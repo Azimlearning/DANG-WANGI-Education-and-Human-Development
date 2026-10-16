@@ -23,7 +23,6 @@ sys.path.insert(0, str(REPO))
 
 from api import postprocess  # noqa: E402
 from api.kit import latest_version  # noqa: E402
-from api.verify import scan  # noqa: E402
 from api.verify.render import render_check  # noqa: E402
 
 CASES = REPO / "data" / "hostile" / "hostile.json"
