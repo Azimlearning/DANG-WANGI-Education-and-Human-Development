@@ -233,7 +233,7 @@ def main() -> int:
                     s in body
                     for s in (
                         "Checked by code",
-                        "Instantiate",
+                        "Compose",
                         "Source:",
                         "What was checked",
                         "Limits:",

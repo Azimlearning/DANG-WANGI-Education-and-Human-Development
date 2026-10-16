@@ -8,16 +8,16 @@
 | Case | USD per Environment | What it assumes |
 |---|---|---|
 | Low | **0.0100** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
-| High | **0.0428** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0570** | the high case with every plan retried once (retry rate 100 percent) |
-| Hard bound | **0.0881** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
+| High | **0.0432** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0575** | the high case with every plan retried once (retry rate 100 percent) |
+| Hard bound | **0.0886** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
 
 Mean over the 24 golden questions (the hard bound is the largest), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amounts to confirm)
 
 1. **A canary of 1 question** first: up to **$0.09** (hard bound), expected under $0.05. It checks model ids, token counts and error handling for almost nothing.
-2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.09 to $0.51**, hard bound **$0.79**.
+2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.09 to $0.52**, hard bound **$0.80**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the cache hit rate, and whether the fail-check registry's hints fix a bad plan.
 - It would not measure: correctness against a textbook (the corpus is not loaded; labels stay `model-checked`, D-21).
@@ -31,7 +31,7 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 
 ## Size of the real prompts (characters, rounded)
 
-- Plan request (virtual experiment): about 24178 characters, of which 19187 are the stable cached prefix.
+- Plan request (virtual experiment): about 24382 characters, of which 19391 are the stable cached prefix.
 - The router-fallback request is built by the real builder, with the full topic list.
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
@@ -49,27 +49,27 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0108 | 0.0452 | 0.0605 |
-| g02 | 0.0108 | 0.0453 | 0.0605 |
-| g03 | 0.0110 | 0.0455 | 0.0609 |
-| g04 | 0.0111 | 0.0459 | 0.0614 |
-| g05 | 0.0108 | 0.0453 | 0.0605 |
-| g06 | 0.0108 | 0.0452 | 0.0605 |
-| g07 | 0.0108 | 0.0453 | 0.0606 |
-| g08 | 0.0110 | 0.0456 | 0.0611 |
-| g09 | 0.0098 | 0.0423 | 0.0563 |
-| g10 | 0.0097 | 0.0423 | 0.0563 |
-| g11 | 0.0100 | 0.0429 | 0.0571 |
-| g12 | 0.0100 | 0.0429 | 0.0571 |
-| g13 | 0.0101 | 0.0429 | 0.0572 |
-| g14 | 0.0100 | 0.0428 | 0.0570 |
-| g15 | 0.0101 | 0.0429 | 0.0571 |
-| g16 | 0.0098 | 0.0423 | 0.0563 |
-| g17 | 0.0093 | 0.0406 | 0.0539 |
-| g18 | 0.0090 | 0.0401 | 0.0531 |
-| g19 | 0.0090 | 0.0401 | 0.0531 |
-| g20 | 0.0093 | 0.0407 | 0.0540 |
-| g21 | 0.0092 | 0.0406 | 0.0538 |
-| g22 | 0.0093 | 0.0407 | 0.0540 |
-| g23 | 0.0091 | 0.0404 | 0.0535 |
-| g24 | 0.0090 | 0.0401 | 0.0531 |
+| g01 | 0.0108 | 0.0456 | 0.0610 |
+| g02 | 0.0108 | 0.0456 | 0.0610 |
+| g03 | 0.0110 | 0.0459 | 0.0614 |
+| g04 | 0.0112 | 0.0463 | 0.0619 |
+| g05 | 0.0108 | 0.0456 | 0.0610 |
+| g06 | 0.0108 | 0.0456 | 0.0609 |
+| g07 | 0.0109 | 0.0457 | 0.0611 |
+| g08 | 0.0110 | 0.0460 | 0.0615 |
+| g09 | 0.0098 | 0.0427 | 0.0568 |
+| g10 | 0.0098 | 0.0427 | 0.0567 |
+| g11 | 0.0101 | 0.0432 | 0.0576 |
+| g12 | 0.0101 | 0.0432 | 0.0576 |
+| g13 | 0.0101 | 0.0433 | 0.0577 |
+| g14 | 0.0100 | 0.0432 | 0.0575 |
+| g15 | 0.0101 | 0.0433 | 0.0576 |
+| g16 | 0.0098 | 0.0427 | 0.0568 |
+| g17 | 0.0093 | 0.0410 | 0.0544 |
+| g18 | 0.0090 | 0.0404 | 0.0536 |
+| g19 | 0.0090 | 0.0405 | 0.0536 |
+| g20 | 0.0093 | 0.0411 | 0.0545 |
+| g21 | 0.0092 | 0.0410 | 0.0543 |
+| g22 | 0.0093 | 0.0410 | 0.0544 |
+| g23 | 0.0091 | 0.0407 | 0.0540 |
+| g24 | 0.0090 | 0.0404 | 0.0536 |

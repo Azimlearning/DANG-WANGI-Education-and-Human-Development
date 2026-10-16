@@ -41,6 +41,7 @@ from api.schema.generated import (
     Citation,
     DoneEvent,
     EnvironmentEvent,
+    Lane,
     MetaEvent,
     PlanDraft,
     PlanEvent,
@@ -326,7 +327,7 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     fills: dict[str, str] = {}
     # A page assembled for THIS question is Compose: it was planned and built from audited Kit parts. Instantiate is kept for
     # hand-written stored Environments (fixtures); a library hit keeps the lane it was minted with.
-    lane = "compose"
+    lane: Lane = "compose"
     scope = scope_names(plan)
     if plan.custom:
         kept = []
@@ -356,7 +357,7 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     yield _stage("verify", "start")
     verify = r.deps.verify_fn or verify_environment
 
-    async def _verify(the_plan: Plan, the_page: Assembled, the_lane: str):  # noqa: ANN202
+    async def _verify(the_plan: Plan, the_page: Assembled, the_lane: Lane):  # noqa: ANN202
         return await asyncio.to_thread(
             verify,
             slug=the_plan.id,
