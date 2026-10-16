@@ -28,4 +28,6 @@ If reality diverges from the doc mid-build, **edit the doc** and note it in the 
 
 | File | Companion plan | Status |
 |---|---|---|
-| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | [../plans/2026-10-16-p0-walking-skeleton-census.md](../plans/2026-10-16-p0-walking-skeleton-census.md) | In progress (tasks 1 to 9 built and verified; the owner's census review is pending) |
+| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | [../plans/2026-10-16-p0-walking-skeleton-census.md](../plans/2026-10-16-p0-walking-skeleton-census.md) | Done |
+| [2026-10-16-p1-kit-core-and-verification.md](2026-10-16-p1-kit-core-and-verification.md) | [../plans/2026-10-16-p1-kit-core-and-verification.md](../plans/2026-10-16-p1-kit-core-and-verification.md) | In progress |
+| [2026-10-16-p1b-models-track.md](2026-10-16-p1b-models-track.md) | [../plans/2026-10-16-p1b-models-track.md](../plans/2026-10-16-p1b-models-track.md) | Draft |

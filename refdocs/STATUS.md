@@ -4,7 +4,7 @@
 
 **Build philosophy:** walking skeleton first. One Environment, end to end, through the full trust path (generate, scan, render, mint, gate, sandbox) on fakes, before building the second of anything. Evidence is measured, never asserted. The Kit grows from measured gaps.
 
-**Right now:** P0 tasks 1 to 8 are built and verified: workspace, schema and codegen, fake LLM seam and ledger, Kit v0, the reference Environment with nine planted defects, verification v0 (L0, render harness, mint, store, gate), `/ask` on fakes, and the web shell with a real-browser smoke. Task 9, the coverage census, is written and validated but is an ESTIMATE awaiting the owner's review (`refdocs/evidence/2026-10-16-p0-census.md`); D-09 stays open until the owner decides. A kit-guardian review of the Kit and verification code found two blocking defects, both fixed (changelog). P1 has not started.
+**Right now:** P0 is done (the owner delegated the first-vertical choice: Physics Form 5, D-18; the census remains an estimate that the owner has not reviewed row by row). The enhancement audit is written (`refdocs/plans/2026-10-16-v4-enhancement-audit.md`) and new decisions D-18 to D-22 set the end state: at least 9 verified Environments, 3 per subject (D-19), a trained-models track (D-20), a label meaning without a corpus (D-21), and a cloud-first working mode (D-22). P1 (Kit core, provenance, L1 to L3, L6 baseline) is next, with plan and execution docs written; P1b (models) is planned.
 
 ---
 
@@ -12,8 +12,9 @@
 
 | Phase | Scope | Status |
 |---|---|---|
-| P0 | Walking skeleton and coverage census | 🔶 Tasks 1 to 8 done and verified. Task 9 (census) written and validated, awaiting the owner's review, so P0 is not done |
-| P1 | Kit core and verification harness | ⬜ Not started |
+| P0 | Walking skeleton and coverage census | ✅ Tasks 1 to 9 done and verified. The owner delegated the vertical choice (D-18); the census is an estimate not reviewed row by row |
+| P1b | Models track (trained local models) | ⬜ Plan and execution docs written |
+| P1 | Kit core and verification harness | 🔶 Plan and execution docs written; build starting |
 | P2 | Evidence: corpus, retrieval, citations | ⬜ Not started |
 | P3 | Mark 3 pipeline and the first vertical | ⬜ Not started |
 | P4 | Kit expansion by kit | ⬜ Not started |
@@ -30,7 +31,7 @@ Status vocabulary: use these exactly, and never round up:
 
 ---
 
-## P0: Walking skeleton and coverage census (current phase)
+## P0: Walking skeleton and coverage census (done)
 
 | Item | Approach | Status |
 |---|---|---|
@@ -42,7 +43,7 @@ Status vocabulary: use these exactly, and never round up:
 | Verification v0 | L0 scan, post-process rules, Playwright render harness, mint, store, gate | 🔶 Works and is tested (78 tests), but `bad-bypass` (a hand-typed wrong number) is NOT caught (needs L1, P1), obfuscated conditional navigation can still pass (A-10), and the gate trusts the store (A-19) |
 | API `/ask` on fakes | SSE: meta, text, environment block, done | ✅ 18 tests and a live `curl -N` |
 | Web shell | Stream, hash check, `sandbox="allow-scripts"` iframe, Peek and Stage | ✅ 22 unit tests and 17 of 17 checks in real Chromium |
-| Coverage census | 53 topics annotated with pattern, model kind, needed micro-component kinds, expected lane | 🔶 Built, validated (18 tests), report generated. An estimate by one annotator. Owner review pending |
+| Coverage census | 53 topics annotated with pattern, model kind, needed micro-component kinds, expected lane | ✅ Built, validated (18 tests), report generated. An estimate by one annotator. The owner delegated the decision it informed (D-18) instead of reviewing it |
 
 ---|---|---|
 | Workspace and toolchain | uv project plus pnpm workspace (`web`, `packages/schema`, `packages/kit`); Python 3.13 | ✅ Verified in the cloud container; `web/` does not exist yet (task 8) |
@@ -79,7 +80,7 @@ What has actually been run, not what has been written. A row here needs a real c
 
 ## Known gaps
 
-- **The first vertical is undecided** (D-09). The census is an estimate (one annotator, topic names only). It ranks Physics first, Chemistry second, Biology third, and splits on Physics Form 4 (more strong topics) against Form 5 (Hooke's law exists, least custom drawing). The owner decides.
+- **The first vertical is provisional** (D-18, Physics Form 5, chosen under the owner's delegation). The census it rests on is an estimate (one annotator, topic names only) and the owner can overturn the choice at any time.
 - **The oracle is the hardest open problem** (PRD A-5): what independent reference says a science micro-model is true. The textbook worked-example bet is unmeasured. `hookes`' reference values are the author's own arithmetic.
 - **The verifier is only partly effective.** It does not catch a hand-typed wrong number in a readout (`bad-bypass`, needs L1 in P1). The L0 scan is text matching and the harness exercises only the inputs it thinks of, so an obfuscated handler that fires on an unreached condition can pass; only isolation closes that (A-10). Its detection rate on planted physics bugs in generated Environments has never been measured (L6, P1).
 - **The gate trusts the store** (A-19). No re-render on delivery and no signature on rows.

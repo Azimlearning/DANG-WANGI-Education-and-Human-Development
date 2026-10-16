@@ -27,4 +27,7 @@ Status vocabulary: `Draft` · `In progress` · `Done` · `Blocked` · `Supersede
 
 | File | Description | Status |
 |---|---|---|
-| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | P0: walking skeleton and coverage census | In progress (tasks 1 to 9 built and verified; the owner's census review is pending) |
+| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | P0: walking skeleton and coverage census | Done (the owner delegated the vertical choice; the census stays an estimate) |
+| [2026-10-16-v4-enhancement-audit.md](2026-10-16-v4-enhancement-audit.md) | Audit of every wanted v4 enhancement against the PRD | Done |
+| [2026-10-16-p1-kit-core-and-verification.md](2026-10-16-p1-kit-core-and-verification.md) | P1: Kit core, provenance, L1 to L3, L6 baseline, isolation spike | In progress |
+| [2026-10-16-p1b-models-track.md](2026-10-16-p1b-models-track.md) | P1b: trained local models (multi-head router) and the misconception matcher | Draft |

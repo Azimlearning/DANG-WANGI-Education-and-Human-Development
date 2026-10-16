@@ -147,6 +147,8 @@ Library lookup; template instantiate; edit-not-regenerate (diff against a stored
 | LLM seam | Providers, tiers, spend ledger, cap, fakes | `api/llm` |
 | Evidence | Corpus manifest, ingestion, retrieval, verbatim quotes, citations | `api/evidence` |
 | Router | Local classifier plus LLM fallback, canonicalisation | `api/routing` |
+| Models | Trained local models (multi-head router, misconception matcher), model cards, retraining | `api/models`, `eval/models` |
+| Experiments | The experiment catalogue: one record per KSSM practical, Amali fields, topic and Environment mapping | `api/experiments`, `data/experiments` |
 | Pipeline | Planner, prompt assembly, generation, retries | `api/pipeline`, `api/prompts` |
 | Verification | L0 to L5, mint, gate, mutation suites | `api/verify` |
 | Library | Store, lifecycle, audit, review queue | `api/library` |
@@ -175,6 +177,8 @@ Library lookup; template instantiate; edit-not-regenerate (diff against a stored
 | kit | micro-components, manifest, gallery | P0 to P4 |
 | verify | L0 to L6, mint, gate | P0 to P1 |
 | evidence | ingestion, retrieval, quotes, citations | P2 |
+| models | trained local models, model cards, retraining | P1b |
+| experiments | the experiment catalogue, validator, ingestion tooling | P2 to P4 |
 | pipeline | router, planner, prompt packs, generation | P3 |
 | library | store, lifecycle, review, shelf | P5 |
 | pedagogy | predict, misconceptions, hints, checks, mastery, Amali, exam mirror | P6 |
@@ -204,14 +208,32 @@ No dates. A phase starts when the previous one's exit criteria are observed.
 | Phase | Scope | Exit criteria |
 |---|---|---|
 | P0 Walking skeleton and census | Workspace, schema codegen, fake LLM and ledger, Kit v0, one hand-written Environment, L0 and render harness, mint and gate, web shell, coverage census of the 53 topics | One Environment goes from question to a sandboxed render on fakes; a planted defect is refused at its named layer; a census table of 53 rows exists |
-| P1 Kit core and verification | Observables and the core micro-components, 2 to 3 science micro-models with references, manifest, L1 provenance, L2 with grid and extremes, L3 cross-check, planted-defect suites, L6 baseline, isolation spike | Planted defects refused at the named layer; verifier detection rate recorded; isolation choice recorded |
-| P2 Evidence | Corpus manifest and ingestion, retrieval, evidence gate, verbatim quotes, citation chips, relation drafting tool, worked-example density measurement | Every claim shown carries a verified quote; density reported per topic |
+| P1 Kit core and verification | Observables and the core micro-components, 3 science micro-models with references (Hooke's law, Ohm's law, liquid pressure), manifest, L1 provenance, L2 with grid, extremes and a reachable goal state, L3 cross-check, planted-defect suites, L6 baseline, hostile set port, isolation spike, label ladder (D-21), the "What was checked" data | Planted defects refused at the named layer; verifier detection rate recorded; isolation choice recorded |
+| P1b Models track | Multi-head router trained on the v3 dataset, baselines, confidence gate, model card, inference module; misconception matcher as retrieval | Held-out metrics against baselines recorded in a model card; the router beats both baselines or is not used |
+| P2 Evidence | Corpus manifest and ingestion, retrieval, evidence gate, verbatim quotes, citation chips, relation drafting tool, worked-example density measurement; the experiment catalogue schema, validator and ingestion tooling | Every claim shown carries a verified quote; density reported per topic; the catalogue validates. Real-corpus steps run locally |
 | P3 Mark 3 pipeline and first vertical | Router, planner, prompt packs, Kit retrieval, Compose and Free lanes, lane labelling, accelerators 1 to 4, 6, 8, 10, first paid run (confirmed) | Golden set for the vertical passes; cost and latency per environment measured against the A-4 hypothesis |
-| P4 Kit expansion | Mechanics, then Chemistry, then Biology kits; gap backlog; gallery; a11y and phone checks | Per-kit coverage reported against the census |
-| P5 Library and lifecycle | Store, re-verify on reuse, audit, review queue, syllabus Shelf, edit-not-regenerate, overnight fill | A covered topic opens in under one second with no model call; a flag evicts |
-| P6 Pedagogy | Predict tasks, misconception port, hint ladder, concept checks, device-local mastery, Amali mode, exam mirror | Three flagship misconceptions run end to end |
-| P7 Reach and deploy gate | Bahasa Melayu for reviewed environments, offline single file, share links, MCP-Apps-shaped bridge, limits, isolation, deploy gate recorded | A student can open a shared link offline; the gate checklist is complete |
+| P4 Kit expansion and Environment authoring | Mechanics, then Chemistry, then Biology kits; gap backlog; gallery; a11y and phone checks; author the Environments for the catalogue | Per-kit coverage reported against the census; at least 3 verified Environments per subject (D-19) |
+| P5 Library and lifecycle | Store, re-verify on reuse, audit, review queue with flag-to-regression-eval, syllabus Shelf, edit-not-regenerate (remix is its acceptance test), overnight fill | A covered topic opens in under one second with no model call; a flag evicts and writes a regression eval |
+| P6 Pedagogy | Predict tasks, misconception port, hint ladder, challenge levels, concept checks, tutor loop from bridge events, device-local mastery and learner map with an export code, Amali mode, exam mirror | Three flagship misconceptions run end to end |
+| P7 Reach and deploy gate | Bahasa Melayu for reviewed environments, offline single file and chapter packs for school PCs, share links, MCP-Apps-shaped bridge, cost dashboard, limits, isolation, store attestation (A-19), deploy gate recorded | A student can open a shared link offline; the gate checklist is complete |
 | P8 Evidence and study | Learner study, paper-ready evaluations | A normalised-gain result, whatever it shows |
+
+### 6.1 End-state targets and headline metrics (D-19)
+
+The build is finished when all of these are true. Each names the phase that produces it. None exists yet.
+
+| Target or metric | Value to report | Phase |
+|---|---|---|
+| Verified Environments | At least 3 each for Physics, Chemistry and Biology (9 in all), each tied to a catalogued experiment or topic, each with its honest label and `checked` record | P4 |
+| Experiment catalogue | One validated record per KSSM practical experiment, with the share that has an Environment | P2, P4 |
+| Syllabus coverage | Environments in the library divided by the 53 topics, per subject | P5 |
+| Verifier detection rate | Planted physics bugs caught, per layer and overall (L6) | P1, repeated each phase |
+| Hostile block rate | Must be 100 percent, at two layers | P1, P3 |
+| Golden pass rate | pass@2 on a KSSM-mapped golden set for the vertical | P3 |
+| Time to a covered Environment | p50, with no model call | P5 |
+| Cost | Per Environment generated, and per student per week | P3, P7 |
+| Router quality | Held-out accuracy and coverage at the chosen confidence threshold, against baselines | P1b |
+| Learning gain | Normalised gain, whatever it shows | P8 |
 
 ---
 
@@ -229,7 +251,7 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-06 | Sandbox and delivery gate carried over: `allow-scripts` only, CSP names the origin, same-origin libraries, verifier-only mint, gate re-hashes | Hard rules from v3 and Arcana v2, proven in both |
 | D-07 | The Free lane is served with an honest label, queued for review, never `canonical` unreviewed | Owner |
 | D-08 | Fakes by default; the owner confirms each paid run; a monthly cap at the LLM seam | Owner |
-| D-09 | The first vertical is decided by the P0 census | Owner |
+| D-09 | The first vertical is decided by the P0 census | Owner (resolved provisionally by D-18) |
 | D-10 | `git init` inside this folder and ignore it in the monorepo; docs are self-contained | Owner: either option; later only this folder is opened |
 | D-11 | No accounts; single operator, no auth, no rate limit; public exposure blocked until a deploy gate is met | Owner, with the agent's resolution of "public students" versus "single user" |
 | D-12 | No graph retrieval; BM25 or TF-IDF first, dense embeddings only if measured to help | Arcana v2 measured no gain (p = 0.69) |
@@ -238,6 +260,11 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-15 | Live mode needs only an Anthropic key and a cap; OpenRouter is optional; no live provider exists until P3 | CLAUDE.md lists OpenRouter as optional; a live path is not built before the owner confirms paid runs |
 | D-16 | The Kit semver is tied to its bundle bytes by `kit-lock.json`; stored Environments carry the bundle hash | Hard constraint 6; found by kit-guardian S2 |
 | D-17 | The CSP must be the first element; ambiguous markup is refused; verification presses real input and treats navigation as a refusal | kit-guardian B1 and B2, both reproduced |
+| D-18 | The first vertical is Physics Form 5 (force and elasticity, forces and pressure, electricity); resolves D-09 provisionally | Owner delegated the choice; Hooke's law already exists |
+| D-19 | End state: at least 9 verified Environments, 3 per subject, each tied to a catalogued KSSM experiment or topic; an experiment catalogue module | Owner |
+| D-20 | A models track: small trained local models (multi-head router; misconception matcher as retrieval), measured against baselines before they may gate anything | Owner asked for trained-model components; IDEA-0003 |
+| D-21 | `model-checked` = passed the deterministic layers with no verified source; `kit-verified` also needs a verified citation; `dev-fixture` is removed in P1 | Hard constraint 4 |
+| D-22 | Cloud-first, local last; limits go in the Deferred to local register | Owner |
 
 ---
 

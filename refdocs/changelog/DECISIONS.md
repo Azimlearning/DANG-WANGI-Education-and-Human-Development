@@ -146,6 +146,46 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** Some legal HTML (comments, an XML prolog) is now refused or altered; generated Environments do not need either. Rejected: a regex for the first `<head` (the original bug), and banning only `location` assignments (obfuscation `window['loc'+'ation']` passes a text scan). **Residual risk:** a navigation or request that fires only on a condition the harness never reaches still passes the verifier; the host teardown and CSP limit the damage but the request to the external origin has already been made. Only isolation (A-10) closes it.
 
+## D-18: The first vertical is Physics Form 5, chosen by the agent under the owner's delegation (2026-10-16)
+
+**Decision.** The first vertical is Physics Form 5: `force_and_elasticity`, `forces_and_pressure` and `electricity`. This resolves D-09 provisionally.
+
+**Why.** Owner, 2026-10-16: "for now u can choice any suitable one". The census (an estimate) ranks Physics first. Within Physics it favours Form 4 on the count of strong topics, but Form 5 starts from `mechanics.hookes`, which already exists and has a registration suite, and its three topics are the simplest closed forms in the table with the least custom drawing (springs, bars, circuit symbols). The cheapest route to the first fully verified result is the right start; Form 4 follows in P4.
+
+**Trade-offs / rejected.** Physics Form 4 (more strong topics, but orbits, wave patterns and ray diagrams need scene components that do not exist). Chemistry (second-ranked, thinner base of reusable models, heavier scene burden). **Revisit freely:** the owner delegated this and may overturn it at any time; the census stays an estimate and the Physics Form 4 topics stay in P4.
+
+## D-19: The end state is at least nine verified Environments, three per subject, each tied to a catalogued KSSM experiment or topic (2026-10-16)
+
+**Decision.** At the end of the build there must be many more Environments than the walking skeleton, and at minimum three each for Physics, Chemistry and Biology (nine in all). Each is composed over the Kit, passes every deterministic layer, carries its honest label and `checked` record, and is mapped to a row in a new **experiment catalogue**: one record per KSSM practical experiment or activity, with the Amali fields (problem statement, hypothesis, manipulated, responding and fixed variables, procedure, results) and the topic it belongs to. The catalogue is a module of its own: the schema, the validator and the ingestion tooling are built in the cloud; the text-derived fields are filled locally from the textbooks, which are not in any repository. Titles seeded in the cloud are marked `unverified` until checked against the textbook.
+
+**Why.** Owner, 2026-10-16: "at the end of the project dev there should be a lot of experiments or environments to be generated (minimum like 3 from each subject, also we have docs of all the available exp)". The experiment is the unit KSSM students are examined on (SPM practical tests), the unit N5 Amali mode needs, and a better coverage unit than a topic.
+
+**Trade-offs / rejected.** Counting by topic only (loses the practical the student sits). Seeding the catalogue from the textbooks in the cloud (impossible: not present; copyright, D-14). **Limit:** until the corpus exists locally, cloud-built Environments cannot reach `kit-verified` (hard constraint 4), so the nine are honest at `model-checked` until their citations are verified.
+
+## D-20: A models track: small trained local models, measured before they may gate anything (2026-10-16)
+
+**Decision.** A new module (`api/models` for inference, `eval/models` for training and evaluation) holds trained local models. First kinds: (1) a **multi-head router** predicting topic (53-way), domain, artifact pattern and complexity from the question text, trained on the v3 labeled dataset (committed in GenUI-Education, no paid call); (2) a **misconception matcher**, built as retrieval over the misconception list, not trained, because the list is too small to train on. Rules: every model is evaluated on held-out data against stated baselines (majority class and a keyword rule) before use; a confidence threshold is chosen on validation data and below it the LLM router decides (PRD 3.2 stage 1); artifacts are JSON weights, never pickles; each model has a model card in `refdocs/evidence/` with its data provenance, metrics, limits and how to retrain; training is deterministic (fixed seeds) and free.
+
+**Why.** Owner: "a new added component which is a trained model (a few different kinds if needed)". IDEA-0003 (distilled router) was in the enhancement plan and the PRD's Route stage, but the PRD had no module, data or evaluation plan for it. The v3 Keras student reached 88.1 percent domain and 70.4 percent artifact-type accuracy and ran only in shadow mode.
+
+**Trade-offs / rejected.** A neural or embedding model (heavier; A-9 and D-12 say embeddings only if measured to help, and the download may not work here; listed as a local follow-up). Labels come from an LLM teacher with a known self-disagreement rate, so measured accuracy is agreement with the teacher, not with truth; the model card says so. Training a lane or Kit-fit predictor (no data until P3 produces generation logs).
+
+## D-21: What a label means before the corpus exists (2026-10-16)
+
+**Decision.** `model-checked` means: the Environment passed every deterministic layer (L0 scan, render and fuzz, L1 provenance, L3 numeric cross-check) but has no verified textbook source. `kit-verified` additionally needs a citation whose quote was verified against the corpus (P2). `dev-fixture` is removed in P1 and is no longer mintable. `reviewed` and `canonical` still need a human. A Free-lane Environment is at most `model-checked` (D-07) and only with L4 and render passes.
+
+**Why.** Hard constraint 4: where no source exists the label says so and the output cannot rise above `model-checked`. Without a definition, the nine cloud-built Environments (D-19) would have no honest label to carry. The names are the agent's elaboration (A-1).
+
+**Trade-offs / rejected.** Keeping `dev-fixture` (it promises nothing, so it cannot carry real work). A new label name such as `checked-unsourced` (more precise, but the name `model-checked` is already in the PRD, the schema and the web labels; the precision goes into the definition and the provenance text instead).
+
+## D-22: Cloud-first, local last (2026-10-16)
+
+**Decision.** Do as much development as possible in the cloud session and move to a local Claude Code session at the end. Anything the container cannot do is noted, not worked around, and listed in the "Deferred to local" register in `refdocs/STATUS.md`, which is the hand-off. The register's current categories: textbooks and OCR (not in any repo), the owner's decisions and consents, paid runs and keys, Windows-specific verification, and model downloads this container cannot make.
+
+**Why.** Owner, 2026-10-16: "i want todo as much dev as possible in cloud at the end i will move to local".
+
+**Trade-offs / rejected.** Working around a limit with something that looks like the real thing (for example inventing textbook content). Stopping at the first limit. **Cost:** some work built in the cloud will need re-checking locally (Windows paths, a real corpus), which the register records.
+
 ---
 
 ## Working assumptions (`ASSUMED:`)
