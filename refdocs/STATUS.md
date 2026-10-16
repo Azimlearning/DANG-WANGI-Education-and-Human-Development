@@ -4,7 +4,7 @@
 
 **Build philosophy:** walking skeleton first. One Environment, end to end, through the full trust path (generate, scan, render, mint, gate, sandbox) on fakes, before building the second of anything. Evidence is measured, never asserted. The Kit grows from measured gaps.
 
-**Right now:** P0 is done (the owner delegated the first-vertical choice: Physics Form 5, D-18; the census remains an estimate that the owner has not reviewed row by row). The enhancement audit is written (`refdocs/plans/2026-10-16-v4-enhancement-audit.md`) and new decisions D-18 to D-22 set the end state: at least 9 verified Environments, 3 per subject (D-19), a trained-models track (D-20), a label meaning without a corpus (D-21), and a cloud-first working mode (D-22). P1 (Kit core, provenance, L1 to L3, L6 baseline) is next, with plan and execution docs written; P1b (models) is planned.
+**Right now:** P0 is done (the owner delegated the first-vertical choice: Physics Form 5, D-18; the census remains an estimate that the owner has not reviewed row by row). The enhancement audit is written (`refdocs/plans/2026-10-16-v4-enhancement-audit.md`) and new decisions D-18 to D-22 set the end state: at least 9 verified Environments, 3 per subject (D-19), a trained-models track (D-20), a label meaning without a corpus (D-21), and a cloud-first working mode (D-22). P1 (Kit core, provenance, L1 to L3, L6 baseline, hostile set, isolation spike) and P1b (trained router) are done in the cloud; P3 (the Mark 3 pipeline on fakes) is next.
 
 ---
 
@@ -13,8 +13,8 @@
 | Phase | Scope | Status |
 |---|---|---|
 | P0 | Walking skeleton and coverage census | ✅ Tasks 1 to 9 done and verified. The owner delegated the vertical choice (D-18); the census is an estimate not reviewed row by row |
-| P1b | Models track (trained local models) | ⬜ Plan and execution docs written |
-| P1 | Kit core and verification harness | 🔶 Plan and execution docs written; build starting |
+| P1b | Models track (trained local models) | ✅ Cloud scope done: audited dataset, baselines, trained and exported router, parity, gates, model card, router with LLM fallback, misconception matcher. Retrain on the full KSSM data and an embedding comparison are deferred to local |
+| P1 | Kit core and verification harness | ✅ Cloud scope done and verified (provenance, L1 to L3, L6 baseline, hostile set, isolation spike, reset/table/graph, two review rounds of which the second did not complete). Open: a fresh adversarial review, and the host-side DOM check noted in D-24 |
 | P2 | Evidence: corpus, retrieval, citations | ⬜ Not started |
 | P3 | Mark 3 pipeline and the first vertical | ⬜ Not started |
 | P4 | Kit expansion by kit | ⬜ Not started |
@@ -40,7 +40,7 @@ Status vocabulary: use these exactly, and never round up:
 | Settings, fake LLM, spend ledger and cap | Fakes default; live mode refuses to start without a cap and key | ✅ 10 tests. No live provider by design until P3 (D-15). Pricing and model ids still ASSUMED |
 | Kit v0 | `environment`, `slider`, `readout`, observable, bridge, Hooke's law; esbuild bundle; manifest; version lock | ✅ 31 tests; bundle 7752 bytes; lock refuses an unversioned change. The Hooke's law reference values are the author's own arithmetic, citation UNVERIFIED |
 | Reference Environment | One hand-written Environment over Kit v0 (a walking-skeleton illustration, not the first vertical) | ✅ Minted and delivered; nine planted-defect variants |
-| Verification v0 | L0 scan, post-process rules, Playwright render harness, mint, store, gate | 🔶 Works and is tested (78 tests), but `bad-bypass` (a hand-typed wrong number) is NOT caught (needs L1, P1), obfuscated conditional navigation can still pass (A-10), and the gate trusts the store (A-19) |
+| Verification v0 | L0 scan, post-process rules, Playwright render harness, mint, store, gate | ✅ as a P0 skeleton; superseded by the P1 verifier (L1 to L3 now catch `bad-bypass`). The gate still trusts the store (A-19) |
 | API `/ask` on fakes | SSE: meta, text, environment block, done | ✅ 18 tests and a live `curl -N` |
 | Web shell | Stream, hash check, `sandbox="allow-scripts"` iframe, Peek and Stage | ✅ 22 unit tests and 17 of 17 checks in real Chromium |
 | Coverage census | 53 topics annotated with pattern, model kind, needed micro-component kinds, expected lane | ✅ Built, validated (18 tests), report generated. An estimate by one annotator. The owner delegated the decision it informed (D-18) instead of reviewing it |
@@ -75,6 +75,11 @@ What has actually been run, not what has been written. A row here needs a real c
 | 2026-10-16 | P0 task 8 web shell | `pnpm --filter web test`; `uv run python eval/smoke/web_smoke.py` | 22 passed; 17 of 17 real-browser checks (sandbox exactly `allow-scripts`, slider 0.040 m to 0.200 m, fetch from the frame blocked with a CSP violation, 360 px no scroll and 44 px targets, wrong hash never rendered, navigating frame torn down). Screenshots in `test-results/web-smoke/` (not committed) |
 | 2026-10-16 | P0 task 9 census | `uv run python eval/census/census.py --check`; `uv run pytest eval -q` | OK: 53 rows, unique slugs, every cell in its vocabulary, every count sums to 53; 18 passed. NOT yet reviewed by the owner |
 | 2026-10-16 | Whole-repo state at the end of the session | `uv run pytest -q`; `pnpm -r test`; `ruff check api eval`; `pyright api`; `pnpm -r typecheck`; `pnpm codegen:check` | 130 + 31 + 22 = 183 tests passed; ruff clean; pyright 0 errors; typecheck clean in 3 packages; codegen OK |
+| 2026-10-16 | P1 and P1b whole-repo state | `uv run pytest -q`; `pnpm -r test`; `ruff check api eval`; `pyright api eval`; `pnpm -r typecheck`; `pnpm codegen:check`; `eval/smoke/web_smoke.py` | 284 passed 1 skipped; Kit 100 and web 23 passed; lint, types, codegen clean; smoke 17 of 17 |
+| 2026-10-16 | L6 planted-defect baseline | `uv run python eval/l6/run.py` | 56 of 61 refused; 0 of 12 neutral controls refused; 5 known misses listed in `refdocs/evidence/2026-10-16-p1-l6-baseline.md`. A regression baseline, not an unbiased rate |
+| 2026-10-16 | Hostile set | `uv run python eval/hostile/run.py` | 20 of 20 blocked by two layers (the question case by API validation) |
+| 2026-10-16 | Isolation spike | `uv run python eval/isolation/spike.py` | `unshare --net` works at no cost; `RLIMIT_AS` breaks Chromium; see the evidence note |
+| 2026-10-16 | Router model | `uv run python eval/models/train_router.py`, `calibrate.py`; `pytest eval/models api/routing` | Beats majority and keyword baselines on every head (complexity narrowly); pure-Python equals scikit-learn on 538 of 538; artifact hash stable across two runs; card generated and tested for staleness |
 
 ---
 
@@ -82,11 +87,11 @@ What has actually been run, not what has been written. A row here needs a real c
 
 - **The first vertical is provisional** (D-18, Physics Form 5, chosen under the owner's delegation). The census it rests on is an estimate (one annotator, topic names only) and the owner can overturn the choice at any time.
 - **The oracle is the hardest open problem** (PRD A-5): what independent reference says a science micro-model is true. The textbook worked-example bet is unmeasured. `hookes`' reference values are the author's own arithmetic.
-- **The verifier is only partly effective.** It does not catch a hand-typed wrong number in a readout (`bad-bypass`, needs L1 in P1). The L0 scan is text matching and the harness exercises only the inputs it thinks of, so an obfuscated handler that fires on an unreached condition can pass; only isolation closes that (A-10). Its detection rate on planted physics bugs in generated Environments has never been measured (L6, P1).
+- **The verifier is stronger but not proven.** P1 added provenance, independent references, a frozen realm and a runtime self-check (D-24), and the L6 baseline refuses 56 of 61 planted defects. The five it cannot see are on the record (a bug at one unsampled input, a wrong label, false prose without numbers, and two conditionals that only the student-time self-check catches). The planted set was grown while holes were found, so it is a regression baseline, not an unbiased rate. The first review round found 18 bypasses; the second round did not complete, so no one has attacked the fixed design.
 - **The gate trusts the store** (A-19). No re-render on delivery and no signature on rows.
 - **Kit size and API are guesses** (A-2). The census names 61 candidate science models for 53 topics but cannot say how many each topic really needs, so it neither supports nor refutes the size guess. It suggests the scene library may dominate effort (51 of 53 topics need scene parts).
 - **Cost of a Compose-lane environment is unmeasured** (A-4). The v3 figure of about $0.19 is for whole-document generation. No paid call has ever been made in this repo.
-- **Isolation for a public deploy is undecided** (A-10). `node:vm` is not isolation.
+- **Isolation for a public deploy is undecided** (A-10, partly confirmed). `unshare --net` verifies fine in this container; hosting, memory limits via cgroup and a browser-exploit answer remain for the deploy gate.
 - **Corpus legality is unconfirmed** (A-8). Four Chemistry experiment books are image-only PDFs with no text layer and need OCR, which is not installed.
 - **Deploy gate, rate limits and auth do not exist** and are deliberately deferred (D-11). The API must not be exposed.
 - **Accessibility is checked only statically and in the harness** (names, `aria-valuetext`, 44 px targets, no overflow at 360 px). No screen reader, reduced-motion or keyboard-only pass has been done in a real browser.
@@ -95,6 +100,10 @@ What has actually been run, not what has been written. A row here needs a real c
 - **Naming** ("Synapse" collision, A-14) is open.
 
 ## Deferred to local (things the cloud container could not do)
+
+- **A fresh kit-guardian pass over D-24** (the second round was stopped by a safety classifier). Run it locally, ideally with a person watching.
+- **Router retrain** on the full KSSM ingestion and an embedding comparison (D-20, A-9); download sizes were not testable here.
+- **Model card check by a person:** the router measures agreement with an LLM teacher; sample 50 held-out questions and judge the labels yourself.
 
 The work ran in a Linux container, not on the Windows dev machine. These were noted and left for a local Claude Code session:
 

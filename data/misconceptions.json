@@ -1,0 +1,92 @@
+{
+  "provenance": {
+    "source_repo": "Azimlearning/GenUI-Education",
+    "source_path": "Synapse/backend/app/knowledge/misconceptions.py",
+    "source_commit": "835a2cefda285b4282ea4d0dbf986d1ff08abdb2",
+    "ported_on": "2026-10-16",
+    "note": "Five seed entries from Synapse v1. The citations are bibliographic references recorded in v1; they have NOT been independently checked in v4 (source_verified false). No textbook text. The list is far too small to train anything."
+  },
+  "entries": [
+    {
+      "id": "osmosis-inverted-gradient",
+      "subject": "biology",
+      "form": 4,
+      "topic": "osmosis",
+      "statement": "Osmosis is when water moves to where there is more water.",
+      "correct": "Water moves across a selectively permeable membrane from a region of lower solute concentration to a region of higher solute concentration (down the water potential gradient) - i.e. toward more solute, not more water.",
+      "triggers": [
+        "osmos",
+        "water mov",
+        "more water",
+        "toward water",
+        "less salt"
+      ],
+      "source": "Odom, A.L. & Barrow, L.H. (1995), 'Development and application of a two-tier diagnostic test measuring college biology students' understanding of diffusion and osmosis', Journal of Research in Science Teaching 32(1).",
+      "source_verified": false
+    },
+    {
+      "id": "bonding-sharing-vs-transfer",
+      "subject": "chemistry",
+      "form": 4,
+      "topic": "ionic vs covalent bonding",
+      "statement": "Ionic and covalent bonds are basically the same kind of sharing.",
+      "correct": "Ionic bonding is electron TRANSFER between a metal and non-metal (forming ions held by electrostatic attraction); covalent bonding is electron SHARING between non-metals. The electronegativity difference decides which occurs.",
+      "triggers": [
+        "ionic",
+        "covalent",
+        "bond"
+      ],
+      "source": "Taber, K.S. (1998), 'An alternative conceptual framework from chemistry education', International Journal of Science Education 20(5); and Taber & Coll (2002) on chemical bonding alternative conceptions.",
+      "source_verified": false
+    },
+    {
+      "id": "newton-force-needed-to-keep-moving",
+      "subject": "physics",
+      "form": 4,
+      "topic": "Newton's first law",
+      "statement": "A moving object needs a continuous force to keep moving.",
+      "correct": "An object in motion stays in motion at constant velocity unless acted on by a net external force (Newton's first law). What stops everyday objects is friction, not the absence of a driving force.",
+      "triggers": [
+        "keep moving",
+        "force to move",
+        "stops moving",
+        "need force"
+      ],
+      "source": "Clement, J. (1982), 'Students' preconceptions in introductory mechanics', American Journal of Physics 50(1); and Halloun & Hestenes (1985), 'Common sense concepts about motion', American Journal of Physics 53(11).",
+      "source_verified": false
+    },
+    {
+      "id": "photosynthesis-food-from-soil",
+      "subject": "biology",
+      "form": 4,
+      "topic": "photosynthesis",
+      "statement": "Plants take in their food from the soil through their roots.",
+      "correct": "Plants make their own food (glucose) by photosynthesis in the leaves, using carbon dioxide, water and light energy. The soil supplies water and mineral ions, not food.",
+      "triggers": [
+        "from the soil",
+        "food from",
+        "plants eat",
+        "roots for food",
+        "photosynth"
+      ],
+      "source": "Driver, R. et al. (1994), 'Making Sense of Secondary Science: Research into Children's Ideas', Routledge.",
+      "source_verified": false
+    },
+    {
+      "id": "current-used-up",
+      "subject": "physics",
+      "form": 5,
+      "topic": "electricity",
+      "statement": "Current is used up as it goes around a circuit, so less comes back to the cell.",
+      "correct": "Charge is conserved: the current is the same at every point in a simple series circuit. What is transferred to the components is energy, not current.",
+      "triggers": [
+        "current used up",
+        "used up",
+        "less current back",
+        "runs out of current"
+      ],
+      "source": "Shipstone, D. (1984), 'A study of children's understanding of electricity in simple DC circuits', European Journal of Science Education 6(2).",
+      "source_verified": false
+    }
+  ]
+}

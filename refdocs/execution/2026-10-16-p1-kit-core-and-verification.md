@@ -101,3 +101,10 @@
 
 - Run the `kit-guardian` agent over the P1 diff; fix or record every finding.
 - STATUS (phase table, ledger, known gaps, deferred to local), CHANGELOG, DECISIONS, this doc, the plans and execution indexes.
+
+## As built (reconciled 2026-10-16)
+
+- Tasks 1 to 9 are done; task 10's review ran twice. Round 1 found 18 bypasses (all fixed, see D-24 and the changelog). Round 2 was stopped by a safety classifier and tested nothing, so a fresh review is open.
+- Beyond the plan: `dom.ts`, `lockdown.ts`, `watch.ts` (runtime self-check), forbidden-markup audit, `series` and `actions` in the audit, a `wrong_unit` / `wrong_input_unit` / `constant_readout` / `control_mismatch` / `forbidden_markup` / `malformed_audit` / `plan_missing` rule set, `eval/l6` (61 mutations), `eval/hostile`, `eval/isolation`, and `__SYNAPSE_VERIFY__`.
+- The L6 report is a regression baseline: the mutation set grew as holes were found.
+- Not done from the plan: energy second-route properties in the references; `ohm` power output.

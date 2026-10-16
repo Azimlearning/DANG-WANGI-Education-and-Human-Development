@@ -63,3 +63,11 @@
 ## Task 7: Wrap-up
 
 - STATUS (phase table, ledger), CHANGELOG, DECISIONS, indexes, the Deferred to local register (embedding comparison; retrain on the full local dataset).
+
+## As built (reconciled 2026-10-16)
+
+- All seven tasks done in the cloud. Files differ slightly from the plan: `api/models/{features,router_model,gate,misconceptions}.py` (features and gate added), `eval/models/calibrate.py` writes both the gate file (`api/models/artifacts/router-v1.gate.json`) and the card, and `data/models/router/{metrics,parity,audit}.json` are generated.
+- Features: word 1 to 2 gram (min_df 2) and character 3 to 5 gram (min_df 5) TF-IDF; weights below 0.1 dropped and rounded to 4 places, so the artifact is 2.7 MB (plan guessed 1.5 MB); every reported number is for that shipped model.
+- The fallback prompt pack is the first file in `api/prompts/` and the loader enforces versioned files.
+- The retrain-twice-identical test is behind `RUN_SLOW=1` (it takes about four minutes); the two manual runs gave the same hash.
+- Misconception citations are v1's and stay `source_verified: false`.
