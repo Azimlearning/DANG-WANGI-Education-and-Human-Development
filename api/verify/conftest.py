@@ -2,29 +2,14 @@
 
 from __future__ import annotations
 
-import shutil
-import subprocess
 from pathlib import Path
-
-import pytest
 
 from api.schema.generated import Citation
 from api.verify.mint import VerifiedEnvironment, verify_environment
 
 REPO = Path(__file__).resolve().parents[2]
-KIT_DIST = REPO / "packages" / "kit" / "dist"
 FIXTURES = REPO / "data" / "fixtures" / "envs"
 ORIGIN = "http://localhost:3000"
-
-
-@pytest.fixture(scope="session")
-def kit_dist() -> Path:
-    if not (KIT_DIST / "0.0.1" / "core.js").is_file():
-        pnpm = shutil.which("pnpm")
-        if pnpm is None:
-            pytest.fail("the Kit is not built and pnpm is not available; run `pnpm --filter @synapse/kit build`")
-        subprocess.run([pnpm, "--filter", "@synapse/kit", "build"], cwd=REPO, check=True)
-    return KIT_DIST
 
 
 def fixture_html(name: str) -> str:

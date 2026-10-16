@@ -64,6 +64,7 @@ _FIELDS = (
     "lane",
     "label",
     "kit_version",
+    "kit_sha256",
     "html",
     "html_sha256",
     "citations",
@@ -125,6 +126,7 @@ if TYPE_CHECKING:  # the static view of the class the factory makes
         lane: Lane
         label: TrustLabel
         kit_version: str
+        kit_sha256: str
         html: str
         html_sha256: str
         citations: tuple[Citation, ...]
@@ -139,6 +141,13 @@ else:
 module; a test scans the repository for any other use of it)."""
 
 
+def kit_bundle_sha256(kit_dist: Path, kit_version: str) -> str | None:
+    """SHA-256 of the built Kit bundle for `kit_version`, or None when it is not built. Stored with each Environment so a Kit whose
+    bytes changed under the same semver makes stored Environments stale (hard constraint 6)."""
+    core = kit_dist / kit_version / "core.js"
+    return hashlib.sha256(core.read_bytes()).hexdigest() if core.is_file() else None
+
+
 def html_sha256(html: str) -> str:
     return hashlib.sha256(html.encode("utf-8")).hexdigest()
 
@@ -150,6 +159,9 @@ def env_id_for(slug: str, sha: str) -> str:
 def guard_label(lane: str, label: str, citations: tuple[Citation, ...]) -> None:
     """Hard constraints 3 and 4 as code. Today only `dev-fixture` is reachable; the rules below stay so that widening the
     allowed set later cannot also widen what a label promises."""
+    if not citations:
+        # Hard constraints 4 and 11: where no source exists the Environment says so. An empty list says nothing at all.
+        raise VerificationFailed("grounding", "no_citation", "state a source, or an explicit UNVERIFIED citation")
     if label in ("reviewed", "canonical"):
         raise VerificationFailed("label", "needs_human", f"'{label}' needs human review; the verifier cannot grant it")
     if label == "kit-verified":
@@ -181,7 +193,8 @@ def verify_environment(
     cited = tuple(citations)
     guard_label(lane, label, cited)
 
-    if not (kit_dist / kit_version / "core.js").is_file():
+    kit_sha = kit_bundle_sha256(kit_dist, kit_version)
+    if kit_sha is None:
         raise VerificationFailed("kit", "unknown_version", f"Kit {kit_version} is not built in {kit_dist}")
     used = set(_KIT_VERSIONS_IN_HTML.findall(raw_html))
     if used - {kit_version}:
@@ -207,6 +220,7 @@ def verify_environment(
         lane=lane,
         label=label,
         kit_version=kit_version,
+        kit_sha256=kit_sha,
         html=processed,
         html_sha256=sha,
         citations=cited,

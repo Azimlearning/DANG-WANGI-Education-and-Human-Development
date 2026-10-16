@@ -11,16 +11,13 @@ The browser then re-hashes `html` against `htmlSha256` before rendering (web/lib
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 from api import postprocess
 from api.schema.generated import BlockMeta, Citation, EnvironmentBlock
 from api.verify import scan as l0
-from api.verify.mint import VerificationFailed, guard_label, html_sha256
+from api.verify.mint import VerificationFailed, guard_label, html_sha256, kit_bundle_sha256
 from api.verify.store import SqliteEnvironmentStore
-
-_CSP_METAS = re.compile(r"<meta\b[^>]*http-equiv\s*=\s*[\"']Content-Security-Policy[\"'][^>]*>", re.IGNORECASE)
 
 
 def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, kit_dist: Path) -> EnvironmentBlock:
@@ -37,16 +34,20 @@ def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, k
     if hit is not None:
         raise VerificationFailed("gate", hit.rule, hit.reason)
 
-    metas = _CSP_METAS.findall(record.html)
-    if metas != [postprocess.csp_tag(public_origin)]:
+    if not postprocess.csp_is_first(record.html, public_origin):
         raise VerificationFailed(
             "gate",
             "csp_mismatch",
-            "the stored CSP is missing, duplicated, or does not name the configured PUBLIC_ORIGIN",
+            "the stored CSP is missing, duplicated, not the first element, or does not name the configured PUBLIC_ORIGIN",
         )
 
-    if not (kit_dist / record.kit_version / "core.js").is_file():
-        raise VerificationFailed("gate", "stale_kit", f"Kit {record.kit_version} is no longer built; re-verify")
+    current = kit_bundle_sha256(kit_dist, record.kit_version)
+    if current is None or current != record.kit_sha256:
+        raise VerificationFailed(
+            "gate",
+            "stale_kit",
+            f"Kit {record.kit_version} is not built, or its bytes changed since this was verified; re-verify",
+        )
 
     citations = tuple(Citation.model_validate(c) for c in record.citations)
     try:

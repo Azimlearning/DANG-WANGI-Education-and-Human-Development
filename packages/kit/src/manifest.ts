@@ -21,16 +21,16 @@ export const manifestEntries: ManifestEntry[] = [
   {
     id: "observable",
     kind: "core",
-    signature: "observable<T>(initial: T): Observable<T>",
+    signature: "observable<T>(initial: T, {transform?: (v: T) => T}?): Observable<T>",
     precondition: "Any value that changes over time and is shown or used by another component.",
     doc: "A value you can get, set, subscribe to and map. Readouts only accept observables.",
   },
   {
     id: "environment",
     kind: "ui",
-    signature: "environment({title: string, note: string}): Environment",
+    signature: "environment({title: string, note: string, stageText?: string, into?: HTMLElement}): Environment",
     precondition: "Called once, before any other component, in a page with a body.",
-    doc: "Mounts the title, a study-note card, a stage, controls and readouts. Returns the env passed to slider and readout.",
+    doc: "Mounts the title, a study-note card, a stage, controls and readouts. stageText is the screen-reader text for the stage. Returns the env passed to slider and readout.",
   },
   {
     id: "slider",

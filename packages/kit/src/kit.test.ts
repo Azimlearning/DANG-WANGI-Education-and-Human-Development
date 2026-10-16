@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import * as bridge from "./bridge";
+import { state as bridgeState } from "./bridge";
 import { components, KIT_VERSION, manifestEntries } from "./index";
 import { environment } from "./environment";
 import { isObservable, observable } from "./observable";
@@ -94,17 +95,18 @@ describe("hookes", () => {
     load.set(10);
     expect(ext.get()).toBeCloseTo(0.5);
   });
-  it("refuses a non-positive k and a negative load", () => {
+  it("refuses a non-positive k and a negative load, and does not clamp silently", () => {
     expect(() => hookes({ k: 0, load: observable(1) })).toThrow(RangeError);
     expect(() => hookesExtension(-1, 10)).toThrow(RangeError);
+    expect(() => hookes({ k: 10, load: observable(-1) })).toThrow(RangeError);
   });
 });
 
 describe("bridge", () => {
   it("posts the three message types", async () => {
     const sent: unknown[] = [];
-    bridge.setPoster((m) => sent.push(m));
-    bridge.resetForTests();
+    bridgeState.poster = (m) => sent.push(m);
+    bridgeState.readySent = false;
     bridge.event("load", 3);
     bridge.error("boom");
     bridge.ready();
@@ -117,8 +119,8 @@ describe("bridge", () => {
   });
   it("posts ready only once", async () => {
     const sent: unknown[] = [];
-    bridge.setPoster((m) => sent.push(m));
-    bridge.resetForTests();
+    bridgeState.poster = (m) => sent.push(m);
+    bridgeState.readySent = false;
     bridge.ready();
     bridge.ready();
     await new Promise((r) => setTimeout(r, 60));
@@ -126,9 +128,38 @@ describe("bridge", () => {
   });
 });
 
+describe("accessibility fence", () => {
+  it("names every readout and gives every slider a spoken value with its unit", () => {
+    const env = environment({ title: "t", note: "n", stageText: "A spring with a hanging load" });
+    const s = slider(env, { id: "load", label: "Load", unit: "N", min: 0, max: 10, value: 2 });
+    const out = readout(env, { label: "Extension", unit: "m", value: s });
+    const labelId = out.getAttribute("aria-labelledby")!;
+    expect(document.getElementById(labelId)?.textContent).toBe("Extension");
+    const input = document.querySelector<HTMLInputElement>("[data-synapse-control]")!;
+    expect(input.getAttribute("aria-valuetext")).toBe("2 N");
+    s.set(7);
+    expect(input.getAttribute("aria-valuetext")).toBe("7 N");
+    expect(document.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("A spring with a hanging load");
+  });
+});
+
+describe("the public surface", () => {
+  it("is frozen, so generated content cannot replace a component", async () => {
+    const { Synapse } = await import("./index");
+    expect(Object.isFrozen(Synapse)).toBe(true);
+    expect(Object.isFrozen(Synapse.bridge)).toBe(true);
+    expect(Object.keys(Synapse.bridge).sort()).toEqual(["error", "event", "installErrorHandlers", "ready"]);
+    expect("setPoster" in Synapse.bridge).toBe(false);
+    expect(() => {
+      "use strict";
+      (Synapse as unknown as Record<string, unknown>).hookes = () => 0;
+    }).toThrow(TypeError);
+  });
+});
+
 describe("manifest", () => {
   it("lists every exported micro-component id, and nothing else", () => {
-    const exported = Object.keys(components).sort();
+    const exported = Object.keys(components).sort(); // the frozen Synapse surface adds only `version`
     const listed = manifestEntries.map((e) => e.id).sort();
     expect(listed).toEqual(exported);
   });

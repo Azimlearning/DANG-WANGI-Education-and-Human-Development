@@ -22,5 +22,5 @@ export function hookes(options: HookesOptions): Observable<number> {
   const { k, load } = options;
   if (!(k > 0)) throw new RangeError("hookes: k must be above 0 N/m");
   // A derived, read-only observable: the extension always follows the load.
-  return load.map((n) => hookesExtension(Math.max(n, 0), k));
+  return load.map((n) => hookesExtension(n, k));
 }

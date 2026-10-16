@@ -34,12 +34,15 @@ export function slider(env: Environment, options: SliderOptions): Observable<num
   input.step = String(options.step ?? (max - min) / 100);
   input.value = String(value.get());
   input.setAttribute("data-synapse-control", id);
+  const describe = (v: number) => input.setAttribute("aria-valuetext", `${v} ${unit}`);
+  describe(value.get());
   input.addEventListener("input", () => {
     value.set(Number(input.value));
     event(id, value.get());
   });
   value.subscribe((v) => {
     if (Number(input.value) !== v) input.value = String(v);
+    describe(v);
   });
   wrap.append(lab, input);
   env.controls.appendChild(wrap);

@@ -1,6 +1,5 @@
-// `readout(env, {label, unit, value})` shows a number that is always an observable's current value. It THROWS unless
-// `value` is an observable, so a result cannot be typed in by hand (A-2; the structural check for hand-written numbers
-// arrives with L1 in P1).
+// `readout(env, {label, unit, value})` shows a number that is always an observable's current value. It THROWS unless `value` is an
+// observable. This stops accidents only: a constant can be wrapped in an observable, and provenance is checked by L1 in P1 (A-2).
 
 import type { Environment } from "./environment";
 import { isObservable, type Observable } from "./observable";
@@ -12,6 +11,8 @@ export interface ReadoutOptions {
   digits?: number;
 }
 
+let labelCounter = 0;
+
 export function readout(env: Environment, options: ReadoutOptions): HTMLOutputElement {
   if (!isObservable(options.value)) {
     throw new TypeError(`readout "${options.label}": value must be an observable, not a plain ${typeof options.value}`);
@@ -22,6 +23,9 @@ export function readout(env: Environment, options: ReadoutOptions): HTMLOutputEl
   const lab = document.createElement("span");
   lab.textContent = options.label;
   const out = document.createElement("output");
+  const labelId = `syn-readout-${labelCounter++}`;
+  lab.id = labelId;
+  out.setAttribute("aria-labelledby", labelId);
   out.setAttribute("data-synapse-readout", options.label);
   out.setAttribute("aria-live", "polite");
   const render = (v: number) => {

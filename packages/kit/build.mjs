@@ -1,10 +1,18 @@
-// Builds the Kit into dist/<semver>/core.js (IIFE exposing window.Synapse) and dist/<semver>/manifest.json.
+// Builds the Kit into dist/<semver>/core.js (IIFE exposing a frozen window.Synapse) and dist/<semver>/manifest.json.
+//
+// Hard constraint 6: a behaviour change bumps the Kit semver. This build enforces it: kit-lock.json (committed) records the SHA-256 of
+// each released version's bundle. Building a locked version whose bytes differ FAILS, naming the fix (bump KIT_VERSION and
+// package.json). A new version is added to the lock by this build; `--relock` replaces a version's entry and is for an UNRELEASED
+// version only (a visible, deliberate act that shows in the diff of kit-lock.json). The manifest carries the bundle hash so the
+// delivery gate can tell a stale Kit from the current one.
 import { build } from "esbuild";
-import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
+const relock = process.argv.includes("--relock");
 const manifestSource = readFileSync(resolve(here, "src/manifest.ts"), "utf-8");
 const version = /KIT_VERSION = "([^"]+)"/.exec(manifestSource)?.[1];
 if (!version) throw new Error("build: KIT_VERSION not found in src/manifest.ts");
@@ -13,9 +21,10 @@ if (pkgVersion !== version) throw new Error(`build: package.json version ${pkgVe
 
 const outdir = resolve(here, "dist", version);
 mkdirSync(outdir, { recursive: true });
+const coreFile = resolve(outdir, "core.js");
 await build({
   entryPoints: [resolve(here, "src/index.ts")],
-  outfile: resolve(outdir, "core.js"),
+  outfile: coreFile,
   bundle: true,
   format: "iife",
   globalName: "__synapse_kit",
@@ -24,15 +33,32 @@ await build({
   target: "es2020",
   legalComments: "none",
 });
+const bundle = readFileSync(coreFile);
+const bundleSha256 = createHash("sha256").update(bundle).digest("hex");
+
+const lockFile = resolve(here, "kit-lock.json");
+const lock = existsSync(lockFile) ? JSON.parse(readFileSync(lockFile, "utf-8")) : {};
+if (lock[version] && lock[version] !== bundleSha256 && !relock) {
+  rmSync(coreFile);
+  console.error(
+    `build: Kit ${version} is locked at ${lock[version].slice(0, 12)} but this build is ${bundleSha256.slice(0, 12)}.\n` +
+      `The Kit's behaviour changed without a version bump. Bump KIT_VERSION in src/manifest.ts and version in package.json.\n` +
+      `(For an unreleased version only: pnpm --filter @synapse/kit build --relock)`,
+  );
+  process.exit(1);
+}
+if (lock[version] !== bundleSha256) {
+  lock[version] = bundleSha256;
+  writeFileSync(lockFile, JSON.stringify(Object.fromEntries(Object.entries(lock).sort()), null, 2) + "\n");
+}
 
 // Load the entries through esbuild too, so the manifest comes from the same TypeScript the tests check.
 const tmp = resolve(outdir, ".manifest.mjs");
 await build({ entryPoints: [resolve(here, "src/manifest.ts")], outfile: tmp, bundle: true, format: "esm", target: "es2020" });
 const { manifestEntries } = await import(tmp + "?t=" + Date.now());
-const bundleBytes = statSync(resolve(outdir, "core.js")).size;
+rmSync(tmp);
 writeFileSync(
   resolve(outdir, "manifest.json"),
-  JSON.stringify({ version, bundle: "core.js", components: manifestEntries }, null, 2) + "\n",
+  JSON.stringify({ version, bundle: "core.js", bundleSha256, components: manifestEntries }, null, 2) + "\n",
 );
-import("node:fs").then((fs) => fs.rmSync(tmp));
-console.log(`kit ${version}: core.js ${bundleBytes} bytes, ${manifestEntries.length} manifest entries -> ${outdir}`);
+console.log(`kit ${version}: core.js ${bundle.length} bytes sha256 ${bundleSha256.slice(0, 12)}, ${manifestEntries.length} manifest entries -> ${outdir}`);

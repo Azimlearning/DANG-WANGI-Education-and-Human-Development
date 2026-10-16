@@ -14,6 +14,8 @@ export interface Environment {
 export interface EnvironmentOptions {
   title: string;
   note: string;
+  /** A text equivalent of what the stage shows, announced for screen readers (hard constraint 10). */
+  stageText?: string;
   /** Where to mount. Defaults to document.body. */
   into?: HTMLElement;
 }
@@ -60,7 +62,7 @@ export function environment(options: EnvironmentOptions): Environment {
   note.textContent = options.note;
   const stage = div("syn-stage");
   stage.setAttribute("role", "region");
-  stage.setAttribute("aria-label", "Stage");
+  stage.setAttribute("aria-label", options.stageText ?? "Stage");
   const controls = div("syn-controls");
   controls.setAttribute("role", "group");
   controls.setAttribute("aria-label", "Controls");

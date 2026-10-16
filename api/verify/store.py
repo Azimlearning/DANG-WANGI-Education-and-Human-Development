@@ -31,6 +31,7 @@ class StoredEnvironment:
     lane: str
     label: str
     kit_version: str
+    kit_sha256: str
     html: str
     html_sha256: str
     citations: list[dict]
@@ -39,7 +40,9 @@ class StoredEnvironment:
     state: str
 
 
-_COLUMNS = "env_id, title, lane, label, kit_version, html, html_sha256, citations, plan_summary, checked, state"
+_COLUMNS = (
+    "env_id, title, lane, label, kit_version, kit_sha256, html, html_sha256, citations, plan_summary, checked, state"
+)
 
 
 class SqliteEnvironmentStore:
@@ -49,7 +52,7 @@ class SqliteEnvironmentStore:
         with closing(self._connect()) as db, db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS environments (env_id TEXT PRIMARY KEY, title TEXT NOT NULL, lane TEXT NOT NULL, "
-                "label TEXT NOT NULL, kit_version TEXT NOT NULL, html TEXT NOT NULL, html_sha256 TEXT NOT NULL, "
+                "label TEXT NOT NULL, kit_version TEXT NOT NULL, kit_sha256 TEXT NOT NULL, html TEXT NOT NULL, html_sha256 TEXT NOT NULL, "
                 "citations TEXT NOT NULL, plan_summary TEXT NOT NULL, checked TEXT NOT NULL, state TEXT NOT NULL, "
                 "reason TEXT, created_at TEXT NOT NULL)"
             )
@@ -73,13 +76,14 @@ class SqliteEnvironmentStore:
         with closing(self._connect()) as db, db:
             # OR IGNORE: the same id is the same HTML, and a stored Environment is never replaced
             db.execute(
-                f"INSERT OR IGNORE INTO environments ({_COLUMNS}, reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'verified', NULL, ?)",
+                f"INSERT OR IGNORE INTO environments ({_COLUMNS}, reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'verified', NULL, ?)",
                 (
                     env.env_id,
                     env.title,
                     env.lane,
                     env.label,
                     env.kit_version,
+                    env.kit_sha256,
                     env.html,
                     env.html_sha256,
                     json.dumps([c.model_dump() for c in env.citations]),
@@ -91,13 +95,37 @@ class SqliteEnvironmentStore:
         stored = self.get(env.env_id)
         if stored is None:
             raise ValueError("the environment could not be stored")
+        # The id is a hash of the HTML alone, so the same HTML verified again under a different label, lane, citations or Kit would
+        # silently return the OLD row. Refuse instead: a changed claim about the same bytes needs a deliberate new record.
+        new = (
+            env.title,
+            env.lane,
+            env.label,
+            env.kit_version,
+            env.kit_sha256,
+            json.dumps([c.model_dump() for c in env.citations]),
+            env.plan_summary,
+        )
+        old = (
+            stored.title,
+            stored.lane,
+            stored.label,
+            stored.kit_version,
+            stored.kit_sha256,
+            json.dumps(stored.citations),
+            stored.plan_summary,
+        )
+        if new != old:
+            raise ValueError(
+                "this HTML is already stored with different metadata (label, lane, citations or Kit); it is never replaced"
+            )
         return stored
 
     def put_rejected(self, slug: str, raw_html: str, stage: str, rule: str, reason: str) -> None:
         sha = html_sha256(raw_html)
         with closing(self._connect()) as db, db:
             db.execute(
-                f"INSERT OR IGNORE INTO environments ({_COLUMNS}, reason, created_at) VALUES (?, ?, '', '', '', ?, ?, '[]', '', '{{}}', 'rejected', ?, ?)",
+                f"INSERT OR IGNORE INTO environments ({_COLUMNS}, reason, created_at) VALUES (?, ?, '', '', '', '', ?, ?, '[]', '', '{{}}', 'rejected', ?, ?)",
                 (
                     f"rejected-{env_id_for(slug, sha)}",
                     slug,
@@ -107,6 +135,16 @@ class SqliteEnvironmentStore:
                     datetime.now(UTC).isoformat(),
                 ),
             )
+
+    def latest_id(self, slug: str) -> str | None:
+        """The newest verified Environment id made from `slug` (ids are `<slug>-<12 hex>`), or None."""
+        with closing(self._connect()) as db:
+            row = db.execute(
+                "SELECT env_id FROM environments WHERE state = 'verified' AND env_id LIKE ? ESCAPE '\\' "
+                "ORDER BY created_at DESC LIMIT 1",
+                (slug.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "-%",),
+            ).fetchone()
+        return None if row is None else str(row[0])
 
     def get_record(self, env_id: str) -> StoredEnvironment | None:
         """The verified row exactly as stored, with no integrity check. For the delivery gate, which does its own."""
@@ -122,12 +160,13 @@ class SqliteEnvironmentStore:
             lane=row[2],
             label=row[3],
             kit_version=row[4],
-            html=row[5],
-            html_sha256=row[6],
-            citations=json.loads(row[7]),
-            plan_summary=row[8],
-            checked=json.loads(row[9]),
-            state=row[10],
+            kit_sha256=row[5],
+            html=row[6],
+            html_sha256=row[7],
+            citations=json.loads(row[8]),
+            plan_summary=row[9],
+            checked=json.loads(row[10]),
+            state=row[11],
         )
 
     def get(self, env_id: str) -> StoredEnvironment | None:

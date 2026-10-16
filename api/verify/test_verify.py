@@ -3,9 +3,11 @@ layer; a stored Environment changed by one byte is refused; the mint cannot be u
 
 from __future__ import annotations
 
+import ast
 import copy
+import hashlib
 import pickle
-import re
+import shutil
 import sqlite3
 from pathlib import Path
 
@@ -187,7 +189,9 @@ def test_a_verified_environment_cannot_be_constructed_outside_the_verifier() -> 
         VerifiedEnvironment(_mint=object(), env_id="x")  # type: ignore[call-arg]
 
 
-def test_a_verified_environment_cannot_be_subclassed_changed_copied_or_pickled(minted: VerifiedEnvironment) -> None:
+def test_a_verified_environment_resists_subclassing_assignment_copying_and_pickling(
+    minted: VerifiedEnvironment,
+) -> None:
     with pytest.raises(TypeError):
 
         class Sub(VerifiedEnvironment):  # type: ignore[misc, valid-type]
@@ -203,6 +207,8 @@ def test_a_verified_environment_cannot_be_subclassed_changed_copied_or_pickled(m
         copy.deepcopy(minted)
     with pytest.raises(TypeError):
         pickle.dumps(minted)
+    # Hardening, not a guarantee: `object.__setattr__` and the closure cell bypass it from inside the process. The mint docstring
+    # says so; the delivery gate, not this class, is what protects the client.
 
 
 def test_the_store_refuses_anything_that_is_not_a_verified_environment(tmp_path: Path) -> None:
@@ -211,21 +217,48 @@ def test_the_store_refuses_anything_that_is_not_a_verified_environment(tmp_path:
         store.put_verified({"env_id": "x"})  # type: ignore[arg-type]
 
 
+def _is_name(node: ast.AST, name: str) -> bool:
+    return (isinstance(node, ast.Name) and node.id == name) or (isinstance(node, ast.Attribute) and node.attr == name)
+
+
 def test_the_mint_issuer_and_constructor_appear_only_in_the_verifier_source() -> None:
-    """Source scan: `_issue` is referenced only in api/verify/mint.py, and `VerifiedEnvironment(` is constructed nowhere else.
-    Test files may construct it to prove it refuses; this file is excluded because it names the strings it looks for."""
+    """AST scan of api/ and eval/: `_issue` is never referenced outside api/verify/mint.py (by name, attribute, import or string),
+    nobody introspects `__closure__`, and outside tests `VerifiedEnvironment` is never called or aliased. Test files may CALL it to
+    prove it refuses. This file is excluded because it names what it looks for."""
     offenders: list[str] = []
-    this_file = Path(__file__).resolve()
-    for path in sorted((REPO / "api").rglob("*.py")):
-        if path.resolve() in (this_file, REPO / "api" / "verify" / "mint.py"):
-            continue
-        text = path.read_text(encoding="utf-8")
-        is_test = path.name.startswith("test_") or path.name == "conftest.py"
-        if re.search(r"\b_issue\b", text):
-            offenders.append(f"{path.relative_to(REPO)}: _issue")
-        if not is_test and re.search(r"\bVerifiedEnvironment\s*\(", text):
-            offenders.append(f"{path.relative_to(REPO)}: VerifiedEnvironment(")
+    skip = {Path(__file__).resolve(), (REPO / "api" / "verify" / "mint.py").resolve()}
+    for root in ("api", "eval"):
+        for path in sorted((REPO / root).rglob("*.py")):
+            if path.resolve() in skip:
+                continue
+            is_test = path.name.startswith("test_") or path.name == "conftest.py"
+            rel = str(path.relative_to(REPO))
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+                line = getattr(node, "lineno", 0)
+                if _is_name(node, "_issue") or (isinstance(node, ast.Constant) and node.value == "_issue"):
+                    offenders.append(f"{rel}:{line}: _issue")
+                if isinstance(node, (ast.ImportFrom, ast.Import)) and any(a.name == "_issue" for a in node.names):
+                    offenders.append(f"{rel}:{line}: imports _issue")
+                if isinstance(node, ast.Attribute) and node.attr in ("__closure__", "cell_contents"):
+                    offenders.append(f"{rel}:{line}: closure introspection")
+                if not is_test:
+                    if isinstance(node, ast.Call) and _is_name(node.func, "VerifiedEnvironment"):
+                        offenders.append(f"{rel}:{line}: VerifiedEnvironment(")
+                    if (
+                        isinstance(node, (ast.Assign, ast.AnnAssign))
+                        and node.value is not None
+                        and _is_name(node.value, "VerifiedEnvironment")
+                    ):
+                        offenders.append(f"{rel}:{line}: alias of VerifiedEnvironment")
     assert offenders == []
+
+
+def test_the_scan_would_catch_an_alias_and_a_closure_peek(tmp_path: Path) -> None:
+    """The scanner itself is checked against the evasions kit-guardian found (`cls = VerifiedEnvironment; cls(...)`)."""
+    tree = ast.parse("cls = VerifiedEnvironment\ncls()\nx = VerifiedEnvironment.__init__.__closure__[0].cell_contents")
+    found = [n for n in ast.walk(tree) if isinstance(n, ast.Assign) and _is_name(n.value, "VerifiedEnvironment")]
+    peeks = [n for n in ast.walk(tree) if isinstance(n, ast.Attribute) and n.attr in ("__closure__", "cell_contents")]
+    assert found and len(peeks) == 2
 
 
 # ── labels and grounding (hard constraints 3 and 4) ─────────────────────────────────────────────────────────────────
@@ -317,3 +350,201 @@ def test_an_oversized_environment_is_refused() -> None:
     out = postprocess.run("<html><head></head><body>" + "x" * 300_000 + "</body></html>", public_origin=ORIGIN)
     assert isinstance(out, postprocess.PostprocessReject)
     assert out.rule == "size_cap"
+
+
+# ── kit-guardian findings (review of 0695052) ───────────────────────────────────────────────────────────────────────
+
+
+def test_B1_a_head_inside_a_comment_cannot_switch_the_csp_off(kit_dist: Path) -> None:
+    """The comment is stripped, the CSP lands after the REAL <head>, and the hidden eval is blocked, so the document is refused."""
+    from api.verify.conftest import fixture_html
+
+    raw = fixture_html("reference-spring.bad-csp-comment.html")
+    processed = postprocess.run(raw, public_origin=ORIGIN)
+    assert isinstance(processed, str)
+    assert "<!--" not in processed
+    assert postprocess.csp_is_first(processed, ORIGIN)
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, "reference-spring.bad-csp-comment.html")
+    assert err.value.stage == "render"  # the eval threw because the CSP is in force; without a CSP this was minted
+
+
+@pytest.mark.parametrize(
+    ("doc", "rule"),
+    [
+        ("<!doctype html><title><head></title><html><body></body></html>", "csp_position"),
+        ("<![CDATA[ x ]]><html></html>", "markup_declaration"),
+        ("<html><!-- never closed", "comment"),
+        ("<?xml version='1.0'?><html></html>", "markup_declaration"),
+    ],
+)
+def test_B1_ambiguous_markup_is_refused_not_guessed_at(doc: str, rule: str) -> None:
+    out = postprocess.run(doc, public_origin=ORIGIN)
+    assert isinstance(out, postprocess.PostprocessReject)
+    assert out.rule == rule
+
+
+def test_B1_csp_is_first_rejects_a_csp_placed_after_a_script() -> None:
+    tag = postprocess.csp_tag(ORIGIN)
+    assert postprocess.csp_is_first(f"<!doctype html><html><head>{tag}</head><body></body></html>", ORIGIN)
+    assert not postprocess.csp_is_first(f"<!doctype html><html><head><script>1</script>{tag}</head></html>", ORIGIN)
+    assert not postprocess.csp_is_first(f"<!doctype html><html><head>{tag}{tag}</head></html>", ORIGIN)
+    assert not postprocess.csp_is_first("<!doctype html><html><head></head></html>", ORIGIN)
+
+
+def test_B2_literal_navigation_is_refused_at_scan(kit_dist: Path) -> None:
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, "reference-spring.bad-navigate-literal.html")
+    assert err.value.stage == "scan"
+    assert "location assignment" in err.value.reason
+
+
+def test_B2_obfuscated_navigation_is_caught_by_a_real_click_in_the_harness(kit_dist: Path) -> None:
+    """`window['loc'+'ation'] = ...` passes the text scan. The harness now presses real input, so the handler runs and the frame
+    leaving its document is a refusal. Residual risk (stated in STATUS): a handler that fires only on a condition the harness
+    never reaches still passes; closing that needs isolation (A-10), not more patterns."""
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, "reference-spring.bad-navigate-obfuscated.html")
+    assert err.value.stage == "render"
+    assert err.value.rule in ("navigation", "blocked_request")
+
+
+@pytest.mark.parametrize(
+    ("snippet", "label"),
+    [
+        ("location = 'x'", "location assignment"),
+        ("document.location.href", "window.location"),
+        ("self.location", "window.location"),
+        ("Function('x')", "Function constructor"),
+        ("parent.postMessage(1, '*')", "postMessage"),
+        ("document.write('x')", "document.write"),
+        ("setTimeout('x', 1)", "string timer (eval)"),
+    ],
+)
+def test_new_l0_patterns_name_what_they_catch(snippet: str, label: str) -> None:
+    from api.verify import scan
+
+    hit = scan.scan(f"<script>{snippet}</script>")
+    assert hit is not None
+    assert label in hit.reason
+
+
+def test_N1_what_is_scanned_is_what_is_minted() -> None:
+    """A CSP-shaped fragment inside `new Function(` used to hide the word from the mint-time scan but not from the gate's."""
+    doc = '<html><head></head><body><script>new<meta http-equiv="Content-Security-Policy" content="x">\nFunction(1)</script></body></html>'
+    out = postprocess.run(doc, public_origin=ORIGIN)
+    assert isinstance(out, postprocess.PostprocessReject)
+    assert out.stage == "scan"
+
+
+def test_S1_an_undeclared_control_is_refused(kit_dist: Path) -> None:
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, "reference-spring.bad-undeclared-control.html")
+    assert (err.value.stage, err.value.rule) == ("render", "undeclared_control")
+
+
+def test_S1_a_readout_that_changes_by_itself_does_not_make_a_dead_control_look_wired(kit_dist: Path) -> None:
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, "reference-spring.bad-selfmutating-readout.html")
+    assert (err.value.stage, err.value.rule) == ("render", "unstable_readout")
+
+
+def test_S6_unnamed_controls_and_readouts_are_refused(kit_dist: Path) -> None:
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, "reference-spring.bad-a11y.html")
+    assert (err.value.stage, err.value.rule) == ("render", "a11y")
+    assert "accessible name" in err.value.reason
+
+
+def test_S2_a_kit_whose_bytes_changed_under_the_same_semver_makes_stored_environments_stale(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    store = SqliteEnvironmentStore(tmp_path / "envs.db")
+    store.put_verified(minted)
+    altered = tmp_path / "kit"
+    shutil.copytree(kit_dist, altered)
+    core = altered / "0.0.1" / "core.js"
+    core.write_bytes(core.read_bytes() + b"\n/* behaviour changed, version not bumped */")
+    with pytest.raises(VerificationFailed) as err:
+        deliver(store, minted.env_id, public_origin=ORIGIN, kit_dist=altered)
+    assert err.value.rule == "stale_kit"
+    assert minted.kit_sha256 == hashlib.sha256((kit_dist / "0.0.1" / "core.js").read_bytes()).hexdigest()
+
+
+def test_S2_the_gate_refuses_a_csp_that_is_not_first(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    db = tmp_path / "envs.db"
+    store = SqliteEnvironmentStore(db)
+    store.put_verified(minted)
+    tag = postprocess.csp_tag(ORIGIN)
+    moved = minted.html.replace(tag, "", 1).replace("</head>", tag + "</head>", 1)
+    sha = html_sha256(moved)
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            "UPDATE environments SET html = ?, html_sha256 = ?, env_id = ?",
+            (moved, sha, f"reference-spring-{sha[:12]}"),
+        )
+    with pytest.raises(VerificationFailed) as err:
+        deliver(store, f"reference-spring-{sha[:12]}", public_origin=ORIGIN, kit_dist=kit_dist)
+    assert err.value.rule == "csp_mismatch"
+
+
+def test_S3_KNOWN_GAP_a_hand_inserted_row_that_passes_the_cheap_checks_is_delivered(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    """Pinned, not endorsed. The gate re-hashes, re-scans and re-checks the CSP and Kit, but it does NOT re-render and the row
+    carries no signature, so someone who can write the SQLite file can insert an Environment the verifier never saw. Hard
+    constraint 1 therefore rests on the store being writable only by the API (single operator, D-11). Closing it (an HMAC
+    attestation with a key outside the data directory, or re-rendering on delivery) is a P7 deploy-gate item. When it lands,
+    flip this test to expect a refusal."""
+    db = tmp_path / "envs.db"
+    store = SqliteEnvironmentStore(db)
+    store.put_verified(minted)
+    html = postprocess.run(
+        "<!doctype html><html><head></head><body><p>never rendered</p></body></html>", public_origin=ORIGIN
+    )
+    assert isinstance(html, str)
+    sha = html_sha256(html)
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            "UPDATE environments SET html = ?, html_sha256 = ?, env_id = ?", (html, sha, f"reference-spring-{sha[:12]}")
+        )
+    block = deliver(store, f"reference-spring-{sha[:12]}", public_origin=ORIGIN, kit_dist=kit_dist)
+    assert block.html == html  # delivered although it was never rendered or minted
+
+
+def test_N2_an_environment_must_state_a_source_even_if_the_source_is_none(kit_dist: Path) -> None:
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, citations=[])
+    assert (err.value.stage, err.value.rule) == ("grounding", "no_citation")
+
+
+def test_N4_the_same_html_cannot_be_stored_again_under_a_different_claim(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    store = SqliteEnvironmentStore(tmp_path / "envs.db")
+    store.put_verified(minted)
+    same_bytes_other_title = mint(kit_dist, title="A different title")
+    assert same_bytes_other_title.html_sha256 == minted.html_sha256
+    with pytest.raises(ValueError, match="different metadata"):
+        store.put_verified(same_bytes_other_title)
+
+
+def test_N7_html_that_loads_a_different_kit_than_the_plan_says_is_refused(kit_dist: Path, tmp_path: Path) -> None:
+    from api.verify.conftest import fixture_html
+
+    other = tmp_path / "kit"
+    shutil.copytree(kit_dist, other)
+    shutil.copytree(other / "0.0.1", other / "0.0.2")
+    with pytest.raises(VerificationFailed) as err:
+        mint(other, raw_html=fixture_html("reference-spring.html"), kit_version="0.0.2")
+    assert (err.value.stage, err.value.rule) == ("kit", "version_mismatch")
+
+
+def test_B1_the_gate_side_check_also_rejects_a_comment_before_the_csp() -> None:
+    """The gate runs csp_is_first on STORED html, which may not have gone through strip_comments."""
+    tag = postprocess.csp_tag(ORIGIN)
+    assert not postprocess.csp_is_first(f"<!-- <head> -->\n<!doctype html><html><head>{tag}</head></html>", ORIGIN)
+    assert not postprocess.csp_is_first(f"<!-- <head>\n{tag}", ORIGIN)
+    assert not postprocess.csp_is_first(f"<?xml version='1.0'?><html><head>{tag}</head></html>", ORIGIN)

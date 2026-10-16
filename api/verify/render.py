@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
+from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Frame, Route, sync_playwright
 
 READY_TIMEOUT_MS = 5_000
@@ -49,6 +50,7 @@ HARNESS = """<!doctype html><html><head><meta charset="utf-8"></head><body style
 class ControlResult:
     id: str
     wired: bool = False
+    stable: bool = True
     height_px: float = 0.0
 
 
@@ -57,17 +59,35 @@ class RenderReport:
     ready: bool = False
     controls: list[ControlResult] = field(default_factory=list)
     readouts: int = 0
+    undeclared_controls: list[str] = field(default_factory=list)
+    duplicate_controls: list[str] = field(default_factory=list)
+    a11y_problems: list[str] = field(default_factory=list)
     page_errors: list[str] = field(default_factory=list)
     artifact_errors: list[str] = field(default_factory=list)
     console_errors: list[str] = field(default_factory=list)
     blocked_requests: list[str] = field(default_factory=list)
+    navigations: list[str] = field(default_factory=list)
     overflow_px: float = 0.0
     interaction_seconds: float = 0.0
+    harness_error: str = ""
 
     def refusal(self, require_controls: bool = True) -> tuple[str, str] | None:
         """The first failed rule as (rule, reason), or None when the Environment passed."""
         if not self.ready:
             return ("ready", f"synapse_ready was not received within {READY_TIMEOUT_MS} ms")
+        if self.navigations:
+            return ("navigation", "the frame navigated away: " + self.navigations[0][:200])
+        if self.harness_error:
+            # Fail closed: the harness lost the page (for example the frame navigated and its context was destroyed).
+            rule = "navigation" if "navigation" in self.harness_error.lower() else "harness_error"
+            return (rule, "the harness could not finish: " + self.harness_error[:200])
+        if self.undeclared_controls:
+            return (
+                "undeclared_control",
+                f"interactive element {self.undeclared_controls[0]} is not a declared control ([data-synapse-control])",
+            )
+        if self.duplicate_controls:
+            return ("duplicate_control", f"control id '{self.duplicate_controls[0]}' is declared more than once")
         if require_controls and not self.controls:
             return ("no_controls", "no declared control found ([data-synapse-control])")
         for c in self.controls:
@@ -76,6 +96,14 @@ class RenderReport:
                     "dead_control",
                     f"control '{c.id}' changed no declared readout within {CONTROL_WIRE_TIMEOUT_MS} ms",
                 )
+        for c in self.controls:
+            if not c.stable:
+                return (
+                    "unstable_readout",
+                    f"readouts changed without input or did not return to the same values around control '{c.id}'",
+                )
+        if self.a11y_problems:
+            return ("a11y", self.a11y_problems[0])
         for c in self.controls:
             if c.height_px < MIN_TOUCH_TARGET_PX:
                 return (
@@ -141,6 +169,15 @@ def render_check(
             context.route("**/*", handle)
             page = context.new_page()
             page.on("pageerror", lambda e: report.page_errors.append(str(e)))
+
+            def on_navigated(frame: Frame) -> None:
+                # The first load of the artifact frame is its srcdoc. Anything else is the frame leaving the document.
+                if frame != page.main_frame and frame.url not in ("about:srcdoc", "about:blank"):
+                    report.navigations.append(frame.url)
+                elif frame == page.main_frame and frame.url != harness_url:
+                    report.navigations.append(frame.url)
+
+            page.on("framenavigated", on_navigated)
             page.on("console", lambda m: report.console_errors.append(m.text) if m.type == "error" else None)
             page.goto(harness_url)
 
@@ -151,8 +188,14 @@ def render_check(
                 report.ready = False
 
             if report.ready:
-                _exercise(page, report, interaction_seconds)
-            report.artifact_errors = list(page.evaluate("window.__synapse.errors"))
+                try:
+                    _exercise(page, report, interaction_seconds)
+                except PlaywrightError as exc:
+                    report.harness_error = str(exc).splitlines()[0]
+            try:
+                report.artifact_errors = list(page.evaluate("window.__synapse.errors"))
+            except PlaywrightError as exc:
+                report.harness_error = report.harness_error or str(exc).splitlines()[0]
         finally:
             browser.close()
     return report
@@ -170,50 +213,119 @@ def _readout_texts(frame: Frame) -> list[str]:
     return frame.eval_on_selector_all("[data-synapse-readout]", "els => els.map(e => e.textContent)")
 
 
-def _set_control(frame: Frame, control_id: str, to: str) -> None:
-    """Move a control to its 'max' or 'min' and fire the input event a user would."""
-    frame.eval_on_selector(
-        f'[data-synapse-control="{control_id}"]',
+def _set_control(handle, which: str) -> None:  # noqa: ANN001
+    """Move a control to exactly its 'min' or 'max' and fire the input event a user would."""
+    handle.evaluate(
         """(el, which) => {
-            var min = Number(el.min), max = Number(el.max);
-            var target = which === 'max' ? max : min;
-            if (Number(el.value) === target) target = which === 'max' ? min : max;
-            el.value = String(target);
+            el.value = which === 'max' ? el.max : el.min;
             el.dispatchEvent(new Event('input', { bubbles: true }));
         }""",
-        to,
+        which,
     )
+
+
+# Every element a user could operate must be a declared control; an undeclared one would never be exercised.
+_INTERACTIVE = "input, select, textarea, button, [role=slider], [role=button], [contenteditable], a[href]"
+
+_A11Y_JS = """() => {
+  const problems = [];
+  const text = (id) => { const n = id && document.getElementById(id); return n ? n.textContent.trim() : ''; };
+  for (const el of document.querySelectorAll('[data-synapse-control]')) {
+    const id = el.getAttribute('data-synapse-control');
+    const lab = el.id && document.querySelector('label[for="' + el.id + '"]');
+    const named = (lab && lab.textContent.trim()) || (el.getAttribute('aria-label') || '').trim() || text(el.getAttribute('aria-labelledby'));
+    if (!named) problems.push("control '" + id + "' has no accessible name");
+    if (el.type === 'range' && !(el.getAttribute('aria-valuetext') || '').trim()) problems.push("control '" + id + "' has no aria-valuetext");
+  }
+  for (const el of document.querySelectorAll('[data-synapse-readout]')) {
+    const name = (el.getAttribute('aria-label') || '').trim() || text(el.getAttribute('aria-labelledby'));
+    if (!name) problems.push("readout '" + el.getAttribute('data-synapse-readout') + "' has no accessible name");
+  }
+  return problems;
+}"""
+
+
+def _settle(page, ms: int = 150) -> None:
+    page.wait_for_timeout(ms)
+
+
+def _poke(page) -> None:
+    """Real pointer and keyboard input: a handler on pointerdown, click or keydown must run during verification, not only the
+    synthetic `input` events above (a navigation on pointerdown once passed because nothing ever pressed anything)."""
+    box = page.query_selector("#artifact").bounding_box()  # type: ignore[union-attr]
+    if box is None:
+        return
+    for fx in (0.15, 0.5, 0.85):
+        for fy in (0.1, 0.35, 0.6, 0.85):
+            page.mouse.click(box["x"] + box["width"] * fx, box["y"] + box["height"] * fy)
+    for key in ("Tab", "Tab", "ArrowRight", "ArrowLeft", "Enter", "Space"):
+        page.keyboard.press(key)
 
 
 def _exercise(page, report: RenderReport, interaction_seconds: float) -> None:
     frame = _frame(page)
     report.readouts = len(_readout_texts(frame))
-    ids = frame.eval_on_selector_all(
-        "[data-synapse-control]", "els => els.map(e => e.getAttribute('data-synapse-control'))"
-    )
 
-    for control_id in ids:
+    undeclared = frame.eval_on_selector_all(
+        _INTERACTIVE,
+        """els => els.filter(e => !e.hasAttribute('data-synapse-control')).map(e =>
+            '<' + e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '>')""",
+    )
+    report.undeclared_controls = list(undeclared)
+
+    handles = frame.query_selector_all("[data-synapse-control]")
+    seen: set[str] = set()
+    for handle in handles:
+        control_id = handle.get_attribute("data-synapse-control") or ""
+        if control_id in seen:
+            report.duplicate_controls.append(control_id)
+        seen.add(control_id)
+
+    for handle in handles:
+        control_id = handle.get_attribute("data-synapse-control") or ""
         result = ControlResult(id=control_id)
-        box = frame.query_selector(f'[data-synapse-control="{control_id}"]')
-        bounds = box.bounding_box() if box else None
+        bounds = handle.bounding_box()
         result.height_px = bounds["height"] if bounds else 0.0
-        before = _readout_texts(frame)
-        _set_control(frame, control_id, "max")
+
+        # A readout that moves on its own would make every control look wired: require a quiet baseline first.
+        _set_control(handle, "min")
+        _settle(page)
+        base = _readout_texts(frame)
+        _settle(page, 300)
+        if _readout_texts(frame) != base:
+            result.stable = False
+
+        _set_control(handle, "max")
         deadline = time.monotonic() + CONTROL_WIRE_TIMEOUT_MS / 1000
         while time.monotonic() < deadline:
-            if _readout_texts(frame) != before:
+            if _readout_texts(frame) != base:
                 result.wired = True
                 break
             page.wait_for_timeout(50)
+        _settle(page)
+        high = _readout_texts(frame)
+
+        # Determinism: back to min must restore the baseline, and max again must restore the high reading.
+        _set_control(handle, "min")
+        _settle(page)
+        if result.wired and _readout_texts(frame) != base:
+            result.stable = False
+        _set_control(handle, "max")
+        _settle(page)
+        if result.wired and _readout_texts(frame) != high:
+            result.stable = False
         report.controls.append(result)
 
-    # Scripted interaction: sweep every declared control across its range for the time box.
+    report.a11y_problems = list(frame.evaluate(_A11Y_JS))
+
+    # Scripted interaction: sweep every declared control and press real input for the time box.
     start = time.monotonic()
-    while ids and time.monotonic() - start < interaction_seconds:
-        for control_id in ids:
+    while time.monotonic() - start < interaction_seconds:
+        for handle in handles:
             for which in ("min", "max"):
-                _set_control(frame, control_id, which)
+                _set_control(handle, which)
                 page.wait_for_timeout(100)
+        _poke(page)
     report.interaction_seconds = time.monotonic() - start
 
     report.overflow_px = float(

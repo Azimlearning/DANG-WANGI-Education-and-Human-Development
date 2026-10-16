@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+import shutil
 import socket
+import subprocess
+from pathlib import Path
 
 import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+KIT_DIST = REPO / "packages" / "kit" / "dist"
 
 
 @pytest.fixture
@@ -31,3 +37,13 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "LEDGER_PATH",
     ):
         monkeypatch.delenv(name, raising=False)
+
+
+@pytest.fixture(scope="session")
+def kit_dist() -> Path:
+    if not (KIT_DIST / "0.0.1" / "core.js").is_file():
+        pnpm = shutil.which("pnpm")
+        if pnpm is None:
+            pytest.fail("the Kit is not built and pnpm is not available; run `pnpm --filter @synapse/kit build`")
+        subprocess.run([pnpm, "--filter", "@synapse/kit", "build"], cwd=REPO, check=True)
+    return KIT_DIST

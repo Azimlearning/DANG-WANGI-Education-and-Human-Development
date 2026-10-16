@@ -14,8 +14,9 @@ import re
 from dataclasses import dataclass
 
 # The CSP meta that api/postprocess.py injects names the public origin by design, so it is removed before scanning: the scan
-# then covers exactly the generated content.
-_CSP_META = re.compile(r"<meta\b[^>]*http-equiv\s*=\s*[\"']Content-Security-Policy[\"'][^>]*>\s*", re.IGNORECASE)
+# then covers exactly the generated content. ONE regex, shared with postprocess (strip_csp_meta), so what is scanned is exactly
+# what is minted (a different strip in each place let a CSP-shaped fragment hide a deny-list word at mint time).
+_CSP_META = re.compile(r"<meta\b[^>]*http-equiv\s*=\s*[\"']Content-Security-Policy[\"'][^>]*>", re.IGNORECASE)
 
 # A script may load only from the Kit, versioned. Anything else is refused (hard constraint 2: no runtime CDN).
 KIT_SCRIPT_SRC = re.compile(r"^/vendor/kit/\d+\.\d+\.\d+/[A-Za-z0-9_.-]+\.js$")
@@ -42,6 +43,31 @@ FORBIDDEN_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"window\s*\.\s*top\b"), "window.top"),
     (re.compile(r"location\s*\.\s*(assign|replace)\s*\("), "location navigation"),
     (re.compile(r"location\s*\.\s*href\s*="), "location.href write"),
+    # Navigation. CSP does not govern it and sandbox="allow-scripts" still lets a frame navigate itself. A bare `location = x`
+    # was missed by the first version of this list (found by kit-guardian, B2).
+    (re.compile(r"(?<![\w$])location\s*=(?!=)"), "location assignment"),
+    (
+        re.compile(
+            r"(?<![\w$])location\s*\.\s*(href|assign|replace|reload|pathname|search|hash|host|hostname|protocol|port|origin)\b"
+        ),
+        "location navigation",
+    ),
+    (re.compile(r"\b(?:window|self|top|parent|globalThis|document)\s*\.\s*location\b"), "window.location"),
+    (re.compile(r"<meta\b[^>]*http-equiv\s*=\s*[\"']?refresh", re.IGNORECASE), "meta refresh"),
+    (re.compile(r"javascript\s*:", re.IGNORECASE), "javascript: URL"),
+    (re.compile(r"data\s*:\s*text/html", re.IGNORECASE), "data:text/html URL"),
+    (
+        re.compile(r"<\s*(form|iframe|object|embed|base|portal|frame|frameset)\b", re.IGNORECASE),
+        "embedding or form element",
+    ),
+    (re.compile(r"\bsrcdoc\b", re.IGNORECASE), "srcdoc"),
+    (re.compile(r"document\s*\.\s*write"), "document.write"),
+    (re.compile(r"\bpostMessage\b"), "postMessage"),
+    (re.compile(r"\b(?:self|globalThis)\s*\.\s*(?:parent|top)\b"), "self.parent or self.top"),
+    (re.compile(r"\bFunction\s*\("), "Function constructor"),
+    (re.compile(r"\b(?:setTimeout|setInterval)\s*\(\s*[\"'`]"), "string timer (eval)"),
+    (re.compile(r"(?<![\w$.])open\s*\("), "open"),
+    (re.compile(r"@import\b", re.IGNORECASE), "CSS @import"),
     (re.compile(r"\bNotification\b"), "Notification"),
     (re.compile(r"\bgeolocation\b"), "geolocation"),
     (re.compile(r"\bgetUserMedia\b"), "getUserMedia"),
@@ -63,8 +89,11 @@ class ScanReject:
     reason: str
 
 
-def strip_injected_csp(html: str) -> str:
+def strip_csp_meta(html: str) -> str:
     return _CSP_META.sub("", html)
+
+
+strip_injected_csp = strip_csp_meta
 
 
 def forbidden_api_scan(html: str) -> ScanReject | None:
