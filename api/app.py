@@ -8,13 +8,14 @@ from collections.abc import AsyncIterator
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.sse import EventSourceResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from api import postprocess
 from api.core.errors import HTTP_STATUS, BadRequest, NotFound, RateLimited, SynapseError, envelope_from_exception
 from api.core.settings import Settings, load_settings
+from api.export import ExportRefused, standalone_page
 from api.kit import built_versions
 from api.limits import ConcurrencyGate, RateLimiter
 from api.llm.factory import build_ledger, build_llm_service
@@ -185,6 +186,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
             return JSONResponse(envelope.model_dump(), status_code=HTTP_STATUS["verification_refused"])
         return JSONResponse(block.model_dump(mode="json"))
+
+    @app.get("/library/{env_id}/export")
+    async def library_export(env_id: str, request: Request) -> Response:
+        """The offline single-file copy of one Environment (P7). Built from the block the gate delivers, with the Kit bytes it was verified against."""
+        try:
+            block = deliver(
+                request.app.state.store,
+                env_id,
+                public_origin=settings.public_origin,
+                kit_dist=settings.kit_dist_dir,
+                evidence=evidence_for(settings),
+            )
+            page = standalone_page(block, (settings.kit_dist_dir / block.kitVersion / "core.js").read_bytes())
+        except (VerificationFailed, ExportRefused, OSError):
+            envelope = ErrorEnvelope(
+                code="verification_refused", message="This Environment cannot be exported.", issues=[], retryable=False
+            )
+            return JSONResponse(envelope.model_dump(), status_code=HTTP_STATUS["verification_refused"])
+        return Response(
+            page,
+            media_type="text/html; charset=utf-8",
+            headers={
+                "content-disposition": f'attachment; filename="synapse-{block.id}.html"',
+                "cache-control": "no-store",
+            },
+        )
 
     def _known(request: Request, env_id: str) -> SqliteEnvironmentStore:
         store: SqliteEnvironmentStore = request.app.state.store

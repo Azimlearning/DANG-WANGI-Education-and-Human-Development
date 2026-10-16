@@ -28,6 +28,13 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-16: Offline single-file export (P7, D-32)
+- **Changed:** `api/export.py` (new), `GET /library/<id>/export` in `api/app.py`, `web/components/Stage.tsx` ("Save a copy to use offline"), `api/test_export.py` (new), route test, D-32 and the PRD table.
+- **Decided:** D-32: the file embeds the Environment and the Kit with their SHA-256 values, re-hashes both before running, keeps the exact sandbox and prints the provenance; it is built only from a block the gate delivered.
+- **Deviations:** none from the plan; "chapter packs" (many Environments in one file) are not built.
+- **Verified:** `uv run pytest api/test_export.py api/routes -q`: 5 + 29 passed. In real Chromium with every network request aborted: the file opens from disk, reports "Fingerprint checked.", the frame has `sandbox="allow-scripts"` and nothing else, a slider move changes a readout, zero requests are attempted; a changed Environment payload or a changed Kit payload is not run and says so; a hostile title or placeholder text cannot break the template; a wrong Kit tag, a wrong hash or a Kit containing `</script` is refused at export. `uv run python eval/smoke/web_smoke.py`: 20 of 20.
+- **Noted, not changed:** a saved copy goes stale (the file says so); someone who rewrites the whole file defeats its own check; the wrapper CSP allows `frame-src about: data:` so the srcdoc frame can load.
+
 ### 2026-10-16: Share links (P7)
 - **Changed:** `web/app/e/[id]/page.tsx` (new route), `web/lib/library.ts` (`fetchEnvironment`, `shareUrl`, id check), `web/components/ShareButton.tsx` (copy with a by-hand fallback), `web/components/Peek.tsx` (the button), tests, `eval/smoke/web_smoke.py` (two new checks).
 - **Decided:** a link is just `/e/<id>` and the page fetches the block through `GET /library/<id>`, which goes through the same delivery gate as `/ask`; the browser re-hashes before rendering, exactly as for a fresh answer. A withdrawn, stale or tampered Environment shows the server's own "not available" message and no frame. The Peek card now has two actions (Open, Copy link), which is the limit our own rule allows.

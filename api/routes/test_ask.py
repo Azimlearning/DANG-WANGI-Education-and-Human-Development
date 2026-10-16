@@ -269,3 +269,19 @@ def test_spend_reports_the_month_against_the_cap_and_holds_no_text(client: TestC
         "by_purpose",
         "by_model",
     }
+
+
+def test_the_export_endpoint_serves_a_single_file_for_a_stored_environment_and_refuses_the_rest(
+    client: TestClient,
+) -> None:
+    events = _events(client)
+    block = next(e for e in events if isinstance(e, EnvironmentEvent)).block
+    reply = client.get(f"/library/{block.id}/export")
+    assert reply.status_code == 200 and reply.headers["content-type"].startswith("text/html")
+    assert "attachment" in reply.headers["content-disposition"] and block.id in reply.headers["content-disposition"]
+    assert 'sandbox="allow-scripts"' in reply.text and "allow-same-origin" not in reply.text
+    assert client.get("/library/no-such-environment/export").status_code == 422
+    client.post(f"/library/{block.id}/withdraw", json={"note": "test"})
+    assert (
+        client.get(f"/library/{block.id}/export").status_code == 422
+    )  # a withdrawn Environment is not exported either

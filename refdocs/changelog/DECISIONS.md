@@ -260,6 +260,14 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** The HTML itself is covered through its hash, which is signed. Rotating the key makes older rows `unattested` and they must be re-verified. Rejected: re-rendering on delivery (adds seconds and a browser to every request; kept as a later option for high-risk deploys). Limit: someone who steals the key can sign anything, so the key belongs in the host's secret store, not in `.env` in the repository folder. Lifecycle, flags and the question cache are decisions about rows, not Environments, and are not signed; the gate still re-checks `withdrawn` on every delivery.
 
+## D-32: The offline file is a separate artifact that carries the Kit, checks two hashes before it runs, and keeps the exact sandbox (2026-10-16)
+
+**Decision.** `GET /library/<id>/export` returns one HTML file for a school PC with no network (`api/export.py`). It is built only from a block the delivery gate just returned, plus the bytes of the Kit bundle the Environment was verified against. The file embeds both as data with their SHA-256 values; its own script re-hashes both and runs nothing on a mismatch (it says so in words). The Environment runs in `<iframe sandbox="allow-scripts">` with no `allow-same-origin`; the Kit is placed inline in that frame's document because an opaque-origin frame has no `/vendor/` to fetch from. The provenance (label, lane, source, what was checked, limits) is printed in the file. A withdrawn, stale or tampered Environment is not exported, because the gate refuses it first.
+
+**Why.** Reach for schools without reliable internet is a P7 goal. The hard constraint that scripts load only from `/vendor/` is about trusting where code comes from; an inline script whose bytes equal a hashed, locked Kit bundle keeps that intent, and the wrapper's own CSP (`default-src 'none'`, no `connect-src`) keeps the page from talking to anything.
+
+**Trade-offs / rejected.** A saved copy cannot be updated, withdrawn or fixed once someone has downloaded it; the file says so. The hash check runs in the file's own script, so someone who edits the whole file (script included) defeats it; the check protects against accidental damage and a changed payload, not against a person who rewrites the wrapper. Rejected: shipping the file without the check (no integrity at all), and loading the Kit from a CDN (needs a network). Not built: chapter packs (many Environments in one file) and signing the file.
+
 ---
 
 ## Working assumptions (`ASSUMED:`)

@@ -20,7 +20,7 @@
 | P4 | Kit expansion by kit | ✅ Cloud scope done: 17 science models (5 Physics, 5 Biology, 7 Chemistry), about 180 planted bugs for the new ones, 17 Environments verified. Wording and scope are unchecked against the textbook |
 | P5 | Library and lifecycle | ✅ Cloud scope done: question cache through the gate, withdraw, restore, flag, stale by Kit hash, endpoints. Single operator (D-11) |
 | P6 | Pedagogy | 🔶 Hint ladder, concept check, predict card and worked solution built, planned and verified on six Environments. Not built: spaced practice, difficulty adaptation, misconception follow-up in the UI |
-| P7 | Reach and the deploy gate | ⬜ Not started |
+| P7 | Reach and the deploy gate | 🔶 Built so far: store attestation (D-31), request limits and `/spend`, share links, the offline single-file export (D-32). Not built: Bahasa Melayu, chapter packs, the MCP-Apps-shaped bridge, per-session and per-day limits, the deploy gate itself |
 | P8 | Evidence and learner study | ⬜ Not started |
 
 Status vocabulary: use these exactly, and never round up:
