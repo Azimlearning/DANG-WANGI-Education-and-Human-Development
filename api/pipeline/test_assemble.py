@@ -101,3 +101,27 @@ def test_plan_text_that_looks_like_a_slot_or_variable_is_never_substituted(manif
     page = assemble(plan_module.parse(json.dumps(d)), manifest).html
     assert "{{nope}}" in page and "{{title}}" in page and "{{kit_version}}" in page
     assert page.count("/*SLOT:") == 3  # the plan wrote one in the note and the title (head and script); all inert text
+
+
+def test_regression_a_control_range_whose_step_is_a_repeating_decimal_still_verifies(
+    manifest: kitmanifest.Manifest, kit_dist: Path
+) -> None:
+    """Found by eval/plans/fuzz.py: min 6, max 14, grid 3 gives a step of 2.666..., which the browser's range input could not reach max with."""
+    d = json.loads((next(p for p in GOLDEN if "osmosis" in p.name)).read_text())
+    d["controls"][0].update({"min": 6, "max": 14, "value": 12, "grid": 3})
+    plan = plan_module.parse(json.dumps(d))
+    env = verify_environment(
+        slug=plan.id,
+        title=plan.title,
+        raw_html=assemble(plan, manifest).html,
+        lane="compose",
+        label="model-checked",
+        kit_version=manifest.version,
+        citations=[Citation(source="UNVERIFIED (corpus not loaded until P2)", page=None, quote=None, verified=False)],
+        plan_summary=plan.goal,
+        public_origin=ORIGIN,
+        kit_dist=kit_dist,
+        interaction_seconds=1.0,
+        plan_models=plan.model_summaries(),
+    )
+    assert env.checked.grid_points >= 4

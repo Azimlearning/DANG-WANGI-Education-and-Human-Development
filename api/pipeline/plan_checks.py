@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from api.kitmanifest import Manifest
 from api.pipeline.plan import Plan
 from api.verify.provenance import copy_number_problems
-from api.verify.references import unit_factor
+from api.verify.references import evaluate_model, unit_factor
 
 MAX_GRID_POSITIONS = 40
 MAX_COPY_CHARS = 1800
@@ -243,6 +243,44 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                     f"{m.model} needs {input_name} to be at least {param_name} ({floor}), but '{bound}' can be {lowest}.",
                     f"Make '{bound}' start at {floor} or more, or lower {param_name}.",
                 )
+
+    # S4: a control that no readout can show a difference for is a "dead control" to the verifier. Evaluate each readout's model (the independent
+    # Python reference) at the control's min and max and compare what the readout would DISPLAY at its digits.
+    for ci, c in enumerate(plan.controls):
+        if not (math.isfinite(c.min) and math.isfinite(c.max) and c.min < c.max):
+            continue
+        feeds = [m for m in plan.models if c.id in m.inputs.values()]
+        shown_any = False
+        evaluable = False
+        for r in plan.readouts:
+            m = instances.get(r.source)
+            if m is None or m not in feeds:
+                continue
+            try:
+                texts = []
+                for edge in (c.min, c.max):
+                    args = {
+                        name: (
+                            edge
+                            if bound == c.id
+                            else controls[bound].value
+                            if bound in controls
+                            else constants[bound].value
+                        )
+                        for name, bound in m.inputs.items()
+                    }
+                    texts.append(f"{evaluate_model(m.model, dict(m.params), args):.{r.digits}f}")
+            except (KeyError, ValueError):
+                continue
+            evaluable = True
+            shown_any = shown_any or texts[0] != texts[1]
+        if feeds and evaluable and not shown_any:
+            add(
+                "PLAN-017",
+                f"controls[{ci}]",
+                f"Control '{c.id}' changes no readout's displayed value between {c.min:g} and {c.max:g} at the digits shown.",
+                f"Show more digits on a readout that depends on '{c.id}', or widen its range.",
+            )
 
     for i, r in enumerate(plan.readouts):
         path = f"readouts[{i}]"

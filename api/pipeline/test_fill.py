@@ -101,3 +101,47 @@ def test_a_valid_fill_is_inserted_and_the_page_is_minted_and_a_bad_one_never_rea
             plan_models=plan.model_summaries(),
         )
     assert err.value.rule == "unbacked_copy_number"
+
+
+# ── bypass probes (S-notes): every one of these must be refused AT THE CONTRACT, so the model gets early, named feedback ──────────────────
+PROBES = {
+    "alias Synapse": "const s = Synapse; s.lockdown();",
+    "pass Synapse to Object.assign": "Object.assign(Synapse, {x: 1});",
+    "constructor chain": 'this.constructor.constructor("return 1")();',
+    "__proto__": "({}).__proto__.polluted = 1;",
+    "prototype": "Array.prototype.map = null;",
+    "defineProperty": 'Object.defineProperty(Synapse, "text", {value: 1});',
+    "getPrototypeOf": "Object.getPrototypeOf(Math).x = 1;",
+    "template substitution": "Synapse.text(`${globalThis.top}`);",
+    "string hides code after //": 'var a = "x//"; Function("return 1")();',
+    "unicode escape in a name": "Synapse.\\u0074ext(1);",
+    "string-keyed access": 'Math["con"+"structor"]["constructor"]("1")();',
+    "string key on a variable": 'var o = Object; o["keys"](Synapse);',
+    "unterminated string": 'var a = "x; Function("1")();',
+    "regex literal with a quote": 'var r = /"/; Function("1")();',
+    "with statement": "with (Math) { PI; }",
+    "indirect eval": '(0, eval)("1");',
+    "setTimeout with a string": 'setTimeout("1", 0);',
+    "dynamic import": 'import("/x.js");',
+    "new Function": 'new Function("return 1")();',
+    "Reflect": "Reflect.ownKeys(Math);",
+    "Proxy": "new Proxy({}, {});",
+}
+
+
+@pytest.mark.parametrize("name", sorted(PROBES))
+def test_each_bypass_probe_is_refused_by_the_contract(name: str) -> None:
+    issues = check_fill(PROBES[name], contract_for("x"), ("load", "k", "env"))
+    assert issues, f"{name} passed the contract"
+
+
+def test_ordinary_fills_still_pass_and_a_string_with_slashes_is_not_a_comment() -> None:
+    scope = ("load", "k", "env")
+    ok = [
+        'Synapse.text(env, { text: "Hello " + load.get() });',
+        "var d = Math.round(load.get() * 2);\nSynapse.text(env, { text: d + 1 });",
+        'Synapse.text(env, { text: "a//b is not a comment" }); // a real comment',
+        'var a = [1, 2, 3]; var b = a[1] + a[0]; Synapse.text(env, { text: "x" + b });',
+    ]
+    for code in ok:
+        assert check_fill(code, contract_for("x"), scope) == [], code

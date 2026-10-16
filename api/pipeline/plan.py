@@ -46,10 +46,10 @@ class ConstantSpec(_Strict):
 class ModelUse(_Strict):
     id: Slug
     """The instance id other parts of the Plan refer to."""
-    model: Annotated[str, StringConstraints(pattern=r"^[a-z]+\.[a-z_]+$")]
+    model: Annotated[str, StringConstraints(pattern=r"^[a-z]+\.[a-z_]+$", max_length=40)]
     """The science model id in the Kit manifest, e.g. `mechanics.hookes`."""
-    params: dict[Slug, float]
-    inputs: dict[Slug, Slug]
+    params: dict[Slug, float] = Field(max_length=8)
+    inputs: dict[Slug, Slug] = Field(max_length=8)
     """Model input name to the id of a control or a constant."""
 
 
@@ -118,7 +118,7 @@ class Plan(_Strict):
     goal: Sentence
     pattern: Pattern
     topic: Annotated[str, StringConstraints(pattern=r"^[a-z0-9_]+$", max_length=80)]
-    experiment_ref: str | None = None
+    experiment_ref: Slug | None = None
     note: Annotated[str, StringConstraints(min_length=1, max_length=400)]
     controls: list[ControlSpec] = Field(min_length=1, max_length=4)
     constants: list[ConstantSpec] = Field(default_factory=list, max_length=4)
@@ -133,7 +133,7 @@ class Plan(_Strict):
     concept_check: ConceptCheckSpec | None = None
     worked_solution: list[Sentence] = Field(default_factory=list, max_length=6)
     steps: list[Sentence] = Field(default_factory=list, max_length=8)
-    citation_ids: list[str] = Field(default_factory=list, max_length=6)
+    citation_ids: list[Slug] = Field(default_factory=list, max_length=6)
     presentation: Literal["peek", "stage"] = "stage"
     custom: list[CustomSlot] = Field(default_factory=list, max_length=3)
 

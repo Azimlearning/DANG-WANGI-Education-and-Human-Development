@@ -8,9 +8,9 @@
 | Case | USD per Environment | What it assumes |
 |---|---|---|
 | Low | **0.0091** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
-| High | **0.0400** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0543** | the high case with every plan retried once (retry rate 100 percent) |
-| Hard bound | **0.0814** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
+| High | **0.0402** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0546** | the high case with every plan retried once (retry rate 100 percent) |
+| Hard bound | **0.0817** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
 
 Mean over the 24 golden questions (the hard bound is the largest), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
@@ -31,7 +31,7 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 
 ## Size of the real prompts (characters, rounded)
 
-- Plan request (virtual experiment): about 24358 characters, of which 19391 are the stable cached prefix.
+- Plan request (virtual experiment): about 24570 characters, of which 19603 are the stable cached prefix.
 - The router-fallback request is built by the real builder, with the full topic list.
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
@@ -49,27 +49,27 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0099 | 0.0424 | 0.0577 |
-| g02 | 0.0100 | 0.0427 | 0.0582 |
-| g03 | 0.0102 | 0.0430 | 0.0586 |
-| g04 | 0.0102 | 0.0431 | 0.0587 |
-| g05 | 0.0099 | 0.0424 | 0.0577 |
-| g06 | 0.0099 | 0.0424 | 0.0577 |
-| g07 | 0.0099 | 0.0424 | 0.0578 |
-| g08 | 0.0102 | 0.0431 | 0.0587 |
-| g09 | 0.0088 | 0.0394 | 0.0535 |
-| g10 | 0.0088 | 0.0394 | 0.0535 |
-| g11 | 0.0091 | 0.0400 | 0.0543 |
-| g12 | 0.0091 | 0.0399 | 0.0543 |
-| g13 | 0.0092 | 0.0401 | 0.0544 |
-| g14 | 0.0088 | 0.0394 | 0.0534 |
-| g15 | 0.0091 | 0.0400 | 0.0543 |
-| g16 | 0.0088 | 0.0395 | 0.0536 |
-| g17 | 0.0083 | 0.0378 | 0.0511 |
-| g18 | 0.0080 | 0.0372 | 0.0503 |
-| g19 | 0.0083 | 0.0377 | 0.0511 |
-| g20 | 0.0084 | 0.0378 | 0.0512 |
-| g21 | 0.0083 | 0.0377 | 0.0510 |
-| g22 | 0.0083 | 0.0378 | 0.0511 |
-| g23 | 0.0083 | 0.0378 | 0.0511 |
-| g24 | 0.0080 | 0.0372 | 0.0503 |
+| g01 | 0.0099 | 0.0426 | 0.0580 |
+| g02 | 0.0100 | 0.0429 | 0.0584 |
+| g03 | 0.0102 | 0.0432 | 0.0589 |
+| g04 | 0.0102 | 0.0433 | 0.0590 |
+| g05 | 0.0099 | 0.0426 | 0.0580 |
+| g06 | 0.0099 | 0.0425 | 0.0580 |
+| g07 | 0.0099 | 0.0426 | 0.0581 |
+| g08 | 0.0102 | 0.0432 | 0.0590 |
+| g09 | 0.0088 | 0.0396 | 0.0538 |
+| g10 | 0.0088 | 0.0396 | 0.0538 |
+| g11 | 0.0091 | 0.0402 | 0.0546 |
+| g12 | 0.0091 | 0.0401 | 0.0545 |
+| g13 | 0.0092 | 0.0403 | 0.0547 |
+| g14 | 0.0088 | 0.0396 | 0.0537 |
+| g15 | 0.0091 | 0.0402 | 0.0546 |
+| g16 | 0.0089 | 0.0397 | 0.0538 |
+| g17 | 0.0083 | 0.0380 | 0.0514 |
+| g18 | 0.0080 | 0.0374 | 0.0506 |
+| g19 | 0.0083 | 0.0379 | 0.0514 |
+| g20 | 0.0084 | 0.0380 | 0.0515 |
+| g21 | 0.0083 | 0.0379 | 0.0513 |
+| g22 | 0.0083 | 0.0380 | 0.0514 |
+| g23 | 0.0083 | 0.0380 | 0.0514 |
+| g24 | 0.0080 | 0.0374 | 0.0506 |

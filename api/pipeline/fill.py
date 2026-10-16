@@ -18,8 +18,15 @@ JS_WORDS = frozenset(
     "var let const function return if else for while do break continue true false null undefined new typeof of in this Math Number String Boolean Array Object".split()
 )
 SAFE_GLOBALS_ACCESS = frozenset({"Math", "Number", "String", "Boolean", "Array", "Object"})
-_STRING = re.compile(r"""("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)""")
-_COMMENT = re.compile(r"//[^\n]*|/\*.*?\*/", re.DOTALL)
+# One left-to-right pass: whichever of a string or a comment starts first wins, so "http://x" is a string and not the start of a comment.
+_STRIP = re.compile(
+    r"""(?P<s>"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|(?P<c>//[^\n]*|/\*.*?\*/)""", re.DOTALL
+)
+# Reflection and prototype names. Refused wherever they appear, including after a dot, because `x.constructor.constructor("...")` reaches eval.
+_REFLECTION = re.compile(
+    r"\b(?:constructor|prototype|__proto__|__defineGetter__|__defineSetter__|__lookupGetter__|__lookupSetter__|defineProperty|defineProperties"
+    r"|getPrototypeOf|setPrototypeOf|getOwnPropertyDescriptors?|getOwnPropertyNames|getOwnPropertySymbols|assign|Reflect|Proxy)\b"
+)
 _IDENT = re.compile(r"(?<![\w$.])([A-Za-z_$][\w$]*)")
 _SYNAPSE_CALL = re.compile(r"\bSynapse\s*\.\s*([A-Za-z_$][\w$]*)")
 
@@ -48,7 +55,7 @@ def contract_for(name: str) -> SlotContract:
 
 
 def _strip(code: str) -> str:
-    return _STRING.sub('""', _COMMENT.sub("", code))
+    return _STRIP.sub(lambda m: '""' if m.group("s") is not None else " ", code)
 
 
 def _declared(stripped: str) -> set[str]:
@@ -93,6 +100,31 @@ def check_fill(code: str, contract: SlotContract, scope: tuple[str, ...]) -> lis
             )
         )
     stripped = _strip(code)
+    if _REFLECTION.search(stripped):
+        issues.append(
+            FillIssue(
+                "FILL-002",
+                "The fill uses reflection or prototype access (constructor, prototype, defineProperty and the like).",
+                "Call Kit components and do arithmetic; do not reach into objects' internals.",
+            )
+        )
+    if re.search(r"\[[^\]]*\"\"", stripped):
+        issues.append(
+            FillIssue(
+                "FILL-003",
+                "The fill looks a property up by a string key.",
+                "Write the property name directly, for example Math.round, not Math['round'].",
+            )
+        )
+    leftover = stripped.replace('""', "")
+    if "\\" in leftover or any(q in leftover for q in "\"'`"):
+        issues.append(
+            FillIssue(
+                "FILL-005",
+                "The fill has an unterminated string or an escape outside a string.",
+                "Close every string and do not use escape sequences in names.",
+            )
+        )
     if (
         stripped.count("(") != stripped.count(")")
         or stripped.count("{") != stripped.count("}")
@@ -108,13 +140,12 @@ def check_fill(code: str, contract: SlotContract, scope: tuple[str, ...]) -> lis
                     f"Use only: {', '.join(sorted(contract.allowed_calls))}.",
                 )
             )
-    if (
-        re.search(r"\bSynapse\s*(?!\s*\.)", stripped.replace("Synapse.", "Synapse .").replace("Synapse .", "Synapse."))
-        and "Synapse[" in stripped
-    ):
+    if re.search(r"\bSynapse\b(?!\s*\.\s*[A-Za-z_$])", stripped):
         issues.append(
             FillIssue(
-                "FILL-003", "The fill reaches into Synapse by name lookup.", "Call Synapse.<component>(...) directly."
+                "FILL-003",
+                "The fill uses Synapse by itself (an alias, an argument or a lookup).",
+                "Call Synapse.<component>(...) directly.",
             )
         )
     known = set(scope) | _declared(stripped) | JS_WORDS | {"Synapse"}

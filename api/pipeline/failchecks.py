@@ -416,6 +416,14 @@ _ENTRIES = [
         "retry_plan",
         "Use a model that is registered for the question's topic.",
     ),
+    _e(
+        "PLAN-017",
+        "PLAN-017",
+        "plan",
+        "block",
+        "retry_plan",
+        "Show more digits so the control visibly changes a readout, or widen its range.",
+    ),
     _e("PLAN-015", "PLAN-015", "plan", "block", "retry_plan", "Keep the final volume at or above the starting volume."),
     _e("PLAN-014", "PLAN-014", "plan", "block", "deterministic", "Start each control inside its range."),
     # fill checks

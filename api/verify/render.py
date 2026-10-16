@@ -193,7 +193,7 @@ def render_check(
     with sync_playwright() as p:
         browser = p.chromium.launch()
         try:
-            context = browser.new_context(viewport={"width": 480, "height": 800})
+            context = browser.new_context(viewport={"width": 480, "height": 800}, reduced_motion="reduce")
             context.route("**/*", handle)
             # Read once by the Kit at load: keep the page standing after a violation so every problem can be named.
             if verify_mode:
@@ -269,6 +269,30 @@ _A11Y_JS = """() => {
     if (!named) problems.push("control '" + id + "' has no accessible name");
     if (el.type === 'range' && !(el.getAttribute('aria-valuetext') || '').trim()) problems.push("control '" + id + "' has no aria-valuetext");
   }
+  // Hard constraint 10 for every OTHER thing a student can operate or must be able to read: named, 44 px, keyboard-focusable, a text equivalent for
+  // every picture, no motion under prefers-reduced-motion, a document language.
+  const shown = (el) => { const r = el.getBoundingClientRect(); const st = getComputedStyle(el); return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && st.display !== 'none'; };
+  const nameOf = (el) => {
+    const wrap = el.closest('label');
+    const lab = el.id && document.querySelector('label[for="' + el.id + '"]');
+    return ((lab && lab.textContent) || (wrap && wrap.textContent) || el.getAttribute('aria-label') || text(el.getAttribute('aria-labelledby')) || el.textContent || el.getAttribute('title') || '').trim();
+  };
+  for (const el of document.querySelectorAll('__INTERACTIVE__')) {
+    if (el.hasAttribute('data-synapse-control') || !shown(el)) continue;
+    const kind = el.tagName.toLowerCase() + (el.type ? '[' + el.type + ']' : '');
+    const label = nameOf(el).slice(0, 30);
+    if (!nameOf(el)) problems.push(kind + " has no accessible name");
+    const box = (el.closest('label') || el).getBoundingClientRect();
+    if (box.height < __MIN__ || box.width < __MIN__) problems.push(kind + " '" + label + "' is " + Math.round(box.width) + " by " + Math.round(box.height) + " px, under the __MIN__ px touch target");
+    if (el.tabIndex < 0) problems.push(kind + " '" + label + "' cannot be reached with the keyboard");
+  }
+  for (const el of document.querySelectorAll('canvas, svg, img, video, audio, object, embed')) {
+    if (!shown(el) || el.getAttribute('aria-hidden') === 'true') continue;
+    const described = (el.getAttribute('aria-label') || '').trim() || text(el.getAttribute('aria-labelledby')) || (el.getAttribute('alt') || '').trim();
+    if (!described) problems.push(el.tagName.toLowerCase() + " has no text equivalent (aria-label, aria-labelledby or alt)");
+  }
+  if (document.getAnimations().length > 0) problems.push("something animates even though the student asked for reduced motion");
+  if (!(document.documentElement.lang || '').trim()) problems.push("the document has no lang attribute");
   for (const el of document.querySelectorAll('[data-synapse-readout]')) {
     const name = (el.getAttribute('aria-label') || '').trim() || text(el.getAttribute('aria-labelledby'));
     if (!name) problems.push("readout '" + el.getAttribute('data-synapse-readout') + "' has no accessible name");
@@ -358,7 +382,9 @@ def _exercise(
             result.stable = False
         report.controls.append(result)
 
-    report.a11y_problems = list(frame.evaluate(_A11Y_JS))
+    report.a11y_problems = list(
+        frame.evaluate(_A11Y_JS.replace("__INTERACTIVE__", _INTERACTIVE).replace("__MIN__", str(MIN_TOUCH_TARGET_PX)))
+    )
 
     if kit_lane:
         _audit_and_sweep(frame, handles, report, plan_models)

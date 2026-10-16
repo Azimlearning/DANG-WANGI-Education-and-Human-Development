@@ -223,3 +223,10 @@ def test_a_configured_attestation_key_signs_what_the_pipeline_stores(kit_dist: P
     record = app.state.store.get_record(block.id)
     assert record is not None and record.attestation and app.state.store.attestation_ok(record)
     assert not SqliteEnvironmentStore(tmp_path / "data" / "environments.db", b"x" * 32).attestation_ok(record)
+
+
+def test_a_server_with_no_kit_built_ends_the_stream_with_one_error_and_done(tmp_path: Path) -> None:
+    app = create_app(_settings(tmp_path / "data", tmp_path / "no_kit"))
+    events = _events(TestClient(app))
+    assert [e.type for e in events] == ["error", "done"]
+    assert "no interactive library" in events[0].error.message  # type: ignore[union-attr]

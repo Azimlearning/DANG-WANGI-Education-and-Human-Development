@@ -44,7 +44,12 @@ export function slider(env: Environment, options: SliderOptions): Observable<num
   input.id = `syn-${id}`;
   input.min = String(min);
   input.max = String(max);
-  input.step = String(options.step ?? (max - min) / grid);
+  // (max - min) / grid is often a binary-float smear (0.9500000000000001) or a repeating decimal (2.6666...), and min + grid x step must not lie above
+  // max or the browser's range input cannot reach max. Twelve significant digits, rounded DOWN one unit in the last place if it would overshoot.
+  const raw = (max - min) / grid;
+  let tidy = Number(raw.toPrecision(12));
+  if (tidy * grid > (max - min) * (1 + 1e-13)) tidy = Number((tidy - 10 ** (Math.floor(Math.log10(tidy)) - 11)).toPrecision(12));
+  input.step = String(options.step ?? tidy);
   input.value = String(value.get());
   input.setAttribute("data-synapse-control", id);
   const describe = (v: number) => input.setAttribute("aria-valuetext", `${v} ${unit}`);

@@ -189,3 +189,47 @@ def test_a_model_under_a_topic_it_is_not_registered_for_is_plan_016(manifest: ki
     assert codes(d, manifest) == []
     d["topic"] = "biology_form4_cell_biology"
     assert "PLAN-016" in codes(d, manifest)
+
+
+def test_a_control_whose_effect_is_hidden_by_the_readout_digits_is_plan_017(manifest: kitmanifest.Manifest) -> None:
+    d = json.loads((REPO / "data" / "plans" / "chemistry-f4-titration.json").read_text(encoding="utf-8"))
+    assert codes(d, manifest) == []
+    for r in d["readouts"]:
+        r["digits"] = 0  # 0.1 mol/dm3 x 25 / vb shows as 0 across the whole range
+    assert "PLAN-017" in codes(d, manifest)
+
+
+def test_every_free_text_field_and_collection_in_a_plan_has_a_size_cap() -> None:
+    base = raw("hookes_amali")
+
+    def refused(**changes: object) -> bool:
+        try:
+            Plan.model_validate({**base, **changes})
+        except ValidationError:
+            return True
+        return False
+
+    assert refused(experiment_ref="x" * 5000)
+    assert refused(citation_ids=["a" * 5000])
+    assert refused(citation_ids=["a"] * 7)
+    models = [{**base["models"][0], "model": "mechanics." + "a" * 5000}]
+    assert refused(models=models)
+    models = [{**base["models"][0], "params": {f"p{i}": 1.0 for i in range(9)}}]
+    assert refused(models=models)
+    models = [{**base["models"][0], "inputs": {f"i{i}": "load" for i in range(9)}}]
+    assert refused(models=models)
+    assert refused(title="t" * 5000) and refused(note="n" * 5000) and refused(goal="g" * 5000)
+    assert refused(sentences=["s" * 5000]) and refused(steps=["s" * 5000]) and refused(sentences=["s"] * 7)
+
+
+def test_every_plan_check_code_has_a_test_that_makes_it_fire() -> None:
+    """A check with no test that triggers it could be deleted unnoticed. Each code must appear in an assertion in this file."""
+    source = (Path(__file__).resolve().parent / "plan_checks.py").read_text(encoding="utf-8")
+    emitted = set(__import__("re").findall(r'"(PLAN-\\d+)"', source))
+    tests = Path(__file__).read_text(encoding="utf-8").upper().replace("_", "-")
+    missing = sorted(
+        code
+        for code in emitted
+        if f'"{code}"' not in tests and code.lower().replace("-", "") not in tests.lower().replace("-", "")
+    )
+    assert not missing, f"no test fires {missing}"

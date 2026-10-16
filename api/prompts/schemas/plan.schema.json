@@ -268,6 +268,7 @@
           "type": "string"
         },
         "inputs": {
+          "maxProperties": 8,
           "patternProperties": {
             "^[a-z][a-z0-9_]{0,23}$": {
               "pattern": "^[a-z][a-z0-9_]{0,23}$",
@@ -278,11 +279,13 @@
           "type": "object"
         },
         "model": {
+          "maxLength": 40,
           "pattern": "^[a-z]+\\.[a-z_]+$",
           "title": "Model",
           "type": "string"
         },
         "params": {
+          "maxProperties": 8,
           "patternProperties": {
             "^[a-z][a-z0-9_]{0,23}$": {
               "type": "number"
@@ -453,6 +456,7 @@
   "properties": {
     "citation_ids": {
       "items": {
+        "pattern": "^[a-z][a-z0-9_]{0,23}$",
         "type": "string"
       },
       "maxItems": 6,
@@ -509,6 +513,7 @@
     "experiment_ref": {
       "anyOf": [
         {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
           "type": "string"
         },
         {

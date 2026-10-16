@@ -74,6 +74,22 @@ describe("slider", () => {
     s.set(Number.NaN);
     expect(s.get()).toBe(0);
   });
+  it.each([
+    [1.95, 20, 19],
+    [6, 14, 3],
+    [0, 1, 3],
+    [0.001, 1, 10],
+    [0, 7, 9],
+  ])("has a step that reaches max exactly: min %s max %s grid %s", (min, max, grid) => {
+    const env = environment({ title: "t", note: "n" });
+    slider(env, { id: `s${min}${max}${grid}`, label: "L", unit: "u", min, max, grid, value: min });
+    const input = document.querySelector<HTMLInputElement>(`input[data-synapse-control="s${min}${max}${grid}"]`)!;
+    const step = Number(input.step);
+    expect(Number.isFinite(step) && step > 0).toBe(true);
+    // The last step position never lies above max (the browser could not reach max) and is within one part in 1e9 of it.
+    expect(step * grid).toBeLessThanOrEqual((max - min) * (1 + 1e-13));
+    expect(step * grid).toBeGreaterThan((max - min) * (1 - 1e-9));
+  });
   it("is a labelled range input with a declared control id, and input events update the observable", () => {
     const env = environment({ title: "t", note: "n" });
     const s = slider(env, { id: "load", label: "Load", unit: "N", min: 0, max: 10, value: 1 });

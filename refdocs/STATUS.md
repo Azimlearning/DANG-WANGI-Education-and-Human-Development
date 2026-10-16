@@ -77,6 +77,8 @@ What has actually been run, not what has been written. A row here needs a real c
 
 | 2026-10-16 | Six more models and Environments | `pnpm -r test`; `uv run pytest -q`; `uv run python eval/environments/build.py`; `eval/l6/run.py`; `eval/hostile/run.py`; `eval/smoke/web_smoke.py --no-build` | Kit 315 passed; 504 passed 1 skipped; 17 Environments verified and delivered; L6 56 of 61 refused with no false positives; hostile 20 of 20; smoke 18 of 18 |
 
+| 2026-10-16 | Whole repo after the P3 review closed | `uv run pytest -q`; `pnpm -r test`; `eval/plans/fuzz.py` seeds 1 to 9; `eval/l6`, `eval/hostile`, `eval/environments/build.py`, `eval/smoke/web_smoke.py` | 565 passed 1 skipped; Kit 323, web 23; fuzz 0 parity gaps after two fixes; L6 56 of 61, 0 of 12 false positives; hostile 20 of 20; 17 Environments; smoke 18 of 18 (one earlier run 17 of 18, not reproduced) |
+
 ---
 
 ## Known gaps
@@ -95,7 +97,7 @@ What has actually been run, not what has been written. A row here needs a real c
 - **No file-structure doc and no parity doc** are written; the tree now exists, so a file map is worth writing at the start of P1.
 - **No model has ever written a Plan.** The planner, the fills and the explainer are exercised only by deterministic fakes. Whether a real model produces Plans that pass the checks, what it costs and how often it needs the retry are all unmeasured (A-4). The first paid run answers this.
 - **The Free lane and the L4 wording check are not built.** A question the Kit cannot express gets the written answer; the `verifier_l4` pack is written but called by nothing.
-- **Open kit-guardian P3 findings:** plan checks vs verifier parity beyond the dilution relation (S4); homogeneous-property silent continue and domain tests (S7); accessibility and 360 px tests per component beyond the render harness audit (S8); a soundness test for the fail-check registry's coverage (S10); string length caps on every plan field and fill-contract bypass probes. B1 and S1, S2, S3, S5 (dilution relation), S6, S9, S12 are fixed. The review itself is one round by one reviewer.
+- **kit-guardian P3 findings:** all answered (B1, S1 to S12 and the notes). One reviewer, one round; a second pass should be run locally. One smoke run failed once and was not reproduced (see the CHANGELOG).
 - **Every Environment is `model-checked` with an UNVERIFIED citation.** No textbook page has confirmed any formula, unit, wording or scope. The photosynthesis curve is a stylised teaching curve and says so.
 - **Kit 0.1.0 is unreleased and relocked on each change** (D-29). Nothing public depends on it yet.
 - **Naming** ("Synapse" collision, A-14) is open.

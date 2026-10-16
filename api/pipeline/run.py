@@ -41,6 +41,7 @@ from api.schema.generated import (
     Citation,
     DoneEvent,
     EnvironmentEvent,
+    ErrorEnvelope,
     Lane,
     MetaEvent,
     PlanDraft,
@@ -175,7 +176,22 @@ def _route_summary(r: Route) -> str:
 
 async def run(question: str, deps: Deps) -> AsyncIterator[StreamEvent]:
     """Yield the wire events for one question. Never raises for a model or verification problem; those degrade."""
-    r = _Run(question, deps)
+    try:
+        r = _Run(question, deps)
+    except FileNotFoundError:
+        # No Kit is built (an operator mistake). The stream still ends properly: one named error and `done`, never a broken connection.
+        log.error("no Kit is built in %s", deps.kit_dist)
+        yield StreamErrorEvent(
+            type="error",
+            error=ErrorEnvelope(
+                code="internal",
+                message="This server has no interactive library built, so it cannot make Environments. Ask the operator to build the Kit.",
+                issues=[],
+                retryable=False,
+            ),
+        )
+        yield DoneEvent(type="done")
+        return
     yield MetaEvent(type="meta", requestId=r.request_id, kitVersion=r.version)
     try:
         async for event in _layers(r):
