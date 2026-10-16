@@ -11,7 +11,7 @@ import math
 import re
 from dataclasses import dataclass
 
-from api.verify.references import REFERENCES, evaluate_model
+from api.verify.references import REFERENCES, evaluate_model, unit_factor
 
 GROUNDED_LEAVES = ("control", "constant")
 COPY_NUMBER = re.compile(r"(?<![A-Za-z0-9_.])-?\d+(?:\.\d+)?")
@@ -47,11 +47,20 @@ def chain_problem(chain: dict) -> Problem | None:
             "the value depends on arithmetic written in the page; only a unit conversion is allowed",
         )
     if kind == "convert":
-        return (
-            chain_problem(inputs["x"])
-            if "x" in inputs
-            else Problem("ungrounded_readout", "a conversion without a source")
-        )
+        if "x" not in inputs:
+            return Problem("ungrounded_readout", "a conversion without a source")
+        try:
+            want = unit_factor(str(chain.get("from")), str(chain.get("to")))
+        except (KeyError, ValueError) as exc:
+            return Problem(
+                "bad_unit_factor", f"{chain.get('from')} to {chain.get('to')} is not a valid unit change: {exc}"
+            )
+        if not math.isclose(float(chain.get("factor", 0.0)), want, rel_tol=1e-12):
+            return Problem(
+                "bad_unit_factor",
+                f"the Kit converts {chain.get('from')} to {chain.get('to')} by {chain.get('factor')} but the factor is {want}",
+            )
+        return chain_problem(inputs["x"])
     if kind == "model":
         model_id = chain.get("id")
         if model_id not in REFERENCES:
@@ -166,6 +175,15 @@ def l1_problems(audit: dict | None) -> list[Problem]:
                 f"a <{m['tag']}> the Kit made was edited: expected {m['expected']!r}, found {m['actual']!r}",
             )
         )
+    for a in audit.get("unownedAttributeNumbers", []):
+        out.append(
+            Problem(
+                "unowned_attribute_number",
+                f"{a['attribute']} on <{a['element']}> holds a number the Kit did not set: {a['value']!r}",
+            )
+        )
+    if audit.get("shadowRoots", 0):
+        out.append(Problem("shadow_root", "an element has a shadow root; its content cannot be audited"))
     for u in audit.get("unownedNumbers", []):
         out.append(
             Problem("unowned_number", f"a number appears outside the Kit's elements in <{u['parent']}>: {u['text']!r}")

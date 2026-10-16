@@ -135,6 +135,8 @@ KIT_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bcontent\s*:\s*[\"'`]", re.IGNORECASE), "CSS generated content"),
     (re.compile(r"::?(?:before|after)\b", re.IGNORECASE), "CSS pseudo-element"),
     (re.compile(r"<\s*(?:video|audio|source|track|svg\s+[^>]*\bimage)\b", re.IGNORECASE), "media element"),
+    (re.compile(r"\battachShadow\b"), "shadow DOM"),
+    (re.compile(r"\bcustomElements\b"), "custom elements"),
 ]
 
 _SCRIPT_TAG = re.compile(r"<script\b[^>]*>", re.IGNORECASE)

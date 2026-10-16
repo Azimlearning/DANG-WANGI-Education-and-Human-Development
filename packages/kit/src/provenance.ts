@@ -91,6 +91,24 @@ export function ownedEntries(): [Element, () => string][] {
   return [...ownedElements.entries()];
 }
 
+// ── owned attributes ────────────────────────────────────────────────────────────────────────────────────────────────────
+// Attributes a person or a screen reader receives as words (`aria-label`, `aria-valuetext`, `title`, `alt`, `placeholder`...) can carry a
+// number just as well as a text node can. The Kit registers the ones it sets, with the value each must have; any such attribute that holds
+// a digit and is not registered is reported by the audit.
+
+const ownedAttributes = new Map<Element, Map<string, () => string>>();
+
+export function ownAttr<E extends Element>(el: E, name: string, expected: () => string): E {
+  let attrs = ownedAttributes.get(el);
+  if (!attrs) ownedAttributes.set(el, (attrs = new Map()));
+  attrs.set(name, expected);
+  return el;
+}
+
+export function ownedAttr(el: Element, name: string): (() => string) | undefined {
+  return ownedAttributes.get(el)?.get(name);
+}
+
 export function isOwned(el: Element | null): boolean {
   return el !== null && ownedElements.has(el);
 }
@@ -132,6 +150,7 @@ export const copy: string[] = [];
 /** Tests only. */
 export function resetForTests(): void {
   ownedElements.clear();
+  ownedAttributes.clear();
   controls.length = 0;
   readouts.length = 0;
   constants.length = 0;

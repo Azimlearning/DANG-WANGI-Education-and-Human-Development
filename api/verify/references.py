@@ -78,3 +78,37 @@ def evaluate_model(model_id: str, params: dict[str, float], inputs: dict[str, fl
     if set(params) != set(ref.params):
         raise ValueError(f"{model_id}: params must be exactly {sorted(ref.params)}, got {sorted(params)}")
     return ref.fn(**inputs, **params)
+
+
+# Unit factors, written here independently of the Kit's table. A conversion node reports its own factor; L1 checks it against this table so
+# a wrong factor in the Kit cannot make a wrong number look right. (Factors are to the SI base unit of the dimension.)
+UNIT_SI: dict[str, tuple[str, float]] = {
+    "m": ("length", 1.0),
+    "cm": ("length", 1e-2),
+    "mm": ("length", 1e-3),
+    "km": ("length", 1e3),
+    "kg": ("mass", 1.0),
+    "g": ("mass", 1e-3),
+    "s": ("time", 1.0),
+    "ms": ("time", 1e-3),
+    "min": ("time", 60.0),
+    "Pa": ("pressure", 1.0),
+    "kPa": ("pressure", 1e3),
+    "A": ("current", 1.0),
+    "mA": ("current", 1e-3),
+    "J": ("energy", 1.0),
+    "kJ": ("energy", 1e3),
+    "N": ("force", 1.0),
+    "V": ("voltage", 1.0),
+    "mV": ("voltage", 1e-3),
+    "W": ("power", 1.0),
+}
+
+
+def unit_factor(source: str, target: str) -> float:
+    """The factor that turns a value in `source` units into `target` units. Raises KeyError for an unknown unit and ValueError across dimensions."""
+    a_dim, a = UNIT_SI[source]
+    b_dim, b = UNIT_SI[target]
+    if a_dim != b_dim:
+        raise ValueError(f"{source} ({a_dim}) cannot become {target} ({b_dim})")
+    return a / b

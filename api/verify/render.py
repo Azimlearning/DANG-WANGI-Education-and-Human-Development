@@ -352,6 +352,12 @@ def _exercise(
                 page.wait_for_timeout(100)
         _poke(page)
     report.interaction_seconds = time.monotonic() - start
+    if kit_lane:
+        # A number inserted late (after the sweep, within the time box) is caught by one more audit at the end.
+        final = _audit(frame)
+        _add(report.problems_l1, prov.l1_problems(final))
+        if final is not None:
+            _add(report.problems_l23, prov.l3_problems(final)[0])
 
     report.overflow_px = float(
         frame.evaluate("Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)")

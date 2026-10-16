@@ -181,6 +181,25 @@ describe("provenance audit", () => {
     expect(a.copy.find((c) => c.text === "Try a load of 5 N.")?.numbers).toEqual(["5"]);
   });
 
+  it("detects a number in a spoken or tooltip attribute the Kit did not set, and accepts the ones it did", () => {
+    const { env } = spring();
+    expect(audit(KIT_VERSION).unownedAttributeNumbers).toEqual([]);
+    const p = document.createElement("p");
+    p.setAttribute("aria-label", "The extension is 0.04 m");
+    env.stage.appendChild(p);
+    const found = audit(KIT_VERSION).unownedAttributeNumbers;
+    expect(found.map((a) => a.attribute)).toContain("aria-label");
+  });
+
+  it("reports a shadow root, whose content it cannot audit", () => {
+    const { env } = spring();
+    expect(audit(KIT_VERSION).shadowRoots).toBe(0);
+    const host = document.createElement("div");
+    env.stage.appendChild(host);
+    host.attachShadow({ mode: "open" }).innerHTML = "<p>0.04 m</p>";
+    expect(audit(KIT_VERSION).shadowRoots).toBe(1);
+  });
+
   it("a script cannot mark its own element as Kit-owned", () => {
     const { env } = spring();
     const p = document.createElement("p");

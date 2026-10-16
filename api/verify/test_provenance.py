@@ -299,3 +299,48 @@ def test_the_audit_helpers_do_not_mutate_their_input() -> None:
     p.l3_problems(audit)
     p.plan_problems(audit, [])
     assert audit == snapshot
+
+
+def convert_audit(factor: float, source: str = "mm", target: str = "m") -> dict:
+    audit = good_audit()
+    audit["readouts"][0]["chain"] = {
+        "kind": "convert",
+        "from": source,
+        "to": target,
+        "factor": factor,
+        "inputs": {"x": {"kind": "control", "id": "load", "min": 0, "max": 10, "grid": 10, "default": 2}},
+    }
+    return audit
+
+
+def test_a_conversion_must_use_the_independent_unit_factor() -> None:
+    assert rules(p.l1_problems(convert_audit(0.001))) == []
+    assert "bad_unit_factor" in rules(p.l1_problems(convert_audit(0.01)))  # the Kit claims the wrong factor
+    assert "bad_unit_factor" in rules(p.l1_problems(convert_audit(1.0, "mm", "kg")))  # across dimensions
+    assert "bad_unit_factor" in rules(p.l1_problems(convert_audit(1.0, "furlong", "m")))  # unknown unit
+
+
+def test_the_kit_unit_table_and_the_independent_one_agree() -> None:
+    """convert.ts and references.UNIT_SI are written separately; this pins that they say the same thing."""
+    import re
+
+    from api.verify.references import UNIT_SI
+
+    source = (Path(__file__).resolve().parents[2] / "packages/kit/src/convert.ts").read_text(encoding="utf-8")
+    kit = {
+        m.group(1): (m.group(2), float(m.group(3)))
+        for m in re.finditer(r'(\w+): \{ dim: "(\w+)", toSI: ([0-9.eE+-]+) \}', source)
+    }
+    assert kit == UNIT_SI
+
+
+def test_a_number_in_an_attribute_the_kit_did_not_set_is_refused() -> None:
+    audit = good_audit()
+    audit["unownedAttributeNumbers"] = [{"element": "p", "attribute": "aria-label", "value": "0.04 m"}]
+    assert rules(p.l1_problems(audit)) == ["unowned_attribute_number"]
+
+
+def test_a_shadow_root_is_refused_because_it_cannot_be_audited() -> None:
+    audit = good_audit()
+    audit["shadowRoots"] = 1
+    assert rules(p.l1_problems(audit)) == ["shadow_root"]

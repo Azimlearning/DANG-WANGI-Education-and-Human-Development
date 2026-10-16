@@ -5,7 +5,7 @@
 import { event } from "./bridge";
 import type { Environment } from "./environment";
 import { create, type Observable } from "./observable";
-import { controls, copy, own } from "./provenance";
+import { controls, copy, own, ownAttr } from "./provenance";
 
 export interface SliderOptions {
   id: string;
@@ -46,6 +46,7 @@ export function slider(env: Environment, options: SliderOptions): Observable<num
   input.setAttribute("data-synapse-control", id);
   const describe = (v: number) => input.setAttribute("aria-valuetext", `${v} ${unit}`);
   describe(value.get());
+  ownAttr(input, "aria-valuetext", () => `${value.get()} ${unit}`);
   input.addEventListener("input", () => {
     value.set(Number(input.value));
     event(id, value.get());

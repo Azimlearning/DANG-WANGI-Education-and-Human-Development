@@ -3,7 +3,7 @@
 // text is registered as Kit-owned with the text it must have, so the L1 audit can tell a Kit-made number from a typed one.
 
 import { installErrorHandlers } from "./bridge";
-import { copy, own } from "./provenance";
+import { copy, own, ownAttr } from "./provenance";
 
 export interface Environment {
   root: HTMLElement;
@@ -71,6 +71,7 @@ export function environment(options: EnvironmentOptions): Environment {
   const stage = div("syn-stage");
   stage.setAttribute("role", "region");
   stage.setAttribute("aria-label", options.stageText ?? "Stage");
+  ownAttr(stage, "aria-label", () => options.stageText ?? "Stage");
   if (options.stageText) copy.push(options.stageText);
   const controls = div("syn-controls");
   controls.setAttribute("role", "group");

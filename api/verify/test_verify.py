@@ -749,3 +749,37 @@ def test_ohm_with_a_constant_resistance_and_a_changed_parameter_are_both_checked
     env = mint(kit_dist, raw_html=html, slug="reference-ohm", plan_models=[{"id": "electricity.ohm", "params": {}}])
     assert env.checked.controls_exercised == 2
     assert env.checked.grid_points >= 13 + 20  # both grids, with the other control at its default
+
+
+def test_L1_a_number_in_an_aria_label_is_refused(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();",
+        "var p = document.createElement('p'); p.setAttribute('aria-label', 'Extension is 0.04 m'); env.stage.appendChild(p);\n  Synapse.bridge.ready();",
+    )
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "unowned_attribute_number")
+
+
+def test_L1_a_shadow_root_built_by_an_obfuscated_call_is_refused_at_render(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();",
+        "var h = document.createElement('div'); env.stage.appendChild(h); h['attach' + 'Shadow']({ mode: 'open' }).innerHTML = '<p>0.04 m</p>';\n  Synapse.bridge.ready();",
+    )
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "shadow_root")
+
+
+def test_L0_shadow_dom_is_named_at_scan_in_the_kit_lanes(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();", "document.body.attachShadow({ mode: 'open' });\n  Synapse.bridge.ready();"
+    )
+    assert refused(kit_dist, html).stage == "scan"
+
+
+def test_L1_a_number_inserted_after_the_sweep_is_still_caught(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();",
+        "setTimeout(function () { var p = document.createElement('p'); p.textContent = 'Extension is 0.04 m'; env.stage.appendChild(p); }, 1200);\n  Synapse.bridge.ready();",
+    )
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "unowned_number")
