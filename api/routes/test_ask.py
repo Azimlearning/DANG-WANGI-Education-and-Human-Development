@@ -63,7 +63,7 @@ def test_the_block_carries_the_honest_lane_label_and_verified_record(client: Tes
     events = _events(client)
     assert events[0].kitVersion == kit_version  # type: ignore[union-attr]
     block = next(e for e in events if isinstance(e, EnvironmentEvent)).block
-    assert (block.lane, block.label) == ("instantiate", "model-checked")
+    assert (block.lane, block.label) == ("compose", "model-checked")
     assert block.citations[0].verified is False
     assert block.htmlSha256 == hashlib.sha256(block.html.encode("utf-8")).hexdigest()
     assert {m.id for m in block.checked.models} == {"mechanics.hookes"} and block.checked.referenceCases > 0
@@ -161,6 +161,7 @@ def test_the_kit_is_served_same_origin_and_cannot_be_escaped(client: TestClient,
     js = client.get(f"/vendor/kit/{kit_version}/core.js")
     assert js.status_code == 200 and "Synapse" in js.text
     assert client.get(f"/vendor/kit/{kit_version}/manifest.json").json()["version"] == kit_version
+    assert js.headers["cache-control"] == "no-cache"
     assert client.get("/vendor/kit/../../pyproject.toml").status_code in (404, 400)
     assert client.get("/vendor/kit/%2e%2e/%2e%2e/pyproject.toml").status_code == 404
 
