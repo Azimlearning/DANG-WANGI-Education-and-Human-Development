@@ -18,18 +18,31 @@ PLANS = Path(__file__).resolve().parents[2] / "data" / "plans"
 _TOPIC = re.compile(r"topic=([a-z0-9_]+)")
 
 
-def golden_by_topic() -> dict[str, str]:
-    out: dict[str, str] = {}
+def golden_by_topic() -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
     for path in sorted(PLANS.glob("*.json")):
         text = path.read_text(encoding="utf-8")
-        out[json.loads(text)["topic"]] = text
+        out.setdefault(json.loads(text)["topic"], []).append(text)
     return out
 
 
+def _overlap(question: str, plan_json: str) -> int:
+    plan = json.loads(plan_json)
+    words = {
+        w for w in re.findall(r"[a-z]+", (plan["title"] + " " + plan["goal"] + " " + plan["id"]).lower()) if len(w) > 3
+    }
+    return len(words & set(re.findall(r"[a-z]+", question.lower())))
+
+
 def plan_responder(request: LLMRequest) -> str:
+    """The golden plan for the routed topic; when a topic has several, the one whose title and goal share the most words with the question."""
     m = _TOPIC.search(request.prompt)
-    golden = golden_by_topic()
-    return golden.get(m.group(1) if m else "", '{"error": "no plan available for this topic in fake mode"}')
+    plans = golden_by_topic().get(m.group(1) if m else "")
+    if not plans:
+        return '{"error": "no plan available for this topic in fake mode"}'
+    question = re.search(r'Student\'s question:\n"""\n(.*?)\n"""', request.prompt, re.DOTALL)
+    q = question.group(1) if question else ""
+    return max(plans, key=lambda p: (_overlap(q, p), -plans.index(p)))
 
 
 def fill_responder(_request: LLMRequest) -> str:

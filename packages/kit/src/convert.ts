@@ -24,6 +24,10 @@ const UNITS: Record<string, { dim: string; toSI: number }> = {
   V: { dim: "voltage", toSI: 1 },
   mV: { dim: "voltage", toSI: 0.001 },
   W: { dim: "power", toSI: 1 },
+  cm3: { dim: "volume", toSI: 1e-6 },
+  dm3: { dim: "volume", toSI: 1e-3 },
+  mL: { dim: "volume", toSI: 1e-6 },
+  L: { dim: "volume", toSI: 1e-3 },
 };
 
 export function convert(source: Observable<number>, from: string, to: string): Observable<number> {

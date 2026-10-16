@@ -37,7 +37,7 @@ def with_(name: str, **changes: object) -> dict:
 
 
 def test_there_is_a_golden_plan_for_each_physics_form_5_topic() -> None:
-    assert {json.loads(p.read_text())["topic"] for p in GOLDEN} == {
+    assert {json.loads(p.read_text())["topic"] for p in GOLDEN if p.name.startswith("physics-f5-")} == {
         "physics_form5_force_and_elasticity",
         "physics_form5_electricity",
         "physics_form5_forces_and_pressure",

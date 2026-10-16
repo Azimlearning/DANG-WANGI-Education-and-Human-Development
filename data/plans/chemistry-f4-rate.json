@@ -1,0 +1,69 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The same gas collected in a shorter time means a faster reaction.",
+      "x": "time",
+      "source": "rate",
+      "label": "Average rate",
+      "unit": "cm3/s",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Try collecting 30 cm3 of gas in 60 s, and then in 20 s."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "rate_of_reaction",
+  "title": "Rate of reaction from gas collected",
+  "goal": "Find the average rate of a reaction from the volume of gas and the time taken.",
+  "pattern": "simulation",
+  "topic": "chemistry_form4_rate_of_reaction",
+  "note": "The average rate of reaction is the quantity of product formed divided by the time taken: rate = volume of gas / time.",
+  "controls": [
+    {
+      "id": "volume",
+      "label": "Volume of gas collected",
+      "unit": "cm3",
+      "min": 10,
+      "max": 60,
+      "value": 30,
+      "grid": 5
+    },
+    {
+      "id": "time",
+      "label": "Time taken",
+      "unit": "s",
+      "min": 10,
+      "max": 100,
+      "value": 60,
+      "grid": 9
+    }
+  ],
+  "models": [
+    {
+      "id": "rate",
+      "model": "chemistry.average_rate",
+      "params": {},
+      "inputs": {
+        "volume": "volume",
+        "time": "time"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Average rate",
+      "unit": "cm3/s",
+      "digits": 2,
+      "source": "rate",
+      "convert_to": null
+    }
+  ]
+}

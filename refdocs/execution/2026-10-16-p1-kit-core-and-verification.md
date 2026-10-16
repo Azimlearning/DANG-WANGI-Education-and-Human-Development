@@ -51,7 +51,7 @@
 
 **Steps:** hand-write each model's reference from the formula, in Python, without reading the TypeScript, and compute a table of worked values by hand (the arithmetic is written out in comments). Where the model has a second route to the same answer, use it as a property (for example Hooke's law: the elastic energy `E = F^2 / (2k)` must equal `F * x / 2`; Ohm's law: `V^2 / R` must equal `V * I`). A registry maps a model id to its reference function and parameter schema. Both implementations share the author, so a shared misunderstanding is possible; the textbook worked examples in P2 are the real independent check.
 
-**Verify:** `uv run pytest api/verify/test_provenance.py -q`: the worked values, properties and domain refusals pass. **Deviation:** the energy second-route properties (`E = F^2 / 2k`, `V^2 / R = V I`) were not written; the references carry hand-computed worked values and the Kit-side properties only.
+**Verify:** `uv run pytest api/verify/test_provenance.py -q`: the worked values, properties and domain refusals pass.
 
 ## Task 5: L1 provenance, L2 grid and extremes, L3 cross-check in the harness
 
@@ -107,4 +107,4 @@
 - Tasks 1 to 9 are done; task 10's review ran twice. Round 1 found 18 bypasses (all fixed, see D-24 and the changelog). Round 2 was stopped by a safety classifier and tested nothing, so a fresh review is open.
 - Beyond the plan: `dom.ts`, `lockdown.ts`, `watch.ts` (runtime self-check), forbidden-markup audit, `series` and `actions` in the audit, a `wrong_unit` / `wrong_input_unit` / `constant_readout` / `control_mismatch` / `forbidden_markup` / `malformed_audit` / `plan_missing` rule set, `eval/l6` (61 mutations), `eval/hostile`, `eval/isolation`, and `__SYNAPSE_VERIFY__`.
 - The L6 report is a regression baseline: the mutation set grew as holes were found.
-- Not done from the plan: energy second-route properties in the references; `ohm` power output.
+- Not done from the plan: the `ohm` power output. (The second-route checks, `E = F^2 / 2k` and `V^2 / R = V I`, ARE written: `test_references_obey_the_same_properties_the_kit_registration_requires`.)

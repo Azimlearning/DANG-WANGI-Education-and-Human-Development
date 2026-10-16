@@ -1,0 +1,95 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "A bigger temperature rise means more heat released.",
+      "x": "rise",
+      "source": "heat",
+      "label": "Heat released",
+      "unit": "J",
+      "digits": 0
+    }
+  ],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "Rise",
+        "unit": "°C",
+        "source": "rise",
+        "digits": 0
+      },
+      {
+        "label": "Heat",
+        "unit": "J",
+        "source": "heat",
+        "digits": 0
+      }
+    ]
+  },
+  "experiment": {
+    "aim": "To find the heat released when an acid is neutralised by an alkali",
+    "hypothesis": "The bigger the temperature rise, the more heat is released",
+    "independent": "Temperature rise (°C)",
+    "dependent": "Heat released (J)",
+    "controlled": [
+      "Mass of the solution",
+      "Specific heat capacity of the solution"
+    ],
+    "apparatus": [
+      "Polystyrene cup",
+      "Thermometer",
+      "Measuring cylinder"
+    ]
+  },
+  "sentences": [],
+  "steps": [
+    "Set the rise to 3 °C and press Record.",
+    "Set the rise to 6 °C and press Record.",
+    "Set the rise to 10 °C and press Record.",
+    "Compare the heat for each rise."
+  ],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "heat_of_neutralisation",
+  "title": "Heat of neutralisation",
+  "goal": "Work out the heat released from the rise in temperature.",
+  "pattern": "virtual_experiment",
+  "topic": "chemistry_form5_thermochemistry",
+  "note": "The heat released is taken up by the solution: Q = m c (change in temperature). Here the solution has a mass of 100 g and a specific heat capacity of 4.2 J/(g °C).",
+  "controls": [
+    {
+      "id": "rise",
+      "label": "Temperature rise",
+      "unit": "°C",
+      "min": 0,
+      "max": 10,
+      "value": 6,
+      "grid": 10
+    }
+  ],
+  "models": [
+    {
+      "id": "heat",
+      "model": "chemistry.heat_energy",
+      "params": {
+        "mass": 100,
+        "c": 4.2
+      },
+      "inputs": {
+        "delta_t": "rise"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Heat released",
+      "unit": "kJ",
+      "digits": 2,
+      "source": "heat",
+      "convert_to": "kJ"
+    }
+  ]
+}

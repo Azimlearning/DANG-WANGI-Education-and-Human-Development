@@ -1,0 +1,91 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The ratio falls as the cube gets bigger.",
+      "x": "side",
+      "source": "cube",
+      "label": "Surface area to volume ratio",
+      "unit": "/cm",
+      "digits": 2
+    }
+  ],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "Side",
+        "unit": "cm",
+        "source": "side",
+        "digits": 1
+      },
+      {
+        "label": "Ratio",
+        "unit": "/cm",
+        "source": "cube",
+        "digits": 2
+      }
+    ]
+  },
+  "experiment": {
+    "aim": "To find how the surface area to volume ratio changes with the size of a cube",
+    "hypothesis": "The bigger the cube, the smaller the surface area to volume ratio",
+    "independent": "Side of the cube (cm)",
+    "dependent": "Surface area to volume ratio (per cm)",
+    "controlled": [
+      "The shape: always a cube"
+    ],
+    "apparatus": [
+      "Agar cubes",
+      "Ruler",
+      "Knife"
+    ]
+  },
+  "sentences": [],
+  "steps": [
+    "Set the side to 1 cm and press Record.",
+    "Set the side to 2 cm and press Record.",
+    "Set the side to 3 cm and press Record.",
+    "Compare the three ratios."
+  ],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "cell_size_agar",
+  "title": "Why are cells small? Agar cubes",
+  "goal": "See how the surface area to volume ratio changes as a cube gets bigger.",
+  "pattern": "virtual_experiment",
+  "topic": "biology_form4_movement_of_substances",
+  "note": "Substances enter a cell through its surface, but they are used by its whole volume. A cube with a bigger side has a smaller surface area to volume ratio.",
+  "controls": [
+    {
+      "id": "side",
+      "label": "Side of the cube",
+      "unit": "cm",
+      "min": 0.5,
+      "max": 4,
+      "value": 2,
+      "grid": 7
+    }
+  ],
+  "models": [
+    {
+      "id": "cube",
+      "model": "biology.sa_to_v_cube",
+      "params": {},
+      "inputs": {
+        "side": "side"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Surface area to volume ratio",
+      "unit": "/cm",
+      "digits": 2,
+      "source": "cube",
+      "convert_to": null
+    }
+  ]
+}

@@ -64,10 +64,104 @@ def pressure_depth(depth: float, density: float, g: float) -> float:
     return depth * density * g
 
 
+def magnification(image: float, actual: float) -> float:
+    """Linear magnification (times) of a specimen of `actual` size (mm) drawn or imaged at `image` size (mm)."""
+    _finite(image=image, actual=actual)
+    if image < 0:
+        raise ValueError("image must be 0 mm or more")
+    if actual <= 0:
+        raise ValueError("actual must be above 0 mm")
+    return image / actual
+
+
+def sa_to_v_cube(side: float) -> float:
+    """Surface area to volume ratio (per cm) of a cube of edge `side` (cm): six faces of side squared over side cubed."""
+    _finite(side=side)
+    if side <= 0:
+        raise ValueError("side must be above 0 cm")
+    return (6 * side * side) / (side * side * side)
+
+
+def photosynthesis_net(light: float, pmax: float, k: float, resp: float) -> float:
+    """Net CO2 uptake (mg/h) of a leaf: a saturating gross rate pmax I / (k + I), minus respiration `resp`. A stylised teaching curve."""
+    _finite(light=light, pmax=pmax, k=k, resp=resp)
+    if light < 0:
+        raise ValueError("light must be 0 klux or more")
+    if pmax <= 0 or k <= 0:
+        raise ValueError("pmax and k must be above 0")
+    if resp < 0:
+        raise ValueError("resp must be 0 mg/h or more")
+    gross = pmax * (light / (k + light))
+    return gross - resp
+
+
+def moles_from_mass(mass: float, molar_mass: float) -> float:
+    """Amount of substance (mol) in `mass` grams of a substance of molar mass `molar_mass` (g/mol)."""
+    _finite(mass=mass, molar_mass=molar_mass)
+    if mass < 0:
+        raise ValueError("mass must be 0 g or more")
+    if molar_mass <= 0:
+        raise ValueError("molar_mass must be above 0 g/mol")
+    return mass / molar_mass
+
+
+def titration_concentration(va: float, vb: float, ma: float, acid_coeff: float, base_coeff: float) -> float:
+    """Concentration of the base (mol/dm3) from a A + b B: moles of acid va*ma scaled by b/a, shared among vb of base."""
+    _finite(va=va, vb=vb, ma=ma, acid_coeff=acid_coeff, base_coeff=base_coeff)
+    if min(va, vb, ma, acid_coeff, base_coeff) <= 0:
+        raise ValueError("all of va, vb, ma and the coefficients must be above 0")
+    moles_acid = ma * va
+    moles_base = moles_acid * base_coeff / acid_coeff
+    return moles_base / vb
+
+
+def dilution(v2: float, m1: float, v1: float) -> float:
+    """Concentration (mol/dm3) after taking `v1` of a solution of concentration `m1` and making it up to `v2` (same volume unit)."""
+    _finite(v2=v2, m1=m1, v1=v1)
+    if min(v2, m1, v1) <= 0:
+        raise ValueError("v2, m1 and v1 must be above 0")
+    solute = m1 * v1  # the amount of solute does not change
+    return solute / v2
+
+
+def heat_energy(delta_t: float, mass: float, c: float) -> float:
+    """Heat (J) absorbed by `mass` grams of solution of specific heat capacity `c` J/(g C) when it warms by `delta_t` C."""
+    _finite(delta_t=delta_t, mass=mass, c=c)
+    if delta_t < 0:
+        raise ValueError("delta_t must be 0 C or more")
+    if mass <= 0 or c <= 0:
+        raise ValueError("mass and c must be above 0")
+    return mass * c * delta_t
+
+
+def average_rate(volume: float, time: float) -> float:
+    """Average rate of reaction (cm3/s): volume of gas collected over the time taken."""
+    _finite(volume=volume, time=time)
+    if volume < 0:
+        raise ValueError("volume must be 0 cm3 or more")
+    if time <= 0:
+        raise ValueError("time must be above 0 s")
+    return volume / time
+
+
 REFERENCES: dict[str, Reference] = {
     "mechanics.hookes": Reference(hookes, ("load",), ("k",), "m", {"load": "N"}),
     "electricity.ohm": Reference(ohm, ("voltage", "resistance"), (), "A", {"voltage": "V", "resistance": "ohm"}),
     "fluids.pressure_depth": Reference(pressure_depth, ("depth",), ("density", "g"), "Pa", {"depth": "m"}),
+    "biology.magnification": Reference(
+        magnification, ("image", "actual"), (), "times", {"image": "mm", "actual": "mm"}
+    ),
+    "biology.sa_to_v_cube": Reference(sa_to_v_cube, ("side",), (), "/cm", {"side": "cm"}),
+    "biology.photosynthesis_net": Reference(
+        photosynthesis_net, ("light",), ("pmax", "k", "resp"), "mg/h", {"light": "klux"}
+    ),
+    "chemistry.moles_from_mass": Reference(moles_from_mass, ("mass",), ("molar_mass",), "mol", {"mass": "g"}),
+    "chemistry.titration_concentration": Reference(
+        titration_concentration, ("va", "vb"), ("ma", "acid_coeff", "base_coeff"), "mol/dm3", {"va": "cm3", "vb": "cm3"}
+    ),
+    "chemistry.dilution": Reference(dilution, ("v2",), ("m1", "v1"), "mol/dm3", {"v2": "cm3"}),
+    "chemistry.heat_energy": Reference(heat_energy, ("delta_t",), ("mass", "c"), "J", {"delta_t": "\u00b0C"}),
+    "chemistry.average_rate": Reference(average_rate, ("volume", "time"), (), "cm3/s", {"volume": "cm3", "time": "s"}),
 }
 
 
@@ -103,6 +197,10 @@ UNIT_SI: dict[str, tuple[str, float]] = {
     "V": ("voltage", 1.0),
     "mV": ("voltage", 1e-3),
     "W": ("power", 1.0),
+    "cm3": ("volume", 1e-6),
+    "dm3": ("volume", 1e-3),
+    "mL": ("volume", 1e-6),
+    "L": ("volume", 1e-3),
 }
 
 

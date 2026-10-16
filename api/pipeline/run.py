@@ -253,7 +253,9 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
         started = time.monotonic()
         yield _stage("plan", "start")
         try:
-            request = prompts.plan_request(r.q, route_text, pattern, r.manifest, issues=issues)
+            request = prompts.plan_request(
+                r.q, route_text, pattern, r.manifest, issues=issues, topic=str(decision.topic.value)
+            )
             raw = await r.call(request, "plan")
         except BudgetExceeded:
             t.outcome = "text_only"

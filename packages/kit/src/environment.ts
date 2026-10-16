@@ -43,7 +43,7 @@ body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-
 .syn-card dl{display:grid;gap:2px;margin:0}
 .syn-card dt{font-weight:600}
 .syn-card dd{margin:0 0 6px;color:var(--syn-muted)}
-.syn-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.syn-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .syn-graph{width:100%;height:auto;max-height:260px}
 .syn-table-wrap{overflow-x:auto;max-width:100%}
 .syn-table{border-collapse:collapse;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}

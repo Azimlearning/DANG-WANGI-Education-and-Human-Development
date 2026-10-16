@@ -78,7 +78,8 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
   // The text equivalent: a table of evenly spaced samples, hidden visually but read by screen readers.
   const wrap = document.createElement("div");
   const tbl = document.createElement("table");
-  tbl.className = "syn-sr";
+  const hidden = document.createElement("div");
+  hidden.className = "syn-sr";
   const cap = own(document.createElement("caption"), () => `${yLabel} against ${xc.label}`);
   cap.textContent = `${yLabel} against ${xc.label}`;
   const thead = document.createElement("thead");
@@ -108,7 +109,8 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
   tbl.id = `syn-graph-table-${graphCounter++}`;
   root.setAttribute("aria-describedby", tbl.id);
   tbl.append(cap, thead, tbody);
-  wrap.append(root, tbl);
+  hidden.appendChild(tbl);
+  wrap.append(root, hidden);
 
   const draw = () => {
     if (!points.length) return;

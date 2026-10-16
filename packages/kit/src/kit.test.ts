@@ -313,7 +313,7 @@ describe("the public surface", () => {
   });
   it("exposes no way to create an observable that the registry would accept except through the Kit", () => {
     expect(Object.keys(Synapse).sort()).toEqual(
-      ["audit", "bridge", "constant", "convert", "environment", "experiment", "graph", "hookes", "observable", "ohm", "pressureDepth", "readout", "reset", "slider", "stepper", "table", "text", "version"].sort(),
+      ["audit", "averageRate", "bridge", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hookes", "magnification", "moles", "netPhotosynthesis", "observable", "ohm", "pressureDepth", "readout", "reset", "slider", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "version"].sort(),
     );
   });
 });
@@ -397,7 +397,7 @@ describe("reset, table and graph", () => {
     expect(a.unownedNumbers).toEqual([]);
     expect(a.ownedMismatches).toEqual([]);
     expect(a.unownedAttributeNumbers).toEqual([]);
-    const rows = document.querySelectorAll("table.syn-sr tbody tr");
+    const rows = document.querySelectorAll(".syn-sr table tbody tr");
     expect(rows).toHaveLength(11);
     expect(rows[10]!.textContent).toBe("100.200");
   });

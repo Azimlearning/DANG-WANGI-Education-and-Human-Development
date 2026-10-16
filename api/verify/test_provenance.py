@@ -251,6 +251,24 @@ WORKED = [
     ("fluids.pressure_depth", {"density": 1000, "g": 10}, {"depth": 2}, 20000.0),
     ("fluids.pressure_depth", {"density": 1000, "g": 9.81}, {"depth": 10}, 98100.0),
     ("fluids.pressure_depth", {"density": 13600, "g": 10}, {"depth": 0.5}, 68000.0),
+    ("biology.magnification", {}, {"image": 50, "actual": 0.5}, 100.0),
+    ("biology.magnification", {}, {"image": 30, "actual": 0.02}, 1500.0),
+    ("biology.sa_to_v_cube", {}, {"side": 2}, 3.0),
+    ("biology.sa_to_v_cube", {}, {"side": 0.5}, 12.0),
+    ("biology.photosynthesis_net", {"pmax": 10, "k": 4, "resp": 2}, {"light": 4}, 3.0),
+    ("biology.photosynthesis_net", {"pmax": 10, "k": 4, "resp": 2}, {"light": 1}, 0.0),
+    ("biology.photosynthesis_net", {"pmax": 10, "k": 4, "resp": 2}, {"light": 0}, -2.0),
+    ("chemistry.moles_from_mass", {"molar_mass": 18}, {"mass": 36}, 2.0),
+    ("chemistry.moles_from_mass", {"molar_mass": 58.5}, {"mass": 5.85}, 0.1),
+    ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 1, "base_coeff": 1}, {"va": 25, "vb": 20}, 0.125),
+    ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 1, "base_coeff": 2}, {"va": 25, "vb": 20}, 0.25),
+    ("chemistry.titration_concentration", {"ma": 0.2, "acid_coeff": 2, "base_coeff": 1}, {"va": 10, "vb": 40}, 0.025),
+    ("chemistry.dilution", {"m1": 2, "v1": 25}, {"v2": 100}, 0.5),
+    ("chemistry.dilution", {"m1": 0.1, "v1": 100}, {"v2": 250}, 0.04),
+    ("chemistry.heat_energy", {"mass": 100, "c": 4.2}, {"delta_t": 5}, 2100.0),
+    ("chemistry.heat_energy", {"mass": 50, "c": 4.2}, {"delta_t": 6.5}, 1365.0),
+    ("chemistry.average_rate", {}, {"volume": 24, "time": 60}, 0.4),
+    ("chemistry.average_rate", {}, {"volume": 36, "time": 12}, 3.0),
 ]
 
 
@@ -271,6 +289,18 @@ def test_references_match_the_values_worked_out_by_hand(
         ("electricity.ohm", {}, {"voltage": -1, "resistance": 1}),
         ("fluids.pressure_depth", {"density": 0, "g": 10}, {"depth": 1}),
         ("fluids.pressure_depth", {"density": 1000, "g": 10}, {"depth": -1}),
+        ("biology.magnification", {}, {"image": 1, "actual": 0}),
+        ("biology.magnification", {}, {"image": -1, "actual": 1}),
+        ("biology.sa_to_v_cube", {}, {"side": 0}),
+        ("biology.photosynthesis_net", {"pmax": 10, "k": 0, "resp": 2}, {"light": 1}),
+        ("biology.photosynthesis_net", {"pmax": 10, "k": 4, "resp": -1}, {"light": 1}),
+        ("chemistry.moles_from_mass", {"molar_mass": 0}, {"mass": 1}),
+        ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 0, "base_coeff": 1}, {"va": 25, "vb": 20}),
+        ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 1, "base_coeff": 1}, {"va": 25, "vb": 0}),
+        ("chemistry.dilution", {"m1": 1, "v1": 10}, {"v2": 0}),
+        ("chemistry.heat_energy", {"mass": 0, "c": 4.2}, {"delta_t": 1}),
+        ("chemistry.heat_energy", {"mass": 100, "c": 4.2}, {"delta_t": -1}),
+        ("chemistry.average_rate", {}, {"volume": 1, "time": 0}),
     ],
 )
 def test_references_refuse_values_outside_the_domain(model: str, params: dict, inputs: dict) -> None:
@@ -429,3 +459,31 @@ def test_forged_actions_are_refused() -> None:
     audit = good_audit()
     audit["forgedActions"] = 1
     assert rules(p.l1_problems(audit)) == ["forged_action"]
+
+
+def test_second_routes_agree_for_the_new_models() -> None:
+    """Independent identities, not the same formula run twice."""
+    # Moles: n = m / M, so m = n M.
+    n = evaluate_model("chemistry.moles_from_mass", {"molar_mass": 40}, {"mass": 10})
+    assert n * 40 == pytest.approx(10, rel=1e-12)
+    # Titration with equal coefficients: the moles of acid and of base at the end point are equal.
+    mb = evaluate_model(
+        "chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 1, "base_coeff": 1}, {"va": 25, "vb": 20}
+    )
+    assert mb * 20 == pytest.approx(0.1 * 25, rel=1e-12)
+    # Dilution keeps the amount of solute: M1 V1 = M2 V2.
+    m2 = evaluate_model("chemistry.dilution", {"m1": 2, "v1": 25}, {"v2": 100})
+    assert m2 * 100 == pytest.approx(2 * 25, rel=1e-12)
+    # Heat: doubling the mass or the temperature change doubles Q.
+    q = evaluate_model("chemistry.heat_energy", {"mass": 100, "c": 4.2}, {"delta_t": 5})
+    assert evaluate_model("chemistry.heat_energy", {"mass": 200, "c": 4.2}, {"delta_t": 5}) == pytest.approx(2 * q)
+    # SA:V of a cube: area 6 s^2 over volume s^3 gives 6 / s.
+    for s in (0.5, 2, 3):
+        assert evaluate_model("biology.sa_to_v_cube", {}, {"side": s}) == pytest.approx(6 * s**2 / s**3)
+    # The compensation point: net uptake is zero at I* = resp k / (pmax - resp).
+    params: dict[str, float] = {"pmax": 10, "k": 4, "resp": 2}
+    star = 2 * 4 / (10 - 2)
+    assert evaluate_model("biology.photosynthesis_net", params, {"light": star}) == pytest.approx(0, abs=1e-12)
+    # Magnification of a drawing: image = magnification x actual.
+    x = evaluate_model("biology.magnification", {}, {"image": 80, "actual": 0.16})
+    assert x * 0.16 == pytest.approx(80, rel=1e-12)

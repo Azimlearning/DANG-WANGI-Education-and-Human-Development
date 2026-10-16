@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "note": "Breadth questions for Biology and Chemistry Environments (P4), two per topic. Written by hand for this repo; not taken from any textbook. Changing this file is a declared amendment (hard constraint 9): update eval/golden/breadth.sha256 and say why in the changelog.",
+  "questions": [
+    {
+      "id": "b01",
+      "question": "How much is a cell magnified in my drawing?",
+      "expect_topic": "biology_form4_cell_structure_function"
+    },
+    {
+      "id": "b02",
+      "question": "What is magnification and how do I calculate it from the image size and the actual size?",
+      "expect_topic": "biology_form4_cell_structure_function"
+    },
+    {
+      "id": "b03",
+      "question": "Why are cells so small? Does surface area to volume ratio matter?",
+      "expect_topic": "biology_form4_movement_of_substances"
+    },
+    {
+      "id": "b04",
+      "question": "In the agar cube experiment, how does the size of the cube change how fast things diffuse in?",
+      "expect_topic": "biology_form4_movement_of_substances"
+    },
+    {
+      "id": "b05",
+      "question": "What is the compensation point of a leaf and how does light intensity affect photosynthesis?",
+      "expect_topic": "biology_form5_leaf_structure_function"
+    },
+    {
+      "id": "b06",
+      "question": "How does the rate of photosynthesis change as light intensity increases?",
+      "expect_topic": "biology_form5_leaf_structure_function"
+    },
+    {
+      "id": "b07",
+      "question": "How many moles are in 36 g of water?",
+      "expect_topic": "chemistry_form4_chemical_formulae_and_equations"
+    },
+    {
+      "id": "b08",
+      "question": "How do I convert the mass of a substance to moles using its molar mass?",
+      "expect_topic": "chemistry_form4_chemical_formulae_and_equations"
+    },
+    {
+      "id": "b09",
+      "question": "How do I find the concentration of sodium hydroxide from a titration with hydrochloric acid?",
+      "expect_topic": "chemistry_form4_acids_bases_salts"
+    },
+    {
+      "id": "b10",
+      "question": "What happens to the concentration when I dilute a solution with water?",
+      "expect_topic": "chemistry_form4_acids_bases_salts"
+    },
+    {
+      "id": "b11",
+      "question": "How do I calculate the heat released in the neutralisation of an acid by an alkali?",
+      "expect_topic": "chemistry_form5_thermochemistry"
+    },
+    {
+      "id": "b12",
+      "question": "How do I use the temperature rise to find the heat of neutralisation?",
+      "expect_topic": "chemistry_form5_thermochemistry"
+    },
+    {
+      "id": "b13",
+      "question": "How do I find the average rate of a reaction from the gas collected?",
+      "expect_topic": "chemistry_form4_rate_of_reaction"
+    },
+    {
+      "id": "b14",
+      "question": "How does the time taken to collect gas change the rate of reaction?",
+      "expect_topic": "chemistry_form4_rate_of_reaction"
+    }
+  ]
+}

@@ -42,7 +42,9 @@ def kit_pack_for_plan(plan: Plan, manifest: Manifest) -> list[str]:
     return sorted(n for n in names if manifest.has(n))
 
 
-def kit_pack_for_question(question: str, pattern: str, manifest: Manifest, *, limit: int = MAX_KIT_PACK) -> list[str]:
+def kit_pack_for_question(
+    question: str, pattern: str, manifest: Manifest, *, topic: str | None = None, limit: int = MAX_KIT_PACK
+) -> list[str]:
     """The base components for the pattern plus the science models that best match the question (BM25 over each model's useWhen and doc)."""
     chosen = [c for c in (*BASE_COMPONENTS, *PATTERN_COMPONENTS.get(pattern, ())) if manifest.has(c)]
     docs = {
@@ -64,6 +66,9 @@ def kit_pack_for_question(question: str, pattern: str, manifest: Manifest, *, li
         key=lambda x: (-x[0], x[1]),
     )
     models = [name for score, name in scored if score > 0] or [name for _, name in scored]
+    # The routed topic is the strongest signal: the models that serve it come first, then the lexical matches.
+    served = sorted(m.export_name for m in manifest.models.values() if topic and topic in m.topics)
+    models = served + [m for m in models if m not in served]
     return (chosen + models)[:limit]
 
 
@@ -104,13 +109,14 @@ def plan_request(
     manifest: Manifest,
     exemplar: Plan | None = None,
     issues: list[PlanIssue] | None = None,
+    topic: str | None = None,
 ) -> LLMRequest:
     core, planner = load("core"), load("planner")
     schema = (DIR / planner_schema()).read_text(encoding="utf-8")
     stable, variable = planner.render_parts(
         schema=schema.strip(),
         pattern_pack=pattern_pack(pattern),
-        kit_pack=render_kit_pack(kit_pack_for_question(question, pattern, manifest), manifest),
+        kit_pack=render_kit_pack(kit_pack_for_question(question, pattern, manifest, topic=topic), manifest),
         exemplar=exemplar.model_dump_json(indent=None) if exemplar else "(none)",
         question=question,
         route=route_summary,

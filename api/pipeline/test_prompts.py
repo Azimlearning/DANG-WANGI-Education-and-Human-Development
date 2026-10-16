@@ -139,9 +139,10 @@ def test_the_question_kit_pack_finds_the_right_model_and_stays_small(
 ) -> None:
     names = pp.kit_pack_for_question(question, "simulation", manifest)
     assert model in names and len(names) <= pp.MAX_KIT_PACK
-    assert names.index(model) == len(
-        [n for n in names if n in pp.BASE_COMPONENTS or n in pp.PATTERN_COMPONENTS["simulation"]]
-    )  # the best model comes first among models
+    topic = next(t for m in manifest.models.values() if m.export_name == model for t in m.topics)
+    served = pp.kit_pack_for_question(question, "simulation", manifest, topic=topic)
+    base = [n for n in served if n in pp.BASE_COMPONENTS or n in pp.PATTERN_COMPONENTS["simulation"]]
+    assert served[len(base)] == model  # with the routed topic, the model that serves it comes first among the models
 
 
 def test_the_request_builders_stay_inside_the_token_cap(manifest: kitmanifest.Manifest) -> None:

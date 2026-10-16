@@ -1,0 +1,86 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "The same mass gives different amounts of different substances. Try 20 g and then 100 g."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "mole_calculator",
+  "title": "How many moles are in a sample?",
+  "goal": "Compare the amount in moles of the same mass of three substances.",
+  "pattern": "simulation",
+  "topic": "chemistry_form4_chemical_formulae_and_equations",
+  "note": "The amount of substance in moles is the mass divided by the molar mass: n = mass / molar mass. Water has a molar mass of 18 g/mol, carbon dioxide 44 g/mol and sodium chloride 58.5 g/mol.",
+  "controls": [
+    {
+      "id": "mass",
+      "label": "Mass",
+      "unit": "g",
+      "min": 0,
+      "max": 100,
+      "value": 20,
+      "grid": 10
+    }
+  ],
+  "models": [
+    {
+      "id": "water",
+      "model": "chemistry.moles_from_mass",
+      "params": {
+        "molar_mass": 18
+      },
+      "inputs": {
+        "mass": "mass"
+      }
+    },
+    {
+      "id": "co2",
+      "model": "chemistry.moles_from_mass",
+      "params": {
+        "molar_mass": 44
+      },
+      "inputs": {
+        "mass": "mass"
+      }
+    },
+    {
+      "id": "salt",
+      "model": "chemistry.moles_from_mass",
+      "params": {
+        "molar_mass": 58.5
+      },
+      "inputs": {
+        "mass": "mass"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Water, H2O",
+      "unit": "mol",
+      "digits": 2,
+      "source": "water",
+      "convert_to": null
+    },
+    {
+      "label": "Carbon dioxide, CO2",
+      "unit": "mol",
+      "digits": 2,
+      "source": "co2",
+      "convert_to": null
+    },
+    {
+      "label": "Sodium chloride, NaCl",
+      "unit": "mol",
+      "digits": 2,
+      "source": "salt",
+      "convert_to": null
+    }
+  ]
+}

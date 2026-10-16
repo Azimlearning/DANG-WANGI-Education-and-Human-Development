@@ -1,0 +1,62 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The concentration falls as the final volume rises.",
+      "x": "v2",
+      "source": "diluted",
+      "label": "Concentration",
+      "unit": "mol/dm3",
+      "digits": 3
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Make the final volume 25 cm3, then 250 cm3, and compare."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "dilution_lab",
+  "title": "Diluting a solution",
+  "goal": "See how adding water lowers the concentration of a solution.",
+  "pattern": "simulation",
+  "topic": "chemistry_form4_acids_bases_salts",
+  "note": "When you add water to a solution the amount of solute stays the same, so M1 V1 = M2 V2. Here 25 cm3 of a 2 mol/dm3 solution is made up to a larger volume.",
+  "controls": [
+    {
+      "id": "v2",
+      "label": "Final volume",
+      "unit": "cm3",
+      "min": 25,
+      "max": 250,
+      "value": 100,
+      "grid": 9
+    }
+  ],
+  "models": [
+    {
+      "id": "diluted",
+      "model": "chemistry.dilution",
+      "params": {
+        "m1": 2,
+        "v1": 25
+      },
+      "inputs": {
+        "v2": "v2"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Concentration",
+      "unit": "mol/dm3",
+      "digits": 3,
+      "source": "diluted",
+      "convert_to": null
+    }
+  ]
+}

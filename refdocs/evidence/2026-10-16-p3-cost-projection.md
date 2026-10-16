@@ -7,22 +7,22 @@
 
 | Case | USD per Environment | What it assumes |
 |---|---|---|
-| Low | **0.0087** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
-| High | **0.0388** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Low | **0.0088** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
+| High | **0.0390** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
 
 Mean over the 24 golden questions, from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amount to confirm)
 
 - 9 questions, three per Physics Form 5 topic (spring, circuit, liquid pressure), live mode, the verifier unchanged.
-- Projected: **$0.08 to $0.52**. Suggested cap `LLM_MONTHLY_CAP_USD`: **$5**, which is more than 20 times the high case and still small.
+- Projected: **$0.08 to $0.53**. Suggested cap `LLM_MONTHLY_CAP_USD`: **$5**, which is more than 20 times the high case and still small.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the cache hit rate, and whether the fail-check registry's hints fix a bad plan.
 - It would not measure: correctness against a textbook (the corpus is not loaded; labels stay `model-checked`, D-21).
 - **Waiting for the owner's reply with an amount. Nothing is sent until then.**
 
 ## Size of the real prompts (characters, rounded)
 
-- Plan request (virtual experiment): about 21684 characters, of which 16659 are the stable cached prefix.
+- Plan request (virtual experiment): about 21650 characters, of which 16659 are the stable cached prefix.
 - Explain, fill and route-fallback requests are small (a few hundred to about 3,000 characters).
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
@@ -41,26 +41,26 @@ Mean over the 24 golden questions, from the real prompts the pipeline builds. Fo
 | Question | Low USD | High USD |
 |---|---|---|
 | g01 | 0.0096 | 0.0413 |
-| g02 | 0.0096 | 0.0413 |
+| g02 | 0.0096 | 0.0414 |
 | g03 | 0.0098 | 0.0416 |
-| g04 | 0.0096 | 0.0413 |
+| g04 | 0.0100 | 0.0420 |
 | g05 | 0.0096 | 0.0413 |
 | g06 | 0.0096 | 0.0413 |
 | g07 | 0.0097 | 0.0414 |
-| g08 | 0.0096 | 0.0414 |
+| g08 | 0.0098 | 0.0417 |
 | g09 | 0.0084 | 0.0379 |
 | g10 | 0.0084 | 0.0378 |
-| g11 | 0.0085 | 0.0381 |
+| g11 | 0.0087 | 0.0384 |
 | g12 | 0.0087 | 0.0384 |
-| g13 | 0.0084 | 0.0379 |
+| g13 | 0.0087 | 0.0385 |
 | g14 | 0.0087 | 0.0384 |
 | g15 | 0.0087 | 0.0385 |
 | g16 | 0.0084 | 0.0379 |
-| g17 | 0.0080 | 0.0368 |
-| g18 | 0.0080 | 0.0368 |
-| g19 | 0.0080 | 0.0368 |
-| g20 | 0.0080 | 0.0368 |
+| g17 | 0.0083 | 0.0374 |
+| g18 | 0.0080 | 0.0369 |
+| g19 | 0.0080 | 0.0369 |
+| g20 | 0.0084 | 0.0375 |
 | g21 | 0.0083 | 0.0374 |
-| g22 | 0.0082 | 0.0371 |
-| g23 | 0.0080 | 0.0368 |
-| g24 | 0.0080 | 0.0368 |
+| g22 | 0.0083 | 0.0375 |
+| g23 | 0.0082 | 0.0372 |
+| g24 | 0.0080 | 0.0369 |

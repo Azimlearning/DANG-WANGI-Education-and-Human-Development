@@ -28,11 +28,16 @@ SET = REPO / "eval" / "golden" / "vertical.json"
 PIN = REPO / "eval" / "golden" / "vertical.sha256"
 
 
-def load() -> list[dict]:
-    text = SET.read_text(encoding="utf-8")
-    if hashlib.sha256(text.encode()).hexdigest() != PIN.read_text(encoding="utf-8").strip():
+SETS = ("vertical", "breadth")
+
+
+def load(name: str = "vertical") -> list[dict]:
+    path = REPO / "eval" / "golden" / f"{name}.json"
+    pin = REPO / "eval" / "golden" / f"{name}.sha256"
+    text = path.read_text(encoding="utf-8")
+    if hashlib.sha256(text.encode()).hexdigest() != pin.read_text(encoding="utf-8").strip():
         raise SystemExit(
-            "the golden set changed without a declared amendment: update eval/golden/vertical.sha256 and the changelog"
+            f"the golden set '{name}' changed without a declared amendment: update eval/golden/{name}.sha256 and the changelog"
         )
     return json.loads(text)["questions"]
 
@@ -83,8 +88,9 @@ async def pipeline_all(questions: list[dict]) -> list[dict]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pipeline", action="store_true")
+    ap.add_argument("--set", default="vertical", choices=SETS)
     args = ap.parse_args()
-    questions = load()
+    questions = load(args.set)
     routed = asyncio.run(route_all(questions))
     right = sum(r["expect"] == r["got"] for r in routed)
     local = sum(r["source"] == "local" for r in routed)

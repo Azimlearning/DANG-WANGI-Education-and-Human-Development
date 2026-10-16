@@ -6,6 +6,14 @@ import type { Quantity, ScienceSpec } from "./science/spec";
 import { spec as hookesSpec } from "./science/hookes";
 import { spec as ohmSpec } from "./science/ohm";
 import { spec as pressureSpec } from "./science/pressure_depth";
+import { spec as magnificationSpec } from "./science/magnification";
+import { spec as saSpec } from "./science/sa_to_v";
+import { spec as photoSpec } from "./science/photosynthesis";
+import { spec as molesSpec } from "./science/moles";
+import { spec as titrSpec } from "./science/titration";
+import { spec as dilSpec } from "./science/dilution";
+import { spec as heatSpec } from "./science/heat_energy";
+import { spec as rateSpec } from "./science/average_rate";
 
 export type KitKind = "ui" | "scene" | "interaction" | "science" | "pedagogy" | "core";
 
@@ -21,6 +29,8 @@ export interface ManifestEntry {
   useWhen?: string;
   /** Science micro-models only. */
   modelId?: string;
+  /** Science micro-models only: the syllabus topics (slugs in data/kssm_topics.json) the model serves, so retrieval can put it in the kit pack. */
+  topics?: string[];
   /** Science micro-models only: names, units and domain of the inputs and parameters, and the output unit, generated from the spec. */
   inputs?: Record<string, Quantity>;
   params?: Record<string, Quantity>;
@@ -127,7 +137,7 @@ export const manifestEntries: ManifestEntry[] = [
     id: "convert",
     kind: "core",
     signature: "convert(source: Observable<number>, from: string, to: string): Observable<number>",
-    precondition: "from and to are known units of the same dimension (m, cm, mm, km, kg, g, s, ms, min, Pa, kPa, A, mA, J, kJ, N, V, mV, W).",
+    precondition: "from and to are known units of the same dimension (m, cm, mm, km, kg, g, s, ms, min, Pa, kPa, A, mA, J, kJ, N, V, mV, W, cm3, dm3, mL, L).",
     doc: "A unit change by a known factor, the only arithmetic allowed on a model's output.",
     useWhen: "Use to show a model's output in a different unit of the same kind (Pa to kPa, m to cm).",
   },
@@ -139,6 +149,7 @@ export const manifestEntries: ManifestEntry[] = [
     doc: "Hooke's law: extension = load / k. A read-only observable that follows the load.",
     useWhen: "Use for a spring or elastic material stretching under a load, within the elastic limit (Force and Elasticity).",
     modelId: "mechanics.hookes",
+    topics: ["physics_form5_force_and_elasticity"],
     citation: "UNVERIFIED (corpus not loaded until P2)",
     units: { load: "N", k: "N/m", output: "m" },
     ...fromSpec(hookesSpec),
@@ -151,6 +162,7 @@ export const manifestEntries: ManifestEntry[] = [
     doc: "Ohm's law: current = voltage / resistance. A read-only observable that follows both inputs.",
     useWhen: "Use for the current through a resistor given the voltage and resistance (Electricity).",
     modelId: "electricity.ohm",
+    topics: ["physics_form5_electricity"],
     citation: "UNVERIFIED (corpus not loaded until P2)",
     units: { voltage: "V", resistance: "ohm", output: "A" },
     ...fromSpec(ohmSpec),
@@ -163,9 +175,114 @@ export const manifestEntries: ManifestEntry[] = [
     doc: "Liquid pressure: P = depth x density x g. g is recorded so the student sees whether 9.81 or 10 was used.",
     useWhen: "Use for the pressure of a liquid at a depth (Forces and Pressure).",
     modelId: "fluids.pressure_depth",
+    topics: ["physics_form5_forces_and_pressure"],
     citation: "UNVERIFIED (corpus not loaded until P2)",
     units: { depth: "m", density: "kg/m3", g: "m/s2", output: "Pa" },
     ...fromSpec(pressureSpec),
+  },
+  {
+    id: "magnification",
+    kind: "science",
+    signature: "magnification({image: Observable<number>, actual: Observable<number>}): Observable<number>",
+    precondition: "Both sizes in the same unit. Domain: image 0 mm or more, actual above 0 mm. Units: image mm, actual mm, magnification times.",
+    doc: "Magnification = image size / actual size. A read-only observable that follows both inputs.",
+    useWhen: "Use for how much a microscope or a drawing enlarges a cell or specimen (Cell Structure and Function).",
+    modelId: "biology.magnification",
+    topics: ["biology_form4_cell_structure_function"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { image: "mm", actual: "mm", output: "times" },
+    ...fromSpec(magnificationSpec),
+  },
+  {
+    id: "surfaceAreaToVolume",
+    kind: "science",
+    signature: "surfaceAreaToVolume({side: Observable<number>}): Observable<number>",
+    precondition: "A cube-shaped cell. Domain: side above 0 cm. Units: side cm, ratio per cm.",
+    doc: "Surface area to volume ratio of a cube, 6 / side. A read-only observable that follows the side.",
+    useWhen: "Use to show why cells are small: the surface area to volume ratio falls as a cell grows (Movement of Substances).",
+    modelId: "biology.sa_to_v_cube",
+    topics: ["biology_form4_movement_of_substances"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { side: "cm", output: "/cm" },
+    ...fromSpec(saSpec),
+  },
+  {
+    id: "netPhotosynthesis",
+    kind: "science",
+    signature: "netPhotosynthesis({light: Observable<number>, pmax: number, k: number, resp: number}): Observable<number>",
+    precondition: "A STYLISED saturating curve for teaching, not measured data. Domain: light 0 klux or more; pmax, k above 0; resp 0 or more. Units: klux, mg/h.",
+    doc: "Net CO2 uptake = pmax x light / (k + light) - respiration. Shows the compensation point and saturation.",
+    useWhen: "Use for how photosynthesis rate changes with light intensity and where it equals respiration (Leaf Structure and Function).",
+    modelId: "biology.photosynthesis_net",
+    topics: ["biology_form5_leaf_structure_function"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { light: "klux", pmax: "mg/h", k: "klux", resp: "mg/h", output: "mg/h" },
+    ...fromSpec(photoSpec),
+  },
+  {
+    id: "moles",
+    kind: "science",
+    signature: "moles({mass: Observable<number>, molar_mass: number}): Observable<number>",
+    precondition: "Domain: mass 0 g or more, molar mass above 0 g/mol. Units: mass g, molar mass g/mol, amount mol.",
+    doc: "Amount of substance n = mass / molar mass. A read-only observable that follows the mass.",
+    useWhen: "Use to convert a mass of a substance to moles (Chemical Formulae and Equations).",
+    modelId: "chemistry.moles_from_mass",
+    topics: ["chemistry_form4_chemical_formulae_and_equations"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { mass: "g", molar_mass: "g/mol", output: "mol" },
+    ...fromSpec(molesSpec),
+  },
+  {
+    id: "titration",
+    kind: "science",
+    signature: "titration({va: Observable<number>, vb: Observable<number>, ma: number, acid_coeff: number, base_coeff: number}): Observable<number>",
+    precondition: "Volumes in the same unit; coefficients from the balanced equation. Domain: all above 0. Units: cm3, mol/dm3.",
+    doc: "Concentration of the base Mb = Ma x Va x b / (a x Vb). A read-only observable that follows both volumes.",
+    useWhen: "Use for a titration: finding an unknown concentration from the volumes at the end point (Acids, Bases and Salts).",
+    modelId: "chemistry.titration_concentration",
+    topics: ["chemistry_form4_acids_bases_salts"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { va: "cm3", vb: "cm3", ma: "mol/dm3", acid_coeff: "1", base_coeff: "1", output: "mol/dm3" },
+    ...fromSpec(titrSpec),
+  },
+  {
+    id: "dilution",
+    kind: "science",
+    signature: "dilution({v2: Observable<number>, m1: number, v1: number}): Observable<number>",
+    precondition: "Volumes in the same unit; the final volume is at least the starting volume in a real dilution. Domain: all above 0. Units: cm3, mol/dm3.",
+    doc: "Concentration after dilution M2 = M1 x V1 / V2. A read-only observable that follows the final volume.",
+    useWhen: "Use to show how adding water lowers a solution's concentration (Acids, Bases and Salts).",
+    modelId: "chemistry.dilution",
+    topics: ["chemistry_form4_acids_bases_salts"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { v2: "cm3", m1: "mol/dm3", v1: "cm3", output: "mol/dm3" },
+    ...fromSpec(dilSpec),
+  },
+  {
+    id: "heatEnergy",
+    kind: "science",
+    signature: "heatEnergy({delta_t: Observable<number>, mass: number, c: number}): Observable<number>",
+    precondition: "Domain: temperature change 0 C or more, mass and specific heat capacity above 0. Units: C, g, J/(g C), J.",
+    doc: "Heat energy Q = m c change in temperature. A read-only observable that follows the temperature change.",
+    useWhen: "Use for the heat released or absorbed when a solution changes temperature (Thermochemistry).",
+    modelId: "chemistry.heat_energy",
+    topics: ["chemistry_form5_thermochemistry"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { delta_t: "°C", mass: "g", c: "J/(g°C)", output: "J" },
+    ...fromSpec(heatSpec),
+  },
+  {
+    id: "averageRate",
+    kind: "science",
+    signature: "averageRate({volume: Observable<number>, time: Observable<number>}): Observable<number>",
+    precondition: "Domain: volume 0 cm3 or more, time above 0 s. Units: cm3, s, cm3/s.",
+    doc: "Average rate of reaction = volume of gas / time. A read-only observable that follows both inputs.",
+    useWhen: "Use for the average rate of a reaction from the gas collected over a time (Rate of Reaction).",
+    modelId: "chemistry.average_rate",
+    topics: ["chemistry_form4_rate_of_reaction"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { volume: "cm3", time: "s", output: "cm3/s" },
+    ...fromSpec(rateSpec),
   },
   {
     id: "bridge",

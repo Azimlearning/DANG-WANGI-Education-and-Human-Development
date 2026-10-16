@@ -23,6 +23,7 @@ class ScienceModel:
     output_unit: str
     citation: str
     use_when: str
+    topics: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,7 @@ def load(kit_dist: Path, version: str) -> Manifest:
             c["output"]["unit"],
             c["citation"],
             c.get("useWhen", ""),
+            tuple(c.get("topics", ())),
         )
         for c in data["components"]
         if c["kind"] == "science"
