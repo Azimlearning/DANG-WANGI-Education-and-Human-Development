@@ -5,6 +5,7 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.143.2",
     "httpx>=0.28.1",
+    "playwright==1.56.0",
     "pydantic>=2",
     "pydantic-settings>=2.16.0",
     "sqlalchemy>=2.1.4",

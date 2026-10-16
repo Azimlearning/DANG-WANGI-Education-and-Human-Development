@@ -27,6 +27,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "LLM_MONTHLY_CAP_USD",
         "PUBLIC_ORIGIN",
         "DATA_DIR",
+        "KIT_DIST_DIR",
         "LEDGER_PATH",
     ):
         monkeypatch.delenv(name, raising=False)

@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     data_dir: Path = Path("./data")
     ledger_path: Path | None = None
     """Where the spend ledger lives. Unset: `<data_dir>/ledger.db`, ONE file so the monthly cap covers every run."""
+    kit_dist_dir: Path = Path("./packages/kit/dist")
+    """Where the built Kit lives (`<semver>/core.js` and `manifest.json`). Served at /vendor/kit/ and read by the render harness."""
     public_origin: str = "http://localhost:3000"
     """The origin the web app is served from. The injected CSP names it, because an opaque-origin srcdoc makes 'self' match nothing."""
     log_level: str = "INFO"
