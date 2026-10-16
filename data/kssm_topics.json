@@ -1,0 +1,436 @@
+{
+  "provenance": {
+    "source_repo": "Azimlearning/GenUI-Education",
+    "source_path": "Synapse-V3/ml/router-distill/kssm_topics.py",
+    "source_commit": "835a2ce",
+    "source_version": "v3 (2026-07-18), merging two independent groundings",
+    "ported_on": "2026-10-16",
+    "note": "Topic names, slugs, short phrasing hints and chapter numbers only. No textbook text. `chapter` is null where the source does not state one; it is never inferred from order."
+  },
+  "topics": [
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "cell_structure_function",
+      "label": "Cell Structure and Function",
+      "hint": "organelles, plant vs animal cells, unicellular vs multicellular organisation",
+      "chapter": 2
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "chemical_composition_of_cell",
+      "label": "Chemical Composition of the Cell",
+      "hint": "water, carbohydrates, proteins, lipids, nucleic acids",
+      "chapter": 4
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "movement_of_substances",
+      "label": "Movement of Substances Across the Plasma Membrane",
+      "hint": "diffusion, osmosis, active transport",
+      "chapter": 3
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "metabolism_and_enzymes",
+      "label": "Metabolism and Enzymes",
+      "hint": "enzyme activity, lock-and-key model, application of enzymes in daily life",
+      "chapter": 5
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "cell_division",
+      "label": "Cell Division",
+      "hint": "mitosis, cell cycle, meiosis",
+      "chapter": 6
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "respiration",
+      "label": "Respiration",
+      "hint": "aerobic respiration, fermentation, energy production",
+      "chapter": 7
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "respiratory_system",
+      "label": "Respiratory System",
+      "hint": "types of respiratory system, mechanism of breathing, gaseous exchange",
+      "chapter": 8
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "digestion",
+      "label": "Digestive System and Digestion",
+      "hint": "digestion, absorption, assimilation, balanced diet",
+      "chapter": 9
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "circulatory_system",
+      "label": "Circulatory System",
+      "hint": "human circulatory system, mechanism of heartbeat, blood clotting, blood groups, lymphatic system",
+      "chapter": 10
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "immunity",
+      "label": "Body Defence and Immunity",
+      "hint": "body defence mechanisms, antibodies, types of immunity",
+      "chapter": 11
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "coordination_and_response",
+      "label": "Coordination and Response",
+      "hint": "nervous system, neurones and synapse, voluntary and involuntary actions, endocrine system",
+      "chapter": 12
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "homeostasis_and_urinary_system",
+      "label": "Homeostasis and the Urinary System",
+      "hint": "homeostasis, urinary system",
+      "chapter": 13
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "support_and_movement",
+      "label": "Support and Movement in Humans and Animals",
+      "hint": "skeletal system, exoskeleton vs endoskeleton, joints and locomotion",
+      "chapter": 14
+    },
+    {
+      "subject": "biology",
+      "form": 4,
+      "slug": "reproduction_development_growth",
+      "label": "Sexual Reproduction, Development and Growth",
+      "hint": "human reproductive system, fertilisation, growth and development stages",
+      "chapter": 15
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "plant_tissues_and_growth",
+      "label": "Organisation of Plant Tissues and Growth",
+      "hint": "meristematic tissues, growth curves",
+      "chapter": 1
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "leaf_structure_function",
+      "label": "Leaf Structure and Function",
+      "hint": "gaseous exchange, transpiration, photosynthesis, compensation point",
+      "chapter": 2
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "nutrition_in_plants",
+      "label": "Nutrition in Plants",
+      "hint": "inorganic nutrients, water and mineral salt uptake",
+      "chapter": 3
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "transport_in_plants",
+      "label": "Transport in Plants",
+      "hint": "vascular tissues, translocation, phytoremediation",
+      "chapter": 4
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "response_in_plants",
+      "label": "Response in Plants",
+      "hint": "types of responses, phytohormones, application in agriculture",
+      "chapter": 5
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "sexual_reproduction_in_plants",
+      "label": "Sexual Reproduction in Flowering Plants",
+      "hint": "flower structure, pollination, fertilisation, seed and fruit development",
+      "chapter": null
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "plant_adaptations",
+      "label": "Adaptations of Plants in Different Habitats",
+      "hint": "structural and physiological adaptations",
+      "chapter": null
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "biodiversity",
+      "label": "Biodiversity",
+      "hint": "classification, naming of organisms, microorganisms and viruses",
+      "chapter": null
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "dynamic_ecosystem",
+      "label": "Ecosystem",
+      "hint": "community and ecosystem, population ecology, energy flow",
+      "chapter": 9
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "environmental_sustainability",
+      "label": "Environmental Sustainability",
+      "hint": "threats to the environment, conservation, green technology",
+      "chapter": 10
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "inheritance",
+      "label": "Inheritance",
+      "hint": "monohybrid and dihybrid inheritance, genes and alleles, inheritance in humans",
+      "chapter": null
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "variation",
+      "label": "Variation",
+      "hint": "types and factors of variation, mutation",
+      "chapter": null
+    },
+    {
+      "subject": "biology",
+      "form": 5,
+      "slug": "genetic_technology",
+      "label": "Genetic Technology",
+      "hint": "genetic engineering, biotechnology",
+      "chapter": null
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "introduction_to_chemistry",
+      "label": "Introduction to Chemistry",
+      "hint": "fields and careers in chemistry, scientific investigation, lab safety",
+      "chapter": 1
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "matter_and_atomic_structure",
+      "label": "Matter and Atomic Structure",
+      "hint": "basic concepts of matter, atomic model, isotopes",
+      "chapter": 2
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "chemical_formulae_and_equations",
+      "label": "Chemical Formulae and Equations",
+      "hint": "moles, empirical formula, balancing chemical equations",
+      "chapter": 3
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "chemical_bonds",
+      "label": "Chemical Bonds",
+      "hint": "ionic bonding, covalent bonding, metallic bonding",
+      "chapter": 5
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "periodic_table_of_elements",
+      "label": "The Periodic Table of Elements",
+      "hint": "groups, periods, trends in properties",
+      "chapter": 4
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "acids_bases_salts",
+      "label": "Acids, Bases and Salts",
+      "hint": "pH scale, neutralisation, titration, indicators",
+      "chapter": null
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "rate_of_reaction",
+      "label": "Rate of Reaction",
+      "hint": "factors affecting reaction rate, collision theory, catalysts",
+      "chapter": 7
+    },
+    {
+      "subject": "chemistry",
+      "form": 4,
+      "slug": "manufactured_substances_in_industry",
+      "label": "Manufactured Substances in Industry",
+      "hint": "alloys, ceramics, composite materials, industrial synthesis",
+      "chapter": 8
+    },
+    {
+      "subject": "chemistry",
+      "form": 5,
+      "slug": "electrochemistry_and_redox",
+      "label": "Electrochemistry and Redox Reactions",
+      "hint": "oxidation and reduction, voltaic cells, electrolysis, corrosion, extraction of metals",
+      "chapter": 1
+    },
+    {
+      "subject": "chemistry",
+      "form": 5,
+      "slug": "carbon_compounds",
+      "label": "Carbon Compounds",
+      "hint": "petroleum, alkanes, alkenes, alcohols, carboxylic acids, esters",
+      "chapter": 2
+    },
+    {
+      "subject": "chemistry",
+      "form": 5,
+      "slug": "thermochemistry",
+      "label": "Thermochemistry",
+      "hint": "exothermic vs endothermic, heat of precipitation/displacement/neutralisation/combustion",
+      "chapter": 3
+    },
+    {
+      "subject": "chemistry",
+      "form": 5,
+      "slug": "polymer",
+      "label": "Polymer",
+      "hint": "natural and synthetic polymers, addition and condensation polymerisation, vulcanisation of rubber",
+      "chapter": 4
+    },
+    {
+      "subject": "chemistry",
+      "form": 5,
+      "slug": "chemicals_for_consumers",
+      "label": "Chemicals for Consumers",
+      "hint": "soaps, detergents, cleansing action, micelle formation",
+      "chapter": 5
+    },
+    {
+      "subject": "physics",
+      "form": 4,
+      "slug": "measurement",
+      "label": "Measurement",
+      "hint": "SI units, precision and accuracy, scalar vs vector quantities",
+      "chapter": null
+    },
+    {
+      "subject": "physics",
+      "form": 4,
+      "slug": "kinematics_dynamics_momentum",
+      "label": "Force and Motion I",
+      "hint": "linear motion, Newton's laws, inertia, momentum, conservation of momentum",
+      "chapter": 2
+    },
+    {
+      "subject": "physics",
+      "form": 4,
+      "slug": "circular_motion_and_gravitation",
+      "label": "Circular Motion and Gravitation",
+      "hint": "centripetal force, Kepler's laws, satellite orbits, escape velocity",
+      "chapter": 3
+    },
+    {
+      "subject": "physics",
+      "form": 4,
+      "slug": "heat",
+      "label": "Heat",
+      "hint": "thermal equilibrium, specific heat capacity, latent heat, gas laws",
+      "chapter": 4
+    },
+    {
+      "subject": "physics",
+      "form": 4,
+      "slug": "waves",
+      "label": "Waves",
+      "hint": "wave properties, transverse and longitudinal waves, reflection, refraction, diffraction, interference",
+      "chapter": 5
+    },
+    {
+      "subject": "physics",
+      "form": 4,
+      "slug": "light_and_optics",
+      "label": "Light and Optics",
+      "hint": "refractive index, total internal reflection, lenses, image formation",
+      "chapter": 6
+    },
+    {
+      "subject": "physics",
+      "form": 5,
+      "slug": "force_and_elasticity",
+      "label": "Force and Elasticity",
+      "hint": "resultant force, forces in equilibrium, Hooke's law, spring constant",
+      "chapter": 1
+    },
+    {
+      "subject": "physics",
+      "form": 5,
+      "slug": "forces_and_pressure",
+      "label": "Forces and Pressure",
+      "hint": "pressure in liquids, Pascal's principle, Archimedes' principle, Bernoulli's principle",
+      "chapter": 2
+    },
+    {
+      "subject": "physics",
+      "form": 5,
+      "slug": "electricity",
+      "label": "Electricity",
+      "hint": "current, potential difference, resistance, resistivity, circuits",
+      "chapter": null
+    },
+    {
+      "subject": "physics",
+      "form": 5,
+      "slug": "electromagnetism",
+      "label": "Electromagnetism",
+      "hint": "force on a current-carrying conductor, electromagnetic induction, transformer",
+      "chapter": null
+    },
+    {
+      "subject": "physics",
+      "form": 5,
+      "slug": "electronics",
+      "label": "Electronics",
+      "hint": "cathode rays, rectification, semiconductor diode, transistor",
+      "chapter": null
+    },
+    {
+      "subject": "physics",
+      "form": 5,
+      "slug": "nuclear_physics",
+      "label": "Nuclear Physics",
+      "hint": "radioactive decay, nuclear fission and fusion",
+      "chapter": null
+    },
+    {
+      "subject": "physics",
+      "form": 5,
+      "slug": "quantum_physics",
+      "label": "Quantum Physics",
+      "hint": "Planck's constant, wave-particle duality, photoelectric effect",
+      "chapter": 7
+    }
+  ]
+}

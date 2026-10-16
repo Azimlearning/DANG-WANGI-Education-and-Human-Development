@@ -130,6 +130,22 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** Requiring both keys (stricter, blocks a single-provider setup). Building the Anthropic provider now behind the cap (convenient, but untestable without a paid call and out of P0 scope). Cost: live-mode configuration is validated at startup but has no provider behind it until P3, so a valid live config still fails at the first request.
 
+## D-16: The Kit's semver is tied to its bundle bytes, and stored Environments carry the bundle hash (2026-10-16)
+
+**Decision.** `packages/kit/kit-lock.json` (committed) records the SHA-256 of each released Kit version's `core.js`. The build fails if a locked version's bytes change, and says to bump `KIT_VERSION` and the package version. `--relock` replaces an entry and is for an unreleased version only. Each Environment records the bundle hash it was verified against, and the delivery gate refuses it as `stale_kit` if the built bytes differ.
+
+**Why.** Hard constraint 6: a behaviour change bumps the Kit semver, which marks stored Environments stale. Before this, nothing tied the version string to the code: a changed bundle under the same version left every stored Environment trusted (kit-guardian S2). The review found it by tracing the code.
+
+**Trade-offs / rejected.** Any source change that alters the minified bundle now forces a bump or a visible `--relock`, including an esbuild upgrade (the bundle is only reproducible with the pinned esbuild). Rejected: hashing the source tree instead (misses build-time changes), and trusting a test that pins the version string (it detected nothing).
+
+## D-17: The CSP must be the first element of the document, ambiguous markup is refused, and verification presses real input (2026-10-16)
+
+**Decision.** Post-processing strips HTML comments and refuses any other markup declaration or processing instruction (`<![CDATA[`, `<?xml`, a stray `<!`). It injects the CSP right after the `<head>` start tag found by an HTML tokenizer, then requires `csp_is_first`: exactly one CSP, ours, with only a doctype and `html` and `head` start tags before it. The delivery gate runs the same check on the stored HTML. The render harness presses real pointer and keyboard input, treats any navigation of the frame as a refusal, fails closed if it loses the page, and the web host tears down a frame that loads a second time.
+
+**Why.** kit-guardian B1 and B2, both reproduced. A `<head>` inside a comment put the CSP in an inert comment, so a document with a hidden `eval` passed every layer. A bare `location = '//evil.example'` passed the scan, CSP does not govern navigation and `sandbox="allow-scripts"` still lets a frame navigate itself, and the harness never fired a pointer event.
+
+**Trade-offs / rejected.** Some legal HTML (comments, an XML prolog) is now refused or altered; generated Environments do not need either. Rejected: a regex for the first `<head` (the original bug), and banning only `location` assignments (obfuscation `window['loc'+'ation']` passes a text scan). **Residual risk:** a navigation or request that fires only on a condition the harness never reaches still passes the verifier; the host teardown and CSP limit the damage but the request to the external origin has already been made. Only isolation (A-10) closes it.
+
 ---
 
 ## Working assumptions (`ASSUMED:`)
@@ -143,3 +159,5 @@ Not decisions: guesses made to keep moving. Each one must be confirmed or killed
 5. **A-8 ASSUMED:** the corpus may be used locally and quoted briefly with citation. Unconfirmed legally.
 6. **A-4 ASSUMED:** Compose lane cost is well below v3's about $0.19. Measured at P3.
 7. **A-14:** the name "Synapse" collides with a published 2026 paper. Decide before a public URL.
+8. **A-19 ASSUMED:** the writers of the Environment store are trusted. The gate re-hashes, re-scans and re-checks the CSP and Kit, but does not re-render and the row has no signature, so someone who can write the SQLite file can insert an Environment the verifier never saw. Acceptable only while the API is single-operator and not public (D-11). Close it (an HMAC attestation with a key outside the data directory, or re-rendering on delivery) at the P7 deploy gate. Pinned by `test_S3_KNOWN_GAP_*`.
+9. **A-20 ASSUMED:** the plan's out-of-scope "L6 planted-physics suite (P1)" is the generation-time detection-rate measurement; hard constraint 6's per-micro-model registration suite is a separate requirement, and it was built for `hookes` in P0. Confirm with the owner.

@@ -27,4 +27,4 @@ Status vocabulary: `Draft` · `In progress` · `Done` · `Blocked` · `Supersede
 
 | File | Description | Status |
 |---|---|---|
-| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | P0: walking skeleton and coverage census | In progress |
+| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | P0: walking skeleton and coverage census | In progress (tasks 1 to 9 built and verified; the owner's census review is pending) |

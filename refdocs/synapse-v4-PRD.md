@@ -236,6 +236,8 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-13 | Process: this doc system, subagents `doc-keeper`, `cost-auditor`, `kit-guardian`, and the secret-guard hook only | Owner chose the subagents; other hooks wait until a rule is broken |
 | D-14 | The corpus is local and gitignored; a manifest and ingestion script are committed | Copyright is the Ministry's; legal position unconfirmed |
 | D-15 | Live mode needs only an Anthropic key and a cap; OpenRouter is optional; no live provider exists until P3 | CLAUDE.md lists OpenRouter as optional; a live path is not built before the owner confirms paid runs |
+| D-16 | The Kit semver is tied to its bundle bytes by `kit-lock.json`; stored Environments carry the bundle hash | Hard constraint 6; found by kit-guardian S2 |
+| D-17 | The CSP must be the first element; ambiguous markup is refused; verification presses real input and treats navigation as a refusal | kit-guardian B1 and B2, both reproduced |
 
 ---
 
@@ -261,6 +263,8 @@ Unresolved. Anything marked `ASSUMED:` is a working assumption, not a confirmed 
 16. **A-16 ASSUMED:** the dev machine's lack of Docker and Postgres persists; SQLite locally, a managed database at deploy.
 17. **A-17 ASSUMED:** the "Mark 2" the owner means is the Arcana v2 GenUI pipeline (D-31, D-36, D-41) together with the compiled-vault plan its docs literally name `genui-obsidianmark2` (D-35).
 18. **A-18 ASSUMED:** `security-reviewer` is added before any public deploy; `test-runner` was not selected and tests are run by the session.
+19. **A-19 ASSUMED:** the writers of the Environment store are trusted until the deploy gate; the gate does not re-render and rows carry no signature. See `DECISIONS.md`.
+20. **A-20 ASSUMED:** the deferred "L6 planted-physics suite" is the generation-time detection-rate measurement; the per-micro-model registration suite required by hard constraint 6 was built for `hookes` in P0. Confirm with the owner.
 
 ---
 
@@ -277,6 +281,7 @@ Unresolved. Anything marked `ASSUMED:` is a working assumption, not a confirmed 
 | Kit | The versioned library of micro-components, served at `/vendor/kit/<semver>/` |
 | Observable | A reactive value; the only thing a readout accepts in Compose |
 | Lane | Instantiate, Compose or Free |
+| `dev-fixture` | A P0-only trust label for hand-written fixtures. It promises nothing about correctness. It is the only label the verifier can mint in P0, and it is removed in P1 when L1 and L3 make `kit-verified` reachable |
 | Label | The trust label shown to the student: `kit-verified`, `model-checked`, then `reviewed`, `canonical` |
 | Prompt pack | A versioned file of prompt segments selected per request |
 | Mint | The single place that can create the deliverable type |

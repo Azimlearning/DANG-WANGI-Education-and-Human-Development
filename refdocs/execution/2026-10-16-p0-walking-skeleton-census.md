@@ -68,6 +68,8 @@
 
 ## Task 4: Kit v0
 
+**Status: done 2026-10-16, Verify passed.** Reality: `bridge` keeps its transport in a private `state` object and `window.Synapse` is frozen; added `kit-lock.json` (D-16) so the build refuses an unversioned change; added `science_registration.ts` and its tests (the registration suite for `hookes`, A-20); `slider` and `readout` set accessible names and `aria-valuetext`; `hookes` throws on a negative load instead of clamping. Bundle 7752 bytes.
+
 **Files:** `packages/kit/src/{observable,environment,slider,readout,bridge,science_hookes,index}.ts`, `packages/kit/build.mjs`, `packages/kit/src/manifest.ts`, `packages/kit/src/*.test.ts`.
 
 **Steps:**
@@ -82,6 +84,8 @@
 
 ## Task 5: Reference Environment fixture
 
+**Status: done 2026-10-16.** Reality: nine planted variants, not three: `bad-fetch`, `bad-dead-control`, `bad-bypass`, `bad-csp-comment`, `bad-navigate-literal`, `bad-navigate-obfuscated`, `bad-undeclared-control`, `bad-selfmutating-readout`, `bad-a11y`. `bad-bypass` is not refused in P0 and a test pins that. The manual screenshot check was replaced by the web smoke.
+
 **Files:** `data/fixtures/envs/reference-spring.html`, `data/fixtures/envs/reference-spring.plan.json`, plus three planted-defect variants alongside it: `reference-spring.bad-fetch.html`, `reference-spring.bad-dead-control.html`, `reference-spring.bad-bypass.html`.
 
 **Steps:**
@@ -91,6 +95,8 @@
 **Verify:** the good fixture, served by the task 6 static mount, shows a slider and a readout that changes when the slider moves (manual, recorded as a screenshot reference in the changelog).
 
 ## Task 6: Verification v0 (L0, render harness, mint, store, gate)
+
+**Status: done 2026-10-16, Verify passed; 🔶 for what it cannot catch (see STATUS).** Reality: Chromium was preinstalled, so no browser download (Playwright pinned to 1.56.0). The harness judges wiring by declared readouts changing, requires a quiet baseline and determinism, refuses undeclared and duplicate controls, presses real pointer and keyboard input, treats any frame navigation as a refusal, fails closed on a lost page, and checks accessible names, 44 px targets and 360 px overflow. Post-processing strips comments, refuses other markup declarations, injects the CSP with a tokenizer and checks `csp_is_first` (D-17). Each Environment records the Kit bundle hash and needs at least one citation (D-16). The store refuses the same HTML under different metadata. Reviewed by kit-guardian; B1 and B2 fixed.
 
 **Files:** `api/verify/{scan,render,mint,store,gate}.py`, `api/postprocess.py`, `api/static.py`, `api/verify/test_*.py`.
 
@@ -111,6 +117,8 @@
 
 ## Task 7: API `/ask` on fakes
 
+**Status: done 2026-10-16, Verify passed.** Reality: the app factory is `api/app.py` (`api/main.py` only builds `app`); `api/seed.py` verifies and stores the reference Environment (`uv run python -m api.seed`, about 15 s) and `/ask` returns a `not_found` error event until it has run. A refused delivery is an `error` event then `done`. A bad question is a 400 envelope before any stream; a malformed body is a 422 envelope. CORS allows only `PUBLIC_ORIGIN`. FastAPI 0.143's built-in `EventSourceResponse` is used.
+
 **Files:** `api/main.py`, `api/routes/ask.py`, `api/sse.py`, `api/routes/test_ask.py`.
 
 **Steps:**
@@ -122,6 +130,8 @@
 - `curl -N -X POST http://localhost:8000/ask -H "content-type: application/json" -d '{"question":"why does a spring stretch"}'` prints those events in that order.
 
 ## Task 8: Web shell
+
+**Status: done 2026-10-16, Verify passed.** Reality: Next.js 16.4.2, React 19.3.1, Tailwind 4.3.3 (TypeScript ^5.9 and vitest ^3.2 to match the other packages). The real-browser smoke is `eval/smoke/web_smoke.py` (Python Playwright, 17 checks), not a test in `web/`. The host also tears down a frame that loads a second time. The fetch from inside the frame is blocked and its CSP violation is the evidence, so the "no console errors" check is taken BEFORE that deliberate fetch.
 
 **Files:** `web/` (a Next.js app), `web/lib/{stream,hash,sandbox}.ts`, `web/components/{EnvironmentFrame,Peek,Stage}.tsx`, `web/**/*.test.ts(x)`, a rewrite in the Next config proxying `/vendor/*` to the API.
 
@@ -136,6 +146,8 @@
 - A real-browser smoke (Playwright): ask a question; the Peek appears; Open shows the Stage; moving the slider changes the readout; a `fetch` from inside the frame is blocked; `iframe.sandbox` is `allow-scripts`; the console has no errors. Record a screenshot reference.
 
 ## Task 9: Coverage census
+
+**Status: built and validated 2026-10-16; the owner's review is PENDING, so this task is not done.** Reality: `candidate_models` is a sixth column; the criteria are the first section of both the script and the generated report; the report is generated and a test fails if it is stale. All rows are estimates by one annotator.
 
 **Files:** `data/kssm_topics.json` (ported), `eval/census/census.py`, `refdocs/evidence/README.md`, `refdocs/evidence/2026-10-16-p0-census.md`.
 
