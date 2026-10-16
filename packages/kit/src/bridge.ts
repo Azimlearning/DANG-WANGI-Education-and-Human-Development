@@ -8,7 +8,8 @@
 export type BridgeMessage =
   | { type: "synapse_ready" }
   | { type: "synapse_event"; control: string; value: number | string | boolean }
-  | { type: "synapse_error"; message: string };
+  | { type: "synapse_error"; message: string }
+  | { type: "synapse_violation"; problems: string[] };
 
 type Poster = (message: BridgeMessage) => void;
 
@@ -46,6 +47,11 @@ export function event(control: string, value: number | string | boolean): void {
 
 export function error(message: string): void {
   state.poster({ type: "synapse_error", message: String(message).slice(0, 500) });
+}
+
+/** The Kit's runtime self-check found the page showing something the Kit did not make. The host hides the Environment. */
+export function violation(problems: string[]): void {
+  state.poster({ type: "synapse_violation", problems: problems.slice(0, 5).map((p) => String(p).slice(0, 120)) });
 }
 
 /** Report uncaught errors and unhandled rejections to the host. Idempotent. */

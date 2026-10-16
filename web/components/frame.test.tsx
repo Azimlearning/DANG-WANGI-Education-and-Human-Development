@@ -80,6 +80,20 @@ describe("EnvironmentFrame", () => {
   });
 });
 
+describe("the Kit's self-check", () => {
+  it("closes the frame when its own frame reports a violation, and ignores one from anywhere else", async () => {
+    const block = await makeBlock();
+    const { container } = render(<EnvironmentFrame block={block} height={300} />);
+    await waitFor(() => expect(container.querySelector("iframe")).not.toBeNull());
+    const frame = container.querySelector("iframe")!;
+    window.dispatchEvent(new MessageEvent("message", { data: { type: "synapse_violation", problems: ["x"] }, source: window }));
+    expect(container.querySelector("iframe")).not.toBeNull();
+    window.dispatchEvent(new MessageEvent("message", { data: { type: "synapse_violation", problems: ["readout shows 42.000 m"] }, source: frame.contentWindow }));
+    await waitFor(() => expect(container.querySelector("iframe")).toBeNull());
+    expect(screen.getByRole("alert").textContent).toMatch(/closed/);
+  });
+});
+
 describe("Peek and Stage", () => {
   it("Peek has at most two actions and states its provenance", async () => {
     const block = await makeBlock();

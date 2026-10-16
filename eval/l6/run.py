@@ -46,6 +46,14 @@ LAYER_OF_RULE = {
     "kit_not_intact": "L1 provenance",
     "kit_missing": "L1 provenance",
     "plan_mismatch": "L1 provenance (plan)",
+    "plan_missing": "L1 provenance (plan)",
+    "forbidden_markup": "L1 provenance",
+    "wrong_input_unit": "L1 provenance",
+    "constant_readout": "L1 provenance",
+    "control_mismatch": "L1 provenance",
+    "malformed_audit": "L1 provenance",
+    "unregistered_readout": "L1 provenance",
+    "runtime_violation": "runtime self-check",
     "forged_action": "L1 provenance",
     "wrong_unit": "L1 provenance",
     # L3: reference
@@ -224,8 +232,9 @@ The harness reports the first failed rule, so this is "first to refuse", not "ev
 
 ## Classes not tried
 
-- Conditional or time-triggered behaviour the harness never reaches (a branch taken only on the third click, or after a minute).
-  Only isolation (A-10) and a longer exploration time address it.
+- Conditional or time-triggered behaviour the harness never reaches (a branch taken only on a touch screen, or after a minute). The
+  verifier cannot see it. The Kit's runtime self-check catches a forged readout in the student's browser and the host closes the
+  Environment (D-24); isolation (A-10) would not help with this class, only with network exfiltration.
 - Bugs in the Kit that are wrong in the same way in its own reference and in the Python reference (they share an author).
 - Defects in prose that contain no numbers (see the known misses), and defects in the choice of model for the question.
 - Accessibility defects beyond the static fence (focus order, screen-reader reading order).

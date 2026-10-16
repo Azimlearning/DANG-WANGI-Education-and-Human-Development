@@ -123,6 +123,8 @@ export interface ControlRecord {
   max: number;
   grid: number;
   default: number;
+  /** The input's step: the most the input's own value can differ from the observable's after rounding to a step. */
+  step: number;
   obs: object;
   el: HTMLInputElement;
 }

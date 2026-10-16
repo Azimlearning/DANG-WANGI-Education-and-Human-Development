@@ -26,7 +26,7 @@
 
 **Steps:**
 1. A module-private `WeakSet` of real observables and a `WeakMap` of provenance nodes (`control`, `model` with id and params, `constant`, `derived`, `free`). `isObservable` checks the set, not the shape. `observable()` created by generated code is kind `free`.
-2. `Synapse.constant(value, {label})` for a declared fixed value; `Synapse.text(env, string)` for sanctioned copy; both mark their DOM `data-synapse-owned`.
+2. `Synapse.constant(value, {label, unit})` for a declared fixed value (an input to a model; a readout of a bare constant is refused); `Synapse.text(env, string)` for sanctioned copy. Ownership is a private map of element to expected text (not a DOM attribute, which a script could copy); see D-24.
 3. Every Kit component marks the elements it creates as owned. `readout` records its observable's provenance and a formatter, so the audit can recompute its text.
 4. `window.Synapse` is defined once with `Object.defineProperty` as non-writable, non-configurable, and frozen. A second definition throws.
 5. `Synapse.audit()` returns a plain, serialisable record: controls (id, min, max, grid, value), readouts (label, unit, digits, displayed text, observable value, formatted value, provenance chain), copy numbers, and constants.
@@ -36,29 +36,29 @@
 
 ## Task 3: Science registration framework and two more models
 
-**Files:** `packages/kit/src/science/{spec,hookes,ohm,pressure_depth}.ts`, `packages/kit/src/science_registration.test.ts` (generalised), manifest entries.
+**Files:** `packages/kit/src/science/{spec,model,hookes,ohm,pressure_depth}.ts`, `packages/kit/src/science/science.test.ts`, manifest entries.
 
 **Steps:**
 1. A `ScienceSpec` type: id, units for inputs and output, domain, citation (`UNVERIFIED`), reference cases with a derivation string, properties, planted bugs. One generic `registrationFailures(spec, impl)`.
-2. Move `hookes` into the framework. Add `electricity.ohm` (current = voltage / resistance, with power) and `fluids.pressure_depth` (pressure = depth x density x g). Each has at least 8 planted bugs.
+2. Move `hookes` into the framework. Add `electricity.ohm` (current = voltage / resistance; power was not built) and `fluids.pressure_depth` (pressure = depth x density x g). Each has at least 8 planted bugs.
 3. Manifest entries carry units, domain and the citation status.
 
 **Verify:** the suite accepts each real model and refuses every planted bug; the report prints `n/n` detected per model.
 
 ## Task 4: Independent Python references
 
-**Files:** `api/verify/references.py`, `api/verify/test_references.py`.
+**Files:** `api/verify/references.py`; its tests are in `api/verify/test_provenance.py` (there is no `test_references.py`).
 
 **Steps:** hand-write each model's reference from the formula, in Python, without reading the TypeScript, and compute a table of worked values by hand (the arithmetic is written out in comments). Where the model has a second route to the same answer, use it as a property (for example Hooke's law: the elastic energy `E = F^2 / (2k)` must equal `F * x / 2`; Ohm's law: `V^2 / R` must equal `V * I`). A registry maps a model id to its reference function and parameter schema. Both implementations share the author, so a shared misunderstanding is possible; the textbook worked examples in P2 are the real independent check.
 
-**Verify:** `uv run pytest api/verify/test_references.py -q`: the worked values, properties and domain refusals pass.
+**Verify:** `uv run pytest api/verify/test_provenance.py -q`: the worked values, properties and domain refusals pass. **Deviation:** the energy second-route properties (`E = F^2 / 2k`, `V^2 / R = V I`) were not written; the references carry hand-computed worked values and the Kit-side properties only.
 
 ## Task 5: L1 provenance, L2 grid and extremes, L3 cross-check in the harness
 
 **Files:** `api/verify/render.py`, `api/verify/mint.py`, tests, new planted fixtures.
 
 **Steps:**
-1. After ready, call `Synapse.audit()`. L1 refuses: a readout whose provenance is not grounded in a control through a science model; a readout whose displayed text differs from its formatted value; any numeric text outside owned elements; a `window.Synapse` that is not the frozen Kit.
+1. After ready, call `Synapse.audit()`. L1 refuses: a readout whose provenance is not grounded in a control through a science model (a bare declared constant is refused, a model fed in the wrong unit is refused); a readout whose displayed text differs from its formatted value; any numeric text outside owned elements; a `window.Synapse` that is not the frozen Kit.
 2. L2 sweeps the declared grid of each control with the others at default, plus every combination of min, mid and max up to a cap, and checks every readout is finite and nothing threw.
 3. L3 reads the audit at each point, evaluates the Python reference for each model with the recorded parameters and control values, and refuses a mismatch beyond the display rounding. It also compares the recorded model parameters to the plan JSON's `models`.
 4. Fill the `checked` summary from what was actually run.

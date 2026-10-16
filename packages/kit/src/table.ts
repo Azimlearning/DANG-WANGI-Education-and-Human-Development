@@ -17,14 +17,18 @@ export interface TableColumn {
 const MAX_ROWS = 30;
 
 export function table(env: Environment, options: { caption: string; columns: TableColumn[] }): HTMLTableElement {
-  const { caption, columns } = options;
+  const caption = String(options.caption);
+  // Snapshot the columns now: Record must read what was verified, not whatever the caller later puts in the array it kept.
+  const columns: Required<TableColumn>[] = (options.columns ?? []).map((c) => ({ label: String(c.label), unit: String(c.unit), value: c.value, digits: c.digits ?? 2 }));
   if (columns.length < 1 || columns.length > 6) throw new RangeError("table: 1 to 6 columns");
   for (const c of columns) {
     if (!isObservable(c.value)) throw new TypeError(`table column "${c.label}": value must be a Kit observable`);
-    const digits = c.digits ?? 2;
+    const digits = c.digits;
     if (!Number.isInteger(digits) || digits < 0 || digits > 8) throw new RangeError(`table column "${c.label}": digits must be 0 to 8`);
   }
   const wrap = document.createElement("div");
+  const scroller = document.createElement("div");
+  scroller.className = "syn-table-wrap";
   const el = document.createElement("table");
   el.className = "syn-table";
   const cap = own(document.createElement("caption"), () => caption);
@@ -39,7 +43,7 @@ export function table(env: Environment, options: { caption: string; columns: Tab
     th.textContent = text;
     copy.push(c.label, c.unit);
     headRow.appendChild(th);
-    series.push({ kind: "table", title: caption, label: c.label, unit: c.unit, digits: c.digits ?? 2, obs: c.value });
+    series.push({ kind: "table", title: caption, label: c.label, unit: c.unit, digits: c.digits, obs: c.value });
   }
   head.appendChild(headRow);
   const body = document.createElement("tbody");
@@ -59,22 +63,34 @@ export function table(env: Environment, options: { caption: string; columns: Tab
     if (body.rows.length >= MAX_ROWS) return;
     const tr = document.createElement("tr");
     for (const c of columns) {
-      const text = c.value.get().toFixed(c.digits ?? 2);
+      const text = c.value.get().toFixed(c.digits);
       const td = own(document.createElement("td"), () => text);
       td.textContent = text;
       tr.appendChild(td);
     }
     body.appendChild(tr);
+    announce("Row recorded");
   });
   clear.addEventListener("click", () => {
     for (const tr of Array.from(body.rows)) {
       // The owned-element registry holds the cells; they leave the page with the row and the audit only visits attached nodes.
       tr.remove();
     }
+    announce("Table cleared");
   });
+  // Rows are added silently otherwise; a polite status tells a screen-reader user what the button did.
+  const status = own(document.createElement("p"), () => announced);
+  status.className = "syn-sr";
+  status.setAttribute("role", "status");
+  let announced = "";
+  const announce = (message: string) => {
+    announced = message;
+    status.textContent = message;
+  };
   const buttons = document.createElement("div");
   buttons.append(record, clear);
-  wrap.append(el, buttons);
+  scroller.appendChild(el);
+  wrap.append(scroller, buttons, status);
   env.stage.appendChild(wrap);
   return el;
 }

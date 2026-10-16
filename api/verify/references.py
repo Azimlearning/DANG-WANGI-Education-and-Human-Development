@@ -25,6 +25,7 @@ class Reference:
     inputs: tuple[str, ...]
     params: tuple[str, ...]
     output_unit: str
+    input_units: dict[str, str]
 
 
 def _finite(**values: float) -> None:
@@ -64,9 +65,9 @@ def pressure_depth(depth: float, density: float, g: float) -> float:
 
 
 REFERENCES: dict[str, Reference] = {
-    "mechanics.hookes": Reference(hookes, ("load",), ("k",), "m"),
-    "electricity.ohm": Reference(ohm, ("voltage", "resistance"), (), "A"),
-    "fluids.pressure_depth": Reference(pressure_depth, ("depth",), ("density", "g"), "Pa"),
+    "mechanics.hookes": Reference(hookes, ("load",), ("k",), "m", {"load": "N"}),
+    "electricity.ohm": Reference(ohm, ("voltage", "resistance"), (), "A", {"voltage": "V", "resistance": "ohm"}),
+    "fluids.pressure_depth": Reference(pressure_depth, ("depth",), ("density", "g"), "Pa", {"depth": "m"}),
 }
 
 

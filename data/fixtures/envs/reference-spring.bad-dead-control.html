@@ -14,8 +14,9 @@
     note: "Hang a load on a spring and it stretches. Within the elastic limit the extension is proportional to the load: extension = load / k."
   });
   var load = Synapse.slider(env, { id: "load", label: "Load", unit: "N", min: 0, max: 10, value: 2, step: 0.1 });
-  var extension = Synapse.hookes({ k: 50, load: load });
-  Synapse.readout(env, { label: "Extension", unit: "m", value: Synapse.constant(0.04, { label: "Extension", unit: "m" }), digits: 3 });
+  var spare = Synapse.slider(env, { id: "spare", label: "Spare load", unit: "N", min: 0, max: 10, value: 2, step: 0.1 });
+  var extension = Synapse.hookes({ k: 50, load: spare });
+  Synapse.readout(env, { label: "Extension", unit: "m", value: extension, digits: 3 });
   Synapse.bridge.ready();
 </script>
 </body>

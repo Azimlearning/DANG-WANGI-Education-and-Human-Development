@@ -18,7 +18,18 @@ def good_audit() -> dict:
         "kitVersion": "0.1.0",
         "intact": True,
         "controls": [
-            {"id": "load", "label": "Load", "unit": "N", "min": 0, "max": 10, "grid": 10, "default": 2, "value": 2}
+            {
+                "id": "load",
+                "label": "Load",
+                "unit": "N",
+                "min": 0,
+                "max": 10,
+                "grid": 10,
+                "default": 2,
+                "step": 1,
+                "value": 2,
+                "inputValue": "2",
+            }
         ],
         "readouts": [
             {
@@ -43,8 +54,15 @@ def good_audit() -> dict:
             {"text": "Why does a spring stretch?", "numbers": []},
             {"text": "Hang a load on a spring.", "numbers": []},
         ],
+        "readoutElements": 1,
+        "series": [],
+        "actions": [],
+        "forgedActions": 0,
         "ownedMismatches": [],
         "unownedNumbers": [],
+        "unownedAttributeNumbers": [],
+        "forbidden": [],
+        "shadowRoots": 0,
     }
 
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { audit, seal } from "./audit";
+import { audit, seal, violations } from "./audit";
 import * as bridge from "./bridge";
 import { state as bridgeState } from "./bridge";
 import { constant } from "./constant";
@@ -17,6 +17,7 @@ import { pressureDepth } from "./science/pressure_depth";
 import { slider } from "./slider";
 import { table } from "./table";
 import { text } from "./text";
+import { resetWatchForTests, startWatch } from "./watch";
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -138,7 +139,7 @@ describe("provenance audit", () => {
   it("reports a grounded readout: control -> model, with its parameters", () => {
     spring();
     const a = audit(KIT_VERSION);
-    expect(a.controls).toEqual([{ id: "load", label: "Load", unit: "N", min: 0, max: 10, grid: 10, default: 2, value: 2 }]);
+    expect(a.controls).toEqual([{ id: "load", label: "Load", unit: "N", min: 0, max: 10, grid: 10, default: 2, step: 1, value: 2, inputValue: "2" }]);
     expect(a.readouts).toHaveLength(1);
     const r = a.readouts[0]!;
     expect(r.displayed).toBe("0.040 m");
@@ -417,5 +418,151 @@ describe("reset, table and graph", () => {
     env.controls.appendChild(b);
     expect(audit(KIT_VERSION).forgedActions).toBe(1);
     expect(audit(KIT_VERSION).actions).toEqual([{ kind: "reset", label: "Reset" }]);
+  });
+});
+
+describe("what the audit refuses to leave unseen", () => {
+  const forbiddenWhat = () => audit(KIT_VERSION).forbidden.map((f) => f.what);
+
+  it("flags canvas, media, meter, progress, list counters and look-alike widgets", () => {
+    const { env } = spring();
+    expect(forbiddenWhat()).toEqual([]);
+    for (const tag of ["canvas", "meter", "progress", "img", "video"]) env.stage.appendChild(document.createElement(tag));
+    const ol = document.createElement("ol");
+    ol.setAttribute("start", "42");
+    env.stage.appendChild(ol);
+    const li = document.createElement("li");
+    li.setAttribute("value", "42");
+    env.stage.appendChild(li);
+    env.stage.appendChild(document.createElement("input"));
+    const found = forbiddenWhat().join("|");
+    for (const expected of ["<canvas> element", "<meter> element", "<progress> element", "<img> element", "<video> element", "list counter start", "list item value", "a widget no Kit component made"]) {
+      expect(found).toContain(expected);
+    }
+  });
+
+  it("flags a stylesheet that draws an image, a font or generated content, and a link element", () => {
+    spring();
+    const style = document.createElement("style");
+    style.textContent = "p::before { content: 'x' }";
+    document.body.appendChild(style);
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    expect(forbiddenWhat().join("|")).toContain("stylesheet with an image");
+    expect(forbiddenWhat().join("|")).toContain("<link> element");
+  });
+
+  it("counts non-ASCII digits as digits in text and in attributes", () => {
+    const { env } = spring();
+    const p = document.createElement("p");
+    p.textContent = "Answer: ４２ m";
+    env.stage.appendChild(p);
+    expect(audit(KIT_VERSION).unownedNumbers.map((u) => u.text)).toContain("Answer: ４２ m");
+    const q = document.createElement("p");
+    q.setAttribute("aria-valuenow", "42");
+    env.stage.appendChild(q);
+    expect(audit(KIT_VERSION).unownedAttributeNumbers.map((a) => a.attribute)).toContain("aria-valuenow");
+  });
+
+  it("reads the body through the captured getter even if a script shadows document.body", () => {
+    const { env } = spring();
+    const p = document.createElement("p");
+    p.textContent = "Answer: 42 m";
+    env.stage.appendChild(p);
+    Object.defineProperty(document, "body", { configurable: true, get: () => document.createElement("body") });
+    try {
+      expect(audit(KIT_VERSION).unownedNumbers.map((u) => u.text)).toContain("Answer: 42 m");
+    } finally {
+      delete (document as unknown as Record<string, unknown>).body;
+    }
+  });
+
+  it("counts readout elements the Kit did not make", () => {
+    const { env } = spring();
+    const o = document.createElement("output");
+    o.setAttribute("data-synapse-readout", "Fake");
+    env.readouts.appendChild(o);
+    const a = audit(KIT_VERSION);
+    expect(a.readoutElements).toBe(2);
+    expect(a.readouts).toHaveLength(1);
+    expect(violations(a).join("|")).toContain("a readout element the Kit did not make");
+  });
+
+  it("a control whose input disagrees with the observable is reported", () => {
+    const { load } = spring();
+    document.querySelector("input")!.value = "9";
+    expect(violations(audit(KIT_VERSION)).join("|")).toContain('control "load" disagrees');
+    load.set(9);
+    expect(violations(audit(KIT_VERSION))).toEqual([]);
+  });
+});
+
+describe("kit-owned strings cannot be changed through the options object", () => {
+  it("environment, readout and table copy what they were given", () => {
+    const opts = { title: "T", note: "N" };
+    const env = environment(opts);
+    opts.note = "At 10 N the extension is 42 m.";
+    expect(audit(KIT_VERSION).ownedMismatches).toEqual([]);
+    document.querySelector(".syn-note")!.textContent = opts.note;
+    expect(audit(KIT_VERSION).ownedMismatches.map((m) => m.expected)).toContain("N");
+    const load = slider(env, { id: "load", label: "Load", unit: "N", min: 0, max: 10, value: 2 });
+    const ext = hookes({ k: 50, load });
+    const ro = { label: "Extension", unit: "m", value: ext, digits: 3 };
+    const out = readout(env, ro);
+    ro.label = "Extension (at 10 N it is 42 m)";
+    (out.previousSibling as HTMLElement).textContent = ro.label;
+    expect(audit(KIT_VERSION).ownedMismatches.map((m) => m.expected)).toContain("Extension");
+    const cols = [{ label: "Load", unit: "N", value: load }, { label: "Extension", unit: "m", value: ext, digits: 3 }];
+    table(env, { caption: "R", columns: cols });
+    cols[1]!.value = { get: () => 42 } as never;
+    document.querySelector<HTMLButtonElement>("[data-synapse-action=record]")!.click();
+    expect(Array.from(document.querySelectorAll("tbody td")).map((c) => c.textContent)).toEqual(["2.00", "0.040"]);
+  });
+
+  it("an observable cannot have its methods replaced", () => {
+    const { load } = spring();
+    expect(Object.isFrozen(load)).toBe(true);
+    expect(() => {
+      "use strict";
+      (load as unknown as Record<string, unknown>).get = () => 99;
+    }).toThrow(TypeError);
+  });
+});
+
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+describe("the runtime self-check", () => {
+  it("reports a tampered readout and empties the page", async () => {
+    resetWatchForTests();
+    const sent: unknown[] = [];
+    bridgeState.poster = (m) => sent.push(m);
+    spring();
+    startWatch();
+    expect(sent).toEqual([]);
+    document.querySelector("output")!.textContent = "42.000 m";
+    await wait(200);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ type: "synapse_violation" });
+    expect(document.body.textContent).toBe("");
+  });
+
+  it("stays quiet while the Kit itself moves the controls and redraws", async () => {
+    resetWatchForTests();
+    const sent: unknown[] = [];
+    bridgeState.poster = (m) => sent.push(m);
+    const { env, load, extension } = spring();
+    graph(env, { title: "g", x: load, y: extension, yLabel: "Extension", yUnit: "m" });
+    table(env, { caption: "r", columns: [{ label: "Load", unit: "N", value: load }] });
+    reset(env);
+    startWatch();
+    for (const v of [0, 5, 10, 3]) {
+      load.set(v);
+      document.querySelector<HTMLButtonElement>("[data-synapse-action=record]")!.click();
+      await wait(120);
+    }
+    document.querySelector<HTMLButtonElement>("[data-synapse-action=reset]")!.click();
+    await wait(1300);
+    expect(sent.filter((m) => (m as { type: string }).type === "synapse_violation")).toEqual([]);
   });
 });

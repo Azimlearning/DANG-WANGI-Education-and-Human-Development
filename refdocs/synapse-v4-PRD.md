@@ -92,7 +92,7 @@ Retries use the verifier's issues. A branch degrades early instead of starting a
 | L5 | Mint and gate: only the verifier mints; the gate re-hashes and re-checks | all | Exists in v3 and Arcana v2 |
 | L6 | Planted-physics-bug suite run against the verifier, producing a detection rate | process | New |
 
-**Guaranteed in Compose (L0 to L5):** the numbers shown come from audited micro-models, and the assembly works across the tested grid. **Not guaranteed:** that the scene tells the truth (a correct number beside a misleading picture), which only L4 and review catch. **Free:** model-checked only, the strength of v3, unmeasured, labelled so.
+**Guaranteed in Compose (L0 to L5), subject to the limits in D-24:** the numbers the Environment computes come from audited micro-models, the numbers in its sentences match a control value or a model setting, and the assembly works across the tested grid; the Kit also watches itself in the student's browser and the host closes an Environment that changes what the Kit drew. **Not guaranteed:** that the scene tells the truth (a correct number beside a misleading picture), which only L4 and review catch. **Free:** model-checked only, the strength of v3, unmeasured, labelled so.
 
 ### 3.4 The Kit
 

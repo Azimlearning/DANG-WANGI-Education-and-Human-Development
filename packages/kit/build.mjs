@@ -30,7 +30,10 @@ await build({
   globalName: "__synapse_kit",
   // Defined once, non-writable and non-configurable: generated code can neither replace nor redefine the Kit (kit-guardian S4).
   footer: {
-    js: 'Object.defineProperty(window,"Synapse",{value:__synapse_kit.Synapse,writable:false,configurable:false,enumerable:true});',
+    // Order matters: freeze the intrinsics first, then publish the Kit, so no generated script ever sees a patchable built-in.
+    // The unit tests that load this bundle into the test runner's own realm set the flag below; a page cannot, because the Kit is
+    // the first script it loads (the verifier requires that) so nothing of the page's has run yet.
+    js: 'if(!window.__SYNAPSE_NO_LOCKDOWN__)__synapse_kit.lockdown();Object.defineProperty(window,"Synapse",{value:__synapse_kit.Synapse,writable:false,configurable:false,enumerable:true});',
   },
   minify: true,
   target: "es2020",

@@ -7,7 +7,7 @@ import type { Environment } from "./environment";
 import { controls, own, registerAction } from "./provenance";
 
 export function reset(env: Environment, options: { label?: string } = {}): HTMLButtonElement {
-  const label = options.label ?? "Reset";
+  const label = String(options.label ?? "Reset");
   const button = own(document.createElement("button"), () => label);
   button.type = "button";
   button.className = "syn-btn";

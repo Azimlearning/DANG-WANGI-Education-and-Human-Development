@@ -21,7 +21,10 @@ export interface SliderOptions {
 }
 
 export function slider(env: Environment, options: SliderOptions): Observable<number> {
-  const { id, label, unit, min, max } = options;
+  const id = String(options.id);
+  const label = String(options.label);
+  const unit = String(options.unit);
+  const { min, max } = options;
   if (!(min < max)) throw new RangeError(`slider ${id}: min must be below max`);
   if (controls.some((c) => c.id === id)) throw new RangeError(`slider ${id}: id already used`);
   const grid = options.grid ?? 10;
@@ -57,6 +60,6 @@ export function slider(env: Environment, options: SliderOptions): Observable<num
   });
   wrap.append(lab, input);
   env.controls.appendChild(wrap);
-  controls.push({ id, label, unit, min, max, grid, default: initial, obs: value, el: input });
+  controls.push({ id, label, unit, min, max, grid, default: initial, step: Number(input.step), obs: value, el: input });
   return value;
 }

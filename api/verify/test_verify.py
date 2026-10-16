@@ -451,7 +451,8 @@ def test_S1_an_undeclared_control_is_refused(kit_dist: Path) -> None:
 def test_S1_a_readout_that_changes_by_itself_does_not_make_a_dead_control_look_wired(kit_dist: Path) -> None:
     with pytest.raises(VerificationFailed) as err:
         mint(kit_dist, "reference-spring.bad-selfmutating-readout.html")
-    assert (err.value.stage, err.value.rule) == ("render", "unstable_readout")
+    # Two layers see it: the control the page moves no longer matches the value the harness set, or the readout drifts on its own.
+    assert err.value.stage == "render" and err.value.rule in ("unstable_readout", "control_mismatch")
 
 
 def test_S6_unnamed_controls_and_readouts_are_refused(kit_dist: Path) -> None:
@@ -703,9 +704,10 @@ def test_L3_a_changed_model_parameter_is_a_plan_mismatch(kit_dist: Path) -> None
     assert "k" in e.reason and "25" in e.reason
 
 
-def test_L3_a_page_that_drops_its_model_for_a_constant_is_a_plan_mismatch(kit_dist: Path) -> None:
+def test_L3_a_readout_fed_by_a_declared_constant_is_refused_as_a_constant_readout(kit_dist: Path) -> None:
+    """A constant is a grounded INPUT to a model, but a readout of a bare constant is a number no model produced (kit-guardian B10)."""
     html = variant("value: extension,", 'value: Synapse.constant(0.04, { label: "Extension", unit: "m" }),')
-    assert refused(kit_dist, html, plan_models=HOOKES_PLAN).rule == "plan_mismatch"
+    assert refused(kit_dist, html, plan_models=HOOKES_PLAN).rule == "constant_readout"
 
 
 def test_L3_a_physics_bug_planted_in_the_kit_bundle_is_caught_by_the_independent_reference(
@@ -847,3 +849,27 @@ def test_L1_a_plain_button_is_still_an_undeclared_control(kit_dist: Path) -> Non
         OHM_GRAPH,
     )
     assert refused(kit_dist, html).rule == "undeclared_control"
+
+
+def test_a_six_column_table_and_the_graph_fit_a_360_px_phone(kit_dist: Path) -> None:
+    """Hard constraint 10: the widest table the Kit allows must not overflow the phone width (the harness checks horizontal overflow)."""
+    wide = """Synapse.table(env, { caption: "Everything recorded", columns: [
+    { label: "Voltage", unit: "V", value: voltage, digits: 3 },
+    { label: "Resistance", unit: "ohm", value: resistance, digits: 3 },
+    { label: "Current", unit: "A", value: current, digits: 3 },
+    { label: "Voltage again", unit: "V", value: voltage, digits: 3 },
+    { label: "Resistance again", unit: "ohm", value: resistance, digits: 3 },
+    { label: "Current again", unit: "A", value: current, digits: 3 }
+  ] });"""
+    import re
+
+    html = fixture_html_ohm_graph()
+    html = re.sub(r"Synapse\.table\(env, \{.*?\] \}\);", lambda _m: wide, html, count=1, flags=re.S)
+    e = mint(kit_dist, raw_html=html, slug="wide-table", plan_models=OHM_PLAN)
+    assert e.checked.reference_cases > 0
+
+
+def fixture_html_ohm_graph() -> str:
+    from api.verify.conftest import fixture_html
+
+    return fixture_html(OHM_GRAPH)

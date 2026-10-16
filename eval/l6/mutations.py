@@ -473,6 +473,193 @@ MUTATIONS: list[Mutation] = [
         kit_edit=patch_fn(["voltage", "resistance"], "{voltage}*{resistance}"),
     ),
     Mutation("neutral-ohm-graph", "neutral", "the unmodified graph, table and reset page", OHM_GRAPH, "accept"),
+    # ── kit-guardian P1 review: attack pages (each was minted before the fixes) ────────────────────────────────────────────
+    Mutation(
+        "g-fullwidth-digits",
+        "provenance",
+        "a result in fullwidth digits",
+        SPRING,
+        "refuse",
+        edit=sub("</body>", "<p>Answer: \uff14\uff12 m</p>\n</body>"),
+    ),
+    Mutation(
+        "g-list-marker-copy",
+        "provenance",
+        "copy that starts with a number",
+        SPRING,
+        "refuse",
+        edit=before_ready('Synapse.text(env, "42 m is the extension at full load.");'),
+    ),
+    Mutation(
+        "g-newline-copy",
+        "provenance",
+        "copy with a number after a newline",
+        SPRING,
+        "refuse",
+        edit=before_ready('Synapse.text(env, "Extension at full load:\\n42 m");'),
+    ),
+    Mutation(
+        "g-step-context-copy",
+        "provenance",
+        "a quantity hidden behind the word step",
+        SPRING,
+        "refuse",
+        edit=before_ready('Synapse.text(env, "The extension is step 42 m.");'),
+    ),
+    Mutation(
+        "g-readout-label-mutation",
+        "provenance",
+        "the options object is changed after readout() and the label rewritten",
+        SPRING,
+        "refuse",
+        edit=sub(
+            'Synapse.readout(env, { label: "Extension", unit: "m", value: extension, digits: 3 });',
+            'var ro = { label: "Extension", unit: "m", value: extension, digits: 3 }; var out = Synapse.readout(env, ro); ro.label = "Extension (at 10 N it is 42 m)"; out.previousSibling.textContent = ro.label;',
+        ),
+    ),
+    Mutation(
+        "g-note-mutation",
+        "provenance",
+        "the environment options are changed and the note rewritten",
+        SPRING,
+        "refuse",
+        edit=lambda h: (
+            h.replace("var env = Synapse.environment({", "var o = ({", 1)
+            .replace(
+                "  var load = Synapse.slider", "  var env = Synapse.environment(o);\n  var load = Synapse.slider", 1
+            )
+            .replace(
+                READY,
+                'o.note = "At 10 N the extension is 42 m."; document.querySelector(".syn-note").textContent = o.note;\n  '
+                + READY,
+                1,
+            )
+        ),
+    ),
+    Mutation(
+        "g-table-column-swap",
+        "provenance",
+        "a table column's observable is swapped for a fake after creation (the Kit copied the columns, so Record still writes the verified value)",
+        SPRING,
+        "accept",
+        edit=before_ready(
+            'var cols = [{ label: "Load", unit: "N", value: load }, { label: "Extension", unit: "m", value: extension, digits: 3 }]; Synapse.table(env, { caption: "Results", columns: cols }); cols[1].value = { get: function () { return 42; } }; var rec = document.querySelector("[data-synapse-action=record]"); load.subscribe(function () { rec.click(); });'
+        ),
+    ),
+    Mutation(
+        "g-patch-regexp",
+        "trust",
+        "RegExp.prototype.test is patched to hide digits from the audit",
+        SPRING,
+        "refuse",
+        edit=before_ready(
+            'var t0 = RegExp.prototype.test; RegExp.prototype.test = function (s) { return this.source === "\\\\d" ? false : t0.call(this, s); }; var p = document.createElement("p"); p.textContent = "Answer: 42 m"; document.body.appendChild(p);'
+        ),
+        note="The patch itself is a no-op once the intrinsics are frozen; the typed number is then caught.",
+    ),
+    Mutation(
+        "g-patch-flatmap",
+        "trust",
+        "Array.prototype.flatMap is emptied so owned mismatches vanish",
+        SPRING,
+        "refuse",
+        edit=before_ready(
+            'Array.prototype.flatMap = function () { return []; }; document.querySelector("h1").textContent = "The extension is 42 m";'
+        ),
+    ),
+    Mutation(
+        "g-ol-start",
+        "provenance",
+        "a number drawn by an ordered-list counter",
+        SPRING,
+        "refuse",
+        edit=sub("</body>", '<ol start="42"><li>m is the extension at full load</li></ol>\n</body>'),
+    ),
+    Mutation(
+        "g-aria-valuenow",
+        "provenance",
+        "a number spoken through aria-valuenow",
+        SPRING,
+        "refuse",
+        edit=sub(
+            "</body>",
+            '<div role="meter" aria-label="Extension" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42"></div>\n</body>',
+        ),
+    ),
+    Mutation(
+        "g-canvas-concat",
+        "trust",
+        "canvas text built from string pieces",
+        SPRING,
+        "refuse",
+        edit=before_ready(
+            'var c = document.createElement("can" + "vas"); var x = c["get" + "Context"]("2d"); x["fill" + "Text"]("Answer: 42 m", 4, 28); env.stage.appendChild(c);'
+        ),
+    ),
+    Mutation(
+        "g-css-background-svg",
+        "trust",
+        "a number drawn as a CSS background image built from pieces",
+        SPRING,
+        "refuse",
+        edit=before_ready(
+            'var d = document.createElement("div"); d.style.height = "40px"; d.style.backgroundImage = "url(\\"da" + "ta:ima" + "ge/svg+xml,%3Csvg xmlns=%27http:%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Ctext y=%2720%27%3E42 m%3C%2Ftext%3E%3C%2Fsvg%3E\\")"; env.stage.appendChild(d);'
+        ),
+    ),
+    Mutation(
+        "g-input-unit-kg",
+        "physics",
+        "a mass slider (kg) feeds the force input of Hooke's law",
+        SPRING,
+        "refuse",
+        edit=sub('label: "Load", unit: "N"', 'label: "Mass", unit: "kg"'),
+    ),
+    Mutation(
+        "g-constant-readout-extra",
+        "physics",
+        "an extra readout of a bare constant beside the real one",
+        SPRING,
+        "refuse",
+        edit=before_ready(
+            'Synapse.readout(env, { label: "Extension at 10 N", unit: "m", value: Synapse.constant(42, { label: "x10", unit: "m" }) });'
+        ),
+    ),
+    Mutation(
+        "g-timer-60s-forge",
+        "provenance",
+        "the readout is overwritten after 60 seconds",
+        SPRING,
+        "refuse",
+        edit=before_ready(
+            'setTimeout(function () { document.querySelector("output").textContent = "42.000 m"; }, 60000);'
+        ),
+        known_miss=True,
+        note="The harness cannot wait that long. The Kit's runtime self-check catches it in the student's browser and the host hides the Environment (tests: eval/l6/test_guardian_attacks.py).",
+    ),
+    Mutation(
+        "g-coarse-pointer-forge",
+        "provenance",
+        "the readout is overwritten only on touch screens",
+        SPRING,
+        "refuse",
+        edit=before_ready(
+            'if (matchMedia("(pointer: coarse)").matches) document.querySelector("output").textContent = "42.000 m";'
+        ),
+        known_miss=True,
+        note="The verification browser has a fine pointer. The runtime self-check catches it on the student's phone.",
+    ),
+    Mutation(
+        "g-patch-observable-get",
+        "provenance",
+        "an observable's get() is replaced before the model is built",
+        SPRING,
+        "accept",
+        edit=sub(
+            "  var extension = Synapse.hookes",
+            "  var g0 = load.get; load.get = function () { return g0() * 9.81; };\n  var extension = Synapse.hookes",
+        ),
+        note="Observables are frozen, so the assignment does nothing and the page behaves normally.",
+    ),
     # ── neutral controls: harmless edits that must be accepted (false-positive measure) ─────────────────────────────────────
     Mutation(
         "neutral-title",

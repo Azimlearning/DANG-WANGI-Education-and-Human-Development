@@ -7,6 +7,8 @@ import { KIT_VERSION } from "./manifest";
 const code = () => readFileSync(resolve(__dirname, "..", "dist", KIT_VERSION, "core.js"), "utf-8");
 
 function load(): void {
+  // The test runner shares its JavaScript intrinsics with the bundle; freezing them would break the runner. The end-to-end tests in api/verify prove the lockdown in a real browser.
+  (window as unknown as Record<string, unknown>).__SYNAPSE_NO_LOCKDOWN__ = true;
   // eslint-disable-next-line no-eval
   (0, eval)(code());
 }

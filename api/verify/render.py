@@ -38,7 +38,7 @@ MAX_PROBLEMS = 20
 
 HARNESS = """<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">
 <script>
-  window.__synapse = { ready: false, errors: [], events: [] };
+  window.__synapse = { ready: false, errors: [], events: [], violations: [] };
   window.addEventListener("message", function (e) {
     var frame = document.getElementById("artifact");
     if (e.source !== frame.contentWindow) return;
@@ -46,6 +46,7 @@ HARNESS = """<!doctype html><html><head><meta charset="utf-8"></head><body style
     if (d.type === "synapse_ready") window.__synapse.ready = true;
     if (d.type === "synapse_error") window.__synapse.errors.push(String(d.message));
     if (d.type === "synapse_event") window.__synapse.events.push(d);
+    if (d.type === "synapse_violation") window.__synapse.violations.push((d.problems || []).join("; "));
   });
 </script>
 <iframe id="artifact" sandbox="allow-scripts" style="width:__WIDTH__px;height:640px;border:0"></iframe>
@@ -71,6 +72,7 @@ class RenderReport:
     a11y_problems: list[str] = field(default_factory=list)
     page_errors: list[str] = field(default_factory=list)
     artifact_errors: list[str] = field(default_factory=list)
+    violations: list[str] = field(default_factory=list)
     console_errors: list[str] = field(default_factory=list)
     blocked_requests: list[str] = field(default_factory=list)
     navigations: list[str] = field(default_factory=list)
@@ -120,6 +122,11 @@ class RenderReport:
                 )
         if self.problems_l23:
             return (self.problems_l23[0].rule, self.problems_l23[0].reason)
+        if self.violations:
+            return (
+                "runtime_violation",
+                "the Kit's own self-check tripped while the page ran: " + self.violations[0][:200],
+            )
         if self.a11y_problems:
             return ("a11y", self.a11y_problems[0])
         for c in self.controls:
@@ -156,6 +163,7 @@ def render_check(
     interaction_seconds: float = INTERACTION_SECONDS,
     plan_models: list[dict] | None = None,
     kit_lane: bool = True,
+    verify_mode: bool = True,
 ) -> RenderReport:
     """Run `html` in headless Chromium. `html` is the post-processed document (it carries our CSP)."""
     report = RenderReport()
@@ -187,6 +195,9 @@ def render_check(
         try:
             context = browser.new_context(viewport={"width": 480, "height": 800})
             context.route("**/*", handle)
+            # Read once by the Kit at load: keep the page standing after a violation so every problem can be named.
+            if verify_mode:
+                context.add_init_script("window.__SYNAPSE_VERIFY__ = true;")
             page = context.new_page()
             page.on("pageerror", lambda e: report.page_errors.append(str(e)))
 
@@ -214,6 +225,7 @@ def render_check(
                     report.harness_error = str(exc).splitlines()[0]
             try:
                 report.artifact_errors = list(page.evaluate("window.__synapse.errors"))
+                report.violations = list(page.evaluate("window.__synapse.violations"))
             except PlaywrightError as exc:
                 report.harness_error = report.harness_error or str(exc).splitlines()[0]
         finally:
@@ -387,6 +399,27 @@ def _audit(frame: Frame) -> dict | None:
         return None  # the audit function itself threw: L1 reports kit_missing
 
 
+def _set_vs_reported(pt: dict[str, float], snapshot: dict | None) -> list[prov.Problem]:
+    """The control values the harness set must be the ones the Kit reports (a page that bends what a control means is refused)."""
+    if not isinstance(snapshot, dict):
+        return []
+    reported = {c["id"]: c for c in snapshot.get("controls", [])}
+    out = []
+    for control_id, want in pt.items():
+        c = reported.get(control_id)
+        if c is None:
+            continue
+        tolerance = float(c.get("step", 0.0)) / 2 + 1e-9
+        if abs(float(c["value"]) - want) > tolerance:
+            out.append(
+                prov.Problem(
+                    "control_mismatch",
+                    f"the harness set control '{control_id}' to {want} but the Kit reports {c['value']}",
+                )
+            )
+    return out
+
+
 def _set_value(handle, value: float) -> None:  # noqa: ANN001
     handle.evaluate(
         "(el, v) => { el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); }",
@@ -443,6 +476,7 @@ def _audit_and_sweep(frame: Frame, handles: list, report: RenderReport, plan_mod
             _set_value(by_id[control_id], value)
         snapshot = _audit(frame)
         report.grid_points += 1
+        _add(report.problems_l1, _set_vs_reported(pt, snapshot))
         _add(report.problems_l1, prov.l1_problems(snapshot))
         if snapshot is not None:
             l3, compared = prov.l3_problems(snapshot)

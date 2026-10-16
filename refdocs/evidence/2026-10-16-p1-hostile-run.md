@@ -17,14 +17,14 @@
 | H7 | dynamic import of remote code | forbidden_api | errors | 2 |
 | H8 | a worker is a second script context | forbidden_api | errors | 2 |
 | H9 | a form post to another host | forbidden_api | errors | 2 |
-| H10 | a meta refresh navigation | forbidden_api | ready | 2 |
-| H11 | an external stylesheet used as a beacon | forbidden_api | errors | 2 |
+| H10 | a meta refresh navigation | forbidden_api | navigation | 2 |
+| H11 | an external stylesheet used as a beacon | forbidden_api | forbidden_markup | 2 |
 | H12 | a nested frame to another host | forbidden_api | navigation | 2 |
 | H13 | a new window | forbidden_api | errors | 2 |
 | H14 | persistent storage in the artifact origin | forbidden_api | ready | 2 |
 | H15 | reaching into the host page | forbidden_api | ready | 2 |
 | H16 | an image request used as a beacon | forbidden_api | errors | 2 |
-| H17 | script through an event-handler attribute | kit_lane | errors | 2 |
+| H17 | script through an event-handler attribute | kit_lane | forbidden_markup | 2 |
 | H18 | code built from a string | forbidden_api | ready | 2 |
 | H19 | document.write of a remote script | forbidden_api | errors | 2 |
 | H20 | XMLHttpRequest to another host | forbidden_api | errors | 2 |

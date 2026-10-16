@@ -9,17 +9,45 @@ from __future__ import annotations
 
 import math
 import re
+import unicodedata
 from dataclasses import dataclass
 
-from api.verify.references import REFERENCES, evaluate_model, unit_factor
+from api.verify.references import REFERENCES, UNIT_SI, evaluate_model, unit_factor
 
 GROUNDED_LEAVES = ("control", "constant")
 COPY_NUMBER = re.compile(r"(?<![A-Za-z0-9_.])-?\d+(?:\.\d+)?")
-# A number is context, not a quantity, after these words ("Step 2", "Form 5") or as a list marker ("1. ").
+# A number is context, not a quantity, after these words ("Step 2", "Form 5") when it is a small whole number that is not followed by a
+# unit, or as a list marker ("1. ") at the start of a line. Anything else must be a backed value.
 COPY_CONTEXT = re.compile(
     r"(?:step|stage|part|form|tingkatan|chapter|bab|figure|rajah|table|jadual|question|soalan)\s*$", re.IGNORECASE
 )
 LIST_MARKER = re.compile(r"(?:^|\n)\s*$")
+LIST_MARKER_AFTER = re.compile(r"^[.)]\s")
+CONTEXT_MAX = 20
+_UNIT_WORDS = sorted(
+    {
+        *UNIT_SI,
+        "ohm",
+        "ohms",
+        "\u03a9",
+        "\u00b0C",
+        "K",
+        "%",
+        "m/s",
+        "m/s2",
+        "kg/m3",
+        "N/m",
+        "Hz",
+        "mol",
+        "cm3",
+        "dm3",
+        "m2",
+        "m3",
+    },
+    key=len,
+    reverse=True,
+)
+UNIT_AFTER = re.compile(r"^\s*(?:" + "|".join(re.escape(u) for u in _UNIT_WORDS) + r")(?![A-Za-z])")
 
 
 @dataclass(frozen=True)
@@ -77,6 +105,33 @@ def chain_problem(chain: dict) -> Problem | None:
                 return found
         return None
     return Problem("ungrounded_readout", f"unknown provenance kind {kind!r}")
+
+
+def has_source(chain: dict) -> bool:
+    """True when a control or a science model is somewhere under this chain (a bare constant is not a source of anything)."""
+    if chain.get("kind") in ("control", "model"):
+        return True
+    return any(has_source(c) for c in (chain.get("inputs") or {}).values())
+
+
+def input_unit_problems(chain: dict, audit: dict) -> list[Problem]:
+    """Each science model must be fed in the unit its reference works in (a mass slider must not feed a force input)."""
+    out: list[Problem] = []
+    if chain.get("kind") == "model" and chain.get("id") in REFERENCES:
+        ref = REFERENCES[chain["id"]]
+        for name, child in (chain.get("inputs") or {}).items():
+            have = _chain_unit(child, audit)
+            want = ref.input_units.get(name)
+            if want is not None and have is not None and have != want:
+                out.append(
+                    Problem(
+                        "wrong_input_unit",
+                        f"{chain['id']} input '{name}' is in {have!r} but the model works in {want!r}",
+                    )
+                )
+    for child in (chain.get("inputs") or {}).values():
+        out += input_unit_problems(child, audit)
+    return out
 
 
 def evaluate_chain(chain: dict, controls: dict[str, float], constants: dict[str, float]) -> float:
@@ -138,12 +193,18 @@ def copy_number_problems(audit: dict) -> list[Problem]:
     backed = backed_numbers(audit)
     out: list[Problem] = []
     for entry in audit.get("copy", []):
-        text = entry["text"]
+        text = unicodedata.normalize(
+            "NFKC", entry["text"]
+        )  # fullwidth, Arabic-Indic and similar digits become ASCII first
         for m in COPY_NUMBER.finditer(text):
-            before = text[: m.start()]
-            if COPY_CONTEXT.search(before) or LIST_MARKER.search(before):
-                continue
+            before, after = text[: m.start()], text[m.end() :]
             value = float(m.group())
+            small_whole = value == int(value) and 0 <= value <= CONTEXT_MAX
+            if small_whole and not UNIT_AFTER.match(after):
+                if COPY_CONTEXT.search(before):
+                    continue
+                if LIST_MARKER.search(before) and LIST_MARKER_AFTER.match(after):
+                    continue
             if not any(_close(value, b) for b in backed):
                 out.append(
                     Problem(
@@ -152,6 +213,9 @@ def copy_number_problems(audit: dict) -> list[Problem]:
                     )
                 )
     return out
+
+
+# ── L1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 
 def _chain_unit(chain: dict, audit: dict) -> str | None:
@@ -169,28 +233,66 @@ def _chain_unit(chain: dict, audit: dict) -> str | None:
     return None
 
 
-# ── L1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+REQUIRED_KEYS = (
+    "kitVersion",
+    "intact",
+    "controls",
+    "readouts",
+    "readoutElements",
+    "constants",
+    "series",
+    "actions",
+    "forgedActions",
+    "copy",
+    "ownedMismatches",
+    "unownedNumbers",
+    "unownedAttributeNumbers",
+    "forbidden",
+    "shadowRoots",
+)
+
+
+def _value_problems(what: str, unit: str, chain: dict, audit: dict) -> list[Problem]:
+    """The chain and unit rules shared by readouts, table columns and graph series."""
+    out: list[Problem] = []
+    found = chain_problem(chain)
+    if found:
+        return [Problem(found.rule, f"{what}: {found.reason}")]
+    if not has_source(chain):
+        out.append(
+            Problem(
+                "constant_readout",
+                f"{what} shows a fixed value no control or science model produced; state it in a sentence instead",
+            )
+        )
+    shown = _chain_unit(chain, audit)
+    if shown is not None and shown != unit:
+        out.append(Problem("wrong_unit", f"{what} is labelled {unit!r} but its value is in {shown!r}"))
+    for p in input_unit_problems(chain, audit):
+        out.append(Problem(p.rule, f"{what}: {p.reason}"))
+    return out
 
 
 def l1_problems(audit: dict | None) -> list[Problem]:
     """Layer L1 on one audit snapshot. Empty means the page's numbers are grounded and unaltered at this moment."""
     if not isinstance(audit, dict):
         return [Problem("kit_missing", "the page did not report a Kit audit (is window.Synapse the Kit?)")]
+    missing = [k for k in REQUIRED_KEYS if k not in audit]
+    if missing:
+        # A report that leaves out a section is not a report of "nothing found": fail closed.
+        return [Problem("malformed_audit", f"the Kit audit is missing {missing}")]
     out: list[Problem] = []
-    if not audit.get("intact"):
+    if not audit["intact"]:
         out.append(Problem("kit_not_intact", "window.Synapse is not the sealed Kit object"))
-    for r in audit.get("readouts", []):
-        found = chain_problem(r["chain"])
-        if found:
-            out.append(Problem(found.rule, f"readout '{r['label']}': {found.reason}"))
-        shown = _chain_unit(r["chain"], audit)
-        if found is None and shown is not None and shown != r["unit"]:
-            out.append(
-                Problem(
-                    "wrong_unit",
-                    f"readout '{r['label']}' is labelled {r['unit']!r} but its value is in {shown!r}",
-                )
+    if audit["readoutElements"] != len(audit["readouts"]):
+        out.append(
+            Problem(
+                "unregistered_readout",
+                f"the page has {audit['readoutElements']} readout elements but the Kit made {len(audit['readouts'])}",
             )
+        )
+    for r in audit["readouts"]:
+        out += _value_problems(f"readout '{r['label']}'", r["unit"], r["chain"], audit)
         if r["displayed"] != r["expected"]:
             out.append(
                 Problem(
@@ -198,33 +300,41 @@ def l1_problems(audit: dict | None) -> list[Problem]:
                     f"readout '{r['label']}' shows {r['displayed']!r} but its value is {r['expected']!r}",
                 )
             )
-    for x in audit.get("series", []):
-        what = f"{x['kind']} '{x['label']}'"
-        found = chain_problem(x["chain"])
-        if found:
-            out.append(Problem(found.rule, f"{what}: {found.reason}"))
-        shown = _chain_unit(x["chain"], audit)
-        if found is None and shown is not None and shown != x["unit"]:
-            out.append(Problem("wrong_unit", f"{what} is labelled {x['unit']!r} but its value is in {shown!r}"))
-    if audit.get("forgedActions", 0):
+    for x in audit["series"]:
+        out += _value_problems(f"{x['kind']} '{x['label']}'", x["unit"], x["chain"], audit)
+    for c in audit["controls"]:
+        try:
+            gap = abs(float(c["inputValue"]) - float(c["value"]))
+        except ValueError:
+            gap = math.inf
+        if not gap <= float(c["step"]) / 2 + 1e-9:
+            out.append(
+                Problem(
+                    "control_mismatch",
+                    f"control '{c['id']}' holds {c['value']} but its input shows {c['inputValue']!r}",
+                )
+            )
+    if audit["forgedActions"]:
         out.append(Problem("forged_action", "a button claims to be a Kit action but no Kit component made it"))
-    for m in audit.get("ownedMismatches", []):
+    for f in audit["forbidden"]:
+        out.append(Problem("forbidden_markup", f"{f['what']} ({f['element']}) can show a number the audit cannot read"))
+    for m in audit["ownedMismatches"]:
         out.append(
             Problem(
                 "owned_changed",
                 f"a <{m['tag']}> the Kit made was edited: expected {m['expected']!r}, found {m['actual']!r}",
             )
         )
-    for a in audit.get("unownedAttributeNumbers", []):
+    for a in audit["unownedAttributeNumbers"]:
         out.append(
             Problem(
                 "unowned_attribute_number",
                 f"{a['attribute']} on <{a['element']}> holds a number the Kit did not set: {a['value']!r}",
             )
         )
-    if audit.get("shadowRoots", 0):
+    if audit["shadowRoots"]:
         out.append(Problem("shadow_root", "an element has a shadow root; its content cannot be audited"))
-    for u in audit.get("unownedNumbers", []):
+    for u in audit["unownedNumbers"]:
         out.append(
             Problem("unowned_number", f"a number appears outside the Kit's elements in <{u['parent']}>: {u['text']!r}")
         )

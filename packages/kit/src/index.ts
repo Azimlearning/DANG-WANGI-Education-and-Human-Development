@@ -3,6 +3,8 @@
 // dist folder), which marks stored environments stale; the build refuses to change a locked version's bytes (kit-lock.json), D-16.
 
 import { audit, seal } from "./audit";
+import { lockdown } from "./lockdown";
+import { startWatch } from "./watch";
 import { error, event, installErrorHandlers, ready } from "./bridge";
 import { constant } from "./constant";
 import { convert } from "./convert";
@@ -19,13 +21,19 @@ import { slider } from "./slider";
 import { table } from "./table";
 import { text } from "./text";
 
-const bridge = Object.freeze({ ready, event, error, installErrorHandlers });
+// Reporting ready also starts the runtime self-check, so every Environment that reaches the student is being watched.
+const readyAndWatch = (): void => {
+  ready();
+  startWatch();
+};
+const bridge = Object.freeze({ ready: readyAndWatch, event, error, installErrorHandlers });
 
 export const components = { observable, environment, slider, readout, reset, graph, table, text, constant, convert, hookes, ohm, pressureDepth, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);
 
+export { lockdown };
 export type { Observable } from "./observable";
 export type { Environment } from "./environment";
 export { KIT_VERSION, manifestEntries } from "./manifest";

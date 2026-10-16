@@ -17,6 +17,7 @@ const B = 40;
 const MAX_POINTS = 40;
 const TABLE_ROWS = 11;
 
+let graphCounter = 0;
 const fmt = (v: number): string => String(Number(v.toPrecision(4)));
 
 function svg<K extends keyof SVGElementTagNameMap>(name: K, attrs: Record<string, string> = {}): SVGElementTagNameMap[K] {
@@ -35,7 +36,10 @@ export interface GraphOptions {
 }
 
 export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
-  const { title, x, y, yLabel, yUnit } = options;
+  const { x, y } = options;
+  const title = String(options.title);
+  const yLabel = String(options.yLabel);
+  const yUnit = String(options.yUnit);
   const digits = options.digits ?? 2;
   if (!isObservable(x) || !isObservable(y)) throw new TypeError("graph: x and y must be Kit observables");
   const xNode = nodeOf(x);
@@ -77,6 +81,15 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
   tbl.className = "syn-sr";
   const cap = own(document.createElement("caption"), () => `${yLabel} against ${xc.label}`);
   cap.textContent = `${yLabel} against ${xc.label}`;
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  for (const text of [`${xc.label} (${xc.unit})`, `${yLabel} (${yUnit})`]) {
+    const th = own(document.createElement("th"), () => text);
+    th.scope = "col";
+    th.textContent = text;
+    headRow.appendChild(th);
+  }
+  thead.appendChild(headRow);
   const tbody = document.createElement("tbody");
   const cells: [HTMLTableCellElement, HTMLTableCellElement][] = [];
   const rowAt = (i: number): [number, number] | undefined => {
@@ -92,7 +105,9 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
     tbody.appendChild(tr);
     cells.push([a, b]);
   }
-  tbl.append(cap, tbody);
+  tbl.id = `syn-graph-table-${graphCounter++}`;
+  root.setAttribute("aria-describedby", tbl.id);
+  tbl.append(cap, thead, tbody);
   wrap.append(root, tbl);
 
   const draw = () => {

@@ -40,8 +40,9 @@ body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-
 .syn-text{margin:0;color:var(--syn-muted)}
 .syn-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .syn-graph{width:100%;height:auto;max-height:260px}
-.syn-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-.syn-table th,.syn-table td{border:1px solid var(--syn-border);padding:6px 8px;text-align:right}
+.syn-table-wrap{overflow-x:auto;max-width:100%}
+.syn-table{border-collapse:collapse;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}
+.syn-table th,.syn-table td{border:1px solid var(--syn-border);padding:4px 6px;text-align:right;overflow-wrap:anywhere;font-size:.875rem}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 `;
 
@@ -51,8 +52,10 @@ function div(className: string): HTMLDivElement {
   return el;
 }
 
-export function environment(options: EnvironmentOptions): Environment {
+export function environment(opts: EnvironmentOptions): Environment {
   installErrorHandlers();
+  // Copy the strings now: a page that keeps the options object must not be able to change what the Kit later treats as expected.
+  const options = { title: String(opts.title), note: String(opts.note), stageText: opts.stageText === undefined ? undefined : String(opts.stageText), into: opts.into };
   const host = options.into ?? document.body;
   if (!document.getElementById("syn-style")) {
     const style = document.createElement("style");

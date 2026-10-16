@@ -13,6 +13,7 @@ describe("sandbox", () => {
     expect(parseBridgeMessage({ type: "synapse_error", message: "x".repeat(900) })).toMatchObject({ type: "synapse_error" });
     expect((parseBridgeMessage({ type: "synapse_error", message: "x".repeat(900) }) as { message: string }).message).toHaveLength(300);
     expect(parseBridgeMessage({ type: "synapse_event", control: "load", value: { a: 1 } })).toBeNull();
+    expect(parseBridgeMessage({ type: "synapse_violation", problems: ["a", 3, "b"] })).toEqual({ type: "synapse_violation", problems: ["a", "b"] });
     expect(parseBridgeMessage({ type: "other" })).toBeNull();
     expect(parseBridgeMessage("synapse_ready")).toBeNull();
     expect(parseBridgeMessage(null)).toBeNull();

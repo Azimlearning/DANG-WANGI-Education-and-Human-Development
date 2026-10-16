@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 from api.kit import latest_version
@@ -31,5 +33,10 @@ def mint(kit_dist: Path, name: str = "reference-spring.html", **overrides) -> Ve
         kit_dist=kit_dist,
         interaction_seconds=1.0,
     )
+    plan = FIXTURES / re.sub(r"\.bad-[a-z0-9-]+", "", name).replace(".html", ".plan.json")
+    if "plan_models" not in overrides and plan.exists():
+        args["plan_models"] = json.loads(plan.read_text(encoding="utf-8")).get("models", [])
+    elif "plan_models" not in overrides:
+        args["plan_models"] = []
     args.update(overrides)
     return verify_environment(**args)  # type: ignore[arg-type]

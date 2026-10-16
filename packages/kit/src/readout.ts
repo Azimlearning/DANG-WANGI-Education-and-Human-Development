@@ -15,10 +15,12 @@ export interface ReadoutOptions {
 
 let labelCounter = 0;
 
-export function readout(env: Environment, options: ReadoutOptions): HTMLOutputElement {
-  if (!isObservable(options.value)) {
-    throw new TypeError(`readout "${options.label}": value must be a Kit observable, not ${typeof options.value}`);
+export function readout(env: Environment, opts: ReadoutOptions): HTMLOutputElement {
+  if (!isObservable(opts.value)) {
+    throw new TypeError(`readout "${opts.label}": value must be a Kit observable, not ${typeof opts.value}`);
   }
+  // Copy the strings now: the caller keeps its options object and could change it after the Kit has recorded what to expect.
+  const options = { label: String(opts.label), unit: String(opts.unit), value: opts.value, digits: opts.digits };
   const digits = options.digits ?? 2;
   if (!Number.isInteger(digits) || digits < 0 || digits > 8) throw new RangeError(`readout "${options.label}": digits must be 0 to 8`);
   const obs = options.value;

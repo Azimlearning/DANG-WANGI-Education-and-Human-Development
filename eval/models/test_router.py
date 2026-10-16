@@ -55,7 +55,7 @@ def test_inference_uses_no_network(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_a_spring_question_is_routed_to_physics(model: router_model.RouterModel) -> None:
     got = model.predict("Show me how Hooke's law works with a spring and different weights")
     assert got["domain"].label == "physics"
-    assert got["topic"].label.startswith("physics_")
+    assert str(got["topic"].label).startswith("physics_")
 
 
 def test_probabilities_are_a_distribution(model: router_model.RouterModel) -> None:

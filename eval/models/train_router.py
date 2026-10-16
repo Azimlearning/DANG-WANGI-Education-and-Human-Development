@@ -76,7 +76,7 @@ def bootstrap_ci(y_true: list, y_pred: list, metric, seed: int) -> tuple[float, 
 
 
 def macro_f1(y_true: list, y_pred: list) -> float:
-    return float(f1_score(y_true, y_pred, average="macro", zero_division=0))
+    return float(f1_score(y_true, y_pred, average="macro", zero_division=0))  # pyright: ignore[reportArgumentType]
 
 
 def score(y_true: list, y_pred: list, seed: int) -> dict:

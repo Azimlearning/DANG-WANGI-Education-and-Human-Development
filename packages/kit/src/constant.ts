@@ -4,7 +4,8 @@
 import { create, type Observable } from "./observable";
 import { constants } from "./provenance";
 
-export function constant(value: number, options: { label: string; unit: string }): Observable<number> {
+export function constant(value: number, opts: { label: string; unit: string }): Observable<number> {
+  const options = { label: String(opts.label), unit: String(opts.unit) };
   if (!Number.isFinite(value)) throw new RangeError(`constant "${options.label}": value must be finite`);
   constants.push({ label: options.label, unit: options.unit, value });
   return create(value, { kind: "constant", id: options.label }, { readOnly: true });

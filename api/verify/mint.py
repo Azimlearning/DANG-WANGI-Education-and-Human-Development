@@ -181,6 +181,19 @@ def guard_label(lane: str, label: str, citations: tuple[Citation, ...]) -> None:
         )
 
 
+def _layers(lane: str, report) -> tuple[str, ...]:  # noqa: ANN001
+    """Only the layers that actually examined something are claimed: a page with no model has nothing for the reference layer to compare."""
+    layers = ["postprocess", "scan", "render"]
+    if lane != "free":
+        if report.audit0 is not None and (report.audit0.get("readouts") or report.audit0.get("series")):
+            layers.append("provenance")
+        if report.grid_points > 0:
+            layers.append("grid")
+        if report.reference_cases > 0:
+            layers.append("reference")
+    return tuple(layers)
+
+
 def verify_environment(
     *,
     slug: str,
@@ -207,6 +220,12 @@ def verify_environment(
     if used - {kit_version}:
         raise VerificationFailed(
             "kit", "version_mismatch", f"HTML loads Kit {sorted(used)} but the plan says {kit_version}"
+        )
+
+    if lane != "free" and plan_models is None:
+        # The plan's list of science models is what the page is compared with; without it nothing says which models the page may use.
+        raise VerificationFailed(
+            "plan", "plan_missing", "a Kit-lane Environment needs the plan's list of science models (it may be empty)"
         )
 
     processed = postprocess.run(
@@ -240,9 +259,7 @@ def verify_environment(
         citations=cited,
         plan_summary=plan_summary,
         checked=Checked(
-            layers=("postprocess", "scan", "render", "provenance", "grid", "reference")
-            if lane != "free"
-            else ("postprocess", "scan", "render"),
+            layers=_layers(lane, report),
             controls_exercised=len(report.controls),
             readouts=report.readouts,
             grid_points=report.grid_points,

@@ -28,6 +28,10 @@ from pathlib import Path
 from playwright.sync_api import Page, Route, sync_playwright
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO))
+
+from api.kit import latest_version  # noqa: E402
+
 SHOTS = REPO / "test-results" / "web-smoke"
 API = "http://localhost:8000"
 WEB = "http://localhost:3000"
@@ -206,7 +210,10 @@ def main() -> int:
             check("moving the slider changes the readout", before != after, f"{before!r} -> {after!r}")
             check("readout is the Hooke's law value at 10 N and 50 N/m", after.strip() == "0.200 m", after)
 
-            kit_loaded = page.evaluate("fetch('/vendor/kit/0.0.1/core.js').then(r => r.status)")
+            kit_loaded = page.evaluate(
+                "v => fetch('/vendor/kit/' + v + '/core.js').then(r => r.status)",
+                latest_version(REPO / "packages" / "kit" / "dist"),
+            )
             check("the Kit is same-origin through the /vendor rewrite", kit_loaded == 200, str(kit_loaded))
             page.screenshot(path=str(SHOTS / "01-peek-360.png"), full_page=True)
 

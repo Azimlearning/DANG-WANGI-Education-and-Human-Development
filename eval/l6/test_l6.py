@@ -13,7 +13,13 @@ FIXTURES = REPO / "data" / "fixtures" / "envs"
 KIT = REPO / "packages" / "kit" / "dist"
 
 # Pinned: defects we believe the verifier cannot see. Closing one is good news and means removing it here AND from the mutation.
-KNOWN_MISSES = {"kit-hookes-narrow-spike", "page-wrong-label", "page-false-prose"}
+KNOWN_MISSES = {
+    "kit-hookes-narrow-spike",
+    "page-wrong-label",
+    "page-false-prose",
+    "g-timer-60s-forge",
+    "g-coarse-pointer-forge",
+}
 
 
 def test_ids_are_unique_and_expectations_are_known() -> None:

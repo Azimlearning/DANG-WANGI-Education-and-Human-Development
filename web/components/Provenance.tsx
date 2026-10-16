@@ -19,7 +19,7 @@ const LAYER_TEXT: Record<string, string> = {
   postprocess: "the page structure and its security policy",
   scan: "no forbidden code",
   render: "it runs in a real browser and its controls work",
-  provenance: "every number on screen comes from an audited science model",
+  provenance: "the values it computes come from a science model, and the numbers in its sentences match its settings",
   grid: "controls were moved across their range, including the extremes",
   reference: "values were compared with an independent calculation",
 };

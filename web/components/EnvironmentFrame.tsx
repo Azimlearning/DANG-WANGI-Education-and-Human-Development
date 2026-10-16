@@ -46,10 +46,16 @@ export function EnvironmentFrame({
       if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return; // only our own frame
       const message = parseBridgeMessage(e.data);
       if (message?.type === "synapse_error") setRuntimeError(message.message);
+      if (message?.type === "synapse_violation") {
+        // The Kit watched itself and found the page showing something it did not make. Nothing it shows can be trusted: close it.
+        const reason = "This Environment changed what it was showing in a way the checker does not allow, so it was closed.";
+        setPhase({ kind: "refused", reason });
+        onRefused?.(reason);
+      }
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [onRefused]);
 
   if (phase.kind === "checking") {
     return (

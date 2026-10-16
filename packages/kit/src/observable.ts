@@ -51,7 +51,8 @@ export function create<T>(initial: T, node: ProvNode, options: ObservableOptions
     },
   };
   writers.set(self, write);
-  return track(self, node);
+  // Frozen: a page cannot replace `get`, `set` or `subscribe` on an observable it was handed (kit-guardian P1 B8).
+  return track(Object.freeze(self), node);
 }
 
 // Computed observables are updated by whoever computed them, through a private writer.

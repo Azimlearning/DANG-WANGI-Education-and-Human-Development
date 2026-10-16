@@ -4,7 +4,8 @@
 import type { Environment } from "./environment";
 import { copy, own } from "./provenance";
 
-export function text(env: Environment, content: string): HTMLParagraphElement {
+export function text(env: Environment, raw: string): HTMLParagraphElement {
+  const content = String(raw);
   const p = own(document.createElement("p"), () => content);
   p.className = "syn-text";
   p.textContent = content;
