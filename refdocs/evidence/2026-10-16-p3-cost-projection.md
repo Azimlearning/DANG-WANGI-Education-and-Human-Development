@@ -7,17 +7,17 @@
 
 | Case | USD per Environment | What it assumes |
 |---|---|---|
-| Low | **0.0100** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
-| High | **0.0432** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0576** | the high case with every plan retried once (retry rate 100 percent) |
-| Hard bound | **0.0886** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
+| Low | **0.0091** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
+| High | **0.0400** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0543** | the high case with every plan retried once (retry rate 100 percent) |
+| Hard bound | **0.0814** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
 
 Mean over the 24 golden questions (the hard bound is the largest), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amounts to confirm)
 
-1. **A canary of 1 question** first: up to **$0.09** (hard bound), expected under $0.05. It checks model ids, token counts and error handling for almost nothing.
-2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.09 to $0.52**, hard bound **$0.80**.
+1. **A canary of 1 question** first: up to **$0.08** (hard bound), expected under $0.05. It checks model ids, token counts and error handling for almost nothing.
+2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.08 to $0.49**, hard bound **$0.73**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the cache hit rate, and whether the fail-check registry's hints fix a bad plan.
 - It would not measure: correctness against a textbook (the corpus is not loaded; labels stay `model-checked`, D-21).
@@ -49,27 +49,27 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0108 | 0.0456 | 0.0610 |
-| g02 | 0.0110 | 0.0459 | 0.0614 |
-| g03 | 0.0111 | 0.0462 | 0.0618 |
-| g04 | 0.0112 | 0.0463 | 0.0619 |
-| g05 | 0.0108 | 0.0456 | 0.0610 |
-| g06 | 0.0108 | 0.0456 | 0.0609 |
-| g07 | 0.0109 | 0.0457 | 0.0611 |
-| g08 | 0.0112 | 0.0463 | 0.0619 |
-| g09 | 0.0098 | 0.0427 | 0.0568 |
-| g10 | 0.0098 | 0.0427 | 0.0567 |
-| g11 | 0.0101 | 0.0432 | 0.0576 |
-| g12 | 0.0100 | 0.0432 | 0.0575 |
-| g13 | 0.0101 | 0.0433 | 0.0577 |
-| g14 | 0.0097 | 0.0426 | 0.0567 |
-| g15 | 0.0101 | 0.0432 | 0.0576 |
-| g16 | 0.0098 | 0.0427 | 0.0568 |
-| g17 | 0.0093 | 0.0410 | 0.0544 |
-| g18 | 0.0090 | 0.0404 | 0.0536 |
-| g19 | 0.0093 | 0.0410 | 0.0543 |
-| g20 | 0.0093 | 0.0411 | 0.0545 |
-| g21 | 0.0092 | 0.0409 | 0.0543 |
-| g22 | 0.0093 | 0.0410 | 0.0544 |
-| g23 | 0.0093 | 0.0410 | 0.0544 |
-| g24 | 0.0090 | 0.0404 | 0.0536 |
+| g01 | 0.0099 | 0.0424 | 0.0577 |
+| g02 | 0.0100 | 0.0427 | 0.0582 |
+| g03 | 0.0102 | 0.0430 | 0.0586 |
+| g04 | 0.0102 | 0.0431 | 0.0587 |
+| g05 | 0.0099 | 0.0424 | 0.0577 |
+| g06 | 0.0099 | 0.0424 | 0.0577 |
+| g07 | 0.0099 | 0.0424 | 0.0578 |
+| g08 | 0.0102 | 0.0431 | 0.0587 |
+| g09 | 0.0088 | 0.0394 | 0.0535 |
+| g10 | 0.0088 | 0.0394 | 0.0535 |
+| g11 | 0.0091 | 0.0400 | 0.0543 |
+| g12 | 0.0091 | 0.0399 | 0.0543 |
+| g13 | 0.0092 | 0.0401 | 0.0544 |
+| g14 | 0.0088 | 0.0394 | 0.0534 |
+| g15 | 0.0091 | 0.0400 | 0.0543 |
+| g16 | 0.0088 | 0.0395 | 0.0536 |
+| g17 | 0.0083 | 0.0378 | 0.0511 |
+| g18 | 0.0080 | 0.0372 | 0.0503 |
+| g19 | 0.0083 | 0.0377 | 0.0511 |
+| g20 | 0.0084 | 0.0378 | 0.0512 |
+| g21 | 0.0083 | 0.0377 | 0.0510 |
+| g22 | 0.0083 | 0.0378 | 0.0511 |
+| g23 | 0.0083 | 0.0378 | 0.0511 |
+| g24 | 0.0080 | 0.0372 | 0.0503 |

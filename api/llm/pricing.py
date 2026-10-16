@@ -2,9 +2,9 @@
 # figures are marked ASSUMED because they come from refdocs/synapse-v4-sources.md and are unchecked against the pricing page.
 """Cost estimates, in USD, used to enforce the monthly cap before a call is sent.
 
-ASSUMED: prices are per million tokens (input, output) as recorded in refdocs/synapse-v4-sources.md (Haiku 4.5 at $1 and
-$5, Sonnet 5.5 at $2 and $10, Opus 5.5 at $4 and $20). Re-check against the provider's pricing page before the first
-live call. Estimates are deliberately conservative: input tokens are over-counted and output is assumed to run to
+Prices are per million tokens (input, output), read from the provider's pricing page on 2026-10-16 (Opus 5.5 $4 and $20, Sonnet 5.5 $2 and
+$10, Haiku 5.5 $0.10 and $0.50 up to 100,000 prompt tokens, Haiku 4.5 $1 and $5). Prompt caching is not used, so only the base rates apply.
+Re-check against the pricing page before the first live call. Estimates are deliberately conservative: input tokens are over-counted and output is assumed to run to
 max_tokens. An unknown model is priced as the dearest one, so a typo can only over-reserve.
 """
 
@@ -18,6 +18,7 @@ from api.llm.types import LLMRequest
 PRICES_PER_MTOK: dict[str, tuple[float, float]] = {
     "claude-opus-5-5": (4.0, 20.0),
     "claude-sonnet-5-5": (2.0, 10.0),
+    "claude-haiku-5-5": (0.10, 0.50),  # prompts up to 100,000 tokens; ours are far below
     "claude-haiku-4-5": (1.0, 5.0),
 }
 
