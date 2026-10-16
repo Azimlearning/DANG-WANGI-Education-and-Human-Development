@@ -399,6 +399,14 @@ _ENTRIES = [
         "retry_plan",
         "Include every part the pattern needs and none it cannot take.",
     ),
+    _e(
+        "PLAN-013",
+        "PLAN-013",
+        "plan",
+        "block",
+        "retry_plan",
+        "Make the concept check's correct index one of its options.",
+    ),
     _e("PLAN-014", "PLAN-014", "plan", "block", "deterministic", "Start each control inside its range."),
     # fill checks
     _e("FILL-001", "FILL-001", "fill", "degrade", "retry_fill", "Keep the fill short."),

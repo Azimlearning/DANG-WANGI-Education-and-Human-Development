@@ -285,10 +285,15 @@ def test_only_dev_fixture_is_reachable_in_p0(kit_dist: Path, label: str, rule: s
     assert err.value.rule == rule
 
 
+class _ProvesEverything:
+    def verify(self, citation: Citation) -> bool:
+        return True
+
+
 def test_free_lane_can_never_be_kit_verified(kit_dist: Path) -> None:
     cited = [Citation(source="Physics F4", page=12, quote="x", verified=True)]
     with pytest.raises(VerificationFailed) as err:
-        mint(kit_dist, lane="free", label="kit-verified", citations=cited)
+        mint(kit_dist, lane="free", label="kit-verified", citations=cited, evidence=_ProvesEverything())
     assert err.value.rule == "free_lane"
 
 

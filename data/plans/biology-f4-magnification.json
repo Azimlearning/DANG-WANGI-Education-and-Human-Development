@@ -65,5 +65,14 @@
       "source": "scope",
       "convert_to": null
     }
-  ]
+  ],
+  "predict": {
+    "prompt": "If you make the drawing twice as big but keep the cell the same size, what happens to the magnification?",
+    "choices": [
+      "It halves",
+      "It doubles",
+      "It stays the same"
+    ],
+    "reveal": "Try an image size of 20 mm and then 40 mm with the actual size fixed."
+  }
 }

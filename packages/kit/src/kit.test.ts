@@ -3,12 +3,15 @@ import { audit, seal, violations } from "./audit";
 import * as bridge from "./bridge";
 import { state as bridgeState } from "./bridge";
 import { constant } from "./constant";
+import { conceptCheck } from "./concept_check";
 import { convert } from "./convert";
 import { environment } from "./environment";
 import { experiment } from "./experiment";
 import { graph } from "./graph";
+import { hintLadder } from "./hints";
 import { components, KIT_VERSION, manifestEntries, Synapse } from "./index";
 import { observable } from "./observable";
+import { predictCard } from "./predict_card";
 import { isObservable, resetForTests } from "./provenance";
 import { readout } from "./readout";
 import { reset } from "./reset";
@@ -19,6 +22,7 @@ import { slider } from "./slider";
 import { stepper } from "./stepper";
 import { table } from "./table";
 import { text } from "./text";
+import { workedSolution } from "./worked_solution";
 import { resetWatchForTests, startWatch } from "./watch";
 
 beforeEach(() => {
@@ -313,7 +317,7 @@ describe("the public surface", () => {
   });
   it("exposes no way to create an observable that the registry would accept except through the Kit", () => {
     expect(Object.keys(Synapse).sort()).toEqual(
-      ["audit", "averageRate", "bridge", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hookes", "magnification", "moles", "netPhotosynthesis", "observable", "ohm", "pressureDepth", "readout", "reset", "slider", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "version"].sort(),
+      ["audit", "averageRate", "bridge", "conceptCheck", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hintLadder", "hookes", "magnification", "moles", "netPhotosynthesis", "observable", "ohm", "predictCard", "pressureDepth", "readout", "reset", "slider", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "version", "workedSolution"].sort(),
     );
   });
 });
@@ -604,5 +608,72 @@ describe("stepper and experiment", () => {
     const { env } = spring();
     stepper(env, { steps: ["The extension is 42 m."] });
     expect(audit(KIT_VERSION).copy.some((c) => c.numbers.includes("42"))).toBe(true);
+  });
+});
+
+describe("pedagogy components", () => {
+  it("hintLadder reveals one hint per press and keeps hidden hints owned and audited", () => {
+    const { env } = spring();
+    hintLadder(env, { hints: ["Think about what the load does.", "Compare 2 N with 4 N.", "Try a load of 10 N."] });
+    const p = Array.from(document.querySelectorAll<HTMLElement>("p")).filter((e) => /load/.test(e.textContent ?? ""));
+    expect(p.filter((e) => !e.hidden)).toHaveLength(0);
+    const button = document.querySelector<HTMLButtonElement>("[data-synapse-action=hint]")!;
+    button.click();
+    expect(p.filter((e) => !e.hidden)).toHaveLength(1);
+    button.click();
+    button.click();
+    expect(p.every((e) => !e.hidden)).toBe(true);
+    expect(button.disabled).toBe(true);
+    const a = audit(KIT_VERSION);
+    expect(a.unownedNumbers).toEqual([]);
+    expect(a.copy.map((c) => c.text)).toContain("Compare 2 N with 4 N.");
+    expect(() => hintLadder(env, { hints: [] })).toThrow(RangeError);
+  });
+
+  it("conceptCheck gives feedback only after a choice and says correct or not quite", () => {
+    const { env } = spring();
+    conceptCheck(env, { question: "What happens to the extension when the load doubles?", options: ["It halves", "It doubles", "It stays the same"], correct: 1, explanation: "Within the elastic limit the extension is proportional to the load." });
+    const status = document.querySelector("[role=status]")!;
+    expect(status.textContent).toBe("");
+    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-synapse-action=choose]"));
+    buttons[0]!.click();
+    expect(status.textContent).toBe("Not quite.");
+    buttons[1]!.click();
+    expect(status.textContent).toBe("Correct.");
+    expect(document.body.textContent).toContain("proportional to the load");
+    expect(audit(KIT_VERSION).ownedMismatches).toEqual([]);
+    expect(() => conceptCheck(env, { question: "q", options: ["a"], correct: 0, explanation: "e" })).toThrow(RangeError);
+    expect(() => conceptCheck(env, { question: "q", options: ["a", "b"], correct: 2, explanation: "e" })).toThrow(RangeError);
+  });
+
+  it("predictCard shows its reveal only after the student commits", () => {
+    const { env } = spring();
+    predictCard(env, { prompt: "What will happen to the extension if you double the load?", choices: ["Less", "More", "The same"], reveal: "Watch the extension as you move the slider." });
+    expect(document.body.textContent).not.toContain("Watch the extension");
+    document.querySelector<HTMLButtonElement>("[data-synapse-action=predict]")!.click();
+    expect(document.body.textContent).toContain("Watch the extension");
+    expect(audit(KIT_VERSION).forbidden).toEqual([]);
+  });
+
+  it("workedSolution opens its steps on request, and a typed result in a step is visible as copy", () => {
+    const { env } = spring();
+    workedSolution(env, { steps: ["Write down F = k x.", "Divide the load by the spring constant.", "The answer is 0.99 m."] });
+    const list = document.querySelector<HTMLElement>("ol")!;
+    expect(list.hidden).toBe(true);
+    document.querySelector<HTMLButtonElement>("[data-synapse-action=solution]")!.click();
+    expect(list.hidden).toBe(false);
+    expect(audit(KIT_VERSION).copy.some((c) => c.numbers.includes("0.99"))).toBe(true);
+  });
+
+  it("none of the new action buttons counts as a forged action or an unregistered widget", () => {
+    const { env } = spring();
+    hintLadder(env, { hints: ["a hint"] });
+    conceptCheck(env, { question: "q?", options: ["a", "b"], correct: 0, explanation: "because" });
+    predictCard(env, { prompt: "p?", choices: ["a", "b"], reveal: "look" });
+    workedSolution(env, { steps: ["one"] });
+    const a = audit(KIT_VERSION);
+    expect(a.forgedActions).toBe(0);
+    expect(a.forbidden).toEqual([]);
+    expect(violations(a)).toEqual([]);
   });
 });

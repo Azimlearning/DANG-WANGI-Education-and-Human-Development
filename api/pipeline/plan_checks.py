@@ -55,13 +55,25 @@ def needed_components(plan: Plan) -> set[str]:
         need.add("stepper")
     if plan.experiment:
         need.add("experiment")
+    if plan.predict:
+        need.add("predictCard")
+    if plan.hints:
+        need.add("hintLadder")
+    if plan.concept_check:
+        need.add("conceptCheck")
+    if plan.worked_solution:
+        need.add("workedSolution")
     if any(r.convert_to for r in plan.readouts):
         need.add("convert")
     return need
 
 
 def _texts(plan: Plan) -> list[str]:
-    out = [plan.title, plan.note, *plan.sentences, *plan.steps]
+    out = [plan.title, plan.note, *plan.sentences, *plan.steps, *plan.hints, *plan.worked_solution]
+    if plan.predict:
+        out += [plan.predict.prompt, *plan.predict.choices, plan.predict.reveal]
+    if plan.concept_check:
+        out += [plan.concept_check.question, *plan.concept_check.options, plan.concept_check.explanation]
     out += [c.label for c in plan.controls] + [r.label for r in plan.readouts]
     out += [g.title for g in plan.graphs]
     if plan.table:
@@ -295,6 +307,13 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                 "A virtual experiment needs an experiment card, a results table and steps.",
                 "Add experiment, table and steps to a virtual_experiment plan.",
             )
+    if plan.concept_check and plan.concept_check.correct >= len(plan.concept_check.options):
+        add(
+            "PLAN-013",
+            "concept_check.correct",
+            "The correct option number is not one of the options.",
+            "Make correct a zero-based index of one of the options.",
+        )
     if plan.custom and plan.pattern not in ("simulation", "virtual_experiment"):
         add("PLAN-012", "custom", "Custom slots are not allowed for this pattern.", "Remove the custom slots.")
 

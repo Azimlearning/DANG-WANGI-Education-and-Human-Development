@@ -91,5 +91,14 @@
   ],
   "citation_ids": [],
   "presentation": "stage",
-  "custom": []
+  "custom": [],
+  "predict": {
+    "prompt": "What will happen to the extension if you double the load?",
+    "choices": [
+      "It will be less",
+      "It will double",
+      "It will stay the same"
+    ],
+    "reveal": "Set the load to 2 N, then to 4 N, and compare the two extensions."
+  }
 }

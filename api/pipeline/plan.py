@@ -94,6 +94,19 @@ class ExperimentCard(_Strict):
     apparatus: list[Short] = Field(min_length=1, max_length=8)
 
 
+class ConceptCheckSpec(_Strict):
+    question: Sentence
+    options: list[Annotated[str, StringConstraints(min_length=1, max_length=80)]] = Field(min_length=2, max_length=4)
+    correct: int = Field(ge=0, le=3)
+    explanation: Sentence
+
+
+class PredictSpec(_Strict):
+    prompt: Sentence
+    choices: list[Annotated[str, StringConstraints(min_length=1, max_length=80)]] = Field(min_length=2, max_length=4)
+    reveal: Sentence
+
+
 class CustomSlot(_Strict):
     name: Slug
     purpose: Sentence
@@ -115,6 +128,10 @@ class Plan(_Strict):
     table: TableSpec | None = None
     experiment: ExperimentCard | None = None
     sentences: list[Sentence] = Field(default_factory=list, max_length=6)
+    predict: PredictSpec | None = None
+    hints: list[Sentence] = Field(default_factory=list, max_length=5)
+    concept_check: ConceptCheckSpec | None = None
+    worked_solution: list[Sentence] = Field(default_factory=list, max_length=6)
     steps: list[Sentence] = Field(default_factory=list, max_length=8)
     citation_ids: list[str] = Field(default_factory=list, max_length=6)
     presentation: Literal["peek", "stage"] = "stage"

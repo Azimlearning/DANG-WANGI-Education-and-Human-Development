@@ -1,5 +1,47 @@
 {
   "$defs": {
+    "ConceptCheckSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "correct": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Correct",
+          "type": "integer"
+        },
+        "explanation": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 2,
+          "title": "Options",
+          "type": "array"
+        },
+        "question": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "options",
+        "correct",
+        "explanation"
+      ],
+      "title": "ConceptCheckSpec",
+      "type": "object"
+    },
     "ConstantSpec": {
       "additionalProperties": false,
       "properties": {
@@ -259,6 +301,41 @@
       "title": "ModelUse",
       "type": "object"
     },
+    "PredictSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "choices": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 2,
+          "title": "Choices",
+          "type": "array"
+        },
+        "prompt": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reveal": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Reveal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "prompt",
+        "choices",
+        "reveal"
+      ],
+      "title": "PredictSpec",
+      "type": "object"
+    },
     "ReadoutSpec": {
       "additionalProperties": false,
       "properties": {
@@ -382,6 +459,17 @@
       "title": "Citation Ids",
       "type": "array"
     },
+    "concept_check": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConceptCheckSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "constants": {
       "items": {
         "$ref": "#/$defs/ConstantSpec"
@@ -444,6 +532,16 @@
       "title": "Graphs",
       "type": "array"
     },
+    "hints": {
+      "items": {
+        "maxLength": 240,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 5,
+      "title": "Hints",
+      "type": "array"
+    },
     "id": {
       "pattern": "^[a-z][a-z0-9_]{0,23}$",
       "title": "Id",
@@ -471,6 +569,17 @@
       ],
       "title": "Pattern",
       "type": "string"
+    },
+    "predict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PredictSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "presentation": {
       "default": "stage",
@@ -532,6 +641,16 @@
       "pattern": "^[a-z0-9_]+$",
       "title": "Topic",
       "type": "string"
+    },
+    "worked_solution": {
+      "items": {
+        "maxLength": 240,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 6,
+      "title": "Worked Solution",
+      "type": "array"
     }
   },
   "required": [

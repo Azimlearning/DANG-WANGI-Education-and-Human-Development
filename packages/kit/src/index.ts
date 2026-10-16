@@ -7,12 +7,15 @@ import { lockdown } from "./lockdown";
 import { startWatch } from "./watch";
 import { error, event, installErrorHandlers, ready } from "./bridge";
 import { constant } from "./constant";
+import { conceptCheck } from "./concept_check";
 import { convert } from "./convert";
 import { environment } from "./environment";
 import { experiment } from "./experiment";
 import { graph } from "./graph";
+import { hintLadder } from "./hints";
 import { KIT_VERSION } from "./manifest";
 import { observable } from "./observable";
+import { predictCard } from "./predict_card";
 import { readout } from "./readout";
 import { reset } from "./reset";
 import { hookes } from "./science/hookes";
@@ -31,6 +34,7 @@ import { slider } from "./slider";
 import { stepper } from "./stepper";
 import { table } from "./table";
 import { text } from "./text";
+import { workedSolution } from "./worked_solution";
 
 // Reporting ready also starts the runtime self-check, so every Environment that reaches the student is being watched.
 const readyAndWatch = (): void => {
@@ -39,7 +43,7 @@ const readyAndWatch = (): void => {
 };
 const bridge = Object.freeze({ ready: readyAndWatch, event, error, installErrorHandlers });
 
-export const components = { observable, environment, slider, readout, reset, graph, table, stepper, experiment, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, bridge };
+export const components = { observable, environment, slider, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);

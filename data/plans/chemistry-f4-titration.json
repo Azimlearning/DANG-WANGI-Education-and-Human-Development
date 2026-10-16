@@ -101,5 +101,11 @@
       "source": "alkali",
       "convert_to": null
     }
+  ],
+  "worked_solution": [
+    "Write the equation: HCl + NaOH gives NaCl + H2O.",
+    "The acid and the alkali react in a 1 to 1 ratio, so at the end point the moles of alkali equal the moles of acid.",
+    "Moles of acid = concentration of acid x volume of acid.",
+    "Concentration of alkali = moles of alkali / volume of alkali."
   ]
 }

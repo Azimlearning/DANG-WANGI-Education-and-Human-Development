@@ -82,5 +82,10 @@
       "source": "salt",
       "convert_to": null
     }
+  ],
+  "worked_solution": [
+    "Write the formula: amount = mass / molar mass.",
+    "Look up the molar mass of water: 18 g/mol.",
+    "Divide the mass of water by 18 to get the amount in moles."
   ]
 }

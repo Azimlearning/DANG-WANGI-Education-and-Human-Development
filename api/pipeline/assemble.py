@@ -25,10 +25,39 @@ _VAR = re.compile(r"\{\{(\w+)\}\}")
 # Which Plan parts each skeleton can take. A part outside the set is a gap.
 SKELETON_PARTS: dict[str, frozenset[str]] = {
     "simulation": frozenset(
-        {"controls", "constants", "models", "readouts", "graphs", "steps", "table", "sentences", "custom"}
+        {
+            "controls",
+            "constants",
+            "models",
+            "readouts",
+            "graphs",
+            "steps",
+            "table",
+            "sentences",
+            "custom",
+            "predict",
+            "hints",
+            "check",
+            "worked",
+        }
     ),
     "virtual_experiment": frozenset(
-        {"experiment", "steps", "controls", "constants", "models", "readouts", "graphs", "table", "sentences", "custom"}
+        {
+            "experiment",
+            "steps",
+            "controls",
+            "constants",
+            "models",
+            "readouts",
+            "graphs",
+            "table",
+            "sentences",
+            "custom",
+            "predict",
+            "hints",
+            "check",
+            "worked",
+        }
     ),
 }
 
@@ -73,6 +102,10 @@ def present_parts(plan: Plan) -> set[str]:
         ("table", plan.table),
         ("sentences", plan.sentences),
         ("experiment", plan.experiment),
+        ("predict", plan.predict),
+        ("hints", plan.hints),
+        ("check", plan.concept_check),
+        ("worked", plan.worked_solution),
         ("custom", plan.custom),
     ):
         if present:
@@ -176,6 +209,27 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
         "table": table_js(),
         "sentences": "\n  ".join(f"Synapse.text(env, {js(s)});" for s in plan.sentences),
         "experiment": experiment_js(),
+        "predict": "Synapse.predictCard(env, "
+        + js({"prompt": plan.predict.prompt, "choices": plan.predict.choices, "reveal": plan.predict.reveal})
+        + ");"
+        if plan.predict
+        else "",
+        "hints": f"Synapse.hintLadder(env, {{ hints: {js(list(plan.hints))} }});" if plan.hints else "",
+        "check": "Synapse.conceptCheck(env, "
+        + js(
+            {
+                "question": plan.concept_check.question,
+                "options": plan.concept_check.options,
+                "correct": plan.concept_check.correct,
+                "explanation": plan.concept_check.explanation,
+            }
+        )
+        + ");"
+        if plan.concept_check
+        else "",
+        "worked": f"Synapse.workedSolution(env, {{ steps: {js(list(plan.worked_solution))} }});"
+        if plan.worked_solution
+        else "",
     }
 
 

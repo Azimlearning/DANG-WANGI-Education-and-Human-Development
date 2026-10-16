@@ -65,5 +65,15 @@
   "steps": [],
   "citation_ids": [],
   "presentation": "stage",
-  "custom": []
+  "custom": [],
+  "concept_check": {
+    "question": "If the voltage stays the same and the resistance is doubled, what happens to the current?",
+    "options": [
+      "It doubles",
+      "It halves",
+      "It stays the same"
+    ],
+    "correct": 1,
+    "explanation": "The current is inversely proportional to the resistance, so doubling the resistance halves the current."
+  }
 }

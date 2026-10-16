@@ -58,5 +58,10 @@
   "steps": [],
   "citation_ids": [],
   "presentation": "stage",
-  "custom": []
+  "custom": [],
+  "hints": [
+    "Pressure depends on how deep you are.",
+    "Compare the pressure at two different depths.",
+    "Try a depth of 5 m and then 10 m."
+  ]
 }
