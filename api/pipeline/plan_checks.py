@@ -100,6 +100,12 @@ def synthetic_audit(plan: Plan) -> dict:
     }
 
 
+# model id: (input that must be at least this parameter, ...). Adding a model with a cross-quantity rule adds a line here.
+RELATIONS: dict[str, tuple[tuple[str, str], ...]] = {
+    "chemistry.dilution": (("v2", "v1"),),
+}
+
+
 def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
     issues: list[PlanIssue] = []
 
@@ -146,6 +152,14 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                 "PLAN-002", path, f"The Kit has no science model '{m.model}'.", f"Use one of the Kit's models: {known}."
             )
             continue
+        if entry.topics and plan.topic not in entry.topics:
+            # S6: a model used under a topic its specification does not list is a model the lesson was not written for.
+            add(
+                "PLAN-016",
+                path,
+                f"{m.model} is registered for {', '.join(entry.topics)}, not for the topic '{plan.topic}'.",
+                f"Use a model that fits '{plan.topic}', or set topic to one of {', '.join(entry.topics)}.",
+            )
         if set(m.params) != set(entry.params):
             add(
                 "PLAN-003",
@@ -213,6 +227,21 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                     f"{path}.inputs.{name}",
                     f"Input {name} is bound to '{bound}', which is not a control or a constant.",
                     f"Bind {name} to a control id or a constant id.",
+                )
+
+        # S5: a relation between an input and a parameter that a per-quantity domain cannot express.
+        for input_name, param_name in RELATIONS.get(m.model, ()):
+            bound = m.inputs.get(input_name)
+            lowest = (
+                controls[bound].min if bound in controls else constants[bound].value if bound in constants else None
+            )
+            floor = m.params.get(param_name)
+            if lowest is not None and floor is not None and lowest < floor:
+                add(
+                    "PLAN-015",
+                    path,
+                    f"{m.model} needs {input_name} to be at least {param_name} ({floor}), but '{bound}' can be {lowest}.",
+                    f"Make '{bound}' start at {floor} or more, or lower {param_name}.",
                 )
 
     for i, r in enumerate(plan.readouts):

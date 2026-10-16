@@ -407,6 +407,15 @@ _ENTRIES = [
         "retry_plan",
         "Make the concept check's correct index one of its options.",
     ),
+    _e(
+        "PLAN-016",
+        "PLAN-016",
+        "plan",
+        "block",
+        "retry_plan",
+        "Use a model that is registered for the question's topic.",
+    ),
+    _e("PLAN-015", "PLAN-015", "plan", "block", "retry_plan", "Keep the final volume at or above the starting volume."),
     _e("PLAN-014", "PLAN-014", "plan", "block", "deterministic", "Start each control inside its range."),
     # fill checks
     _e("FILL-001", "FILL-001", "fill", "degrade", "retry_fill", "Keep the fill short."),

@@ -174,3 +174,18 @@ def test_the_json_schema_file_matches_the_model() -> None:
     assert json.loads(SCHEMA.read_text(encoding="utf-8")) == plan_module.json_schema(), (
         "regenerate with: uv run python -m api.pipeline.plan"
     )
+
+
+def test_a_dilution_that_can_go_below_its_starting_volume_is_plan_015(manifest: kitmanifest.Manifest) -> None:
+    d = json.loads((REPO / "data" / "plans" / "chemistry-f4-dilution.json").read_text(encoding="utf-8"))
+    assert codes(d, manifest) == []
+    d["controls"][0]["min"] = 10
+    d["controls"][0]["value"] = 50
+    assert "PLAN-015" in codes(d, manifest)
+
+
+def test_a_model_under_a_topic_it_is_not_registered_for_is_plan_016(manifest: kitmanifest.Manifest) -> None:
+    d = raw("hookes_amali")
+    assert codes(d, manifest) == []
+    d["topic"] = "biology_form4_cell_biology"
+    assert "PLAN-016" in codes(d, manifest)
