@@ -5,6 +5,7 @@ import { state as bridgeState } from "./bridge";
 import { constant } from "./constant";
 import { convert } from "./convert";
 import { environment } from "./environment";
+import { experiment } from "./experiment";
 import { graph } from "./graph";
 import { components, KIT_VERSION, manifestEntries, Synapse } from "./index";
 import { observable } from "./observable";
@@ -15,6 +16,7 @@ import { hookes } from "./science/hookes";
 import { ohm } from "./science/ohm";
 import { pressureDepth } from "./science/pressure_depth";
 import { slider } from "./slider";
+import { stepper } from "./stepper";
 import { table } from "./table";
 import { text } from "./text";
 import { resetWatchForTests, startWatch } from "./watch";
@@ -311,7 +313,7 @@ describe("the public surface", () => {
   });
   it("exposes no way to create an observable that the registry would accept except through the Kit", () => {
     expect(Object.keys(Synapse).sort()).toEqual(
-      ["audit", "bridge", "constant", "convert", "environment", "graph", "hookes", "observable", "ohm", "pressureDepth", "readout", "reset", "slider", "table", "text", "version"].sort(),
+      ["audit", "bridge", "constant", "convert", "environment", "experiment", "graph", "hookes", "observable", "ohm", "pressureDepth", "readout", "reset", "slider", "stepper", "table", "text", "version"].sort(),
     );
   });
 });
@@ -331,6 +333,18 @@ describe("manifest", () => {
       }
     }
     expect(KIT_VERSION).toBe("0.1.0");
+  });
+  it("gives every entry a one-sentence useWhen and every science entry its domain, generated from the spec", () => {
+    for (const e of manifestEntries) {
+      expect(e.useWhen, e.id).toMatch(/^Use .+\.$/);
+      expect(e.useWhen!.length, e.id).toBeLessThan(200);
+      if (e.kind === "science") {
+        expect(Object.keys(e.inputs ?? {}).length, e.id).toBeGreaterThanOrEqual(1);
+        expect(e.output?.unit, e.id).toBeTruthy();
+        const names = [...Object.keys(e.inputs!), ...Object.keys(e.params!)].sort();
+        expect(names, e.id).toEqual(Object.keys(e.units!).filter((k) => k !== "output").sort());
+      }
+    }
   });
 });
 
@@ -564,5 +578,31 @@ describe("the runtime self-check", () => {
     document.querySelector<HTMLButtonElement>("[data-synapse-action=reset]")!.click();
     await wait(1300);
     expect(sent.filter((m) => (m as { type: string }).type === "synapse_violation")).toEqual([]);
+  });
+});
+
+describe("stepper and experiment", () => {
+  it("stepper lists owned steps and refuses 0 or too many", () => {
+    const { env } = spring();
+    stepper(env, { steps: ["Set the load to 2 N.", "Read the extension.", "Move the load to 10 N."] });
+    const a = audit(KIT_VERSION);
+    expect(a.unownedNumbers).toEqual([]);
+    expect(a.copy.map((c) => c.text)).toContain("Set the load to 2 N.");
+    expect(() => stepper(env, { steps: [] })).toThrow(RangeError);
+    expect(() => stepper(env, { steps: Array(9).fill("x") })).toThrow(RangeError);
+  });
+  it("experiment shows the card, every word owned, and refuses an empty field", () => {
+    const { env } = spring();
+    experiment(env, { aim: "To find how the extension depends on the load", hypothesis: "The extension is proportional to the load", independent: "Load (N)", dependent: "Extension (m)", controlled: ["The spring"], apparatus: ["Spring", "Weights"] });
+    const a = audit(KIT_VERSION);
+    expect(a.unownedNumbers).toEqual([]);
+    expect(a.ownedMismatches).toEqual([]);
+    expect(document.querySelector("section dd")!.textContent).toContain("depends on the load");
+    expect(() => experiment(env, { aim: " ", hypothesis: "h", independent: "i", dependent: "d", controlled: ["c"], apparatus: ["a"] })).toThrow(RangeError);
+  });
+  it("a step that states an unbacked number is visible to the verifier as copy", () => {
+    const { env } = spring();
+    stepper(env, { steps: ["The extension is 42 m."] });
+    expect(audit(KIT_VERSION).copy.some((c) => c.numbers.includes("42"))).toBe(true);
   });
 });

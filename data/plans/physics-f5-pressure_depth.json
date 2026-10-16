@@ -1,0 +1,62 @@
+{
+  "id": "pressure_depth",
+  "title": "Pressure in a liquid",
+  "goal": "See how the pressure in a liquid grows with depth.",
+  "pattern": "simulation",
+  "topic": "physics_form5_forces_and_pressure",
+  "experiment_ref": null,
+  "note": "Pressure in a liquid increases with depth. Here water has a density of 1000 kg/m3 and g is taken as 10 m/s2.",
+  "controls": [
+    {
+      "id": "depth",
+      "label": "Depth",
+      "unit": "m",
+      "min": 0,
+      "max": 20,
+      "value": 5,
+      "grid": 20
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "water",
+      "model": "fluids.pressure_depth",
+      "params": {
+        "density": 1000,
+        "g": 10
+      },
+      "inputs": {
+        "depth": "depth"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Pressure",
+      "unit": "kPa",
+      "digits": 1,
+      "source": "water",
+      "convert_to": "kPa"
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The pressure rises in a straight line with the depth.",
+      "x": "depth",
+      "source": "water",
+      "label": "Pressure",
+      "unit": "Pa",
+      "digits": 0
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Move the depth from 0 m to 20 m and watch the pressure grow."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": []
+}

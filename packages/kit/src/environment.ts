@@ -38,6 +38,11 @@ body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-
 .syn-readout output{font-weight:700;font-variant-numeric:tabular-nums}
 .syn-btn{min-height:44px;min-width:44px;padding:0 16px;border-radius:var(--syn-radius);border:1px solid var(--syn-border);background:var(--syn-card);color:var(--syn-fg);font:inherit;font-weight:600}
 .syn-text{margin:0;color:var(--syn-muted)}
+.syn-steps{margin:0;padding-left:1.4rem;display:grid;gap:4px}
+.syn-card{background:var(--syn-card);border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:8px 16px}
+.syn-card dl{display:grid;gap:2px;margin:0}
+.syn-card dt{font-weight:600}
+.syn-card dd{margin:0 0 6px;color:var(--syn-muted)}
 .syn-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .syn-graph{width:100%;height:auto;max-height:260px}
 .syn-table-wrap{overflow-x:auto;max-width:100%}

@@ -9,6 +9,7 @@ import { error, event, installErrorHandlers, ready } from "./bridge";
 import { constant } from "./constant";
 import { convert } from "./convert";
 import { environment } from "./environment";
+import { experiment } from "./experiment";
 import { graph } from "./graph";
 import { KIT_VERSION } from "./manifest";
 import { observable } from "./observable";
@@ -18,6 +19,7 @@ import { hookes } from "./science/hookes";
 import { ohm } from "./science/ohm";
 import { pressureDepth } from "./science/pressure_depth";
 import { slider } from "./slider";
+import { stepper } from "./stepper";
 import { table } from "./table";
 import { text } from "./text";
 
@@ -28,7 +30,7 @@ const readyAndWatch = (): void => {
 };
 const bridge = Object.freeze({ ready: readyAndWatch, event, error, installErrorHandlers });
 
-export const components = { observable, environment, slider, readout, reset, graph, table, text, constant, convert, hookes, ohm, pressureDepth, bridge };
+export const components = { observable, environment, slider, readout, reset, graph, table, stepper, experiment, text, constant, convert, hookes, ohm, pressureDepth, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);
