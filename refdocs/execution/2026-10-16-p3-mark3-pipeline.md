@@ -82,4 +82,11 @@
 
 ## Task 10: Wrap-up
 
-STATUS, CHANGELOG, DECISIONS, indexes, the Deferred to local register, `kit-guardian` review of the Kit and pipeline diff.
+STATUS, CHANGELOG, DECISIONS, indexes, the Deferred to local register, `kit-guardian` review of the Kit and pipeline diff. (Done, see As built.)
+
+## As built (reconciled 2026-10-16, after the kit-guardian P3 review)
+
+- **Done on fakes:** Tasks 1 to 9. Not done: the first paid run (waits for the owner and for a live provider class that does not exist, D-15); the Free lane and the L4 model check of words (prompt pack `verifier_l4` is written and loaded but nothing calls it).
+- **Deviations from the plan:** (1) Prompt packs are flat files in `api/prompts/` (`<name>.v<N>.md`), not a nested tree; the loader enforces the header, the budget, declared-equals-used variables, and (since the review) no per-request variable above the `=== VARIABLE ===` line unless listed in `static_inputs`. (2) There is no `api/pipeline/events.py`; the stream events are typed once in `packages/schema/src/events.ts` and generated (hard constraint 7). (3) A fresh page is the **Compose** lane (D-26), not Instantiate. (4) After a refused verification with fills, the pipeline retries once without fills before falling to words (the degrade ladder gained a rung). (5) The assembler substitutes slots and variables in one pass over the template, so plan text is never re-scanned. (6) Plan checks gained PLAN-013 (concept check index), PLAN-015 (cross-quantity relations) and PLAN-016 (topic fit). (7) Pedagogy slots (`predict`, `hints`, `check`, `worked`) joined both skeletons (P6).
+- **Review findings left open (kit-guardian P3, S4, S7, S8, S10, S11 and notes):** plan checks vs verifier parity beyond the dilution relation (S4); homogeneous-property silent continue and domain tests (S7); a11y and 360 px tests per component such as stepper, experiment, graph, table and reset beyond what the render harness audits (S8); a coverage-soundness test for the fail-check registry (S10); string length caps on every plan field and fill-contract bypass probes (notes). They are listed in STATUS Known gaps.
+- **Verify as run:** `uv run pytest api/pipeline -q` (108 passed at the end of this reconciliation).

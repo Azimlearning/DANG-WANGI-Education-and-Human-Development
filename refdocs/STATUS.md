@@ -4,7 +4,7 @@
 
 **Build philosophy:** walking skeleton first. One Environment, end to end, through the full trust path (generate, scan, render, mint, gate, sandbox) on fakes, before building the second of anything. Evidence is measured, never asserted. The Kit grows from measured gaps.
 
-**Right now:** P0 is done (the owner delegated the first-vertical choice: Physics Form 5, D-18; the census remains an estimate that the owner has not reviewed row by row). The enhancement audit is written (`refdocs/plans/2026-10-16-v4-enhancement-audit.md`) and new decisions D-18 to D-22 set the end state: at least 9 verified Environments, 3 per subject (D-19), a trained-models track (D-20), a label meaning without a corpus (D-21), and a cloud-first working mode (D-22). P1 (Kit core, provenance, L1 to L3, L6 baseline, hostile set, isolation spike) and P1b (trained router) are done in the cloud; P3 (the Mark 3 pipeline on fakes) is next.
+**Right now:** everything that can be built on fakes in the cloud is built: P0, P1, P1b done; P2, P3, P4, P5 and P6 done for their cloud scope. The Mark 3 pipeline (D-23) runs end to end on fakes with real Chromium verification and produces **11 verified Environments, 3 Physics, 3 Biology and 5 Chemistry** (D-19 asked for 3 per subject), each with a hand-written Plan. No paid call has ever been made and no live provider class exists. **What waits for the owner:** the first paid run (confirm an amount; proposed canary up to $0.09, then 9 questions, projected $0.09 to $0.52, hard bound $0.80, suggested `LLM_MONTHLY_CAP_USD` $1.00; see `refdocs/evidence/2026-10-16-p3-cost-projection.md`), loading the textbook corpus locally (A-8), matching the catalogue to the owner's experiment documents, and a fresh adversarial review. The kit-guardian P3 review is answered except the items listed under Known gaps.
 
 ---
 
@@ -15,11 +15,11 @@
 | P0 | Walking skeleton and coverage census | ✅ Tasks 1 to 9 done and verified. The owner delegated the vertical choice (D-18); the census is an estimate not reviewed row by row |
 | P1b | Models track (trained local models) | ✅ Cloud scope done: audited dataset, baselines, trained and exported router, parity, gates, model card, router with LLM fallback, misconception matcher. Retrain on the full KSSM data and an embedding comparison are deferred to local |
 | P1 | Kit core and verification harness | ✅ Cloud scope done and verified (provenance, L1 to L3, L6 baseline, hostile set, isolation spike, reset/table/graph, two review rounds of which the second did not complete). Open: a fresh adversarial review, and the host-side DOM check noted in D-24 |
-| P2 | Evidence: corpus, retrieval, citations | ⬜ Not started |
-| P3 | Mark 3 pipeline and the first vertical | ⬜ Not started |
-| P4 | Kit expansion by kit | ⬜ Not started |
-| P5 | Library and lifecycle | ⬜ Not started |
-| P6 | Pedagogy | ⬜ Not started |
+| P2 | Evidence: corpus, retrieval, citations | ✅ Cloud scope done: corpus format, BM25, exact quotation proof, `kit-verified` rule at mint and gate, experiment catalogue (metadata). Proved against a synthetic corpus only; the real corpus is loaded locally (A-8) |
+| P3 | Mark 3 pipeline and the first vertical | 🔶 Done on fakes: router, planner, plan checks (PLAN-001 to 016), skeleton assembler, typed slot fills, verify with a drop-fills retry, mint, gate, deliver, loading skeleton, prompt packs, fail-check registry, golden set, hostile set, cost projection. **Not done:** the first paid run (owner), a live provider class, the Free lane, the L4 wording check. Review findings S4, S7, S8, S10 and notes remain |
+| P4 | Kit expansion by kit | ✅ Cloud scope done: 11 science models (3 Physics, 3 Biology, 5 Chemistry), 87 planted bugs for the new ones, 11 Environments verified. Wording and scope are unchecked against the textbook |
+| P5 | Library and lifecycle | ✅ Cloud scope done: question cache through the gate, withdraw, restore, flag, stale by Kit hash, endpoints. Single operator (D-11) |
+| P6 | Pedagogy | 🔶 Hint ladder, concept check, predict card and worked solution built, planned and verified on six Environments. Not built: spaced practice, difficulty adaptation, misconception follow-up in the UI |
 | P7 | Reach and the deploy gate | ⬜ Not started |
 | P8 | Evidence and learner study | ⬜ Not started |
 
@@ -44,17 +44,6 @@ Status vocabulary: use these exactly, and never round up:
 | API `/ask` on fakes | SSE: meta, text, environment block, done | ✅ 18 tests and a live `curl -N` |
 | Web shell | Stream, hash check, `sandbox="allow-scripts"` iframe, Peek and Stage | ✅ 22 unit tests and 17 of 17 checks in real Chromium |
 | Coverage census | 53 topics annotated with pattern, model kind, needed micro-component kinds, expected lane | ✅ Built, validated (18 tests), report generated. An estimate by one annotator. The owner delegated the decision it informed (D-18) instead of reviewing it |
-
----|---|---|
-| Workspace and toolchain | uv project plus pnpm workspace (`web`, `packages/schema`, `packages/kit`); Python 3.13 | ✅ Verified in the cloud container; `web/` does not exist yet (task 8) |
-| Wire schema and codegen | TypeScript source, codegen to strict Pydantic, drift check; ported from Arcana v2 with provenance | ✅ Drift check proven to fail and recover; 6 strictness tests pass |
-| Settings, fake LLM, spend ledger and cap | Fakes default; live mode refuses to start without a cap and key | ✅ 10 tests pass. No live provider by design until P3 (D-15). Pricing and model ids still ASSUMED |
-| Kit v0 | `environment`, `slider`, `readout`, observable, bridge; esbuild bundle; manifest | ⬜ |
-| Reference Environment | One hand-written Environment composed over Kit v0 (a walking-skeleton illustration, not the first vertical) | ⬜ |
-| Verification v0 | L0 scan (ported from v3), Playwright render harness, mint, store, gate | ⬜ |
-| API `/ask` on fakes | SSE: meta, text, environment block, done | ⬜ |
-| Web shell | Stream, hash check, `sandbox="allow-scripts"` iframe, Peek and Stage | ⬜ |
-| Coverage census | 53 topics annotated with pattern, model kind, needed micro-component kinds, expected lane | ⬜ |
 
 ---
 
@@ -81,6 +70,11 @@ What has actually been run, not what has been written. A row here needs a real c
 | 2026-10-16 | Isolation spike | `uv run python eval/isolation/spike.py` | `unshare --net` works at no cost; `RLIMIT_AS` breaks Chromium; see the evidence note |
 | 2026-10-16 | Router model | `uv run python eval/models/train_router.py`, `calibrate.py`; `pytest eval/models api/routing` | Beats majority and keyword baselines on every head (complexity narrowly); pure-Python equals scikit-learn on 538 of 538; artifact hash stable across two runs; card generated and tested for staleness |
 
+| 2026-10-16 | Whole-repo state after P2 to P6 cloud work and the P3 review fixes | `uv run pytest -q` (463 passed, 1 skipped); `pnpm -r test` (Kit 228, web 23); `ruff check api eval`; `pyright api eval`; `pnpm -r typecheck`; `pnpm codegen:check`; `eval/smoke/web_smoke.py` | All clean; smoke 18 of 18 in Chromium. After the exemplar change: `pytest api/pipeline api/routes eval/cost` 134 passed |
+| 2026-10-16 | L6 and hostile after the pedagogy components and relocks | `uv run python eval/l6/run.py`; `uv run python eval/hostile/run.py` | L6: 56 of 61 refused, 0 of 12 neutral controls refused, no surprise misses; hostile 20 of 20 blocked |
+| 2026-10-16 | The breadth set | `uv run python eval/environments/build.py` | 11 Environments verified in Chromium and delivered through the gate: Physics 3, Biology 3, Chemistry 5 (`refdocs/evidence/2026-10-16-p4-environments.md`) |
+| 2026-10-16 | Cost projection (no paid call) | `uv run python eval/cost/project.py` | Per Environment, mean over 24 golden questions; canary up to $0.09, then 9 questions projected $0.09 to $0.52, hard bound $0.80; suggested cap $1.00. ASSUMED prices and model ids |
+
 ---
 
 ## Known gaps
@@ -97,10 +91,19 @@ What has actually been run, not what has been written. A row here needs a real c
 - **Accessibility is checked only statically and in the harness** (names, `aria-valuetext`, 44 px targets, no overflow at 360 px). No screen reader, reduced-motion or keyboard-only pass has been done in a real browser.
 - **No clean-checkout rebuild has been done.** `uv sync` and `pnpm install` were run incrementally, never from an empty clone.
 - **No file-structure doc and no parity doc** are written; the tree now exists, so a file map is worth writing at the start of P1.
+- **No model has ever written a Plan.** The planner, the fills and the explainer are exercised only by deterministic fakes. Whether a real model produces Plans that pass the checks, what it costs and how often it needs the retry are all unmeasured (A-4). The first paid run answers this.
+- **The Free lane and the L4 wording check are not built.** A question the Kit cannot express gets the written answer; the `verifier_l4` pack is written but called by nothing.
+- **Open kit-guardian P3 findings:** plan checks vs verifier parity beyond the dilution relation (S4); homogeneous-property silent continue and domain tests (S7); accessibility and 360 px tests per component beyond the render harness audit (S8); a soundness test for the fail-check registry's coverage (S10); string length caps on every plan field and fill-contract bypass probes. B1 and S1, S2, S3, S5 (dilution relation), S6, S9, S12 are fixed. The review itself is one round by one reviewer.
+- **Every Environment is `model-checked` with an UNVERIFIED citation.** No textbook page has confirmed any formula, unit, wording or scope. The photosynthesis curve is a stylised teaching curve and says so.
+- **Kit 0.1.0 is unreleased and relocked on each change** (D-29). Nothing public depends on it yet.
 - **Naming** ("Synapse" collision, A-14) is open.
 
 ## Deferred to local (things the cloud container could not do)
 
+- **Load the textbook corpus** (A-8): set `CORPUS_DIR`, ingest with `api/evidence/ingest.py`, then re-run the breadth set and add real citations to the Plans. Four Chemistry experiment books are image-only and need OCR.
+- **Match the experiment catalogue** (`data/experiments/catalogue.json`) to the owner's experiment documents; every entry says `confirmed_by_person: false`.
+- **The first paid run** (needs the owner's confirmed amount and a live provider class built against the provider SDK's current docs, rule 6).
+- **Run all suites on the Windows machine** and confirm Kit sha and bytes are stable across platforms (line endings, esbuild version).
 - **A fresh kit-guardian pass over D-24** (the second round was stopped by a safety classifier). Run it locally, ideally with a person watching.
 - **Router retrain** on the full KSSM ingestion and an embedding comparison (D-20, A-9); download sizes were not testable here.
 - **Model card check by a person:** the router measures agreement with an LLM teacher; sample 50 held-out questions and judge the labels yourself.

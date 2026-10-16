@@ -10,14 +10,16 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections import Counter
+from pathlib import Path
 
 from api.kitmanifest import Manifest
 from api.llm.types import LLMRequest
 from api.models.misconceptions import _tokens
 from api.pipeline import failchecks
 from api.pipeline.fill import SlotContract
-from api.pipeline.plan import Plan
+from api.pipeline.plan import Plan, parse
 from api.pipeline.plan_checks import PlanIssue, needed_components
 from api.prompts import DIR, estimate_tokens, load
 
@@ -102,6 +104,33 @@ def issues_text(issues: list[PlanIssue]) -> str:
     )
 
 
+PLANS_DIR = Path(__file__).resolve().parents[2] / "data" / "plans"
+
+
+def exemplar_for(question: str, topic: str | None, pattern: str) -> Plan | None:
+    """The hand-written golden Plan nearest to the question, from the SAME topic only: an exemplar from another topic would invite the
+    planner to copy another lesson's science. Prefers the same pattern, then the most shared words. None when the topic has no golden Plan."""
+    if not topic:
+        return None
+    words = set(re.findall(r"[a-z]+", question.lower()))
+    best: tuple[int, int, str] | None = None
+    chosen: Plan | None = None
+    for path in sorted(PLANS_DIR.glob("*.json")):
+        try:
+            candidate = parse(path.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        if candidate.topic != topic:
+            continue
+        shared = len(
+            {w for w in re.findall(r"[a-z]+", f"{candidate.title} {candidate.goal}".lower()) if len(w) > 3} & words
+        )
+        key = (int(candidate.pattern == pattern), shared, candidate.id)
+        if best is None or key[:2] > best[:2]:
+            best, chosen = key, candidate
+    return chosen
+
+
 def plan_request(
     question: str,
     route_summary: str,
@@ -113,11 +142,12 @@ def plan_request(
 ) -> LLMRequest:
     core, planner = load("core"), load("planner")
     schema = (DIR / planner_schema()).read_text(encoding="utf-8")
+    example = exemplar or exemplar_for(question, topic, pattern)
     stable, variable = planner.render_parts(
         schema=schema.strip(),
         pattern_pack=pattern_pack(pattern),
         kit_pack=render_kit_pack(kit_pack_for_question(question, pattern, manifest, topic=topic), manifest),
-        exemplar=exemplar.model_dump_json(indent=None) if exemplar else "(none)",
+        exemplar=example.model_dump_json(indent=None) if example else "(none)",
         question=question,
         route=route_summary,
         issues=issues_text(issues or []),

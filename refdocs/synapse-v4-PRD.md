@@ -270,6 +270,13 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-21 | `model-checked` = passed the deterministic layers with no verified source; `kit-verified` also needs a verified citation; `dev-fixture` is removed in P1 | Hard constraint 4 |
 | D-22 | Cloud-first, local last; limits go in the Deferred to local register | Owner |
 | D-23 | Mark 3 is layered and skeleton-first: plan as data, deterministic assembly from a per-pattern skeleton, model fills only typed slots; a fail-check registry; a loading skeleton; Kit `useWhen` retrieval | Owner asked for layers, skeletons, prompt templates, fail checks and generation micro-components; ChatGPT apps research |
+| D-24 | The page's numbers are protected in four places (lockdown, ownership, verifier, runtime self-check); none is a proof alone | kit-guardian P1 round 1 |
+| D-25 | `kit-verified` only when the corpus re-proves every citation (mint and gate); never in the Free lane | Hard constraint 4 |
+| D-26 | Lane names say what was done for this question: Compose for pages planned and assembled for it, Instantiate for stored pages reused, Free not built; fills dropped on a verify failure before words-only | kit-guardian P3 B1 |
+| D-27 | The library is a canonical-question cache; every hit goes through the gate again; withdraw, restore, flag, stale by Kit hash | Hard constraint 1 |
+| D-28 | A local `none` topic is never trusted; it goes to the LLM fallback | Measured: 7 of 24 golden questions wrongly `none` |
+| D-29 | Kit 0.1.0 stays unreleased and is relocked until the deploy gate; Kit files are served `no-cache` | D-16 |
+| D-30 | Plan checks know cross-quantity rules (PLAN-015) and topic fit (PLAN-016); prompt packs keep per-request text below the divider | kit-guardian P3 S1, S5, S6 |
 
 ---
 

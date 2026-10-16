@@ -189,3 +189,16 @@ def test_fill_and_explain_requests_keep_one_stable_system_prefix() -> None:
     c1 = pp.fill_request("note", "say hello", fillmod.contract_for("note"), ("k", "x"))
     c2 = pp.fill_request("other", "something else", fillmod.contract_for("other"), ("y",), "Fix this")
     assert c1.system == c2.system and "say hello" not in (c1.system or "") and "say hello" in c1.prompt
+
+
+def test_the_exemplar_is_a_golden_plan_of_the_same_topic_and_only_that(manifest: kitmanifest.Manifest) -> None:
+    ex = pp.exemplar_for(
+        "Why does a spring stretch when I hang a load?", "physics_form5_force_and_pressure", "simulation"
+    )
+    assert ex is None or ex.topic == "physics_form5_force_and_pressure"
+    assert pp.exemplar_for("anything", None, "simulation") is None
+    assert pp.exemplar_for("anything", "no_such_topic", "simulation") is None
+    topic = next(iter({json.loads(p.read_text())["topic"] for p in pp.PLANS_DIR.glob("*.json")}))
+    req = pp.plan_request("A question", "topic=x", "simulation", manifest, topic=topic)
+    assert "(none)" not in req.prompt.split("Nearest worked example")[1].split("Routing")[0]
+    assert pp.exemplar_for("anything", topic, "simulation") is not None

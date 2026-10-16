@@ -204,6 +204,54 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** Freezing built-ins breaks code that patches them (polyfills, `Object.prototype` assignment of inherited names); generated Environments do not need to. The self-check can false-alarm if the Kit's own rendering drifts from its expected text, which would close an honest Environment; the tests pin that an honest page stays quiet. Rejected: running the audit from a separate browser world (CDP isolated world): it cannot see the Kit's private registries, so it would need a second ownership channel the page could also read. Deferred to the A-10 / deploy-gate work: a host-side check of the DOM from outside the frame. **Limits that remain:** the self-check and lockdown are defence in depth, not a sandbox proof; a browser or engine bug defeats them; the audit compares numeric values and units, not meaning (a correct number beside a misleading picture); a condition the harness never creates is covered only at student time, and the Environment is already on screen for the moment before the check fires (interval 1 s, mutation debounce 50 ms).
 
+## D-25: `kit-verified` is reachable only when the corpus re-proves every citation (2026-10-16)
+
+**Decision.** `guard_label` (mint) and the delivery gate refuse `kit-verified` unless the lane is not Free, the Environment cites at least one source, every citation is marked verified, and an `Evidence` object can find each quotation in the local corpus (exact match after normalisation of case, whitespace and hyphenation). A citation that claims `verified` but cannot be re-proved is refused as `citation_unproved`, not downgraded. With no corpus configured the best label is `model-checked` with an explicit UNVERIFIED citation. `reviewed` and `canonical` are never mintable by code.
+
+**Why.** Hard constraint 4 says no source, no `kit-verified`. A flag on the record is a claim; the corpus lookup is the proof, and the gate repeats it so a row edited in storage cannot gain the label. Exact-after-normalisation matching is deliberately strict: a paraphrase is not a quotation.
+
+**Trade-offs / rejected.** The corpus is local and never committed (rule 13), so the cloud build can only prove the mechanism against a synthetic corpus. Rejected: fuzzy matching (it would accept a nearby but wrong passage), and trusting the planner's citation field. Limit: a quotation proves the words are in the book, not that the Environment's formula matches them.
+
+## D-26: Lane names mean what was done for this question (2026-10-16)
+
+**Decision.** A page the pipeline planned and assembled for the student's question from audited Kit parts is **Compose**, with or without model-written slot fills. **Instantiate** is a stored, hand-written Environment reused as it was (fixtures, the P4 breadth set). **Free** (a whole model-written page) is not built. The student sees this in the provenance panel ("planned for your question and assembled from audited Kit components"). If a page with fills is refused by the verifier, the fills are dropped and the plain assembly is verified once before the student gets words only.
+
+**Why.** The P3 review found fresh pages shown as "a stored Environment, not written for this question", which is false. The PRD says the lane is decided by what verification the output survives; a library hit keeps the lane it was minted with.
+
+**Trade-offs / rejected.** "Compose" now covers plan-only pages where no model wrote any code, which stretches the PRD's wording ("raw HTML/JS that calls the Kit"). Kept because the label's promise (assembled from audited parts, checked) is exactly true. Rejected: a fourth lane name (more vocabulary for the student with no new trust meaning).
+
+## D-27: The library is a question cache in front of the pipeline, and every hit goes through the gate again (2026-10-16)
+
+**Decision.** `canonical_question` maps a question to a stored Environment id (`questions` table). A hit is delivered by `deliver` (re-hash, re-scan, CSP, Kit sha, label guard, evidence re-proof, withdrawn check), so a withdrawn, stale or tampered row falls through to a fresh run. Lifecycle is `withdraw` / `restore` and `flag` (a student or the operator marks a problem); `library()` lists rows with their state; an Environment verified against an older Kit bundle is `stale`.
+
+**Why.** Most KSSM questions repeat; a hit costs nothing and the hard constraint (nothing unverified reaches the client) still holds because delivery does not trust the cache. 
+
+**Trade-offs / rejected.** Exact canonical match only; no semantic cache until measured (a wrong near-match is worse than a miss). Single operator, so no per-user state (D-11).
+
+## D-28: A local `none` topic is never trusted (2026-10-16)
+
+**Decision.** When the router predicts `none` for the topic head, the question goes to the LLM fallback regardless of confidence. A keyword second opinion was measured and is no better than chance on the `none` class, so it is not used.
+
+**Why.** 7 of 24 golden questions were wrongly routed to `none` by the local model (the training data's untagged rows include on-syllabus questions). A wrong `none` silently becomes "words only" for a question the product exists to answer.
+
+**Trade-offs.** More fallback calls (cost) for questions that really are off-syllabus. Revisit when the local dataset is relabelled (deferred to local).
+
+## D-29: Kit 0.1.0 stays unreleased and is relocked until the deploy gate; Kit files revalidate (2026-10-16)
+
+**Decision.** Until the owner releases, every Kit change relocks 0.1.0 (`build.mjs --relock`); stored Environments verified against an earlier build become `stale_kit` and are re-verified rather than served. Kit files are served with `Cache-Control: no-cache` so a browser cannot keep an old bundle under the same semver. At release the version is bumped and files can be made immutable.
+
+**Why.** D-16 ties semver to bytes. Bumping on every pre-release edit would leave dozens of dead versions; relocking is safe only because nothing is public yet.
+
+**Trade-offs.** The lock file does not protect an unreleased version. A cached stale bundle would break the page's hash expectation, hence the header.
+
+## D-30: Plan checks know cross-quantity rules and topic fit; prompt packs keep per-request text below the divider (2026-10-16)
+
+**Decision.** `plan_checks.RELATIONS` holds rules a per-quantity domain cannot express (first: dilution final volume must not start below the starting volume, PLAN-015). PLAN-016 refuses a model used under a topic its Kit entry does not list. The prompt loader refuses any `{{variable}}` above the `=== VARIABLE ===` line unless the pack lists it in `static_inputs` (a value that is constant between requests, such as the failure-mode list).
+
+**Why.** The P3 review found plans the verifier would accept as numbers but that make no physical sense, a model answering under the wrong topic, and cache prefixes that changed on every call. Each is now a check with a test.
+
+**Trade-offs.** Relations are written by hand per model; a new model with a cross-quantity constraint must add a line (a coverage test for this does not exist yet).
+
 ---
 
 ## Working assumptions (`ASSUMED:`)
