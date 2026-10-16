@@ -56,6 +56,13 @@ class ProviderRejected(SynapseError):
     retryable = False
 
 
+class RateLimited(SynapseError):
+    """Too many requests from this client, or the server is already busy with as many Environments as it will make at once."""
+
+    code = "rate_limited"
+    retryable = True
+
+
 class VerificationRefused(SynapseError):
     """An Environment failed a verification layer. `issues` names the layer and the reason."""
 
@@ -77,5 +84,6 @@ HTTP_STATUS: dict[str, int] = {
     "spend_cap_exceeded": 402,
     "provider_unavailable": 503,
     "verification_refused": 422,
+    "rate_limited": 429,
     "internal": 500,
 }

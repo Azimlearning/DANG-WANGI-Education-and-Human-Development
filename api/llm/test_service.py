@@ -204,3 +204,24 @@ def test_live_mode_is_never_built_uncapped_or_with_a_relative_ledger_even_withou
     with pytest.raises(ConfigError) as err:
         build_ledger(settings(llm_monthly_cap_usd=1))
     assert "LEDGER_PATH" in str(err.value)
+
+
+async def test_the_spend_summary_splits_by_purpose_and_model_and_counts_failed_calls(tmp_path: Path) -> None:
+    ledger = SpendLedger(engine_for(tmp_path / "l.db"), 1.0)
+    service = LLMService(FakeProvider(name="anthropic", models=ANTHROPIC_MODELS), None, ledger)
+    await service.complete(LLMRequest(prompt="a" * 300, purpose="plan", tier="standard", max_tokens=100))
+    await service.complete(LLMRequest(prompt="b" * 300, purpose="explain", tier="light", max_tokens=100))
+    broken = LLMService(
+        FakeProvider(name="anthropic", models=ANTHROPIC_MODELS, fail_with="x", fail_kind="transient"), None, ledger
+    )
+    with pytest.raises(Exception):  # noqa: B017, PT011
+        await broken.complete(LLMRequest(prompt="c", purpose="plan", tier="standard", max_tokens=10))
+    s = ledger.summary()
+    assert s["cap_usd"] == 1.0 and s["calls"] == 3 and s["failed_calls"] == 1
+    assert set(s["by_purpose"]) == {"plan", "explain"} and set(s["by_model"]) == {
+        "claude-sonnet-5-5",
+        "claude-haiku-5-5",
+    }
+    assert s["spent_usd"] == pytest.approx(sum(s["by_model"].values())) and s["remaining_usd"] == pytest.approx(
+        1.0 - s["spent_usd"]
+    )

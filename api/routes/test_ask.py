@@ -230,3 +230,42 @@ def test_a_server_with_no_kit_built_ends_the_stream_with_one_error_and_done(tmp_
     events = _events(TestClient(app))
     assert [e.type for e in events] == ["error", "done"]
     assert "no interactive library" in events[0].error.message  # type: ignore[union-attr]
+
+
+def test_the_third_question_in_a_minute_is_refused_with_429_when_the_limit_is_two(
+    kit_dist: Path, tmp_path: Path
+) -> None:
+    client = TestClient(create_app(_settings(tmp_path / "data", kit_dist, rate_limit_per_minute=2)))
+    assert [client.post("/ask", json={"question": "Why does a spring stretch?"}).status_code for _ in range(2)] == [
+        200,
+        200,
+    ]
+    refused = client.post("/ask", json={"question": "Why does a spring stretch?"})
+    assert (
+        refused.status_code == 429 and refused.json()["code"] == "rate_limited" and refused.json()["retryable"] is True
+    )
+
+
+def test_a_full_server_refuses_with_429_and_a_finished_stream_frees_its_slot(kit_dist: Path, tmp_path: Path) -> None:
+    app = create_app(_settings(tmp_path / "data", kit_dist, max_concurrent_asks=1, rate_limit_per_minute=0))
+    client = TestClient(app)
+    token = app.state.gate.acquire()  # something else is being worked on
+    assert client.post("/ask", json={"question": "Why does a spring stretch?"}).status_code == 429
+    app.state.gate.release(token)
+    assert client.post("/ask", json={"question": "Why does a spring stretch?"}).status_code == 200
+    assert app.state.gate.in_flight() == 0  # released when the stream ended
+
+
+def test_spend_reports_the_month_against_the_cap_and_holds_no_text(client: TestClient) -> None:
+    body = client.get("/spend").json()
+    assert body["spent_usd"] == 0 and body["cap_usd"] is None and body["remaining_usd"] is None and body["calls"] >= 0
+    assert set(body) == {
+        "month",
+        "spent_usd",
+        "cap_usd",
+        "remaining_usd",
+        "calls",
+        "failed_calls",
+        "by_purpose",
+        "by_model",
+    }

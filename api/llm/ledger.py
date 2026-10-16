@@ -72,6 +72,42 @@ class SpendLedger:
             ).scalar_one()
         return float(total)
 
+    def summary(self) -> dict:
+        """This month's spend for the operator: total, cap, what remains, and the split by purpose and by model. No prompt or reply text is ever stored."""
+        month = self._clock().strftime("%Y-%m")
+        with self._engine.connect() as conn:
+            rows = conn.execute(
+                select(
+                    spend_ledger.c.purpose,
+                    spend_ledger.c.model,
+                    spend_ledger.c.status,
+                    func.count(),
+                    func.sum(spend_ledger.c.cost_usd),
+                    func.sum(spend_ledger.c.tokens_in),
+                    func.sum(spend_ledger.c.tokens_out),
+                )
+                .where(spend_ledger.c.month == month)
+                .group_by(spend_ledger.c.purpose, spend_ledger.c.model, spend_ledger.c.status)
+            ).all()
+        by_purpose: dict[str, float] = {}
+        by_model: dict[str, float] = {}
+        calls = failed = 0
+        for purpose, model, status, n, cost, _tin, _tout in rows:
+            by_purpose[purpose] = by_purpose.get(purpose, 0.0) + float(cost or 0.0)
+            by_model[model] = by_model.get(model, 0.0) + float(cost or 0.0)
+            calls += int(n)
+            failed += int(n) if status == "failed" else 0
+        return {
+            "month": month,
+            "spent_usd": round(self.month_total(), 6),
+            "cap_usd": self._cap,
+            "remaining_usd": None if self._cap is None else round(self.remaining_usd() or 0.0, 6),
+            "calls": calls,
+            "failed_calls": failed,
+            "by_purpose": {k: round(v, 6) for k, v in sorted(by_purpose.items())},
+            "by_model": {k: round(v, 6) for k, v in sorted(by_model.items())},
+        }
+
     def remaining_usd(self) -> float | None:
         """Cap minus this month's spend and in-flight reservations; None when there is no cap."""
         if self._cap is None:

@@ -91,7 +91,7 @@ What has actually been run, not what has been written. A row here needs a real c
 - **Cost of a Compose-lane environment is unmeasured** (A-4). The v3 figure of about $0.19 is for whole-document generation. No paid call has ever been made in this repo.
 - **Isolation for a public deploy is undecided** (A-10, partly confirmed). `unshare --net` verifies fine in this container; hosting, memory limits via cgroup and a browser-exploit answer remain for the deploy gate.
 - **Corpus legality is unconfirmed** (A-8). Four Chemistry experiment books are image-only PDFs with no text layer and need OCR, which is not installed.
-- **Deploy gate, rate limits and auth do not exist** and are deliberately deferred (D-11). The API must not be exposed.
+- **The deploy gate and auth do not exist** and are deliberately deferred (D-11). A per-client per-minute limit, a cap on questions in flight and `GET /spend` now exist (in-process, per worker); per-session and per-day limits, student accounts and the rest of `refdocs/guides/checklist.md` do not. The API must not be exposed.
 - **Accessibility is checked only statically and in the harness** (names, `aria-valuetext`, 44 px targets, no overflow at 360 px). No screen reader, reduced-motion or keyboard-only pass has been done in a real browser.
 - **No clean-checkout rebuild has been done.** `uv sync` and `pnpm install` were run incrementally, never from an empty clone.
 - **No file-structure doc and no parity doc** are written; the tree now exists, so a file map is worth writing at the start of P1.

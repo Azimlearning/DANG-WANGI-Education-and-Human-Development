@@ -28,6 +28,13 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-16: Request limits and a spend view (P7 deploy-gate items)
+- **Changed:** `api/limits.py` (new: sliding-window `RateLimiter`, `ConcurrencyGate` with slot expiry), `api/app.py` (`/ask` admission dependency, slot released when the stream ends, `GET /spend`), `api/llm/ledger.py` (`summary()`), `api/core/errors.py` and `packages/schema/src/errors.ts` (error code `rate_limited`, HTTP 429), regenerated `api/schema/generated.py`, `web/lib/stream.ts` (accepts the new code), settings `RATE_LIMIT_PER_MINUTE` (20) and `MAX_CONCURRENT_ASKS` (3), `env_setup.md`, the deploy-gate checklist (annotated, boxes left unticked), STATUS.
+- **Decided:** limits are in-process and per worker, keyed by client address, because the API is single-operator (D-11); a proxied or multi-worker deploy must also limit at the proxy. The concurrency cap matters more than the rate: each question can launch Chromium.
+- **Deviations:** the checklist asks for per-session and per-day limits and a per-student cost view; there are no sessions or accounts, so only the per-address per-minute limit, the in-flight cap and the monthly total by purpose and model are built.
+- **Verified:** `uv run pytest api/test_limits.py api/llm api/routes -q`: 68 passed (limiter window and recovery, idle-client forgetting, slot expiry, 429 on the third question with a limit of two, a full server refuses and a finished stream frees its slot, the spend summary); `pnpm codegen:check` OK; ruff and pyright clean.
+- **Noted, not changed:** an abandoned stream that never started would hold a slot for up to 10 minutes (the TTL); behind a proxy without forwarded addresses all clients share one bucket.
+
 ### 2026-10-16: Closing the remaining P3 review findings (S4, S7, S8, S10 and the notes)
 - **Changed:** `eval/plans/fuzz.py` (new plan/verifier parity fuzzer), `packages/kit/src/slider.ts` (step), `api/pipeline/plan_checks.py` (PLAN-017), `api/verify/render.py` (accessibility audit, reduced motion), `api/pipeline/fill.py` (contract), `api/pipeline/plan.py` (size caps), `api/pipeline/run.py` (no-Kit stream), `packages/kit/src/science/spec.ts` (registration suite), tests for each, `refdocs/evidence/*` regenerated.
 - **Reported (kit-guardian P3):** S4 plan checks vs verifier parity; S7 the homogeneity check silently skips a call that throws, and domain tests are thin; S8 no accessibility test beyond declared controls; S10 the fail-check coverage test could pass vacuously; notes: fill-contract bypasses, string length caps, no `done` when the Kit is missing.

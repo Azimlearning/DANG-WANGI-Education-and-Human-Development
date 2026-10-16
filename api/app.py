@@ -13,9 +13,10 @@ from fastapi.sse import EventSourceResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from api import postprocess
-from api.core.errors import HTTP_STATUS, BadRequest, NotFound, SynapseError, envelope_from_exception
+from api.core.errors import HTTP_STATUS, BadRequest, NotFound, RateLimited, SynapseError, envelope_from_exception
 from api.core.settings import Settings, load_settings
 from api.kit import built_versions
+from api.limits import ConcurrencyGate, RateLimiter
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.service import LLMService
 from api.pipeline.run import Deps
@@ -62,6 +63,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.store = open_store(settings)
     app.state.ledger = build_ledger(settings)
+    app.state.rate = RateLimiter(settings.rate_limit_per_minute)
+    app.state.gate = ConcurrencyGate(settings.max_concurrent_asks)
     app.state.llm = (
         None  # built on first use, so a live config without a provider fails per request, not at import (D-15)
     )
@@ -109,9 +112,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             request.app.state.llm = build_llm_service(settings, request.app.state.ledger)
         return request.app.state.llm
 
+    def admitted(request: Request, question: str = Depends(checked_question)) -> tuple[str, int]:
+        """Rate limit per client address, then a slot among the questions in flight. Raises RateLimited (HTTP 429) before any work starts."""
+        client = request.client.host if request.client else "unknown"
+        if not request.app.state.rate.allow(client):
+            raise RateLimited("Too many questions in a short time. Wait a minute and try again.")
+        token = request.app.state.gate.acquire()
+        if token is None:
+            raise RateLimited("The server is making as many Environments as it can right now. Try again in a moment.")
+        return question, token
+
     @app.post("/ask", response_class=EventSourceResponse)
-    async def ask(request: Request, question: str = Depends(checked_question)) -> AsyncIterator[StreamEvent]:
+    async def ask(request: Request, admission: tuple[str, int] = Depends(admitted)) -> AsyncIterator[StreamEvent]:
         """The Mark 3 pipeline (D-23) on whatever LLM service is configured: fakes by default, nothing paid without the owner's go."""
+        question, token = admission
+        try:
+            async for event in _ask_events(request, question):
+                yield event
+        finally:
+            request.app.state.gate.release(token)
+
+    async def _ask_events(request: Request, question: str) -> AsyncIterator[StreamEvent]:
         try:
             llm = llm_for(request)
         except SynapseError as exc:  # live mode without a provider: a clean error event, not a broken stream
@@ -129,6 +150,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         async for event in run_pipeline(question, deps):
             yield event
+
+    @app.get("/spend")
+    async def spend(request: Request) -> dict:
+        """This month's LLM spend against the cap (P7 cost dashboard). Single operator, no auth (D-11): not for the public internet."""
+        return request.app.state.ledger.summary()
 
     # ── the library and its lifecycle (P5). Single operator, no auth (D-11): these must not be exposed until the deploy gate. ──────────────────────
 

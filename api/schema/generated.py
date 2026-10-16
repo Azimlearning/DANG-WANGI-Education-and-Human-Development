@@ -145,7 +145,7 @@ Block = EnvironmentBlock
 
 BlockStatus = Literal['empty', 'loading', 'partial', 'ready', 'error']
 
-ErrorCode = Literal['validation_failed', 'bad_request', 'not_found', 'spend_cap_exceeded', 'provider_unavailable', 'verification_refused', 'internal']
+ErrorCode = Literal['validation_failed', 'bad_request', 'not_found', 'spend_cap_exceeded', 'provider_unavailable', 'verification_refused', 'rate_limited', 'internal']
 
 Lane = Literal['instantiate', 'compose', 'free']
 

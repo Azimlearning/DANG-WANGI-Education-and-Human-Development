@@ -8,6 +8,7 @@ export type ErrorCode =
   | "spend_cap_exceeded"
   | "provider_unavailable"
   | "verification_refused"
+  | "rate_limited"
   | "internal";
 
 /**
