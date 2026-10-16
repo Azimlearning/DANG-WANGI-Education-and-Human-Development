@@ -1,0 +1,96 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The net uptake rises with light, then levels off.",
+      "x": "light",
+      "source": "leaf",
+      "label": "Net uptake",
+      "unit": "mg/h",
+      "digits": 1
+    }
+  ],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "Light",
+        "unit": "klux",
+        "source": "light",
+        "digits": 0
+      },
+      {
+        "label": "Net uptake",
+        "unit": "mg/h",
+        "source": "leaf",
+        "digits": 1
+      }
+    ]
+  },
+  "experiment": {
+    "aim": "To find the light intensity at which a leaf takes in no net carbon dioxide",
+    "hypothesis": "Net uptake is negative in the dark and rises with light intensity",
+    "independent": "Light intensity (klux)",
+    "dependent": "Net carbon dioxide uptake (mg/h)",
+    "controlled": [
+      "Temperature",
+      "Carbon dioxide concentration",
+      "The same leaf"
+    ],
+    "apparatus": [
+      "Leaf chamber",
+      "Light source",
+      "Gas sensor"
+    ]
+  },
+  "sentences": [],
+  "steps": [
+    "Set the light to 0 klux and press Record.",
+    "Raise the light a little at a time and press Record each time.",
+    "Find the light intensity where the net uptake is zero."
+  ],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "compensation_point",
+  "title": "Light intensity and photosynthesis in a leaf",
+  "goal": "Find the light intensity at which a leaf's photosynthesis balances its respiration.",
+  "pattern": "virtual_experiment",
+  "topic": "biology_form5_leaf_structure_function",
+  "note": "A leaf photosynthesises and respires at the same time. At the compensation point the net exchange of carbon dioxide is zero. This is a teaching curve, not measured data.",
+  "controls": [
+    {
+      "id": "light",
+      "label": "Light intensity",
+      "unit": "klux",
+      "min": 0,
+      "max": 16,
+      "value": 4,
+      "grid": 16
+    }
+  ],
+  "models": [
+    {
+      "id": "leaf",
+      "model": "biology.photosynthesis_net",
+      "params": {
+        "pmax": 10,
+        "k": 4,
+        "resp": 2
+      },
+      "inputs": {
+        "light": "light"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Net carbon dioxide uptake",
+      "unit": "mg/h",
+      "digits": 1,
+      "source": "leaf",
+      "convert_to": null
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "A bigger drawing of the same cell means a bigger magnification.",
+      "x": "image",
+      "source": "scope",
+      "label": "Magnification",
+      "unit": "times",
+      "digits": 0
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Keep the actual size the same and make the image size larger, then smaller."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "magnification_lab",
+  "title": "How much is a cell magnified?",
+  "goal": "Find the magnification from the size of a drawing and the size of the cell.",
+  "pattern": "simulation",
+  "topic": "biology_form4_cell_structure_function",
+  "note": "Magnification tells you how many times bigger the drawing or image is than the real specimen: magnification = image size / actual size.",
+  "controls": [
+    {
+      "id": "image",
+      "label": "Image size",
+      "unit": "mm",
+      "min": 10,
+      "max": 100,
+      "value": 50,
+      "grid": 9
+    },
+    {
+      "id": "actual",
+      "label": "Actual size",
+      "unit": "mm",
+      "min": 0.02,
+      "max": 0.1,
+      "value": 0.05,
+      "grid": 8
+    }
+  ],
+  "models": [
+    {
+      "id": "scope",
+      "model": "biology.magnification",
+      "params": {},
+      "inputs": {
+        "image": "image",
+        "actual": "actual"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Magnification",
+      "unit": "times",
+      "digits": 0,
+      "source": "scope",
+      "convert_to": null
+    }
+  ],
+  "predict": {
+    "prompt": "If you make the drawing twice as big but keep the cell the same size, what happens to the magnification?",
+    "choices": [
+      "It halves",
+      "It doubles",
+      "It stays the same"
+    ],
+    "reveal": "Try an image size of 20 mm and then 40 mm with the actual size fixed."
+  }
+}

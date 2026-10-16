@@ -1,0 +1,79 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The cardiac output rises as the heart rate rises.",
+      "x": "heart_rate",
+      "source": "heart",
+      "label": "Cardiac output",
+      "unit": "L/min",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Compare a heart rate of 40 beats/min with 180 beats/min at the same stroke volume."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "simulation",
+  "id": "cardiac_output_lab",
+  "title": "How much blood does the heart pump?",
+  "goal": "See how the heart rate and the stroke volume set the amount of blood pumped each minute.",
+  "topic": "biology_form4_circulatory_system",
+  "note": "Cardiac output is the volume of blood the heart pumps in one minute. It is the heart rate multiplied by the stroke volume, the volume pumped by one beat. A mL per minute figure is shown in litres per minute.",
+  "controls": [
+    {
+      "id": "heart_rate",
+      "label": "Heart rate",
+      "unit": "beats/min",
+      "min": 40,
+      "max": 180,
+      "value": 70,
+      "grid": 14
+    },
+    {
+      "id": "stroke_volume",
+      "label": "Stroke volume",
+      "unit": "mL",
+      "min": 30,
+      "max": 120,
+      "value": 70,
+      "grid": 9
+    }
+  ],
+  "models": [
+    {
+      "id": "heart",
+      "model": "biology.cardiac_output",
+      "params": {},
+      "inputs": {
+        "heart_rate": "heart_rate",
+        "stroke_volume": "stroke_volume"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Cardiac output",
+      "unit": "L/min",
+      "digits": 2,
+      "source": "heart",
+      "convert_to": null
+    }
+  ],
+  "concept_check": {
+    "question": "During exercise the heart rate rises and the stroke volume stays the same. What happens to the cardiac output?",
+    "options": [
+      "It rises",
+      "It falls",
+      "It stays the same"
+    ],
+    "correct": 0,
+    "explanation": "Cardiac output is the heart rate times the stroke volume, so a higher heart rate with the same stroke volume gives a higher output."
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "artifact_sha256": "e5b7a11292c2a8c47ea769ac3368e9661f92f3518082129668db971035d1f31b",
+  "heads": {
+    "complexity": {
+      "test_accuracy": 0.9101,
+      "test_coverage": 0.3513,
+      "threshold": 0.833,
+      "useful": true,
+      "val_accuracy": 0.9068,
+      "val_coverage": 0.3699
+    },
+    "domain": {
+      "test_accuracy": 0.929,
+      "test_coverage": 0.9944,
+      "threshold": 0.367,
+      "useful": true,
+      "val_accuracy": 0.901,
+      "val_coverage": 0.9812
+    },
+    "pattern": {
+      "test_accuracy": 0.9282,
+      "test_coverage": 0.3625,
+      "threshold": 0.648,
+      "useful": true,
+      "val_accuracy": 0.9027,
+      "val_coverage": 0.3542
+    },
+    "topic": {
+      "test_accuracy": 0.8803,
+      "test_coverage": 0.9261,
+      "threshold": 0.182,
+      "useful": true,
+      "val_accuracy": 0.9031,
+      "val_coverage": 0.9382
+    }
+  },
+  "min_coverage": 0.2,
+  "target_accuracy": 0.9
+}

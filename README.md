@@ -1,8 +1,8 @@
 # Synapse v4
 
-Turn a Malaysian Form 4 or 5 KSSM science question into a verified, interactive **environment**: raw HTML/JS assembled over a vetted library of hundreds of micro-components, with the textbook evidence and an honest trust label beside it.
+Turn a Malaysian Form 4 or 5 KSSM science question into a verified, interactive **environment**: raw HTML/JS assembled over a vetted library of micro-components (34 so far), with the textbook evidence and an honest trust label beside it.
 
-**Status:** scaffolded 2026-10-16, pre-implementation. Nothing is built; see [`refdocs/STATUS.md`](refdocs/STATUS.md).
+**Status:** the pipeline runs end to end on deterministic fakes and produces 17 verified Environments across Physics, Biology and Chemistry. No paid model call has ever been made, and no textbook corpus is loaded. See [`refdocs/STATUS.md`](refdocs/STATUS.md) for exactly what is and is not done.
 
 ## What it does
 
@@ -26,7 +26,6 @@ Nothing unverified reaches the client: the deliverable type can only be minted b
 ## Setup
 
 ```bash
-# not yet runnable: created in P0 task 1
 uv sync
 pnpm install
 cp .env.example .env
@@ -37,31 +36,31 @@ Settings are documented in [`refdocs/guides/env_setup.md`](refdocs/guides/env_se
 ## Usage
 
 ```bash
-# not yet runnable: created in P0
 uv run uvicorn api.main:app --reload --port 8000
 pnpm --filter web dev          # http://localhost:3000
 pnpm --filter kit build        # builds the micro-component Kit
 ```
 
-**Do not expose the API publicly.** There is no auth and no rate limit yet; see ADR D-11 and the deploy gate in [`refdocs/guides/checklist.md`](refdocs/guides/checklist.md).
+**Do not expose the API publicly.** There is no auth, and the limits that exist are in-process and per worker; see ADR D-11 and the deploy gate in [`refdocs/guides/checklist.md`](refdocs/guides/checklist.md).
 
 ## Project layout
 
-Planned. No file here exists until P0 creates it.
+The short version; [`refdocs/guides/file_map.md`](refdocs/guides/file_map.md) says what each file is for.
 
 ```
-api/                 FastAPI: routing, pipeline, evidence, verify, library, llm
+api/                 FastAPI: pipeline, verify (the trust path), evidence, llm seam, routing, models
   prompts/           prompt packs, versioned files
-web/                 Next.js: chat shell, presentations, sandbox host
+web/                 Next.js: chat shell, sandbox host, shared links, progress
 packages/
   schema/            wire types (TypeScript), codegen to Pydantic
-  kit/               micro-components, bundles, manifest
-eval/                golden, hostile, planted-bug, census, cost
-data/fixtures/       small committed fixtures
-corpus/              textbook corpus (gitignored, never committed)
-refdocs/             the doc system: PRD, STATUS, plans, execution, changelog, decisions
+  kit/               micro-components and science models, bundle, manifest
+eval/                golden, hostile, planted-defect, census, cost, parity fuzzer, browser smoke
+data/                plans, catalogue, taxonomy, router data, fixtures (no textbook text)
+refdocs/             the doc system: PRD, STATUS, plans, execution, changelog, decisions, evidence
 .claude/             agents, commands, preflight, hooks
 ```
+
+The textbook corpus is never in the repository: point `CORPUS_DIR` at a local folder.
 
 ## Documentation
 
@@ -74,6 +73,8 @@ refdocs/             the doc system: PRD, STATUS, plans, execution, changelog, d
 | [`refdocs/changelog/DECISIONS.md`](refdocs/changelog/DECISIONS.md) | Why things are the way they are |
 | [`refdocs/guides/env_setup.md`](refdocs/guides/env_setup.md) | Every setting and where to get it |
 | [`refdocs/guides/checklist.md`](refdocs/guides/checklist.md) | Pre-ship and deploy-gate checklist |
+| [`refdocs/guides/file_map.md`](refdocs/guides/file_map.md) | Where everything is and what it is for |
+| [`refdocs/guides/local_handoff.md`](refdocs/guides/local_handoff.md) | The prompt for the first local session: everything left to finish the project |
 | [`CLAUDE.md`](CLAUDE.md) | Operating brief for AI sessions on this repo |
 
 ## License

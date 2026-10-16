@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "note": "Golden questions for the first vertical (Physics Form 5, D-18). Written by hand for this repo; not taken from any textbook. Changing this file is a declared amendment (hard constraint 9): update eval/golden/vertical.sha256 in the same commit and say why in the changelog.",
+  "questions": [
+    {
+      "id": "g01",
+      "question": "Why does a spring stretch when I hang a weight on it?",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g02",
+      "question": "How is the extension of a spring related to the force pulling it?",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g03",
+      "question": "What is Hooke's law and when does it stop working?",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g04",
+      "question": "Show me how the length of a spring changes when I add more mass.",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g05",
+      "question": "Why does a stiffer spring stretch less for the same load?",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g06",
+      "question": "What is the elastic limit of a spring?",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g07",
+      "question": "I do not understand the experiment where we hang slotted weights on a spring. What should I see?",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g08",
+      "question": "How do I find the spring constant from a graph of force against extension?",
+      "expect_topic": "physics_form5_force_and_elasticity"
+    },
+    {
+      "id": "g09",
+      "question": "What happens to the current if I raise the resistance in a circuit?",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g10",
+      "question": "How are voltage, current and resistance related?",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g11",
+      "question": "State Ohm's law and show it with an example.",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g12",
+      "question": "Why does a bulb get dimmer when I use a bigger resistor?",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g13",
+      "question": "Show me how current changes when the voltage of the cell goes up.",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g14",
+      "question": "What does it mean that a conductor is ohmic?",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g15",
+      "question": "In the experiment with a rheostat, what should the graph of V against I look like?",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g16",
+      "question": "How do I calculate the current through a 6 ohm resistor connected to 12 volts?",
+      "expect_topic": "physics_form5_electricity"
+    },
+    {
+      "id": "g17",
+      "question": "How does the pressure change as a diver goes deeper in water?",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    },
+    {
+      "id": "g18",
+      "question": "Why is the pressure at the bottom of a dam greater than near the top?",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    },
+    {
+      "id": "g19",
+      "question": "What is the formula for pressure in a liquid and what does each part mean?",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    },
+    {
+      "id": "g20",
+      "question": "Show me how liquid pressure depends on depth.",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    },
+    {
+      "id": "g21",
+      "question": "Why must a submarine be built stronger to go deeper?",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    },
+    {
+      "id": "g22",
+      "question": "Does the shape of the container change the pressure at a given depth?",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    },
+    {
+      "id": "g23",
+      "question": "How does the density of the liquid change the pressure at the same depth?",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    },
+    {
+      "id": "g24",
+      "question": "Why do we feel pressure in our ears when we dive in a swimming pool?",
+      "expect_topic": "physics_form5_forces_and_pressure"
+    }
+  ]
+}

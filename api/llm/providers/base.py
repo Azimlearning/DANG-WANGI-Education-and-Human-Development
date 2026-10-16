@@ -1,0 +1,34 @@
+# Adapted from Azimlearning/Arcana-v2, api/llm/providers/base.py @ 21c6dcf5. Read in full; unchanged in shape.
+"""The provider interface. Providers translate every SDK failure into ProviderFailure."""
+
+from __future__ import annotations
+
+from typing import Literal, Protocol
+
+from api.llm.types import LLMRequest, ProviderResponse, Tier
+
+# transient: try the fallback. timeout: the call may have been billed. truncated: the reply hit max_tokens (billed). credit_exhausted and auth: the
+# provider's balance or key is the problem, NOT the spend cap; retrying or falling back is wrong, so the whole run stops. bad_request: our request is wrong.
+FailureKind = Literal["transient", "timeout", "truncated", "credit_exhausted", "auth", "bad_request"]
+
+
+class ProviderFailure(Exception):
+    """A provider could not serve the call (rate limit, timeout, outage, refusal, bad status).
+
+    The service answers any ProviderFailure by trying the fallback. `reason` is short and safe to log: it never carries
+    a key or a response body.
+    """
+
+    def __init__(self, provider: str, reason: str, kind: FailureKind = "transient"):
+        super().__init__(f"{provider}: {reason}")
+        self.provider = provider
+        self.reason = reason
+        self.kind = kind
+
+
+class Provider(Protocol):
+    name: str
+
+    def model_for(self, tier: Tier) -> str: ...
+
+    async def complete(self, request: LLMRequest, model: str) -> ProviderResponse: ...

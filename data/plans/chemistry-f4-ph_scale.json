@@ -1,0 +1,78 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The pH falls as the hydrogen ion concentration rises.",
+      "x": "h_conc",
+      "source": "acid",
+      "label": "pH",
+      "unit": "pH",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Compare a concentration of 0.001 mol/dm3 with 1 mol/dm3."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "simulation",
+  "id": "ph_scale_lab",
+  "title": "The pH scale and hydrogen ion concentration",
+  "goal": "See how the pH of a solution changes with the concentration of hydrogen ions.",
+  "topic": "chemistry_form4_acids_bases_salts",
+  "note": "The pH of a solution is a measure of its hydrogen ion concentration: pH = -log10 of the concentration in mol/dm3. A higher concentration of hydrogen ions gives a lower pH, and each tenfold change in the concentration changes the pH by one unit.",
+  "controls": [
+    {
+      "id": "h_conc",
+      "label": "Hydrogen ion concentration",
+      "unit": "mol/dm3",
+      "min": 0.001,
+      "max": 1,
+      "value": 0.1,
+      "grid": 10
+    }
+  ],
+  "models": [
+    {
+      "id": "acid",
+      "model": "chemistry.ph_from_h",
+      "params": {},
+      "inputs": {
+        "h_conc": "h_conc"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "pH",
+      "unit": "pH",
+      "digits": 2,
+      "source": "acid",
+      "convert_to": null
+    }
+  ],
+  "predict": {
+    "prompt": "If the hydrogen ion concentration becomes ten times bigger, what happens to the pH?",
+    "choices": [
+      "It rises by one",
+      "It falls by one",
+      "It stays the same"
+    ],
+    "reveal": "Set the concentration to 0.1 mol/dm3 and then to the smallest value and compare the pH."
+  },
+  "concept_check": {
+    "question": "Which solution is more acidic?",
+    "options": [
+      "The one with the lower pH",
+      "The one with the higher pH",
+      "They are the same"
+    ],
+    "correct": 0,
+    "explanation": "A lower pH means a higher hydrogen ion concentration, so the solution with the lower pH is more acidic."
+  }
+}

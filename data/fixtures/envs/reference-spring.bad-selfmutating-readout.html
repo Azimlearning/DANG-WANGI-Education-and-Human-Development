@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why does a spring stretch?</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  // reference-spring: a walking-skeleton illustration of the Instantiate lane. It is NOT the first vertical (D-09).
+  var env = Synapse.environment({
+    title: "Why does a spring stretch?",
+    note: "Hang a load on a spring and it stretches. Within the elastic limit the extension is proportional to the load: extension = load / k."
+  });
+  var load = Synapse.slider(env, { id: "load", label: "Load", unit: "N", min: 0, max: 10, value: 2, step: 0.1 });
+  var extension = Synapse.hookes({ k: 50, load: load });
+  Synapse.readout(env, { label: "Extension", unit: "m", value: extension, digits: 3 });
+  setInterval(function () { load.set(Math.random() * 10); }, 80);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

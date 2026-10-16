@@ -1,0 +1,111 @@
+{
+  "experiment_ref": null,
+  "constants": [
+    {
+      "id": "va",
+      "label": "Volume of acid",
+      "unit": "cm3",
+      "value": 25
+    }
+  ],
+  "graphs": [
+    {
+      "title": "A bigger end-point volume means a weaker alkali.",
+      "x": "vb",
+      "source": "alkali",
+      "label": "Concentration",
+      "unit": "mol/dm3",
+      "digits": 3
+    }
+  ],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "End point",
+        "unit": "cm3",
+        "source": "vb",
+        "digits": 0
+      },
+      {
+        "label": "Concentration",
+        "unit": "mol/dm3",
+        "source": "alkali",
+        "digits": 3
+      }
+    ]
+  },
+  "experiment": {
+    "aim": "To find the concentration of a sodium hydroxide solution by titration with hydrochloric acid",
+    "hypothesis": "The more alkali needed to neutralise the acid, the lower its concentration",
+    "independent": "Volume of alkali at the end point (cm3)",
+    "dependent": "Concentration of the alkali (mol/dm3)",
+    "controlled": [
+      "Volume and concentration of the acid",
+      "The indicator"
+    ],
+    "apparatus": [
+      "Burette",
+      "Pipette",
+      "Conical flask",
+      "Indicator"
+    ]
+  },
+  "sentences": [],
+  "steps": [
+    "Put 25 cm3 of 0.1 mol/dm3 hydrochloric acid in the flask.",
+    "Add alkali from the burette until the indicator just changes colour.",
+    "Set the end point to 20 cm3 and press Record.",
+    "Try 10 cm3 and 40 cm3 as well."
+  ],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "id": "titration_virtual",
+  "title": "Titration: finding a concentration",
+  "goal": "Find the concentration of sodium hydroxide from the volume needed to neutralise an acid.",
+  "pattern": "virtual_experiment",
+  "topic": "chemistry_form4_acids_bases_salts",
+  "note": "At the end point the acid and the alkali have neutralised each other exactly. For hydrochloric acid and sodium hydroxide, one mole of acid reacts with one mole of alkali.",
+  "controls": [
+    {
+      "id": "vb",
+      "label": "Volume of alkali at the end point",
+      "unit": "cm3",
+      "min": 10,
+      "max": 40,
+      "value": 20,
+      "grid": 6
+    }
+  ],
+  "models": [
+    {
+      "id": "alkali",
+      "model": "chemistry.titration_concentration",
+      "params": {
+        "ma": 0.1,
+        "acid_coeff": 1,
+        "base_coeff": 1
+      },
+      "inputs": {
+        "va": "va",
+        "vb": "vb"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Concentration of the alkali",
+      "unit": "mol/dm3",
+      "digits": 3,
+      "source": "alkali",
+      "convert_to": null
+    }
+  ],
+  "worked_solution": [
+    "Write the equation: HCl + NaOH gives NaCl + H2O.",
+    "The acid and the alkali react in a 1 to 1 ratio, so at the end point the moles of alkali equal the moles of acid.",
+    "Moles of acid = concentration of acid x volume of acid.",
+    "Concentration of alkali = moles of alkali / volume of alkali."
+  ]
+}

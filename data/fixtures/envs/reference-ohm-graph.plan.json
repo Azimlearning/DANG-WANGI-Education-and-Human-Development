@@ -1,0 +1,29 @@
+{
+  "id": "reference-ohm-graph",
+  "title": "Current, voltage and resistance together",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "A hand-written fixture composed over Kit 0.1.0: two sliders, the Ohm's law micro-model, a current readout, a graph of current against voltage, a results table and a reset button.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (corpus not loaded until P2)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "models": [
+    {
+      "id": "electricity.ohm",
+      "params": {}
+    }
+  ],
+  "controls": [
+    "voltage",
+    "resistance"
+  ],
+  "readouts": [
+    "Current"
+  ]
+}

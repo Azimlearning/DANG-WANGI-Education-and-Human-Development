@@ -27,4 +27,10 @@ Status vocabulary: `Draft` · `In progress` · `Done` · `Blocked` · `Supersede
 
 | File | Description | Status |
 |---|---|---|
-| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | P0: walking skeleton and coverage census | Draft |
+| [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | P0: walking skeleton and coverage census | Done (the owner delegated the vertical choice; the census stays an estimate) |
+| [2026-10-16-v4-enhancement-audit.md](2026-10-16-v4-enhancement-audit.md) | Audit of every wanted v4 enhancement against the PRD | Done |
+| [2026-10-16-p1-kit-core-and-verification.md](2026-10-16-p1-kit-core-and-verification.md) | P1: Kit core, provenance, L1 to L3, L6 baseline, isolation spike | Done (cloud scope) |
+| [2026-10-16-p1b-models-track.md](2026-10-16-p1b-models-track.md) | P1b: trained local models (multi-head router) and the misconception matcher | Done (cloud scope) |
+| [2026-10-16-p3-mark3-pipeline.md](2026-10-16-p3-mark3-pipeline.md) | P3: the layered, skeleton-first Mark 3 pipeline (plan as data, assembler, slot fills, fail checks, prompt packs) | Done on fakes (cloud scope); the first paid run is waiting on the owner |
+| [2026-10-16-p2-p5-p6-evidence-library-pedagogy.md](2026-10-16-p2-p5-p6-evidence-library-pedagogy.md) | P2, P5, P6 cloud scope: evidence engine, library and lifecycle, pedagogy components (written after the build) | Done (cloud scope) |
+| [2026-10-16-p4-kit-expansion.md](2026-10-16-p4-kit-expansion.md) | P4: eight new science models and eleven verified Environments across three subjects (written after the build) | Done (cloud scope) |

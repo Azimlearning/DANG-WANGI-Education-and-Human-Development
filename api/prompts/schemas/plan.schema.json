@@ -1,0 +1,674 @@
+{
+  "$defs": {
+    "ConceptCheckSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "correct": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Correct",
+          "type": "integer"
+        },
+        "explanation": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 2,
+          "title": "Options",
+          "type": "array"
+        },
+        "question": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "options",
+        "correct",
+        "explanation"
+      ],
+      "title": "ConceptCheckSpec",
+      "type": "object"
+    },
+    "ConstantSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 12,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "unit",
+        "value"
+      ],
+      "title": "ConstantSpec",
+      "type": "object"
+    },
+    "ControlSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "grid": {
+          "maximum": 40,
+          "minimum": 1,
+          "title": "Grid",
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "max": {
+          "title": "Max",
+          "type": "number"
+        },
+        "min": {
+          "title": "Min",
+          "type": "number"
+        },
+        "unit": {
+          "maxLength": 12,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "unit",
+        "min",
+        "max",
+        "value",
+        "grid"
+      ],
+      "title": "ControlSpec",
+      "type": "object"
+    },
+    "CustomSlot": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "purpose": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "purpose"
+      ],
+      "title": "CustomSlot",
+      "type": "object"
+    },
+    "ExperimentCard": {
+      "additionalProperties": false,
+      "properties": {
+        "aim": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Aim",
+          "type": "string"
+        },
+        "apparatus": {
+          "items": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Apparatus",
+          "type": "array"
+        },
+        "controlled": {
+          "items": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Controlled",
+          "type": "array"
+        },
+        "dependent": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Dependent",
+          "type": "string"
+        },
+        "hypothesis": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Hypothesis",
+          "type": "string"
+        },
+        "independent": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Independent",
+          "type": "string"
+        }
+      },
+      "required": [
+        "aim",
+        "hypothesis",
+        "independent",
+        "dependent",
+        "controlled",
+        "apparatus"
+      ],
+      "title": "ExperimentCard",
+      "type": "object"
+    },
+    "GraphSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "digits": {
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Digits",
+          "type": "integer"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 12,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "x": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "X",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "x",
+        "source",
+        "label",
+        "unit",
+        "digits"
+      ],
+      "title": "GraphSpec",
+      "type": "object"
+    },
+    "ModelUse": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "inputs": {
+          "maxProperties": 8,
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,23}$": {
+              "pattern": "^[a-z][a-z0-9_]{0,23}$",
+              "type": "string"
+            }
+          },
+          "title": "Inputs",
+          "type": "object"
+        },
+        "model": {
+          "maxLength": 40,
+          "pattern": "^[a-z]+\\.[a-z_]+$",
+          "title": "Model",
+          "type": "string"
+        },
+        "params": {
+          "maxProperties": 8,
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,23}$": {
+              "type": "number"
+            }
+          },
+          "title": "Params",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "model",
+        "params",
+        "inputs"
+      ],
+      "title": "ModelUse",
+      "type": "object"
+    },
+    "PredictSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "choices": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 2,
+          "title": "Choices",
+          "type": "array"
+        },
+        "prompt": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reveal": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Reveal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "prompt",
+        "choices",
+        "reveal"
+      ],
+      "title": "PredictSpec",
+      "type": "object"
+    },
+    "ReadoutSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "convert_to": {
+          "anyOf": [
+            {
+              "maxLength": 12,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Convert To"
+        },
+        "digits": {
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Digits",
+          "type": "integer"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 12,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "unit",
+        "digits",
+        "source"
+      ],
+      "title": "ReadoutSpec",
+      "type": "object"
+    },
+    "TableColumn": {
+      "additionalProperties": false,
+      "properties": {
+        "digits": {
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Digits",
+          "type": "integer"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 12,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "unit",
+        "source",
+        "digits"
+      ],
+      "title": "TableColumn",
+      "type": "object"
+    },
+    "TableSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "caption": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Caption",
+          "type": "string"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/TableColumn"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "caption",
+        "columns"
+      ],
+      "title": "TableSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "citation_ids": {
+      "items": {
+        "pattern": "^[a-z][a-z0-9_]{0,23}$",
+        "type": "string"
+      },
+      "maxItems": 6,
+      "title": "Citation Ids",
+      "type": "array"
+    },
+    "concept_check": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConceptCheckSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "constants": {
+      "items": {
+        "$ref": "#/$defs/ConstantSpec"
+      },
+      "maxItems": 4,
+      "title": "Constants",
+      "type": "array"
+    },
+    "controls": {
+      "items": {
+        "$ref": "#/$defs/ControlSpec"
+      },
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Controls",
+      "type": "array"
+    },
+    "custom": {
+      "items": {
+        "$ref": "#/$defs/CustomSlot"
+      },
+      "maxItems": 3,
+      "title": "Custom",
+      "type": "array"
+    },
+    "experiment": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExperimentCard"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "experiment_ref": {
+      "anyOf": [
+        {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experiment Ref"
+    },
+    "goal": {
+      "maxLength": 240,
+      "minLength": 1,
+      "title": "Goal",
+      "type": "string"
+    },
+    "graphs": {
+      "items": {
+        "$ref": "#/$defs/GraphSpec"
+      },
+      "maxItems": 2,
+      "title": "Graphs",
+      "type": "array"
+    },
+    "hints": {
+      "items": {
+        "maxLength": 240,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 5,
+      "title": "Hints",
+      "type": "array"
+    },
+    "id": {
+      "pattern": "^[a-z][a-z0-9_]{0,23}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "models": {
+      "items": {
+        "$ref": "#/$defs/ModelUse"
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "title": "Models",
+      "type": "array"
+    },
+    "note": {
+      "maxLength": 400,
+      "minLength": 1,
+      "title": "Note",
+      "type": "string"
+    },
+    "pattern": {
+      "enum": [
+        "simulation",
+        "virtual_experiment"
+      ],
+      "title": "Pattern",
+      "type": "string"
+    },
+    "predict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PredictSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "presentation": {
+      "default": "stage",
+      "enum": [
+        "peek",
+        "stage"
+      ],
+      "title": "Presentation",
+      "type": "string"
+    },
+    "readouts": {
+      "items": {
+        "$ref": "#/$defs/ReadoutSpec"
+      },
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Readouts",
+      "type": "array"
+    },
+    "sentences": {
+      "items": {
+        "maxLength": 240,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 6,
+      "title": "Sentences",
+      "type": "array"
+    },
+    "steps": {
+      "items": {
+        "maxLength": 240,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Steps",
+      "type": "array"
+    },
+    "table": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TableSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "title": {
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "topic": {
+      "maxLength": 80,
+      "pattern": "^[a-z0-9_]+$",
+      "title": "Topic",
+      "type": "string"
+    },
+    "worked_solution": {
+      "items": {
+        "maxLength": 240,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 6,
+      "title": "Worked Solution",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "goal",
+    "pattern",
+    "topic",
+    "note",
+    "controls",
+    "models",
+    "readouts"
+  ],
+  "title": "Plan",
+  "type": "object"
+}

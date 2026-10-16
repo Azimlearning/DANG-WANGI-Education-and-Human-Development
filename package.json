@@ -1,0 +1,10 @@
+{
+  "name": "synapse-v4",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "codegen": "pnpm --filter @synapse/schema codegen",
+    "codegen:check": "pnpm --filter @synapse/schema codegen:check"
+  }
+}

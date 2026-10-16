@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How does resistance change the current?</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  // reference-ohm: Physics Form 5 electricity, a walking illustration for electricity.ohm. Not yet tied to a textbook experiment.
+  var env = Synapse.environment({
+    title: "How does resistance change the current?",
+    note: "In an ohmic conductor the current is proportional to the voltage and inversely proportional to the resistance."
+  });
+  var voltage = Synapse.slider(env, { id: "voltage", label: "Voltage", unit: "V", min: 0, max: 12, value: 6, grid: 12 });
+  var resistance = Synapse.slider(env, { id: "resistance", label: "Resistance", unit: "ohm", min: 1, max: 20, value: 4, grid: 19 });
+  var current = Synapse.ohm({ voltage: voltage, resistance: resistance });
+  Synapse.readout(env, { label: "Current", unit: "A", value: current, digits: 3 });
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

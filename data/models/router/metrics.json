@@ -1,0 +1,161 @@
+{
+  "features": 12462,
+  "heads": {
+    "complexity": {
+      "chosen_C": 3.0,
+      "classes": 3,
+      "majority": {
+        "accuracy": 0.6766,
+        "accuracy_ci": [
+          0.6357,
+          0.7193
+        ],
+        "macro_f1": 0.269,
+        "macro_f1_ci": [
+          0.2596,
+          0.2781
+        ],
+        "n": 538
+      },
+      "majority_label": 2,
+      "model": {
+        "accuracy": 0.7361,
+        "accuracy_ci": [
+          0.6989,
+          0.7732
+        ],
+        "macro_f1": 0.6412,
+        "macro_f1_ci": [
+          0.592,
+          0.6906
+        ],
+        "n": 538
+      },
+      "val_accuracy": 0.7492
+    },
+    "domain": {
+      "chosen_C": 10.0,
+      "classes": 5,
+      "keyword": {
+        "accuracy": 0.7361,
+        "accuracy_ci": [
+          0.7007,
+          0.7714
+        ],
+        "macro_f1": 0.4582,
+        "macro_f1_ci": [
+          0.4352,
+          0.4785
+        ],
+        "n": 538
+      },
+      "majority": {
+        "accuracy": 0.3755,
+        "accuracy_ci": [
+          0.3327,
+          0.4182
+        ],
+        "macro_f1": 0.1092,
+        "macro_f1_ci": [
+          0.0994,
+          0.1172
+        ],
+        "n": 538
+      },
+      "majority_label": "biology",
+      "model": {
+        "accuracy": 0.9257,
+        "accuracy_ci": [
+          0.9033,
+          0.9461
+        ],
+        "macro_f1": 0.8609,
+        "macro_f1_ci": [
+          0.8029,
+          0.9065
+        ],
+        "n": 538
+      },
+      "val_accuracy": 0.8871
+    },
+    "pattern": {
+      "chosen_C": 1.0,
+      "classes": 5,
+      "majority": {
+        "accuracy": 0.3104,
+        "accuracy_ci": [
+          0.2695,
+          0.3494
+        ],
+        "macro_f1": 0.0948,
+        "macro_f1_ci": [
+          0.0849,
+          0.1036
+        ],
+        "n": 538
+      },
+      "majority_label": "explorable_diagram",
+      "model": {
+        "accuracy": 0.7156,
+        "accuracy_ci": [
+          0.6766,
+          0.7509
+        ],
+        "macro_f1": 0.6882,
+        "macro_f1_ci": [
+          0.6414,
+          0.7245
+        ],
+        "n": 538
+      },
+      "val_accuracy": 0.7241
+    },
+    "topic": {
+      "chosen_C": 100.0,
+      "classes": 54,
+      "keyword": {
+        "accuracy": 0.6,
+        "accuracy_ci": [
+          0.5565,
+          0.6435
+        ],
+        "macro_f1": 0.5909,
+        "macro_f1_ci": [
+          0.5317,
+          0.6203
+        ],
+        "n": 460
+      },
+      "majority": {
+        "accuracy": 0.1761,
+        "accuracy_ci": [
+          0.1435,
+          0.213
+        ],
+        "macro_f1": 0.0055,
+        "macro_f1_ci": [
+          0.0047,
+          0.0066
+        ],
+        "n": 460
+      },
+      "majority_label": "none",
+      "model": {
+        "accuracy": 0.8304,
+        "accuracy_ci": [
+          0.7957,
+          0.8674
+        ],
+        "macro_f1": 0.7878,
+        "macro_f1_ci": [
+          0.7275,
+          0.8262
+        ],
+        "n": 460
+      },
+      "val_accuracy": 0.8655
+    }
+  },
+  "seed": 20261016,
+  "source_commit": "835a2cefda285b4282ea4d0dbf986d1ff08abdb2"
+}

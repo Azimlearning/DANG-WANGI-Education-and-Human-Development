@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+</head>
+<body>
+<script src="/vendor/kit/{{kit_version}}/core.js"></script>
+<script>
+  /*SLOT:environment*/
+  /*SLOT:predict*/
+  /*SLOT:controls*/
+  /*SLOT:constants*/
+  /*SLOT:models*/
+  /*SLOT:readouts*/
+  /*SLOT:graphs*/
+  /*SLOT:steps*/
+  /*SLOT:table*/
+  /*SLOT:sentences*/
+  /*SLOT:hints*/
+  /*SLOT:check*/
+  /*SLOT:worked*/
+  /*SLOT:custom*/
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

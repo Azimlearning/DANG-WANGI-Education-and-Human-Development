@@ -1,0 +1,79 @@
+{
+  "id": "ohm_explorer",
+  "title": "Ohm's law: current, voltage and resistance",
+  "goal": "Explore how the current changes with the voltage and the resistance.",
+  "pattern": "simulation",
+  "topic": "physics_form5_electricity",
+  "experiment_ref": null,
+  "note": "In an ohmic conductor the current is proportional to the voltage and inversely proportional to the resistance.",
+  "controls": [
+    {
+      "id": "voltage",
+      "label": "Voltage",
+      "unit": "V",
+      "min": 0,
+      "max": 12,
+      "value": 6,
+      "grid": 12
+    },
+    {
+      "id": "resistance",
+      "label": "Resistance",
+      "unit": "ohm",
+      "min": 1,
+      "max": 20,
+      "value": 4,
+      "grid": 19
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "conductor",
+      "model": "electricity.ohm",
+      "params": {},
+      "inputs": {
+        "voltage": "voltage",
+        "resistance": "resistance"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Current",
+      "unit": "A",
+      "digits": 3,
+      "source": "conductor",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The current rises in a straight line as the voltage rises.",
+      "x": "voltage",
+      "source": "conductor",
+      "label": "Current",
+      "unit": "A",
+      "digits": 3
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Try a resistance of 4 ohm and then 20 ohm at the same voltage."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "concept_check": {
+    "question": "If the voltage stays the same and the resistance is doubled, what happens to the current?",
+    "options": [
+      "It doubles",
+      "It halves",
+      "It stays the same"
+    ],
+    "correct": 1,
+    "explanation": "The current is inversely proportional to the resistance, so doubling the resistance halves the current."
+  }
+}
