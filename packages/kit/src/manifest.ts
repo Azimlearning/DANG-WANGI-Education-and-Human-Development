@@ -14,6 +14,12 @@ import { spec as titrSpec } from "./science/titration";
 import { spec as dilSpec } from "./science/dilution";
 import { spec as heatSpec } from "./science/heat_energy";
 import { spec as rateSpec } from "./science/average_rate";
+import { spec as waveSpec } from "./science/wave_speed";
+import { spec as newtonSpec } from "./science/newton_second";
+import { spec as cardiacSpec } from "./science/cardiac_output";
+import { spec as massChangeSpec } from "./science/mass_change";
+import { spec as phSpec } from "./science/ph";
+import { spec as gasSpec } from "./science/gas_volume";
 
 export type KitKind = "ui" | "scene" | "interaction" | "science" | "pedagogy" | "core";
 
@@ -315,6 +321,84 @@ export const manifestEntries: ManifestEntry[] = [
     citation: "UNVERIFIED (corpus not loaded until P2)",
     units: { volume: "cm3", time: "s", output: "cm3/s" },
     ...fromSpec(rateSpec),
+  },
+  {
+    id: "waveSpeed",
+    kind: "science",
+    signature: "waveSpeed({frequency: Observable<number>, wavelength: Observable<number>}): Observable<number>",
+    precondition: "A wave travelling in one medium. Domain: frequency and wavelength above 0. Units: Hz, m, m/s.",
+    doc: "Wave speed v = f x wavelength. A read-only observable that follows both inputs.",
+    useWhen: "Use for the speed of a wave from its frequency and wavelength (Waves).",
+    modelId: "physics.wave_speed",
+    topics: ["physics_form4_waves"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { frequency: "Hz", wavelength: "m", output: "m/s" },
+    ...fromSpec(waveSpec),
+  },
+  {
+    id: "newtonSecond",
+    kind: "science",
+    signature: "newtonSecond({force: Observable<number>, mass: Observable<number>}): Observable<number>",
+    precondition: "One resultant force on one object. Domain: force 0 N or more, mass above 0 kg. Units: N, kg, m/s2.",
+    doc: "Newton's second law: acceleration = resultant force / mass. A read-only observable that follows both inputs.",
+    useWhen: "Use for the acceleration of an object given the resultant force and its mass (Force and Motion).",
+    modelId: "physics.newton_second",
+    topics: ["physics_form4_kinematics_dynamics_momentum"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { force: "N", mass: "kg", output: "m/s2" },
+    ...fromSpec(newtonSpec),
+  },
+  {
+    id: "cardiacOutput",
+    kind: "science",
+    signature: "cardiacOutput({heart_rate: Observable<number>, stroke_volume: Observable<number>}): Observable<number>",
+    precondition: "Domain: heart rate and stroke volume 0 or more. Units: beats/min, mL per beat, L/min.",
+    doc: "Cardiac output = heart rate x stroke volume, converted from mL/min to L/min. A read-only observable that follows both inputs.",
+    useWhen: "Use for how much blood the heart pumps each minute (Circulatory System).",
+    modelId: "biology.cardiac_output",
+    topics: ["biology_form4_circulatory_system"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { heart_rate: "beats/min", stroke_volume: "mL", output: "L/min" },
+    ...fromSpec(cardiacSpec),
+  },
+  {
+    id: "percentChangeMass",
+    kind: "science",
+    signature: "percentChangeMass({final_mass: Observable<number>, initial_mass: number}): Observable<number>",
+    precondition: "Domain: final mass 0 g or more, initial mass above 0 g. Units: g, per cent.",
+    doc: "Percentage change in mass = (final - initial) / initial x 100. Negative means the tissue lost mass.",
+    useWhen: "Use for the percentage change in mass of plant tissue in an osmosis practical (Movement of Substances).",
+    modelId: "biology.percent_change_mass",
+    topics: ["biology_form4_movement_of_substances"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { final_mass: "g", initial_mass: "g", output: "%" },
+    ...fromSpec(massChangeSpec),
+  },
+  {
+    id: "ph",
+    kind: "science",
+    signature: "ph({h_conc: Observable<number>}): Observable<number>",
+    precondition: "Domain: hydrogen ion concentration above 0 mol/dm3. Units: mol/dm3, pH.",
+    doc: "pH = -log10 of the hydrogen ion concentration. A read-only observable that follows the concentration.",
+    useWhen: "Use for the pH of a solution given its hydrogen ion concentration (Acids, Bases and Salts).",
+    modelId: "chemistry.ph_from_h",
+    topics: ["chemistry_form4_acids_bases_salts"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { h_conc: "mol/dm3", output: "pH" },
+    ...fromSpec(phSpec),
+  },
+  {
+    id: "gasVolume",
+    kind: "science",
+    signature: "gasVolume({moles: Observable<number>, molar_volume: number}): Observable<number>",
+    precondition: "Gas at the stated conditions. Domain: moles 0 or more, molar volume above 0. Units: mol, dm3/mol, dm3. Molar volume is 24 at room conditions and 22.4 at STP.",
+    doc: "Gas volume V = n x molar volume. A read-only observable that follows the amount.",
+    useWhen: "Use for the volume of a gas from its amount in moles (Chemical Formulae and Equations).",
+    modelId: "chemistry.gas_volume",
+    topics: ["chemistry_form4_chemical_formulae_and_equations"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { moles: "mol", molar_volume: "dm3/mol", output: "dm3" },
+    ...fromSpec(gasSpec),
   },
   {
     id: "bridge",

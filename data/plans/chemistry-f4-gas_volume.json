@@ -1,0 +1,88 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The volume rises in a straight line with the amount of gas.",
+      "x": "moles",
+      "source": "room",
+      "label": "Volume at room conditions",
+      "unit": "dm3",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Set the amount to 2 mol and compare the two volumes."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "simulation",
+  "id": "gas_volume_lab",
+  "title": "The volume of a gas from its amount",
+  "goal": "Compare the volume of the same amount of gas at room conditions and at standard temperature and pressure.",
+  "topic": "chemistry_form4_chemical_formulae_and_equations",
+  "note": "One mole of any gas has the same volume under the same conditions. At room conditions the molar volume is 24 dm3/mol and at STP it is 22.4 dm3/mol. The volume is the amount in moles times the molar volume.",
+  "controls": [
+    {
+      "id": "moles",
+      "label": "Amount of gas",
+      "unit": "mol",
+      "min": 0,
+      "max": 5,
+      "value": 2,
+      "grid": 10
+    }
+  ],
+  "models": [
+    {
+      "id": "room",
+      "model": "chemistry.gas_volume",
+      "params": {
+        "molar_volume": 24
+      },
+      "inputs": {
+        "moles": "moles"
+      }
+    },
+    {
+      "id": "stp",
+      "model": "chemistry.gas_volume",
+      "params": {
+        "molar_volume": 22.4
+      },
+      "inputs": {
+        "moles": "moles"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Volume at room conditions",
+      "unit": "dm3",
+      "digits": 1,
+      "source": "room",
+      "convert_to": null
+    },
+    {
+      "label": "Volume at STP",
+      "unit": "dm3",
+      "digits": 1,
+      "source": "stp",
+      "convert_to": null
+    }
+  ],
+  "hints": [
+    "Write the formula: volume = amount x molar volume.",
+    "Choose the molar volume for the conditions.",
+    "Multiply the amount in moles by the molar volume."
+  ],
+  "worked_solution": [
+    "Write the formula: volume = amount x molar volume.",
+    "Take 24 dm3/mol for room conditions.",
+    "Multiply by the amount in moles to get the volume in dm3."
+  ]
+}

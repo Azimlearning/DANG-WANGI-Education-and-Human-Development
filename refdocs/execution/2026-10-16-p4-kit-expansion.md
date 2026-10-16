@@ -11,11 +11,13 @@
 5. **Build and report**: `eval/environments/build.py` assembles every plan, verifies it in Chromium and delivers it through the gate, then writes `refdocs/evidence/2026-10-16-p4-environments.md` (11 verified, 3 Physics, 3 Biology, 5 Chemistry).
 6. **Layout fixes found on the way**: graph/table overflowed at 360 px (hidden table, six-column table); fixed with a `div.syn-sr` wrapper and fixed table layout.
 
+7. **Second batch (same day):** six more models, each with a spec, manifest entry, independent Python reference, 10 or 11 planted bugs, a golden Plan and an Environment: Physics `wave_speed` and `newton_second` (Form 4), Biology `cardiac_output` and `percent_change_mass` (Form 4), Chemistry `ph_from_h` and `gas_volume` (Form 4). The registration suite caught two weaknesses of mine while writing them (the pH references were all whole numbers and none went above pH 7, so a cap at 7 and rounding escaped; fixed with non-integer references). Plans for these are simulators of a law, not SPM practicals, so only the osmosis (potato) one is added to the experiment catalogue. The report now lists 17 Environments (Physics 5, Biology 5, Chemistry 7).
+
 ## Verify
 
-`uv run python eval/environments/build.py` prints "11 Environments verified and delivered". `pnpm --filter kit test` (228 tests). `uv run pytest eval/environments -q`.
+`uv run python eval/environments/build.py` prints "11 Environments verified and delivered". `pnpm --filter kit test` (315 tests). `uv run pytest eval/environments -q`.
 
 ## Open
 
 - The wording of every study note and task is the author's; check each against the textbook before any `reviewed` label.
-- Ideas for further models (by measured gap): Physics wave speed, Newton's second law, half-life, parallel resistance; Biology logistic growth; Chemistry pH, gas volume, molarity.
+- Ideas for further models (by measured gap): Physics half-life, parallel resistance, refraction; Biology logistic growth; Chemistry molarity, percentage yield.

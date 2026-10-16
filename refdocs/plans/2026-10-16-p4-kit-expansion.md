@@ -10,7 +10,7 @@ D-19 sets the end state: at least nine verified Environments, three per subject 
 
 **In (cloud):**
 1. Eight new science micro-models, each with a written precondition, units and domain, a citation field (UNVERIFIED until the corpus is loaded), an independent hand-written Python reference, properties, and a registration suite that refuses every planted defect: Biology `sa_to_v_cube`, `magnification`, `photosynthesis_net`; Chemistry `moles_from_mass`, `titration_concentration`, `dilution`, `heat_energy`, `average_rate`.
-2. One hand-written golden Plan per Environment (eleven in all), assembled by the deterministic assembler and verified in real Chromium.
+2. One hand-written golden Plan per Environment (seventeen in all), assembled by the deterministic assembler and verified in real Chromium.
 3. Manifest `useWhen`, domain and `topics` for each model so the planner's kit pack finds it (topic-aware retrieval).
 4. A breadth set and a generated report listing what the project can make today.
 
@@ -21,7 +21,7 @@ D-19 sets the end state: at least nine verified Environments, three per subject 
 
 ## Definition of done
 
-- Eleven Environments verified and delivered through the gate, three or more per subject, listed in `refdocs/evidence/2026-10-16-p4-environments.md` (generated; a test refuses stale).
+- Seventeen Environments verified (eleven in the first batch, six in the second) and delivered through the gate, three or more per subject, listed in `refdocs/evidence/2026-10-16-p4-environments.md` (generated; a test refuses stale).
 - Every new model refuses all its planted bugs and its reference agrees with the TypeScript on a grid.
 - The photosynthesis curve says on the page that it is a stylised teaching curve.
 

@@ -269,6 +269,18 @@ WORKED = [
     ("chemistry.heat_energy", {"mass": 50, "c": 4.2}, {"delta_t": 6.5}, 1365.0),
     ("chemistry.average_rate", {}, {"volume": 24, "time": 60}, 0.4),
     ("chemistry.average_rate", {}, {"volume": 36, "time": 12}, 3.0),
+    ("physics.wave_speed", {}, {"frequency": 50, "wavelength": 0.4}, 20.0),
+    ("physics.wave_speed", {}, {"frequency": 100, "wavelength": 3.4}, 340.0),
+    ("physics.newton_second", {}, {"force": 10, "mass": 2}, 5.0),
+    ("physics.newton_second", {}, {"force": 15, "mass": 0.5}, 30.0),
+    ("biology.cardiac_output", {}, {"heart_rate": 72, "stroke_volume": 70}, 5.04),
+    ("biology.cardiac_output", {}, {"heart_rate": 150, "stroke_volume": 120}, 18.0),
+    ("biology.percent_change_mass", {"initial_mass": 10}, {"final_mass": 12}, 20.0),
+    ("biology.percent_change_mass", {"initial_mass": 10}, {"final_mass": 8}, -20.0),
+    ("chemistry.ph_from_h", {}, {"h_conc": 0.001}, 3.0),
+    ("chemistry.ph_from_h", {}, {"h_conc": 1e-7}, 7.0),
+    ("chemistry.gas_volume", {"molar_volume": 24}, {"moles": 2}, 48.0),
+    ("chemistry.gas_volume", {"molar_volume": 22.4}, {"moles": 0.5}, 11.2),
 ]
 
 
@@ -276,7 +288,7 @@ WORKED = [
 def test_references_match_the_values_worked_out_by_hand(
     model: str, params: dict, inputs: dict, expected: float
 ) -> None:
-    assert evaluate_model(model, params, inputs) == pytest.approx(expected, rel=1e-12)
+    assert evaluate_model(model, params, inputs) == pytest.approx(expected, rel=1e-12, abs=1e-12)
 
 
 @pytest.mark.parametrize(
@@ -295,6 +307,12 @@ def test_references_match_the_values_worked_out_by_hand(
         ("biology.photosynthesis_net", {"pmax": 10, "k": 0, "resp": 2}, {"light": 1}),
         ("biology.photosynthesis_net", {"pmax": 10, "k": 4, "resp": -1}, {"light": 1}),
         ("chemistry.moles_from_mass", {"molar_mass": 0}, {"mass": 1}),
+        ("physics.wave_speed", {}, {"frequency": 0, "wavelength": 1}),
+        ("physics.newton_second", {}, {"force": 1, "mass": 0}),
+        ("biology.cardiac_output", {}, {"heart_rate": -1, "stroke_volume": 70}),
+        ("biology.percent_change_mass", {"initial_mass": 0}, {"final_mass": 1}),
+        ("chemistry.ph_from_h", {}, {"h_conc": 0}),
+        ("chemistry.gas_volume", {"molar_volume": 0}, {"moles": 1}),
         ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 0, "base_coeff": 1}, {"va": 25, "vb": 20}),
         ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 1, "base_coeff": 1}, {"va": 25, "vb": 0}),
         ("chemistry.dilution", {"m1": 1, "v1": 10}, {"v2": 0}),

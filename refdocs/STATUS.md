@@ -4,7 +4,7 @@
 
 **Build philosophy:** walking skeleton first. One Environment, end to end, through the full trust path (generate, scan, render, mint, gate, sandbox) on fakes, before building the second of anything. Evidence is measured, never asserted. The Kit grows from measured gaps.
 
-**Right now:** everything that can be built on fakes in the cloud is built: P0, P1, P1b done; P2, P3, P4, P5 and P6 done for their cloud scope. The Mark 3 pipeline (D-23) runs end to end on fakes with real Chromium verification and produces **11 verified Environments, 3 Physics, 3 Biology and 5 Chemistry** (D-19 asked for 3 per subject), each with a hand-written Plan. No paid call has ever been made and no live provider class exists. **What waits for the owner:** the first paid run (confirm an amount; proposed canary up to $0.09, then 9 questions, projected $0.09 to $0.52, hard bound $0.80, suggested `LLM_MONTHLY_CAP_USD` $1.00; see `refdocs/evidence/2026-10-16-p3-cost-projection.md`), loading the textbook corpus locally (A-8), matching the catalogue to the owner's experiment documents, and a fresh adversarial review. The kit-guardian P3 review is answered except the items listed under Known gaps.
+**Right now:** everything that can be built on fakes in the cloud is built: P0, P1, P1b done; P2, P3, P4, P5 and P6 done for their cloud scope. The Mark 3 pipeline (D-23) runs end to end on fakes with real Chromium verification and produces **17 verified Environments, 5 Physics, 5 Biology and 7 Chemistry** (D-19 asked for 3 per subject), each with a hand-written Plan. No paid call has ever been made and no live provider class exists. **What waits for the owner:** the first paid run (confirm an amount; proposed canary up to $0.09, then 9 questions, projected $0.09 to $0.52, hard bound $0.80, suggested `LLM_MONTHLY_CAP_USD` $1.00; see `refdocs/evidence/2026-10-16-p3-cost-projection.md`), loading the textbook corpus locally (A-8), matching the catalogue to the owner's experiment documents, and a fresh adversarial review. The kit-guardian P3 review is answered except the items listed under Known gaps.
 
 ---
 
@@ -17,7 +17,7 @@
 | P1 | Kit core and verification harness | ✅ Cloud scope done and verified (provenance, L1 to L3, L6 baseline, hostile set, isolation spike, reset/table/graph, two review rounds of which the second did not complete). Open: a fresh adversarial review, and the host-side DOM check noted in D-24 |
 | P2 | Evidence: corpus, retrieval, citations | ✅ Cloud scope done: corpus format, BM25, exact quotation proof, `kit-verified` rule at mint and gate, experiment catalogue (metadata). Proved against a synthetic corpus only; the real corpus is loaded locally (A-8) |
 | P3 | Mark 3 pipeline and the first vertical | 🔶 Done on fakes: router, planner, plan checks (PLAN-001 to 016), skeleton assembler, typed slot fills, verify with a drop-fills retry, mint, gate, deliver, loading skeleton, prompt packs, fail-check registry, golden set, hostile set, cost projection. **Not done:** the first paid run (owner), a live provider class, the Free lane, the L4 wording check. Review findings S4, S7, S8, S10 and notes remain |
-| P4 | Kit expansion by kit | ✅ Cloud scope done: 11 science models (3 Physics, 3 Biology, 5 Chemistry), 87 planted bugs for the new ones, 11 Environments verified. Wording and scope are unchecked against the textbook |
+| P4 | Kit expansion by kit | ✅ Cloud scope done: 17 science models (5 Physics, 5 Biology, 7 Chemistry), about 180 planted bugs for the new ones, 17 Environments verified. Wording and scope are unchecked against the textbook |
 | P5 | Library and lifecycle | ✅ Cloud scope done: question cache through the gate, withdraw, restore, flag, stale by Kit hash, endpoints. Single operator (D-11) |
 | P6 | Pedagogy | 🔶 Hint ladder, concept check, predict card and worked solution built, planned and verified on six Environments. Not built: spaced practice, difficulty adaptation, misconception follow-up in the UI |
 | P7 | Reach and the deploy gate | ⬜ Not started |
@@ -74,6 +74,8 @@ What has actually been run, not what has been written. A row here needs a real c
 | 2026-10-16 | L6 and hostile after the pedagogy components and relocks | `uv run python eval/l6/run.py`; `uv run python eval/hostile/run.py` | L6: 56 of 61 refused, 0 of 12 neutral controls refused, no surprise misses; hostile 20 of 20 blocked |
 | 2026-10-16 | The breadth set | `uv run python eval/environments/build.py` | 11 Environments verified in Chromium and delivered through the gate: Physics 3, Biology 3, Chemistry 5 (`refdocs/evidence/2026-10-16-p4-environments.md`) |
 | 2026-10-16 | Cost projection (no paid call) | `uv run python eval/cost/project.py` | Per Environment, mean over 24 golden questions; canary up to $0.09, then 9 questions projected $0.09 to $0.52, hard bound $0.80; suggested cap $1.00. ASSUMED prices and model ids |
+
+| 2026-10-16 | Six more models and Environments | `pnpm -r test`; `uv run pytest -q`; `uv run python eval/environments/build.py`; `eval/l6/run.py`; `eval/hostile/run.py`; `eval/smoke/web_smoke.py --no-build` | Kit 315 passed; 504 passed 1 skipped; 17 Environments verified and delivered; L6 56 of 61 refused with no false positives; hostile 20 of 20; smoke 18 of 18 |
 
 ---
 

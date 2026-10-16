@@ -28,6 +28,13 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-16: Six more science models and Environments (17 in all)
+- **Changed:** Kit `waveSpeed`, `newtonSecond`, `cardiacOutput`, `percentChangeMass`, `ph`, `gasVolume` (specs, manifest entries with `useWhen` and `topics`, about 60 planted bugs), independent references in `api/verify/references.py` with hand-worked cases, six golden Plans, one catalogue entry (osmosis), the report `refdocs/evidence/2026-10-16-p4-environments.md`, the cost projection (regenerated), P4 plan and execution docs, STATUS.
+- **Diagnosed:** the registration suite refused my first `ph` spec: all five reference cases were powers of ten and none was above pH 7, so "rounds to a whole number" and "caps at pH 7" both passed. Added non-integer references (pH 2.69897 and 7.52288, derived by hand from log10 of 2 and 3). One derivation was also too short for the rule that demands a written derivation.
+- **Deviations:** none from the plan; this extends the P4 breadth set past the D-19 minimum at the owner's request for "a lot" of Environments.
+- **Verified:** `pnpm -r test`: Kit 315 passed, web 23. `uv run pytest -q`: 504 passed, 1 skipped. `ruff check api eval` clean; `pyright api eval` 0 errors. `uv run python eval/environments/build.py`: 17 Environments verified in Chromium and delivered (Physics 5, Biology 5, Chemistry 7). `eval/l6/run.py`: 56 of 61 refused, 0 of 12 false positives. `eval/hostile/run.py`: 20 of 20. `eval/smoke/web_smoke.py --no-build`: 18 of 18.
+- **Noted, not changed:** the new Plans are law simulators, not SPM practicals, and their wording is the author's; the wave speed note says plainly that in a real medium the speed is fixed by the medium. Every Environment is still `model-checked` with an UNVERIFIED citation. Kit 0.1.0 was relocked again (D-29).
+
 ### 2026-10-16: Store attestation (A-19, D-31)
 - **Changed:** `api/verify/store.py` (HMAC signature column, `attestation_for`, `attestation_ok`, migration for older stores), `api/verify/gate.py` (refuses `unattested` first), `api/core/settings.py` (`store_attestation_key`), `api/seed.py` (`open_store`), `api/app.py`, `api/pipeline/failchecks.py` (GATE-006), `refdocs/guides/env_setup.md`, D-31 and the A-19 note.
 - **Decided:** sign what the verifier minted, not what is in the row, so a row planted before the key was configured is not blessed; unset key leaves behaviour unchanged.

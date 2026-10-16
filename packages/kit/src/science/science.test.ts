@@ -4,6 +4,12 @@ import { spec as dilution } from "./dilution";
 import { spec as heat } from "./heat_energy";
 import { spec as magnification } from "./magnification";
 import { spec as moles } from "./moles";
+import { spec as wave } from "./wave_speed";
+import { spec as newton } from "./newton_second";
+import { spec as cardiac } from "./cardiac_output";
+import { spec as massChange } from "./mass_change";
+import { spec as phSpec } from "./ph";
+import { spec as gasVol } from "./gas_volume";
 import { spec as photo } from "./photosynthesis";
 import { spec as sa } from "./sa_to_v";
 import { spec as titration } from "./titration";
@@ -201,6 +207,99 @@ const BUGS: { spec: ScienceSpec; bugs: Record<string, Impl> }[] = [
       "rounds to whole numbers": planted(average, (a) => Math.round(n(a, "volume") / n(a, "time"))),
       "no domain check on time": planted(average, (a) => n(a, "volume") / n(a, "time"), ["time"]),
       "no domain check on volume": planted(average, (a) => n(a, "volume") / n(a, "time"), ["volume"]),
+    },
+  },
+  {
+    spec: wave,
+    bugs: {
+      "divides frequency by wavelength": planted(wave, (a) => n(a, "frequency") / n(a, "wavelength")),
+      "adds instead of multiplying": planted(wave, (a) => n(a, "frequency") + n(a, "wavelength")),
+      "period used instead of frequency": planted(wave, (a) => n(a, "wavelength") / n(a, "frequency")),
+      "half wavelength": planted(wave, (a) => (n(a, "frequency") * n(a, "wavelength")) / 2),
+      "caps at 300 m/s": planted(wave, (a) => Math.min(n(a, "frequency") * n(a, "wavelength"), 300)),
+      "ignores wavelength": planted(wave, (a) => n(a, "frequency") * 0.4),
+      "squares the frequency": planted(wave, (a) => n(a, "frequency") ** 2 * n(a, "wavelength")),
+      "NaN at 50 Hz": planted(wave, (a) => (n(a, "frequency") === 50 ? Number.NaN : n(a, "frequency") * n(a, "wavelength"))),
+      "sign flips above 60 Hz": planted(wave, (a) => (n(a, "frequency") > 60 ? -1 : 1) * n(a, "frequency") * n(a, "wavelength")),
+      "no domain check on frequency": planted(wave, (a) => n(a, "frequency") * n(a, "wavelength"), ["frequency"]),
+      "no domain check on wavelength": planted(wave, (a) => n(a, "frequency") * n(a, "wavelength"), ["wavelength"]),
+    },
+  },
+  {
+    spec: newton,
+    bugs: {
+      "multiplies force by mass": planted(newton, (a) => n(a, "force") * n(a, "mass")),
+      "divides mass by force": planted(newton, (a) => n(a, "mass") / Math.max(n(a, "force"), 1e-9)),
+      "uses weight (g = 10) instead of force": planted(newton, (a) => (n(a, "force") * 10) / n(a, "mass")),
+      "forgets mass": planted(newton, (a) => n(a, "force")),
+      "mass squared": planted(newton, (a) => n(a, "force") / n(a, "mass") ** 2),
+      "caps at 20 m/s2": planted(newton, (a) => Math.min(n(a, "force") / n(a, "mass"), 20)),
+      "NaN with no force": planted(newton, (a) => (n(a, "force") === 0 ? Number.NaN : n(a, "force") / n(a, "mass"))),
+      "sign flips above 50 N": planted(newton, (a) => (n(a, "force") > 50 ? -1 : 1) * (n(a, "force") / n(a, "mass"))),
+      "rounds to a whole number": planted(newton, (a) => Math.round(n(a, "force") / n(a, "mass"))),
+      "no domain check on mass": planted(newton, (a) => n(a, "force") / n(a, "mass"), ["mass"]),
+      "no domain check on force": planted(newton, (a) => n(a, "force") / n(a, "mass"), ["force"]),
+    },
+  },
+  {
+    spec: cardiac,
+    bugs: {
+      "forgets the mL to L conversion": planted(cardiac, (a) => n(a, "heart_rate") * n(a, "stroke_volume")),
+      "divides by 100": planted(cardiac, (a) => (n(a, "heart_rate") * n(a, "stroke_volume")) / 100),
+      "adds instead of multiplying": planted(cardiac, (a) => (n(a, "heart_rate") + n(a, "stroke_volume")) / 1000),
+      "ignores stroke volume": planted(cardiac, (a) => (n(a, "heart_rate") * 70) / 1000),
+      "ignores heart rate": planted(cardiac, (a) => (72 * n(a, "stroke_volume")) / 1000),
+      "caps at 15 L/min": planted(cardiac, (a) => Math.min((n(a, "heart_rate") * n(a, "stroke_volume")) / 1000, 15)),
+      "NaN at rest rate 60": planted(cardiac, (a) => (n(a, "heart_rate") === 60 ? Number.NaN : (n(a, "heart_rate") * n(a, "stroke_volume")) / 1000)),
+      "per second not per minute": planted(cardiac, (a) => (n(a, "heart_rate") * n(a, "stroke_volume")) / 1000 / 60),
+      "rounds to a whole litre": planted(cardiac, (a) => Math.round((n(a, "heart_rate") * n(a, "stroke_volume")) / 1000)),
+      "no domain check on heart rate": planted(cardiac, (a) => (n(a, "heart_rate") * n(a, "stroke_volume")) / 1000, ["heart_rate"]),
+      "no domain check on stroke volume": planted(cardiac, (a) => (n(a, "heart_rate") * n(a, "stroke_volume")) / 1000, ["stroke_volume"]),
+    },
+  },
+  {
+    spec: massChange,
+    bugs: {
+      "divides by the final mass": planted(massChange, (a) => ((n(a, "final_mass") - n(a, "initial_mass")) / Math.max(n(a, "final_mass"), 1e-9)) * 100),
+      "reversed subtraction": planted(massChange, (a) => ((n(a, "initial_mass") - n(a, "final_mass")) / n(a, "initial_mass")) * 100),
+      "forgets the times 100": planted(massChange, (a) => (n(a, "final_mass") - n(a, "initial_mass")) / n(a, "initial_mass")),
+      "difference only (grams)": planted(massChange, (a) => n(a, "final_mass") - n(a, "initial_mass")),
+      "ratio without subtracting one": planted(massChange, (a) => (n(a, "final_mass") / n(a, "initial_mass")) * 100),
+      "absolute value hides the loss": planted(massChange, (a) => Math.abs(((n(a, "final_mass") - n(a, "initial_mass")) / n(a, "initial_mass")) * 100)),
+      "floors a loss at zero": planted(massChange, (a) => Math.max(((n(a, "final_mass") - n(a, "initial_mass")) / n(a, "initial_mass")) * 100, 0)),
+      "caps at 50 per cent": planted(massChange, (a) => Math.min(((n(a, "final_mass") - n(a, "initial_mass")) / n(a, "initial_mass")) * 100, 50)),
+      "NaN at no change": planted(massChange, (a) => (n(a, "final_mass") === n(a, "initial_mass") ? Number.NaN : ((n(a, "final_mass") - n(a, "initial_mass")) / n(a, "initial_mass")) * 100)),
+      "no domain check on initial mass": planted(massChange, (a) => ((n(a, "final_mass") - n(a, "initial_mass")) / n(a, "initial_mass")) * 100, ["initial_mass"]),
+    },
+  },
+  {
+    spec: phSpec,
+    bugs: {
+      "positive log (pH rises with acidity)": planted(phSpec, (a) => Math.log10(n(a, "h_conc"))),
+      "natural log": planted(phSpec, (a) => 0 - Math.log(n(a, "h_conc"))),
+      "uses the reciprocal": planted(phSpec, (a) => 1 / n(a, "h_conc")),
+      "pOH instead of pH": planted(phSpec, (a) => 14 + Math.log10(n(a, "h_conc"))),
+      "log base 2": planted(phSpec, (a) => 0 - Math.log2(n(a, "h_conc"))),
+      "rounds to a whole number": planted(phSpec, (a) => Math.round(0 - Math.log10(n(a, "h_conc")))),
+      "caps at pH 7": planted(phSpec, (a) => Math.min(0 - Math.log10(n(a, "h_conc")), 7)),
+      "floors at pH 1": planted(phSpec, (a) => Math.max(0 - Math.log10(n(a, "h_conc")), 1)),
+      "NaN at 0.01": planted(phSpec, (a) => (n(a, "h_conc") === 0.01 ? Number.NaN : 0 - Math.log10(n(a, "h_conc")))),
+      "no domain check on concentration": planted(phSpec, (a) => 0 - Math.log10(n(a, "h_conc")), ["h_conc"]),
+    },
+  },
+  {
+    spec: gasVol,
+    bugs: {
+      "divides by molar volume": planted(gasVol, (a) => n(a, "moles") / n(a, "molar_volume")),
+      "uses 22.4 always": planted(gasVol, (a) => n(a, "moles") * 22.4),
+      "uses 24 always": planted(gasVol, (a) => n(a, "moles") * 24),
+      "adds instead of multiplying": planted(gasVol, (a) => n(a, "moles") + n(a, "molar_volume")),
+      "cm3 reported as dm3": planted(gasVol, (a) => n(a, "moles") * n(a, "molar_volume") * 1000),
+      "caps at 100 dm3": planted(gasVol, (a) => Math.min(n(a, "moles") * n(a, "molar_volume"), 100)),
+      "NaN at one mole": planted(gasVol, (a) => (n(a, "moles") === 1 ? Number.NaN : n(a, "moles") * n(a, "molar_volume"))),
+      "rounds to a whole dm3": planted(gasVol, (a) => Math.round(n(a, "moles") * n(a, "molar_volume"))),
+      "squares the moles": planted(gasVol, (a) => n(a, "moles") ** 2 * n(a, "molar_volume")),
+      "no domain check on molar volume": planted(gasVol, (a) => n(a, "moles") * n(a, "molar_volume"), ["molar_volume"]),
     },
   },
 ];

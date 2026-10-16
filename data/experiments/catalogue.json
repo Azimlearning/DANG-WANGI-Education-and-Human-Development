@@ -80,6 +80,22 @@
       "plan_id": "hookes_amali",
       "confirmed_by_person": false,
       "note": "Authored by the assistant from the KSSM topic name and general knowledge of SPM practicals. Not yet matched to a page of the owner's documents."
+    },
+    {
+      "id": "osmosis_mass_lab",
+      "subject": "biology",
+      "form": 4,
+      "topic": "biology_form4_movement_of_substances",
+      "title": "Osmosis in potato: percentage change in mass",
+      "aim": "To find the percentage change in the mass of potato strips left in solutions of different concentrations",
+      "source": null,
+      "status": "authored",
+      "models": [
+        "biology.percent_change_mass"
+      ],
+      "plan_id": "osmosis_mass_lab",
+      "confirmed_by_person": false,
+      "note": "Authored by the assistant from the KSSM topic name and general knowledge of SPM practicals. Not yet matched to a page of the owner's documents."
     }
   ]
 }

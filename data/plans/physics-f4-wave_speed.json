@@ -1,0 +1,88 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The wave speed rises in a straight line as the frequency rises.",
+      "x": "frequency",
+      "source": "wave",
+      "label": "Wave speed",
+      "unit": "m/s",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Keep the wavelength at its starting value and move the frequency from its smallest to its largest."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "simulation",
+  "id": "wave_speed_lab",
+  "title": "Wave speed: frequency and wavelength",
+  "goal": "See how the speed of a wave depends on its frequency and its wavelength.",
+  "topic": "physics_form4_waves",
+  "note": "The speed of a wave is the frequency multiplied by the wavelength: v = f x wavelength. In a real medium the speed is fixed by the medium, so changing the frequency changes the wavelength. Here you can set both to see the product.",
+  "controls": [
+    {
+      "id": "frequency",
+      "label": "Frequency",
+      "unit": "Hz",
+      "min": 1,
+      "max": 20,
+      "value": 5,
+      "grid": 19
+    },
+    {
+      "id": "wavelength",
+      "label": "Wavelength",
+      "unit": "m",
+      "min": 0.5,
+      "max": 5,
+      "value": 2,
+      "grid": 9
+    }
+  ],
+  "models": [
+    {
+      "id": "wave",
+      "model": "physics.wave_speed",
+      "params": {},
+      "inputs": {
+        "frequency": "frequency",
+        "wavelength": "wavelength"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Wave speed",
+      "unit": "m/s",
+      "digits": 2,
+      "source": "wave",
+      "convert_to": null
+    }
+  ],
+  "predict": {
+    "prompt": "If the wavelength stays the same and the frequency doubles, what happens to the wave speed?",
+    "choices": [
+      "It halves",
+      "It doubles",
+      "It stays the same"
+    ],
+    "reveal": "Set the frequency to its starting value, then to double that, and watch the speed."
+  },
+  "concept_check": {
+    "question": "A wave has a frequency of 5 Hz and a wavelength of 2 m. What is its speed?",
+    "options": [
+      "7 m/s",
+      "10 m/s",
+      "2.5 m/s"
+    ],
+    "correct": 1,
+    "explanation": "Speed is frequency times wavelength, so 5 Hz times 2 m gives 10 m/s."
+  }
+}

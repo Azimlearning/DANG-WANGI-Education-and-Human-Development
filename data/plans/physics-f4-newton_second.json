@@ -1,0 +1,88 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "The acceleration rises in a straight line as the force rises.",
+      "x": "force",
+      "source": "motion",
+      "label": "Acceleration",
+      "unit": "m/s2",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Try a mass of 2 kg and then 10 kg at the same force."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "simulation",
+  "id": "newton_second_lab",
+  "title": "Newton's second law: force, mass and acceleration",
+  "goal": "Explore how the acceleration of an object depends on the resultant force and the mass.",
+  "topic": "physics_form4_kinematics_dynamics_momentum",
+  "note": "The acceleration of an object is the resultant force divided by its mass: a = F / m. A bigger force gives a bigger acceleration, and a bigger mass gives a smaller acceleration.",
+  "controls": [
+    {
+      "id": "force",
+      "label": "Resultant force",
+      "unit": "N",
+      "min": 0,
+      "max": 20,
+      "value": 10,
+      "grid": 20
+    },
+    {
+      "id": "mass",
+      "label": "Mass",
+      "unit": "kg",
+      "min": 1,
+      "max": 10,
+      "value": 2,
+      "grid": 9
+    }
+  ],
+  "models": [
+    {
+      "id": "motion",
+      "model": "physics.newton_second",
+      "params": {},
+      "inputs": {
+        "force": "force",
+        "mass": "mass"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Acceleration",
+      "unit": "m/s2",
+      "digits": 2,
+      "source": "motion",
+      "convert_to": null
+    }
+  ],
+  "predict": {
+    "prompt": "If the resultant force stays the same and the mass doubles, what happens to the acceleration?",
+    "choices": [
+      "It doubles",
+      "It halves",
+      "It stays the same"
+    ],
+    "reveal": "Hold the force at its starting value and compare the mass at 2 kg with 4 kg."
+  },
+  "hints": [
+    "Write down the formula: acceleration = force / mass.",
+    "Put the force in newtons and the mass in kilograms.",
+    "Divide the force by the mass."
+  ],
+  "worked_solution": [
+    "Write the formula: a = F / m.",
+    "Substitute the resultant force and the mass.",
+    "Divide to get the acceleration in m/s2."
+  ]
+}

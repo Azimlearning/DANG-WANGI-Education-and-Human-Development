@@ -23,6 +23,12 @@ import { magnification } from "./science/magnification";
 import { surfaceAreaToVolume } from "./science/sa_to_v";
 import { netPhotosynthesis } from "./science/photosynthesis";
 import { moles } from "./science/moles";
+import { waveSpeed } from "./science/wave_speed";
+import { newtonSecond } from "./science/newton_second";
+import { cardiacOutput } from "./science/cardiac_output";
+import { percentChangeMass } from "./science/mass_change";
+import { ph } from "./science/ph";
+import { gasVolume } from "./science/gas_volume";
 import { titration } from "./science/titration";
 import { dilution } from "./science/dilution";
 import { heatEnergy } from "./science/heat_energy";
@@ -43,7 +49,7 @@ const readyAndWatch = (): void => {
 };
 const bridge = Object.freeze({ ready: readyAndWatch, event, error, installErrorHandlers });
 
-export const components = { observable, environment, slider, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, bridge };
+export const components = { observable, environment, slider, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, waveSpeed, newtonSecond, cardiacOutput, percentChangeMass, ph, gasVolume, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);

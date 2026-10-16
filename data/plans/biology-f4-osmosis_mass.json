@@ -1,0 +1,71 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "A bigger final mass means a bigger percentage gain.",
+      "x": "final_mass",
+      "source": "potato",
+      "label": "Change in mass",
+      "unit": "%",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Set the final mass to 6 g and then to 14 g and compare the sign of the change."
+  ],
+  "steps": [],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "simulation",
+  "id": "osmosis_mass_lab",
+  "title": "Osmosis in potato: percentage change in mass",
+  "goal": "Find the percentage change in the mass of a potato strip after it is left in a solution.",
+  "topic": "biology_form4_movement_of_substances",
+  "note": "A potato strip gains mass in a solution that is more dilute than its cell sap because water enters by osmosis, and loses mass in a more concentrated solution. The percentage change in mass is the change divided by the starting mass, shown as a percentage. This strip started at 10 g.",
+  "controls": [
+    {
+      "id": "final_mass",
+      "label": "Mass after the experiment",
+      "unit": "g",
+      "min": 6,
+      "max": 14,
+      "value": 12,
+      "grid": 8
+    }
+  ],
+  "models": [
+    {
+      "id": "potato",
+      "model": "biology.percent_change_mass",
+      "params": {
+        "initial_mass": 10
+      },
+      "inputs": {
+        "final_mass": "final_mass"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Change in mass",
+      "unit": "%",
+      "digits": 1,
+      "source": "potato",
+      "convert_to": null
+    }
+  ],
+  "concept_check": {
+    "question": "A potato strip has a final mass less than its starting mass. What is the sign of the percentage change?",
+    "options": [
+      "Positive",
+      "Negative",
+      "Zero"
+    ],
+    "correct": 1,
+    "explanation": "The strip lost mass, so the change is negative: water left the cells by osmosis."
+  }
+}

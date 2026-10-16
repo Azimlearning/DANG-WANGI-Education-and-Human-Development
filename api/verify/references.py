@@ -144,6 +144,61 @@ def average_rate(volume: float, time: float) -> float:
     return volume / time
 
 
+def wave_speed(frequency: float, wavelength: float) -> float:
+    """Speed (m/s) of a wave of `frequency` (Hz) and `wavelength` (m): v = f x lambda."""
+    _finite(frequency=frequency, wavelength=wavelength)
+    if frequency <= 0 or wavelength <= 0:
+        raise ValueError("frequency and wavelength must be above 0")
+    return frequency * wavelength
+
+
+def newton_second(force: float, mass: float) -> float:
+    """Acceleration (m/s2) of `mass` (kg) under a resultant `force` (N): a = F / m."""
+    _finite(force=force, mass=mass)
+    if force < 0:
+        raise ValueError("force must be 0 N or more")
+    if mass <= 0:
+        raise ValueError("mass must be above 0 kg")
+    return force / mass
+
+
+def cardiac_output(heart_rate: float, stroke_volume: float) -> float:
+    """Blood pumped per minute (L/min) at `heart_rate` (beats/min) with `stroke_volume` (mL per beat)."""
+    _finite(heart_rate=heart_rate, stroke_volume=stroke_volume)
+    if heart_rate < 0 or stroke_volume < 0:
+        raise ValueError("heart_rate and stroke_volume must be 0 or more")
+    millilitres_per_minute = heart_rate * stroke_volume
+    return millilitres_per_minute / 1000.0
+
+
+def percent_change_mass(final_mass: float, initial_mass: float) -> float:
+    """Percentage change in mass (%) from `initial_mass` to `final_mass` (both g)."""
+    _finite(final_mass=final_mass, initial_mass=initial_mass)
+    if final_mass < 0:
+        raise ValueError("final_mass must be 0 g or more")
+    if initial_mass <= 0:
+        raise ValueError("initial_mass must be above 0 g")
+    return 100.0 * (final_mass - initial_mass) / initial_mass
+
+
+def ph_from_h(h_conc: float) -> float:
+    """pH of a solution with hydrogen ion concentration `h_conc` (mol/dm3)."""
+    _finite(h_conc=h_conc)
+    if h_conc <= 0:
+        raise ValueError("h_conc must be above 0 mol/dm3")
+    return -math.log10(h_conc)
+
+
+def gas_volume(moles: float, molar_volume: float) -> float:
+    """Volume (dm3) of `moles` of gas when one mole occupies `molar_volume` dm3."""
+    _finite(moles=moles, molar_volume=molar_volume)
+    if moles < 0:
+        raise ValueError("moles must be 0 mol or more")
+    if molar_volume <= 0:
+        raise ValueError("molar_volume must be above 0 dm3/mol")
+    return moles * molar_volume
+
+
 REFERENCES: dict[str, Reference] = {
     "mechanics.hookes": Reference(hookes, ("load",), ("k",), "m", {"load": "N"}),
     "electricity.ohm": Reference(ohm, ("voltage", "resistance"), (), "A", {"voltage": "V", "resistance": "ohm"}),
@@ -162,6 +217,18 @@ REFERENCES: dict[str, Reference] = {
     "chemistry.dilution": Reference(dilution, ("v2",), ("m1", "v1"), "mol/dm3", {"v2": "cm3"}),
     "chemistry.heat_energy": Reference(heat_energy, ("delta_t",), ("mass", "c"), "J", {"delta_t": "\u00b0C"}),
     "chemistry.average_rate": Reference(average_rate, ("volume", "time"), (), "cm3/s", {"volume": "cm3", "time": "s"}),
+    "physics.wave_speed": Reference(
+        wave_speed, ("frequency", "wavelength"), (), "m/s", {"frequency": "Hz", "wavelength": "m"}
+    ),
+    "physics.newton_second": Reference(newton_second, ("force", "mass"), (), "m/s2", {"force": "N", "mass": "kg"}),
+    "biology.cardiac_output": Reference(
+        cardiac_output, ("heart_rate", "stroke_volume"), (), "L/min", {"heart_rate": "beats/min", "stroke_volume": "mL"}
+    ),
+    "biology.percent_change_mass": Reference(
+        percent_change_mass, ("final_mass",), ("initial_mass",), "%", {"final_mass": "g"}
+    ),
+    "chemistry.ph_from_h": Reference(ph_from_h, ("h_conc",), (), "pH", {"h_conc": "mol/dm3"}),
+    "chemistry.gas_volume": Reference(gas_volume, ("moles",), ("molar_volume",), "dm3", {"moles": "mol"}),
 }
 
 
