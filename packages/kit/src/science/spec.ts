@@ -124,7 +124,11 @@ export function registrationFailures(spec: ScienceSpec, impl: Impl): string[] {
       for (const args of all) {
         const base = call(args);
         const doubled = call({ ...args, [p.arg]: (args[p.arg] as number) * 2 });
-        if (base instanceof Error || doubled instanceof Error) continue;
+        // A call that throws is a failure, not a case to skip: doubling an input never leaves a domain that only has a lower bound.
+        if (base instanceof Error || doubled instanceof Error) {
+          failures.push(`property homogeneous(${p.degree}) in ${p.arg}: ${JSON.stringify(args)} threw ${(base instanceof Error ? base : (doubled as Error)).message}`);
+          continue;
+        }
         const want = base * 2 ** p.degree;
         if (!(Math.abs(doubled - want) <= 1e-9 * (1 + Math.abs(want)))) failures.push(`property homogeneous(${p.degree}) in ${p.arg}: ${JSON.stringify(args)}`);
       }
@@ -134,10 +138,15 @@ export function registrationFailures(spec: ScienceSpec, impl: Impl): string[] {
   // Domain refusals: every argument just outside its domain, and NaN, must be refused.
   const base = Object.fromEntries(Object.keys({ ...spec.inputs, ...spec.params }).map((n) => [n, (spec.grid[n] as number[])[Math.floor((spec.grid[n] as number[]).length / 2)] as number]));
   for (const [name, q] of Object.entries({ ...spec.inputs, ...spec.params })) {
-    for (const bad of [q.exclusive ? q.min : q.min - 1, Number.NaN]) {
+    for (const bad of [q.exclusive ? q.min : q.min - 1, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
       const got = call({ ...base, [name]: bad });
       if (!(got instanceof Error)) failures.push(`domain: ${name}=${bad} was not refused`);
     }
+    // The boundary itself: an inclusive minimum, and a value just above an exclusive one, must be ACCEPTED (a model that refuses its own
+    // stated minimum is wrong the other way round).
+    const edge = q.exclusive ? q.min + 1e-6 : q.min;
+    const accepted = call({ ...base, [name]: edge });
+    if (accepted instanceof Error) failures.push(`domain: ${name}=${edge} should be accepted but threw ${accepted.message}`);
   }
   return failures;
 }

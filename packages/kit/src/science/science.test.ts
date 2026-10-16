@@ -331,6 +331,32 @@ describe.each(BUGS)("registration suite for $spec.id", ({ spec, bugs }) => {
   });
 });
 
+describe("the registration suite itself", () => {
+  const strict = (spec: ScienceSpec, drop: (a: Record<string, number>) => boolean): Impl => {
+    const real = guarded(spec);
+    return (a) => {
+      if (drop(a)) throw new RangeError("refused");
+      return real(a);
+    };
+  };
+
+  it("refuses an implementation that rejects its own inclusive minimum", () => {
+    const bug = strict(hookes, (a) => a["load"] === 0);
+    expect(registrationFailures(hookes, bug).some((f) => f.includes("should be accepted"))).toBe(true);
+  });
+
+  it("refuses an implementation that throws only on doubled inputs (the homogeneity check no longer skips it)", () => {
+    const bug = strict(ohm, (a) => (a["voltage"] as number) > 300);
+    expect(registrationFailures(ohm, bug).some((f) => f.includes("homogeneous") && f.includes("threw"))).toBe(true);
+  });
+
+  it("refuses an implementation that lets infinity through", () => {
+    const real = guarded(hookes);
+    const bug: Impl = (a) => (a["load"] === Number.POSITIVE_INFINITY ? 1 : real(a));
+    expect(registrationFailures(hookes, bug).some((f) => f.includes("Infinity"))).toBe(true);
+  });
+});
+
 describe("domain guard", () => {
   it("refuses values outside the domain and non-numbers", () => {
     const run = guarded(hookes);

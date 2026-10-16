@@ -22,24 +22,46 @@ def _consts(node: ast.AST) -> list[str]:
     return []
 
 
-def emitted_by_verifier() -> set[str]:
-    files = [
+def scan_source(src: str, filename: str) -> tuple[set[str], list[str]]:
+    """The rule strings one source file can emit, and the call sites whose rule is NOT a string constant (they would evade this test)."""
+    consts: set[str] = set()
+    dynamic: list[str] = []
+    for n in ast.walk(ast.parse(src)):
+        if isinstance(n, ast.Call):
+            name = getattr(n.func, "id", getattr(n.func, "attr", None))
+            idx = _ARG_INDEX.get(name or "")
+            if idx is not None and len(n.args) > idx:
+                found = _consts(n.args[idx])
+                if found:
+                    consts |= set(found)
+                else:
+                    dynamic.append(f"{filename}:{n.lineno} {name}({ast.unparse(n.args[idx])})")
+        if isinstance(n, ast.Return) and isinstance(n.value, ast.Tuple) and n.value.elts and filename == "render.py":
+            consts |= set(_consts(n.value.elts[0]))
+        if isinstance(n, ast.Assign) and any(getattr(t, "id", "") == "rule" for t in n.targets):
+            consts |= set(_consts(n.value))
+    return consts, dynamic
+
+
+def _verifier_files() -> list[Path]:
+    return [
         f
         for f in [*(API / "verify").glob("*.py"), API / "postprocess.py"]
         if not f.name.startswith(("test_", "conftest"))
     ]
+
+
+def emitted_by_verifier() -> set[str]:
     out: set[str] = set()
-    for f in files:
-        for n in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):
-            if isinstance(n, ast.Call):
-                name = getattr(n.func, "id", getattr(n.func, "attr", None))
-                idx = _ARG_INDEX.get(name or "")
-                if idx is not None and len(n.args) > idx:
-                    out |= set(_consts(n.args[idx]))
-            if isinstance(n, ast.Return) and isinstance(n.value, ast.Tuple) and n.value.elts and f.name == "render.py":
-                out |= set(_consts(n.value.elts[0]))
-            if isinstance(n, ast.Assign) and any(getattr(t, "id", "") == "rule" for t in n.targets):
-                out |= set(_consts(n.value))
+    for f in _verifier_files():
+        out |= scan_source(f.read_text(encoding="utf-8"), f.name)[0]
+    return out
+
+
+def dynamic_sites() -> list[str]:
+    out: list[str] = []
+    for f in _verifier_files():
+        out += scan_source(f.read_text(encoding="utf-8"), f.name)[1]
     return out
 
 
@@ -88,3 +110,37 @@ def test_the_coverage_test_bites(tmp_path: Path, monkeypatch) -> None:  # noqa: 
     smaller = {k: v for k, v in fc.REGISTRY.items() if k != "dead_control"}
     monkeypatch.setattr(fc, "REGISTRY", smaller)
     assert "dead_control" in emitted_by_verifier() - set(fc.REGISTRY)
+
+
+def test_the_scanner_is_not_vacuous_and_finds_a_rule_added_without_a_registry_entry() -> None:
+    found = emitted_by_verifier()
+    assert len(found) >= 40, f"the scan found only {len(found)} rules; it has probably stopped seeing the code"
+    rule = "a_brand_new_rule_nobody_registered"
+    synthetic = f'raise VerificationFailed("render", "{rule}", "reason")\nraise ScanReject("{rule}2", "x")\n'
+    consts, dynamic = scan_source(synthetic, "synthetic.py")
+    assert consts == {rule, rule + "2"} and dynamic == []
+    assert (found | consts) - set(fc.REGISTRY) == {
+        rule,
+        rule + "2",
+    }  # this is exactly what the coverage test would report
+
+
+# Each of these re-wraps a rule that another, scanned call site already produced as a string constant (the L0 scan's ScanReject, chain_problem and
+# input_unit_problems in provenance.py, the gate re-raising guard_label's failure). They are pinned by file and expression, so a NEW dynamic site
+# fails here until someone checks where its rule comes from.
+REVIEWED_DYNAMIC = {
+    "provenance.py Problem(found.rule)",
+    "provenance.py Problem(p.rule)",
+    "postprocess.py PostprocessReject(hit.rule)",
+    "gate.py VerificationFailed(failure.rule)",
+    "gate.py VerificationFailed(hit.rule)",
+    "mint.py VerificationFailed(processed.rule)",
+    "mint.py VerificationFailed(refusal[0])",
+}
+
+
+def test_a_rule_passed_as_a_variable_is_seen_as_dynamic_and_new_ones_must_be_reviewed() -> None:
+    consts, dynamic = scan_source('raise VerificationFailed("gate", some_variable, "x")', "synthetic.py")
+    assert consts == set() and len(dynamic) == 1
+    seen = {site.split(":", 1)[0] + " " + site.split(" ", 1)[1] for site in dynamic_sites()}
+    assert seen <= REVIEWED_DYNAMIC, f"new dynamic rule sites need review: {sorted(seen - REVIEWED_DYNAMIC)}"
