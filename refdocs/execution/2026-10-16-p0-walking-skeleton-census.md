@@ -7,7 +7,8 @@
 
 - Read `CLAUDE.md`, `.claude/memory/preflight.md`, the PRD sections 3 and 6, and `refdocs/changelog/DECISIONS.md`.
 - Toolchain observed 2026-10-16: Python 3.13.14, uv 0.11.26, Node 24.11.0, pnpm 10.12.1, git 2.47.0. Re-check with `uv --version`, `node --version`, `pnpm --version`.
-- Disk: 17 GB free on C: (94 percent used). Record free space before and after task 6.
+- Cloud session 2026-10-16: the work ran in a Linux container, not on the Windows machine. Toolchain there: Python 3.13.16, uv 0.11.32, Node 22.22.0, pnpm 10.28.0; 30 GB free. Sources were attached as read-only shallow clones at `/home/user/azimlearning/arcana-v2` (HEAD `21c6dcf`, the planned commit) and `/home/user/azimlearning/genui-education`.
+- Disk (Windows machine): 17 GB free on C: (94 percent used). Record free space before and after task 6.
 - No API key is needed. Leave `SYNAPSE_LLM_MODE=fake`. No paid call is made in P0.
 - Source repositories to port from are `Azimlearning/Arcana-v2` (commit `21c6dcf5`) and the `Azimlearning/GenUI-Education` monorepo's `Synapse-V3/` folder. Have local clones available (their paths are machine-specific and deliberately not recorded here). They are read-only references. Never edit them from here.
 - Open assumptions that P0 does not depend on but should not be forgotten: A-8 (corpus legality), A-10 (isolation), A-11 (exposure reading), A-14 (name).
@@ -15,6 +16,8 @@
 ---
 
 ## Task 1: Workspace and toolchain
+
+**Status: done 2026-10-16, Verify passed.** Reality: project created with `uv init --bare`, name `synapse-api`; `web/` is listed in the workspace but not created until task 8; the online docs were unreachable so `--help` output was used (changelog Deviations).
 
 **Files:** `pyproject.toml`, `uv.lock`, `package.json`, `pnpm-workspace.yaml`, `.python-version`, `api/__init__.py`, `packages/schema/package.json`, `packages/kit/package.json`, `eval/__init__.py`.
 
@@ -31,6 +34,8 @@
 
 ## Task 2: Wire schema and codegen
 
+**Status: done 2026-10-16, Verify passed.** Reality: `EnvironmentBlock` also has `type` and `meta` (a `BlockMeta`); `AskRequest` and `Citation` were added; `ErrorCode` is `validation_failed | bad_request | not_found | spend_cap_exceeded | provider_unavailable | verification_refused | internal`. Arcana's codegen guard test was not ported.
+
 **Files:** `packages/schema/src/{blocks,events,index}.ts`, `packages/schema/codegen/to_python.ts`, `api/schema/generated.py`, `api/schema/test_strict.py`.
 
 **Steps:**
@@ -45,6 +50,8 @@
 - `uv run pytest api/schema -q`: an unknown field is rejected; `"1"` is rejected for an integer field; an unknown `lane` is rejected.
 
 ## Task 3: Settings, fake LLM seam, spend ledger and cap
+
+**Status: done 2026-10-16, Verify passed.** Reality: files are `api/llm/{types,models,pricing,ledger,service,factory}.py` and `api/llm/providers/{base,fake}.py`; tests are in `api/llm/test_service.py` with fixtures in `api/conftest.py`. No live provider is built (D-15); live mode raises `ProviderUnavailable` from the factory.
 
 **Files:** `api/core/settings.py`, `api/llm/{types,service,fake,ledger,pricing}.py`, `api/llm/test_*.py`.
 

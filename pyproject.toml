@@ -1,0 +1,41 @@
+[project]
+name = "synapse-api"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.143.2",
+    "httpx>=0.28.1",
+    "pydantic>=2",
+    "pydantic-settings>=2.16.0",
+    "sqlalchemy>=2.1.4",
+    "sse-starlette>=3.5.0",
+    "uvicorn>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.17.1",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["api", "eval"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+extend-exclude = ["api/schema/generated.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.pyright]
+include = ["api"]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"

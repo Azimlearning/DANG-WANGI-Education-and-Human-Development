@@ -122,6 +122,14 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** Committing extracted passages (convenient, and a likely licensing problem). A reproducible corpus then depends on the owner having the PDFs locally.
 
+## D-15: Live mode needs only an Anthropic key and a cap, and no live provider exists until P3 (2026-10-16)
+
+**Decision.** `SYNAPSE_LLM_MODE=live` makes startup require `ANTHROPIC_API_KEY` and a positive `LLM_MONTHLY_CAP_USD`, and name whichever is missing. `OPENROUTER_API_KEY` is optional. In P0 the factory builds only the fake provider; asking for live builds nothing and raises `ProviderUnavailable`.
+
+**Why.** CLAUDE.md names OpenRouter as an optional fallback, and Arcana v2's rule of requiring both keys would have blocked a live start for no reason. Building a live provider before P3 would put a paid path in the repo that no one has confirmed (hard constraint 8, CLAUDE.md rule 7).
+
+**Trade-offs / rejected.** Requiring both keys (stricter, blocks a single-provider setup). Building the Anthropic provider now behind the cap (convenient, but untestable without a paid call and out of P0 scope). Cost: live-mode configuration is validated at startup but has no provider behind it until P3, so a valid live config still fails at the first request.
+
 ---
 
 ## Working assumptions (`ASSUMED:`)

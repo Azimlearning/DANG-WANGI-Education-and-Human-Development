@@ -235,6 +235,7 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-12 | No graph retrieval; BM25 or TF-IDF first, dense embeddings only if measured to help | Arcana v2 measured no gain (p = 0.69) |
 | D-13 | Process: this doc system, subagents `doc-keeper`, `cost-auditor`, `kit-guardian`, and the secret-guard hook only | Owner chose the subagents; other hooks wait until a rule is broken |
 | D-14 | The corpus is local and gitignored; a manifest and ingestion script are committed | Copyright is the Ministry's; legal position unconfirmed |
+| D-15 | Live mode needs only an Anthropic key and a cap; OpenRouter is optional; no live provider exists until P3 | CLAUDE.md lists OpenRouter as optional; a live path is not built before the owner confirms paid runs |
 
 ---
 

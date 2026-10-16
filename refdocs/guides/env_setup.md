@@ -23,6 +23,9 @@ Last updated: 2026-10-16
 | Variable | Default if unset | What it changes |
 |---|---|---|
 | `OPENROUTER_API_KEY` | none | Enables an OpenRouter fallback route when Anthropic is unavailable or out of credit |
+| `DATA_DIR` | `./data` | Where local stores and the default spend ledger live |
+| `LEDGER_PATH` | `<DATA_DIR>/ledger.db` | Overrides the spend ledger file. Keep ONE ledger so the monthly cap covers every run |
+| `LOG_LEVEL` | `INFO` | API log verbosity |
 
 ---
 
