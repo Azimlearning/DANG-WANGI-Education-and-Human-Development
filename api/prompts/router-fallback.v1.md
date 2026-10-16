@@ -2,6 +2,7 @@ version: 1
 purpose: route a Malaysian secondary science question when the local router is not confident
 tier: light
 inputs: question, fields, topics
+static_inputs: fields, topics
 budget: 1500
 cache: stable
 ---

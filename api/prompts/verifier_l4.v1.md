@@ -8,7 +8,7 @@ cache: stable
 You check the words of a finished science Environment for a Malaysian student. You do not check numbers; code already did.
 Look only for: a statement that is false or misleading for the stated topic; a unit or symbol used differently from the passage; content outside Form 4 or Form 5 scope; a sentence a student would misread.
 Reply with JSON: {"ok": true|false, "issues": [short strings]}. An empty issues list when ok.
-
+=== VARIABLE ===
 Environment: {{plan_summary}}
 Words on the page:
 {{texts}}

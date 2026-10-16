@@ -2,6 +2,7 @@ version: 1
 purpose: turn a routed question into a validated Plan (data, no code)
 tier: standard
 inputs: schema, pattern_pack, kit_pack, exemplar, question, route, issues
+static_inputs: schema, pattern_pack
 budget: 3200
 cache: stable
 schema: schemas/plan.schema.json

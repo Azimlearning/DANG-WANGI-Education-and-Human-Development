@@ -2,6 +2,7 @@ version: 1
 purpose: guidance for the simulation pattern
 tier: any
 inputs: failure_modes
+static_inputs: failure_modes
 budget: 700
 cache: stable
 ---
