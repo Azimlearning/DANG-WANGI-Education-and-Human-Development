@@ -501,17 +501,8 @@ def test_S2_the_gate_refuses_a_csp_that_is_not_first(
     assert err.value.rule == "csp_mismatch"
 
 
-def test_S3_KNOWN_GAP_a_hand_inserted_row_that_passes_the_cheap_checks_is_delivered(
-    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
-) -> None:
-    """Pinned, not endorsed. The gate re-hashes, re-scans and re-checks the CSP and Kit, but it does NOT re-render and the row
-    carries no signature, so someone who can write the SQLite file can insert an Environment the verifier never saw. Hard
-    constraint 1 therefore rests on the store being writable only by the API (single operator, D-11). Closing it (an HMAC
-    attestation with a key outside the data directory, or re-rendering on delivery) is a P7 deploy-gate item. When it lands,
-    flip this test to expect a refusal."""
-    db = tmp_path / "envs.db"
-    store = SqliteEnvironmentStore(db)
-    store.put_verified(minted)
+def _plant(db: Path, kit_dist: Path) -> str:
+    """Rewrite the stored row to different HTML with a consistent hash and id, the way someone with only file access could."""
     html = postprocess.run(
         "<!doctype html><html><head></head><body><p>never rendered</p></body></html>", public_origin=ORIGIN
     )
@@ -521,8 +512,86 @@ def test_S3_KNOWN_GAP_a_hand_inserted_row_that_passes_the_cheap_checks_is_delive
         conn.execute(
             "UPDATE environments SET html = ?, html_sha256 = ?, env_id = ?", (html, sha, f"reference-spring-{sha[:12]}")
         )
-    block = deliver(store, f"reference-spring-{sha[:12]}", public_origin=ORIGIN, kit_dist=kit_dist)
-    assert block.html == html  # delivered although it was never rendered or minted
+    return f"reference-spring-{sha[:12]}"
+
+
+def test_S3_KNOWN_GAP_without_an_attestation_key_a_planted_row_is_delivered(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    """Pinned, not endorsed. With no STORE_ATTESTATION_KEY the gate re-hashes, re-scans and re-checks the CSP and Kit, but cannot tell a row
+    the verifier wrote from one written to the file. Single operator only (D-11). The next test shows the gap closed when a key is set."""
+    db = tmp_path / "envs.db"
+    store = SqliteEnvironmentStore(db)
+    store.put_verified(minted)
+    planted = _plant(db, kit_dist)
+    assert deliver(store, planted, public_origin=ORIGIN, kit_dist=kit_dist).id == planted
+
+
+def test_A19_with_an_attestation_key_a_planted_or_edited_row_is_refused(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    db = tmp_path / "envs.db"
+    store = SqliteEnvironmentStore(db, attestation_key=b"k" * 32)
+    store.put_verified(minted)
+    assert (
+        deliver(store, minted.env_id, public_origin=ORIGIN, kit_dist=kit_dist).id == minted.env_id
+    )  # signed rows pass
+    planted = _plant(db, kit_dist)
+    with pytest.raises(VerificationFailed) as err:
+        deliver(store, planted, public_origin=ORIGIN, kit_dist=kit_dist)
+    assert err.value.rule == "unattested"
+
+
+def test_A19_each_signed_field_is_covered_and_the_wrong_key_or_no_signature_fails(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    db = tmp_path / "envs.db"
+    store = SqliteEnvironmentStore(db, attestation_key=b"k" * 32)
+    store.put_verified(minted)
+    for column, value in (
+        ("label", "canonical"),
+        ("lane", "free"),
+        ("plan_summary", "something else"),
+        ("citations", "[]"),
+        ("kit_version", "9.9.9"),
+        ("title", "Another title"),
+        ("checked", "{}"),
+    ):
+        with sqlite3.connect(db) as conn:
+            original = conn.execute(f"SELECT {column} FROM environments").fetchone()[0]
+            conn.execute(f"UPDATE environments SET {column} = ?", (value,))
+        with pytest.raises(VerificationFailed) as err:
+            deliver(store, minted.env_id, public_origin=ORIGIN, kit_dist=kit_dist)
+        assert err.value.rule == "unattested", column
+        with sqlite3.connect(db) as conn:
+            conn.execute(f"UPDATE environments SET {column} = ?", (original,))
+    assert deliver(store, minted.env_id, public_origin=ORIGIN, kit_dist=kit_dist).id == minted.env_id
+    other = SqliteEnvironmentStore(db, attestation_key=b"x" * 32)
+    with pytest.raises(VerificationFailed) as err:
+        deliver(other, minted.env_id, public_origin=ORIGIN, kit_dist=kit_dist)
+    assert err.value.rule == "unattested"
+    with sqlite3.connect(db) as conn:
+        conn.execute("UPDATE environments SET attestation = NULL")
+    with pytest.raises(VerificationFailed) as err:
+        deliver(store, minted.env_id, public_origin=ORIGIN, kit_dist=kit_dist)
+    assert err.value.rule == "unattested"
+
+
+def test_A19_a_row_planted_before_the_verifier_stores_the_same_html_is_not_blessed(
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+) -> None:
+    db = tmp_path / "envs.db"
+    unkeyed = SqliteEnvironmentStore(db)
+    unkeyed.put_verified(minted)
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            "UPDATE environments SET checked = '{}'"
+        )  # planted: same HTML, different claim about what was checked
+    keyed = SqliteEnvironmentStore(db, attestation_key=b"k" * 32)
+    keyed.put_verified(minted)  # the verifier signs what IT minted, which does not match the planted row
+    with pytest.raises(VerificationFailed) as err:
+        deliver(keyed, minted.env_id, public_origin=ORIGIN, kit_dist=kit_dist)
+    assert err.value.rule in ("unattested", "bad_record")
 
 
 def test_N2_an_environment_must_state_a_source_even_if_the_source_is_none(kit_dist: Path) -> None:

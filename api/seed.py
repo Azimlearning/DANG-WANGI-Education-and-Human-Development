@@ -21,6 +21,13 @@ def store_path(settings: Settings):
     return settings.data_dir / "environments.db"
 
 
+def open_store(settings: Settings) -> SqliteEnvironmentStore:
+    key = settings.store_attestation_key
+    return SqliteEnvironmentStore(
+        store_path(settings), key.get_secret_value().encode("utf-8") if key is not None else None
+    )
+
+
 def seed_reference(settings: Settings, interaction_seconds: float | None = None) -> str:
     fixtures = settings.data_dir / "fixtures" / "envs"
     plan = json.loads((fixtures / f"{REFERENCE_SLUG}.plan.json").read_text(encoding="utf-8"))
@@ -38,7 +45,7 @@ def seed_reference(settings: Settings, interaction_seconds: float | None = None)
         plan_models=plan.get("models"),
         interaction_seconds=INTERACTION_SECONDS if interaction_seconds is None else interaction_seconds,
     )
-    SqliteEnvironmentStore(store_path(settings)).put_verified(env)
+    open_store(settings).put_verified(env)
     return env.env_id
 
 

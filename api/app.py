@@ -28,7 +28,7 @@ from api.schema.generated import (
     StreamErrorEvent,
     StreamEvent,
 )
-from api.seed import store_path
+from api.seed import open_store
 from api.static import mount_kit
 from api.verify.gate import deliver
 from api.verify.mint import VerificationFailed, kit_bundle_sha256
@@ -60,7 +60,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or load_settings()
     app = FastAPI(title="Synapse v4 API", version="0.1.0")
     app.state.settings = settings
-    app.state.store = SqliteEnvironmentStore(store_path(settings))
+    app.state.store = open_store(settings)
     app.state.ledger = build_ledger(settings)
     app.state.llm = (
         None  # built on first use, so a live config without a provider fails per request, not at import (D-15)

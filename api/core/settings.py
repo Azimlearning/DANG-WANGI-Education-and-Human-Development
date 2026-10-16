@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     verify_interaction_seconds: float = 10.0
     """How long the render harness presses controls and inputs while verifying one Environment. Tests use 1; do not go below 5 for real use."""
 
+    store_attestation_key: SecretStr | None = None
+    """HMAC key that signs stored Environments (A-19). Keep it OUTSIDE the data directory. Unset: rows are unsigned and the gate trusts the store."""
     anthropic_api_key: SecretStr | None = None
     openrouter_api_key: SecretStr | None = None
     llm_monthly_cap_usd: float | None = None

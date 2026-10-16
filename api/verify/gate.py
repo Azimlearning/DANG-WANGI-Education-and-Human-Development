@@ -57,6 +57,11 @@ def deliver(
     if actual != record.html_sha256 or not record.env_id.endswith(actual[:12]):
         raise VerificationFailed("gate", "hash_mismatch", "the stored HTML does not match its recorded hash")
 
+    if not store.attestation_ok(record):
+        raise VerificationFailed(
+            "gate", "unattested", "the stored row was not written by this verifier (bad or missing signature)"
+        )
+
     hit = l0.scan(record.html)
     if hit is not None:
         raise VerificationFailed("gate", hit.rule, hit.reason)

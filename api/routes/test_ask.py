@@ -13,6 +13,7 @@ from pydantic import TypeAdapter
 from api.app import create_app
 from api.core.settings import Settings
 from api.schema.generated import EnvironmentEvent, ErrorEnvelope, StreamEvent
+from api.verify.store import SqliteEnvironmentStore
 
 EVENTS = TypeAdapter(StreamEvent)
 SPRING = "Why does a spring stretch when I hang a weight on it?"
@@ -213,3 +214,12 @@ def test_library_actions_on_an_unknown_environment_are_404_and_bodies_are_strict
     env_id = _environment_id(client)
     assert client.post(f"/library/{env_id}/flag", json={"note": ""}).status_code == 422
     assert client.post(f"/library/{env_id}/flag", json={"note": "x", "extra": 1}).status_code == 422
+
+
+def test_a_configured_attestation_key_signs_what_the_pipeline_stores(kit_dist: Path, tmp_path: Path) -> None:
+    app = create_app(_settings(tmp_path / "data", kit_dist, store_attestation_key="k" * 32))
+    events = _events(TestClient(app))
+    block = next(e for e in events if isinstance(e, EnvironmentEvent)).block
+    record = app.state.store.get_record(block.id)
+    assert record is not None and record.attestation and app.state.store.attestation_ok(record)
+    assert not SqliteEnvironmentStore(tmp_path / "data" / "environments.db", b"x" * 32).attestation_ok(record)

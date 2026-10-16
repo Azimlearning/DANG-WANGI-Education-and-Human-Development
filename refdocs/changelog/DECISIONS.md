@@ -252,6 +252,14 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs.** Relations are written by hand per model; a new model with a cross-quantity constraint must add a line (a coverage test for this does not exist yet).
 
+## D-31: Stored Environments are signed with an HMAC, and the gate refuses an unsigned or altered row when a key is set (2026-10-16)
+
+**Decision.** `STORE_ATTESTATION_KEY` (a secret outside the data directory) signs, at `put_verified`, an HMAC-SHA256 over the id, title, lane, label, Kit version and sha, HTML hash, citations, plan summary and the `checked` record. The signature is computed from what the verifier just minted, never from what is already in the row. `deliver` calls `attestation_ok` first and refuses with `unattested` (GATE-006) a row with no signature, a wrong key or any altered signed field. With no key, behaviour is unchanged and A-19 stays open (single operator, D-11).
+
+**Why.** The gate re-hashes, re-scans and checks the CSP and Kit, but cannot tell a row the verifier wrote from one written straight into the SQLite file. A signature with a key the file writer does not hold closes that, which hard constraint 1 needs before the API is public.
+
+**Trade-offs / rejected.** The HTML itself is covered through its hash, which is signed. Rotating the key makes older rows `unattested` and they must be re-verified. Rejected: re-rendering on delivery (adds seconds and a browser to every request; kept as a later option for high-risk deploys). Limit: someone who steals the key can sign anything, so the key belongs in the host's secret store, not in `.env` in the repository folder. Lifecycle, flags and the question cache are decisions about rows, not Environments, and are not signed; the gate still re-checks `withdrawn` on every delivery.
+
 ---
 
 ## Working assumptions (`ASSUMED:`)
@@ -265,5 +273,5 @@ Not decisions: guesses made to keep moving. Each one must be confirmed or killed
 5. **A-8 ASSUMED:** the corpus may be used locally and quoted briefly with citation. Unconfirmed legally.
 6. **A-4 ASSUMED:** Compose lane cost is well below v3's about $0.19. Measured at P3.
 7. **A-14:** the name "Synapse" collides with a published 2026 paper. Decide before a public URL.
-8. **A-19 ASSUMED:** the writers of the Environment store are trusted. The gate re-hashes, re-scans and re-checks the CSP and Kit, but does not re-render and the row has no signature, so someone who can write the SQLite file can insert an Environment the verifier never saw. Acceptable only while the API is single-operator and not public (D-11). Close it (an HMAC attestation with a key outside the data directory, or re-rendering on delivery) at the P7 deploy gate. Pinned by `test_S3_KNOWN_GAP_*`.
+8. **A-19 PARTLY CLOSED (D-31):** with `STORE_ATTESTATION_KEY` set the gate refuses unsigned or altered rows; without it the writers of the Environment store are still trusted. Required at the deploy gate. Originally: the writers of the Environment store are trusted. The gate re-hashes, re-scans and re-checks the CSP and Kit, but does not re-render and the row has no signature, so someone who can write the SQLite file can insert an Environment the verifier never saw. Acceptable only while the API is single-operator and not public (D-11). Close it (an HMAC attestation with a key outside the data directory, or re-rendering on delivery) at the P7 deploy gate. Pinned by `test_S3_KNOWN_GAP_*`.
 9. **A-20 ASSUMED:** the plan's out-of-scope "L6 planted-physics suite (P1)" is the generation-time detection-rate measurement; hard constraint 6's per-micro-model registration suite is a separate requirement, and it was built for `hookes` in P0. Confirm with the owner.

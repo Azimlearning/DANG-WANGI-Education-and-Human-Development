@@ -10,6 +10,8 @@ trust it (see api/verify/gate.py), and `get_record` exists so the gate can read 
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import sqlite3
 from contextlib import closing
@@ -38,6 +40,7 @@ class StoredEnvironment:
     plan_summary: str
     checked: dict
     state: str
+    attestation: str | None = None
 
 
 _COLUMNS = (
@@ -45,9 +48,33 @@ _COLUMNS = (
 )
 
 
+def attestation_for(key: bytes, record: StoredEnvironment) -> str:
+    """HMAC-SHA256 over every field the delivery gate trusts (A-19). The key lives outside the data directory, so someone who can only write
+    the SQLite file cannot make a row the gate accepts."""
+    body = json.dumps(
+        [
+            record.env_id,
+            record.title,
+            record.lane,
+            record.label,
+            record.kit_version,
+            record.kit_sha256,
+            record.html_sha256,
+            record.citations,
+            record.plan_summary,
+            record.checked,
+        ],
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    )
+    return hmac.new(key, body.encode("ascii"), hashlib.sha256).hexdigest()
+
+
 class SqliteEnvironmentStore:
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, attestation_key: bytes | None = None):
         self._path = path
+        self._key = attestation_key or None
         path.parent.mkdir(parents=True, exist_ok=True)
         with closing(self._connect()) as db, db:
             db.execute(
@@ -56,6 +83,9 @@ class SqliteEnvironmentStore:
                 "citations TEXT NOT NULL, plan_summary TEXT NOT NULL, checked TEXT NOT NULL, state TEXT NOT NULL, "
                 "reason TEXT, created_at TEXT NOT NULL)"
             )
+            columns = {r[1] for r in db.execute("PRAGMA table_info(environments)")}
+            if "attestation" not in columns:  # older stores: rows keep NULL and are unattested
+                db.execute("ALTER TABLE environments ADD COLUMN attestation TEXT")
             # The library and lifecycle (P5). These tables hold decisions ABOUT stored Environments, never their content, so the verified rows stay immutable.
             db.execute(
                 "CREATE TABLE IF NOT EXISTS lifecycle (env_id TEXT PRIMARY KEY, status TEXT NOT NULL, reason TEXT NOT NULL, changed_at TEXT NOT NULL)"
@@ -108,6 +138,29 @@ class SqliteEnvironmentStore:
         stored = self.get(env.env_id)
         if stored is None:
             raise ValueError("the environment could not be stored")
+        if self._key is not None and stored.attestation is None:
+            # Sign what the VERIFIER just minted, never what is in the row: if a row was planted before this call, the signature will not
+            # match it and the gate refuses it (fail closed).
+            minted = StoredEnvironment(
+                env_id=env.env_id,
+                title=env.title,
+                lane=env.lane,
+                label=env.label,
+                kit_version=env.kit_version,
+                kit_sha256=env.kit_sha256,
+                html="",
+                html_sha256=env.html_sha256,
+                citations=[c.model_dump() for c in env.citations],
+                plan_summary=env.plan_summary,
+                checked=checked,
+                state="verified",
+            )
+            with closing(self._connect()) as db, db:
+                db.execute(
+                    "UPDATE environments SET attestation = ? WHERE env_id = ? AND attestation IS NULL",
+                    (attestation_for(self._key, minted), env.env_id),
+                )
+            stored = self.get(env.env_id) or stored
         # The id is a hash of the HTML alone, so the same HTML verified again under a different label, lane, citations or Kit would
         # silently return the OLD row. Refuse instead: a changed claim about the same bytes needs a deliberate new record.
         new = (
@@ -163,7 +216,7 @@ class SqliteEnvironmentStore:
         """The verified row exactly as stored, with no integrity check. For the delivery gate, which does its own."""
         with closing(self._connect()) as db:
             row = db.execute(
-                f"SELECT {_COLUMNS} FROM environments WHERE env_id = ? AND state = 'verified'", (env_id,)
+                f"SELECT {_COLUMNS}, attestation FROM environments WHERE env_id = ? AND state = 'verified'", (env_id,)
             ).fetchone()
         if row is None:
             return None
@@ -180,6 +233,15 @@ class SqliteEnvironmentStore:
             plan_summary=row[9],
             checked=json.loads(row[10]),
             state=row[11],
+            attestation=row[12],
+        )
+
+    def attestation_ok(self, record: StoredEnvironment) -> bool:
+        """True when no key is configured (A-19 stays open and STATUS says so) or the row carries a valid signature."""
+        if self._key is None:
+            return True
+        return record.attestation is not None and hmac.compare_digest(
+            record.attestation, attestation_for(self._key, record)
         )
 
     def get(self, env_id: str) -> StoredEnvironment | None:

@@ -277,6 +277,7 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-28 | A local `none` topic is never trusted; it goes to the LLM fallback | Measured: 7 of 24 golden questions wrongly `none` |
 | D-29 | Kit 0.1.0 stays unreleased and is relocked until the deploy gate; Kit files are served `no-cache` | D-16 |
 | D-30 | Plan checks know cross-quantity rules (PLAN-015) and topic fit (PLAN-016); prompt packs keep per-request text below the divider | kit-guardian P3 S1, S5, S6 |
+| D-31 | Stored Environments are HMAC-signed with a key outside the data directory; the gate refuses unsigned or altered rows when a key is set | A-19, hard constraint 1 |
 
 ---
 

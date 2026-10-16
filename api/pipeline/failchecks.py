@@ -350,6 +350,7 @@ _ENTRIES = [
         "This Environment was withdrawn by the operator; it is not delivered.",
         "This Environment was taken down while it is being corrected, so you are getting the written answer.",
     ),
+    _e("unattested", "GATE-006", "gate", "block", "none", "The stored row has no valid signature from this verifier."),
     _e("bad_record", "GATE-004", "gate", "block", "none", "The stored record is unusable."),
     # plan checks
     _e("PLAN-001", "PLAN-001", "plan", "block", "retry_plan", "Return JSON that matches the plan schema exactly."),
