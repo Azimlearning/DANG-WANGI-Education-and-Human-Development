@@ -783,3 +783,18 @@ def test_L1_a_number_inserted_after_the_sweep_is_still_caught(kit_dist: Path) ->
     )
     e = refused(kit_dist, html)
     assert (e.stage, e.rule) == ("render", "unowned_number")
+
+
+def test_L1_a_readout_labelled_with_the_wrong_unit_is_refused(kit_dist: Path) -> None:
+    html = variant('unit: "kPa"', 'unit: "Pa"', "reference-pressure.html")
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "wrong_unit")
+
+
+def test_L1_a_readout_forged_at_load_is_seen_before_any_input_redraws_it(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();",
+        "document.querySelector('[data-synapse-readout]').textContent = '0.999 m';\n  Synapse.bridge.ready();",
+    )
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "readout_mismatch")

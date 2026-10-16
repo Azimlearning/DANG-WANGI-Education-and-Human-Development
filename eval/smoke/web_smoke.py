@@ -68,8 +68,13 @@ def crafted_block(html: str, sha: str | None = None) -> dict:
         "html": html,
         "citations": [{"source": "UNVERIFIED", "page": None, "quote": None, "verified": False}],
         "checked": {
-            "layers": ["scan"], "controlsExercised": 0, "gridPoints": 0, "referenceCases": 0, "readouts": 0,
-            "models": [], "limits": "A crafted block used only by the smoke test.",
+            "layers": ["scan"],
+            "controlsExercised": 0,
+            "gridPoints": 0,
+            "referenceCases": 0,
+            "readouts": 0,
+            "models": [],
+            "limits": "A crafted block used only by the smoke test.",
         },
         "planSummary": "A crafted block used only by the smoke test.",
     }
@@ -217,7 +222,17 @@ def main() -> int:
             body = page.inner_text("body")
             check(
                 "provenance shows label, lane, source and limits",
-                all(s in body for s in ("Checked by code", "Instantiate", "Source:", "What was checked", "Limits:", "not verified")),
+                all(
+                    s in body
+                    for s in (
+                        "Checked by code",
+                        "Instantiate",
+                        "Source:",
+                        "What was checked",
+                        "Limits:",
+                        "not verified",
+                    )
+                ),
             )
 
             # ── Stage ─────────────────────────────────────────────────────────────────────────────────────────────────

@@ -344,3 +344,20 @@ def test_a_shadow_root_is_refused_because_it_cannot_be_audited() -> None:
     audit = good_audit()
     audit["shadowRoots"] = 1
     assert rules(p.l1_problems(audit)) == ["shadow_root"]
+
+
+def test_a_readout_unit_must_match_the_unit_of_what_it_shows() -> None:
+    audit = good_audit()
+    audit["readouts"][0]["unit"] = "cm"
+    audit["readouts"][0]["displayed"] = audit["readouts"][0]["expected"] = (
+        "0.040 cm"  # the Kit would format it this way
+    )
+    assert "wrong_unit" in rules(p.l1_problems(audit))
+    # a conversion changes the unit the readout must carry
+    ok = convert_audit(0.001)
+    ok["readouts"][0]["unit"] = "m"
+    ok["readouts"][0]["displayed"] = ok["readouts"][0]["expected"] = "0.040 m"
+    assert "wrong_unit" not in rules(p.l1_problems(ok))
+    ok["readouts"][0]["unit"] = "mm"
+    ok["readouts"][0]["displayed"] = ok["readouts"][0]["expected"] = "0.040 mm"
+    assert "wrong_unit" in rules(p.l1_problems(ok))

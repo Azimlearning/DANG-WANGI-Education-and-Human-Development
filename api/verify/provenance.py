@@ -147,6 +147,21 @@ def copy_number_problems(audit: dict) -> list[Problem]:
     return out
 
 
+def _chain_unit(chain: dict, audit: dict) -> str | None:
+    """The unit a grounded chain's value is in, from the independent references and the declared controls and constants; None if unknown."""
+    kind = chain.get("kind")
+    if kind == "model":
+        ref = REFERENCES.get(chain.get("id", ""))
+        return ref.output_unit if ref else None
+    if kind == "convert":
+        return chain.get("to")
+    if kind == "control":
+        return next((c["unit"] for c in audit.get("controls", []) if c["id"] == chain.get("id")), None)
+    if kind == "constant":
+        return next((c["unit"] for c in audit.get("constants", []) if c["label"] == chain.get("id")), None)
+    return None
+
+
 # ── L1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -161,6 +176,14 @@ def l1_problems(audit: dict | None) -> list[Problem]:
         found = chain_problem(r["chain"])
         if found:
             out.append(Problem(found.rule, f"readout '{r['label']}': {found.reason}"))
+        shown = _chain_unit(r["chain"], audit)
+        if found is None and shown is not None and shown != r["unit"]:
+            out.append(
+                Problem(
+                    "wrong_unit",
+                    f"readout '{r['label']}' is labelled {r['unit']!r} but its value is in {shown!r}",
+                )
+            )
         if r["displayed"] != r["expected"]:
             out.append(
                 Problem(

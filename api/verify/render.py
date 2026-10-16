@@ -288,6 +288,14 @@ def _exercise(
     frame = _frame(page)
     report.readouts = len(_readout_texts(frame))
 
+    if kit_lane:
+        # The state exactly as the page left it at load, before any input: the wiring checks below move every control, and the Kit
+        # redraws its readouts as they move, which would erase a number a page forged at load.
+        at_load = _audit(frame)
+        _add(report.problems_l1, prov.l1_problems(at_load))
+        if at_load is not None:
+            _add(report.problems_l23, prov.l3_problems(at_load)[0])
+
     undeclared = frame.eval_on_selector_all(
         _INTERACTIVE,
         """els => els.filter(e => !e.hasAttribute('data-synapse-control')).map(e =>
