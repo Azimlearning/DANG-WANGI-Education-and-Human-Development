@@ -49,7 +49,7 @@ This is a planning document, not a measurement. It was written by reading both d
 | D5 curriculum alignment and Bahasa Melayu in; accounts, payments, teacher dashboard out | Covered | None |
 | D6 name before public launch | A-14 | Unchanged, open |
 | Phase F learner study with consent through UTP | Covered (P8) | Needs the owner; cannot be done in the cloud |
-| Amali timing: SPM practical tests reported for November 2026 | Not in the PRD | Recorded as an owner chore: confirm the dates with LPM before relying on them (the source is a secondary site) |
+| Amali timing: SPM practical tests reported for November 2026 | Not in the PRD | Dropped by the owner (2026-10-16): the exam calendar has nothing to do with the project, so no dates are tracked |
 
 ## 4. From the external landscape (source plan section 2)
 

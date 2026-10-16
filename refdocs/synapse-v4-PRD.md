@@ -304,7 +304,7 @@ Unresolved. Anything marked `ASSUMED:` is a working assumption, not a confirmed 
 17. **A-17 ASSUMED:** the "Mark 2" the owner means is the Arcana v2 GenUI pipeline (D-31, D-36, D-41) together with the compiled-vault plan its docs literally name `genui-obsidianmark2` (D-35).
 18. **A-18 ASSUMED:** `security-reviewer` is added before any public deploy; `test-runner` was not selected and tests are run by the session.
 19. **A-19 ASSUMED:** the writers of the Environment store are trusted until the deploy gate; the gate does not re-render and rows carry no signature. See `DECISIONS.md`.
-20. **A-20 ASSUMED:** the deferred "L6 planted-physics suite" is the generation-time detection-rate measurement; the per-micro-model registration suite required by hard constraint 6 was built for `hookes` in P0. Confirm with the owner.
+20. **A-20 CONFIRMED by the owner (2026-10-16):** the L6 planted-physics suite (detection rate of the verifier) and the per-micro-model registration suite (hard constraint 6) are separate; both are built.
 
 ---
 
