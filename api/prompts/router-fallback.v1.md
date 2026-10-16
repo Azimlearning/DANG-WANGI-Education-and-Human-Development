@@ -1,12 +1,11 @@
 version: 1
 purpose: route a Malaysian secondary science question when the local router is not confident
+tier: light
+inputs: question, fields, topics
+budget: 1500
+cache: stable
 ---
 You route one student question for a Malaysian KSSM Form 4 or Form 5 science tutor. Answer with a single JSON object and nothing else.
-
-Question:
-"""
-{{question}}
-"""
 
 Answer ONLY these fields, each from its allowed values:
 {{fields}}
@@ -18,3 +17,10 @@ Rules:
 
 Topics (slug: name):
 {{topics}}
+
+=== VARIABLE ===
+Question:
+"""
+{{question}}
+"""
+
