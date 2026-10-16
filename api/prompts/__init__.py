@@ -94,6 +94,16 @@ def _parse(path: Path, name: str, file_version: int) -> Prompt:
     if "schema" in fields and not (DIR / fields["schema"]).is_file():
         raise PromptError(f"{path.name}: schema file '{fields['schema']}' does not exist")
     stable, _, variable = body.strip().partition(DIVIDER)
+    static = {i.strip() for i in fields.get("static_inputs", "").split(",") if i.strip()}
+    if not static <= set(inputs):
+        raise PromptError(f"{path.name}: static_inputs {sorted(static - set(inputs))} are not declared inputs")
+    leaked = set(_PLACEHOLDER.findall(stable)) - static
+    if leaked:
+        # S1: a per-request value above the divider changes the cacheable prefix on every call.
+        raise PromptError(
+            f"{path.name}: {sorted(leaked)} appear above the {DIVIDER} line; per-request values belong below it "
+            "(or list them in static_inputs if they never change between requests)"
+        )
     stable, variable = stable.strip() + "\n", variable.strip()
     if variable:
         variable += "\n"

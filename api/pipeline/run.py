@@ -324,7 +324,9 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     started = time.monotonic()
     yield _stage("assemble", "start")
     fills: dict[str, str] = {}
-    lane = "instantiate"
+    # A page assembled for THIS question is Compose: it was planned and built from audited Kit parts. Instantiate is kept for
+    # hand-written stored Environments (fixtures); a library hit keeps the lane it was minted with.
+    lane = "compose"
     scope = scope_names(plan)
     if plan.custom:
         kept = []
@@ -334,7 +336,6 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
                 fills[slot.name] = text
                 kept.append(slot)
         plan = plan.model_copy(update={"custom": kept})
-        lane = "compose" if kept else "instantiate"
     try:
         page: Assembled = assemble(plan, r.manifest, fills)
     except AssemblyGap as gap:
@@ -349,27 +350,43 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     t.add("assemble", "ok", started, slots=list(page.slots_used), lane=lane)
     yield _stage("assemble", "done")
 
-    # 8 verify and 9 mint, store
+    # 8 verify and 9 mint, store. S2: if the page with model-written fills is refused, drop the fills and verify the
+    # plain assembly once (the ladder: fills, then no fills, then the written answer).
     started = time.monotonic()
     yield _stage("verify", "start")
     verify = r.deps.verify_fn or verify_environment
-    try:
-        env = await asyncio.to_thread(
+
+    async def _verify(the_plan: Plan, the_page: Assembled, the_lane: str):  # noqa: ANN202
+        return await asyncio.to_thread(
             verify,
-            slug=plan.id,
-            title=plan.title,
-            raw_html=page.html,
-            lane=lane,
+            slug=the_plan.id,
+            title=the_plan.title,
+            raw_html=the_page.html,
+            lane=the_lane,
             label="model-checked",
             kit_version=r.version,
             citations=[UNVERIFIED_CITATION],
-            plan_summary=plan.goal,
+            plan_summary=the_plan.goal,
             public_origin=r.deps.public_origin,
             kit_dist=r.deps.kit_dist,
             interaction_seconds=r.deps.interaction_seconds,
-            plan_models=plan.model_summaries(),
+            plan_models=the_plan.model_summaries(),
             evidence=r.deps.evidence,
         )
+
+    try:
+        try:
+            env = await _verify(plan, page, lane)
+        except VerificationFailed as first:
+            if not fills:
+                raise
+            entry = failchecks.get(first.rule)
+            t.add("verify", "refused", started, stage=first.stage, rule=first.rule, code=entry.code, retry="drop_fills")
+            started = time.monotonic()
+            plan = plan.model_copy(update={"custom": []})
+            page = assemble(plan, r.manifest, {})
+            env = await _verify(plan, page, "compose")
+            lane = "compose"
     except VerificationFailed as failure:
         entry = failchecks.get(failure.rule)
         t.add(

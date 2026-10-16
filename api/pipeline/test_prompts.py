@@ -159,3 +159,33 @@ def test_the_request_builders_stay_inside_the_token_cap(manifest: kitmanifest.Ma
 def test_an_oversized_request_is_refused(manifest: kitmanifest.Manifest) -> None:
     with pytest.raises(ValueError, match="cap"):
         pp.plan_request("x" * 40000, "r", "simulation", manifest)
+
+
+def test_a_per_request_value_above_the_divider_is_refused_unless_declared_static(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(prompts, "DIR", tmp_path)
+    head = "version: 1\npurpose: x\ntier: light\ninputs: q\nbudget: 100\ncache: stable\n"
+    (tmp_path / "leak.v1.md").write_text(head + "---\nAsk {{q}}\n=== VARIABLE ===\nmore", encoding="utf-8")
+    with pytest.raises(prompts.PromptError, match="above"):
+        prompts.load("leak")
+    (tmp_path / "ok.v1.md").write_text(head + "---\nstable\n=== VARIABLE ===\nAsk {{q}}", encoding="utf-8")
+    assert prompts.load("ok").variable.strip() == "Ask {{q}}"
+    (tmp_path / "static.v1.md").write_text(
+        head + "static_inputs: q\n---\nAsk {{q}}\n=== VARIABLE ===\nmore", encoding="utf-8"
+    )
+    assert prompts.load("static").inputs == ("q",)
+    (tmp_path / "bogus.v1.md").write_text(head + "static_inputs: z\n---\nstable", encoding="utf-8")
+    with pytest.raises(prompts.PromptError):
+        prompts.load("bogus")
+
+
+def test_fill_and_explain_requests_keep_one_stable_system_prefix() -> None:
+    from api.pipeline import fill as fillmod
+
+    a = pp.explain_request("Why does a spring stretch?", "topic=a")
+    b = pp.explain_request("What is osmosis?", "topic=b", "a misconception")
+    assert a.system == b.system and "spring" not in (a.system or "")
+    c1 = pp.fill_request("note", "say hello", fillmod.contract_for("note"), ("k", "x"))
+    c2 = pp.fill_request("other", "something else", fillmod.contract_for("other"), ("y",), "Fix this")
+    assert c1.system == c2.system and "say hello" not in (c1.system or "") and "say hello" in c1.prompt

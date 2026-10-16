@@ -88,7 +88,7 @@ def test_a_custom_slot_fill_that_exfiltrates_is_dropped(tmp_path: Path, kit_dist
     deps, _ = deps_for(tmp_path, kit_dist, responder)
     events = collect(QUESTION, deps)
     env = next(e for e in events if e.type == "environment").block
-    assert "sendBeacon" not in env.html and env.lane == "instantiate"
+    assert "sendBeacon" not in env.html and env.lane == "compose"
 
 
 def test_an_absurd_range_never_produces_an_unchecked_environment(tmp_path: Path, kit_dist: Path) -> None:

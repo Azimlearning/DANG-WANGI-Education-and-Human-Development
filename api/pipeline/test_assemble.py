@@ -92,3 +92,12 @@ def test_a_custom_slot_without_a_fill_is_a_gap_and_with_a_fill_is_placed(manifes
     page = assemble(plan, manifest, {"extra": 'Synapse.text(env, "Try it.");'})
     assert "/* custom: extra */" in page.html and 'Synapse.text(env, "Try it.");' in page.html
     assert "env" in page.scope and "c_voltage" in page.scope and "m_conductor" in page.scope
+
+
+def test_plan_text_that_looks_like_a_slot_or_variable_is_never_substituted(manifest: kitmanifest.Manifest) -> None:
+    d = json.loads(GOLDEN[0].read_text())
+    d["note"] = "See {{title}} and {{nope}} and /*SLOT:custom*/ here."
+    d["title"] = "A /*SLOT:steps*/ title {{kit_version}}"
+    page = assemble(plan_module.parse(json.dumps(d)), manifest).html
+    assert "{{nope}}" in page and "{{title}}" in page and "{{kit_version}}" in page
+    assert page.count("/*SLOT:") == 3  # the plan wrote one in the note and the title (head and script); all inert text

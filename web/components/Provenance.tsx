@@ -3,8 +3,8 @@
 import type { CheckedSummary, EnvironmentBlock } from "@synapse/schema";
 
 const LANE_TEXT: Record<EnvironmentBlock["lane"], string> = {
-  instantiate: "Instantiate: a stored Environment, not written for this question",
-  compose: "Compose: assembled from audited Kit components",
+  instantiate: "Instantiate: a stored Environment reused as it was",
+  compose: "Compose: planned for your question and assembled from audited Kit components",
   free: "Free: written whole by a model, not built on the Kit",
 };
 

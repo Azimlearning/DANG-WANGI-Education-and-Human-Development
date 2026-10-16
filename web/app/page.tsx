@@ -45,11 +45,15 @@ export default function Home() {
             setBlock(event.block);
             setDraft(null);
           }
-          else if (event.type === "error") setError(event.error);
+          else if (event.type === "error") {
+            setError(event.error);
+            setDraft(null);
+          }
         }
       } catch (err) {
         if ((err as Error).name !== "AbortError") setError(err instanceof AskError ? (err.envelope ?? err.message) : "Could not reach the server.");
       } finally {
+        setDraft(null);
         setBusy(false);
       }
     },

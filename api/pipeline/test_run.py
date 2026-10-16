@@ -17,7 +17,7 @@ from api.llm.service import LLMService
 from api.llm.types import LLMRequest
 from api.pipeline import fakes, run
 from api.pipeline.run import Deps
-from api.verify.mint import VerificationFailed
+from api.verify.mint import VerificationFailed, verify_environment
 from api.verify.store import SqliteEnvironmentStore
 
 SPRING = "Why does a spring stretch when I hang a weight on it?"
@@ -81,7 +81,7 @@ def test_the_happy_path_makes_three_model_calls_at_most_and_traces_every_layer(t
         "deliver",
     } <= layers
     last = json.loads(deps.trace_path.read_text().splitlines()[-1])  # type: ignore[union-attr]
-    assert last["outcome"] == "instantiate" and last["llm_calls"] == len(provider.calls)
+    assert last["outcome"] == "compose" and last["llm_calls"] == len(provider.calls)
 
 
 def test_the_stream_order_is_stable_across_runs(tmp_path: Path, kit_dist: Path) -> None:
@@ -200,7 +200,7 @@ def test_a_custom_slot_whose_fill_breaks_its_contract_twice_is_dropped_not_the_p
     deps, provider = deps_for(tmp_path, kit_dist, responder)
     events = collect("What happens to the current if I raise the resistance in a circuit?", deps)
     block = next(e for e in events if e.type == "environment").block
-    assert block.lane == "instantiate" and "fetch" not in block.html
+    assert block.lane == "compose" and "fetch" not in block.html
     refused = [r for r in trace_records(deps) if r["layer"] == "fill" and r["status"] == "refused"]
     assert len(refused) == 2 and "FILL-002" in refused[0]["detail"]["codes"]
     assert sum(c.purpose == "fill" for c in provider.calls) == 2
@@ -210,3 +210,25 @@ def test_an_unplannable_topic_in_fake_mode_still_answers_in_words(tmp_path: Path
     deps, _ = deps_for(tmp_path, kit_dist, fakes.fake_responder)
     events = collect("How do enzymes change with temperature in the human body?", deps)
     assert "environment" not in kinds(events) and any(e.type == "text_delta" for e in events)
+
+
+def test_a_refused_page_with_fills_is_retried_once_without_them(tmp_path: Path, kit_dist: Path) -> None:
+    seen: list[str] = []
+
+    def verify(**kw: object):  # noqa: ANN202
+        html = str(kw["raw_html"])
+        seen.append(html)
+        if "Try moving each slider" in html:
+            raise VerificationFailed("render", "dead_control", "the fill broke a control")
+        return verify_environment(**kw)  # type: ignore[arg-type]
+
+    def responder(request: LLMRequest) -> str:
+        return json.dumps(_with_custom(GOLDEN_OHM)) if request.purpose == "plan" else fakes.fake_responder(request)
+
+    deps, _ = deps_for(tmp_path, kit_dist, responder, verify_fn=verify)
+    events = collect("What happens to the current if I raise the resistance in a circuit?", deps)
+    block = next(e for e in events if e.type == "environment").block
+    assert len(seen) == 2 and "Try moving each slider" not in block.html and block.lane == "compose"
+    records = [r for r in trace_records(deps) if r["layer"] == "verify"]
+    assert records[0]["status"] == "refused" and records[0]["detail"]["retry"] == "drop_fills"
+    assert records[-1]["status"] == "ok"

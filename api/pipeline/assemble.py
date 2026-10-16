@@ -19,8 +19,7 @@ from api.kitmanifest import Manifest
 from api.pipeline.plan import Plan
 
 SKELETONS = Path(__file__).resolve().parent / "skeletons"
-_SLOT = re.compile(r"/\*SLOT:(\w+)\*/")
-_VAR = re.compile(r"\{\{(\w+)\}\}")
+_TOKEN = re.compile(r"/\*SLOT:(?P<slot>\w+)\*/|\{\{(?P<var>\w+)\}\}")
 
 # Which Plan parts each skeleton can take. A part outside the set is a gap.
 SKELETON_PARTS: dict[str, frozenset[str]] = {
@@ -257,17 +256,23 @@ def assemble(plan: Plan, manifest: Manifest, fills: dict[str, str] | None = None
     slots = _slots(plan, manifest)
     slots["custom"] = "\n  ".join(f"/* custom: {s.name} */\n  {fills[s.name].strip()}" for s in plan.custom)
     used = []
+    variables = {"title": html.escape(plan.title), "kit_version": manifest.version}
 
     def fill(m: re.Match[str]) -> str:
-        name = m.group(1)
-        if name not in slots:
-            raise AssemblyGap(name, "the skeleton names a slot the assembler does not know")
-        text = slots[name]
-        if text:
-            used.append(name)
-        return text
+        # One pass over the TEMPLATE: text that came from the plan is never scanned again for slots or variables (S3).
+        if m.group("slot") is not None:
+            name = m.group("slot")
+            if name not in slots:
+                raise AssemblyGap(name, "the skeleton names a slot the assembler does not know")
+            text = slots[name]
+            if text:
+                used.append(name)
+            return text
+        name = m.group("var")
+        if name not in variables:
+            raise AssemblyGap(name, "the skeleton names a variable the assembler does not know")
+        return variables[name]
 
-    body = _SLOT.sub(fill, template)
-    body = re.sub(r"\n[ \t]*\n(?=[ \t]*\n)", "\n", body)  # collapse the empty lines left by empty slots
-    page = _VAR.sub(lambda m: {"title": html.escape(plan.title), "kit_version": manifest.version}[m.group(1)], body)
+    page = _TOKEN.sub(fill, template)
+    page = re.sub(r"\n[ \t]*\n(?=[ \t]*\n)", "\n", page)  # collapse the empty lines left by empty slots
     return Assembled(page, scope_names(plan), tuple(used))
