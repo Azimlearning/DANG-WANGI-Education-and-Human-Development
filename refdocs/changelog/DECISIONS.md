@@ -186,6 +186,14 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** Working around a limit with something that looks like the real thing (for example inventing textbook content). Stopping at the first limit. **Cost:** some work built in the cloud will need re-checking locally (Windows paths, a real corpus), which the register records.
 
+## D-23: The Mark 3 pipeline is layered and skeleton-first: plan as data, assemble deterministically, fill only the gaps (2026-10-16)
+
+**Decision.** The pipeline is eleven ordered layers (intake, route, look up, plan, plan checks, skeleton, assemble, fill, verify, mint and gate, deliver, learn; PRD 3.2). The model's main output is a validated **Plan** (data). A deterministic **assembler** builds the page from a per-pattern **skeleton**; the model writes only short typed **slot fills** for parts marked `custom`. A **fail-check registry** names every refusal (code, layer, repair route, model hint, student message) and a test ties it to the code. Prompt packs are versioned files assembled in cache order. The student gets a **loading skeleton** (the Peek shell from the Plan) before verification finishes. The Kit manifest gains a `useWhen` sentence per component and the kit pack is chosen by retrieval over it. A degrade ladder (Instantiate-by-plan, Compose with fills, Free labelled, text) means no blank screen.
+
+**Why.** The owner asked for a layered pipeline with skeletons, deep prompt templates, fail checks and micro-components that make generation easier and cheaper. The research (`refdocs/evidence/2026-10-16-chatgpt-ui-research.md`) shows ChatGPT's reliability comes from the model supplying data to a developer-authored template, and declarative systems (A2UI, AG-UI) make a trusted catalogue the security boundary. Moving the model's output toward data removes most of what the verifier would otherwise have to catch and most of the output tokens.
+
+**Trade-offs / rejected.** Skeletons are rigid: questions they cannot express become `custom` slots or the Free lane, and the rates are tracked as the Kit backlog (principle 8). Rejected: having the model write the whole page by default (v3, expensive and the largest verification surface); a fully declarative JSON tree like A2UI (cannot express the virtual-experiment glue we need). The new layer is named the **assembler** to avoid the PRD's Composer, which places blocks in the UI (hard constraint 5). The research rests on search summaries, not primary pages; the cost and latency benefits are assumptions until the first paid run measures them (A-4).
+
 ---
 
 ## Working assumptions (`ASSUMED:`)

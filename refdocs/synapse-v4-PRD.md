@@ -78,6 +78,8 @@ Mark 1 is v3's single-shot generation with an LLM verifier. Mark 2 is Arcana v2'
 
 Retries use the verifier's issues. A branch degrades early instead of starting a revision without enough time or budget left (v3 finding).
 
+**Layers and skeletons (D-23).** The table above is the order of work; the design that makes it cheap and reliable is in `refdocs/plans/2026-10-16-p3-mark3-pipeline.md`. In short: the model's main output is a validated **Plan** (data); **plan checks** run before any HTML exists; a deterministic **assembler** builds the page from a per-pattern **skeleton**; the model writes only short typed **slot fills** for parts the skeleton cannot express; a **fail-check registry** names every refusal; and a **degrade ladder** (Instantiate-by-plan, Compose with fills, Free labelled, text) means no blank screen. The student sees a **loading skeleton** (the Peek shell from the Plan) before verification finishes. The research behind it: `refdocs/evidence/2026-10-16-chatgpt-ui-research.md`.
+
 ### 3.3 Verification layers and what they guarantee
 
 | Layer | What | Lane | Status |
@@ -104,6 +106,8 @@ A micro-component is the smallest reusable, versioned unit with an id, a signatu
 | **science** | `mechanics.projectile`, `mechanics.hookes`, `gas.boyle`, `chem.titration_curve`, `bio.osmosis_flux`, `genetics.punnett` | **yes** | textbook citation, units and domain, independent hand-written reference, properties, planted-defect suite |
 | pedagogy | predict card, concept check, misconception probe, worked solution, results table | no | behaviour test; `when` predicates resolve against live observables |
 | bridge | ready, event, error, model-visible summary | no | protocol test |
+
+**Generation micro-components (D-23).** Components that remove work from the model, each built to the rules above: `experiment` (the Amali card), `resultsTable` and `record`, `graph`, `reset`, `stepper`, `predictCard`, `hintLadder`, `conceptCheck`, `workedSolution`, scenes bound to observables (`springScene`, `circuitScene`, `tankScene`, `vectorArrow`, `axes`), and inputs (`select`, `toggle`, `numberInput`, `dragDrop`). A scene draws a quantity and never prints one. Every manifest entry also carries a `useWhen` sentence and described arguments, because the kit pack is chosen by retrieval over them, the way ChatGPT discovers tools by their descriptions.
 
 "Hundreds" is the owner's target and a direction, not a count. The size guess in A-2 is replaced by the P0 census.
 
@@ -149,7 +153,7 @@ Library lookup; template instantiate; edit-not-regenerate (diff against a stored
 | Router | Local classifier plus LLM fallback, canonicalisation | `api/routing` |
 | Models | Trained local models (multi-head router, misconception matcher), model cards, retraining | `api/models`, `eval/models` |
 | Experiments | The experiment catalogue: one record per KSSM practical, Amali fields, topic and Environment mapping | `api/experiments`, `data/experiments` |
-| Pipeline | Planner, prompt assembly, generation, retries | `api/pipeline`, `api/prompts` |
+| Pipeline | Plan model and checks, skeletons and the assembler, slot fills, prompt assembly, the fail-check registry, orchestration, retries and the degrade ladder | `api/pipeline`, `api/prompts` |
 | Verification | L0 to L5, mint, gate, mutation suites | `api/verify` |
 | Library | Store, lifecycle, audit, review queue | `api/library` |
 | Pedagogy | Tasks, misconceptions, hints, concept checks | Kit plus `api/pedagogy` |
@@ -211,7 +215,7 @@ No dates. A phase starts when the previous one's exit criteria are observed.
 | P1 Kit core and verification | Observables and the core micro-components, 3 science micro-models with references (Hooke's law, Ohm's law, liquid pressure), manifest, L1 provenance, L2 with grid, extremes and a reachable goal state, L3 cross-check, planted-defect suites, L6 baseline, hostile set port, isolation spike, label ladder (D-21), the "What was checked" data | Planted defects refused at the named layer; verifier detection rate recorded; isolation choice recorded |
 | P1b Models track | Multi-head router trained on the v3 dataset, baselines, confidence gate, model card, inference module; misconception matcher as retrieval | Held-out metrics against baselines recorded in a model card; the router beats both baselines or is not used |
 | P2 Evidence | Corpus manifest and ingestion, retrieval, evidence gate, verbatim quotes, citation chips, relation drafting tool, worked-example density measurement; the experiment catalogue schema, validator and ingestion tooling | Every claim shown carries a verified quote; density reported per topic; the catalogue validates. Real-corpus steps run locally |
-| P3 Mark 3 pipeline and first vertical | Router, planner, prompt packs, Kit retrieval, Compose and Free lanes, lane labelling, accelerators 1 to 4, 6, 8, 10, first paid run (confirmed) | Golden set for the vertical passes; cost and latency per environment measured against the A-4 hypothesis |
+| P3 Mark 3 pipeline and first vertical | The layered pipeline (D-23): router, Plan and plan checks, skeletons and the assembler, slot fills, prompt packs, fail-check registry, Kit retrieval by `useWhen`, loading skeleton, Compose and Free lanes, lane labelling, accelerators 1 to 4, 6, 8, 10, first paid run (confirmed) | Golden set for the vertical passes; cost and latency per environment measured against the A-4 hypothesis |
 | P4 Kit expansion and Environment authoring | Mechanics, then Chemistry, then Biology kits; gap backlog; gallery; a11y and phone checks; author the Environments for the catalogue | Per-kit coverage reported against the census; at least 3 verified Environments per subject (D-19) |
 | P5 Library and lifecycle | Store, re-verify on reuse, audit, review queue with flag-to-regression-eval, syllabus Shelf, edit-not-regenerate (remix is its acceptance test), overnight fill | A covered topic opens in under one second with no model call; a flag evicts and writes a regression eval |
 | P6 Pedagogy | Predict tasks, misconception port, hint ladder, challenge levels, concept checks, tutor loop from bridge events, device-local mastery and learner map with an export code, Amali mode, exam mirror | Three flagship misconceptions run end to end |
@@ -265,6 +269,7 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-20 | A models track: small trained local models (multi-head router; misconception matcher as retrieval), measured against baselines before they may gate anything | Owner asked for trained-model components; IDEA-0003 |
 | D-21 | `model-checked` = passed the deterministic layers with no verified source; `kit-verified` also needs a verified citation; `dev-fixture` is removed in P1 | Hard constraint 4 |
 | D-22 | Cloud-first, local last; limits go in the Deferred to local register | Owner |
+| D-23 | Mark 3 is layered and skeleton-first: plan as data, deterministic assembly from a per-pattern skeleton, model fills only typed slots; a fail-check registry; a loading skeleton; Kit `useWhen` retrieval | Owner asked for layers, skeletons, prompt templates, fail checks and generation micro-components; ChatGPT apps research |
 
 ---
 
@@ -278,7 +283,7 @@ Unresolved. Anything marked `ASSUMED:` is a working assumption, not a confirmed 
 4. **A-4 ASSUMED:** Kit composition shrinks output to 1k to 2.5k tokens and cost well below the v3 figure of about $0.19. Arithmetic from stated prices, not a measurement. Measured at P3.
 5. **A-5 ASSUMED:** the oracle ladder (registered, evidence-derived, cross-derived, declared) and the bet that textbook worked examples can serve as an independent reference. Corpus text quality and worked-example density are unmeasured. Four Chemistry experiment books are image-only PDFs and are not indexed.
 6. **A-6 ASSUMED:** trust-ladder names, and that Arcana v2's `promoted` (three deliveries) is replaced by a human `reviewed` state.
-7. **A-7 ASSUMED:** Peek, Stage, Companion and Shelf, and an MCP-Apps-shaped bridge, adopted from OpenAI's patterns. Not confirmed by the owner.
+7. **A-7 ASSUMED:** Peek, Stage, Companion and Shelf, and an MCP-Apps-shaped bridge, informed by OpenAI's patterns. Not confirmed by the owner. **Correction (2026-10-16 research):** the sources support inline, fullscreen and picture-in-picture modes and a preference for starting inline and avoiding nested scrolling; they do NOT show an official OpenAI limit of two actions. Peek's "at most two actions" is our own design rule. The research rests on search summaries, not primary pages.
 8. **A-8 ASSUMED:** the corpus can be used locally and quoted briefly with citation in a public product. The legal position is unconfirmed. Confirm before any public deploy.
 9. **A-9 ASSUMED:** dense embeddings are not needed at first.
 10. **A-10 ASSUMED:** verification runs generated HTML in headless Chromium inside a no-network container for a public deploy. `node:vm` is not isolation. Confirmed by a P1 spike.

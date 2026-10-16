@@ -31,3 +31,4 @@ If reality diverges from the doc mid-build, **edit the doc** and note it in the 
 | [2026-10-16-p0-walking-skeleton-census.md](2026-10-16-p0-walking-skeleton-census.md) | [../plans/2026-10-16-p0-walking-skeleton-census.md](../plans/2026-10-16-p0-walking-skeleton-census.md) | Done |
 | [2026-10-16-p1-kit-core-and-verification.md](2026-10-16-p1-kit-core-and-verification.md) | [../plans/2026-10-16-p1-kit-core-and-verification.md](../plans/2026-10-16-p1-kit-core-and-verification.md) | In progress |
 | [2026-10-16-p1b-models-track.md](2026-10-16-p1b-models-track.md) | [../plans/2026-10-16-p1b-models-track.md](../plans/2026-10-16-p1b-models-track.md) | Draft |
+| [2026-10-16-p3-mark3-pipeline.md](2026-10-16-p3-mark3-pipeline.md) | [../plans/2026-10-16-p3-mark3-pipeline.md](../plans/2026-10-16-p3-mark3-pipeline.md) | Draft |

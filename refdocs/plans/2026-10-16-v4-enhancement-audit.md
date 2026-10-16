@@ -69,6 +69,7 @@ This is a planning document, not a measurement. It was written by reading both d
 | "We have docs of all the available experiments" | The textbooks are not in any repo and the four Chemistry experiment books are image-only. D-19 adds an experiment catalogue: the schema and tooling are built in the cloud, the text-derived fields are filled locally. Titles seeded in the cloud are marked unverified |
 | A trained-model component, a few kinds if needed | D-20: a models track. Kinds: a multi-head router (topic, domain, pattern, complexity) trained on the committed v3 dataset, and a misconception matcher built as retrieval. Each is measured against a baseline before it may gate anything |
 | Do as much as possible in the cloud, move to local at the end | D-22: cloud-first, with a "Deferred to local" register in STATUS as the hand-off |
+| Mark 3: research how ChatGPT's UI works; deep prompt templates, fail checks, micro-components, layers, skeletons | D-23 and `2026-10-16-p3-mark3-pipeline.md`: eleven layers, plan as data, generation skeletons plus a loading skeleton, versioned prompt packs, a fail-check registry tied to the code, generation micro-components, `useWhen` retrieval. Research note written; it rests on search summaries |
 
 ## 6. What is still not decided
 
