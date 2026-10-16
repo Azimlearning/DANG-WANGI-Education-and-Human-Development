@@ -20,6 +20,10 @@ dev = [
     "pytest-asyncio>=1.4.0",
     "ruff>=0.17.1",
 ]
+ml = [
+    "numpy>=2.5.4",
+    "scikit-learn>=1.9.1",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -40,3 +44,6 @@ ignore = ["E501"]
 include = ["api"]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
+
+[tool.uv]
+default-groups = ["dev", "ml"]
