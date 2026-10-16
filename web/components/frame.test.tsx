@@ -121,3 +121,25 @@ describe("Peek and Stage", () => {
     expect(onBack).toHaveBeenCalledTimes(2);
   });
 });
+
+
+describe("ShareButton", () => {
+  it("copies the link and says so", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    const { ShareButton } = await import("./ShareButton");
+    render(<ShareButton id="spring-0123456789ab" />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Link copied."));
+    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/\/e\/spring-0123456789ab$/));
+  });
+
+  it("shows the link to copy by hand when the clipboard is unavailable", async () => {
+    Object.defineProperty(navigator, "clipboard", { value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) }, configurable: true });
+    const { ShareButton } = await import("./ShareButton");
+    render(<ShareButton id="spring-0123456789ab" />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+    const field = await screen.findByLabelText("Link to this Environment");
+    expect((field as HTMLInputElement).value).toMatch(/\/e\/spring-0123456789ab$/);
+  });
+});

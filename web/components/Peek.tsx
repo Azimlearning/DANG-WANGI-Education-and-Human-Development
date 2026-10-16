@@ -5,6 +5,7 @@
 import type { EnvironmentBlock } from "@synapse/schema";
 import { EnvironmentFrame } from "./EnvironmentFrame";
 import { Provenance } from "./Provenance";
+import { ShareButton } from "./ShareButton";
 
 export const MAX_PEEK_ACTIONS = 2;
 
@@ -22,6 +23,7 @@ export function Peek({ block, onOpen }: { block: EnvironmentBlock; onOpen: () =>
           Open
         </button>
       </header>
+      <ShareButton id={block.id} />
       <EnvironmentFrame block={block} height={360} />
       <Provenance block={block} />
     </article>

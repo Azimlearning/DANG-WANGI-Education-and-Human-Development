@@ -242,6 +242,33 @@ def main() -> int:
                 ),
             )
 
+            # ── A shared link opens the stored Environment through the gate ───────────────────────────────────────────────────────────
+            import json as _json
+            import urllib.request as _url
+
+            with _url.urlopen(f"{API}/library", timeout=10) as resp:  # noqa: S310 - our own local API
+                stored = _json.loads(resp.read())["environments"]
+            if stored:
+                shared = page.context.new_page()
+                shared.goto(f"{WEB}/e/{stored[0]['id']}")
+                shared.wait_for_selector("iframe", timeout=20000)
+                sandbox = shared.eval_on_selector("iframe", "e => e.getAttribute('sandbox')")
+                body_text = shared.inner_text("body")
+                copy_h = shared.eval_on_selector(
+                    "button:has-text('Copy link')", "e => Math.round(e.getBoundingClientRect().height)"
+                )
+                check(
+                    "a shared link shows the Environment in the exact sandbox with its provenance and a 44 px copy button",
+                    sandbox == "allow-scripts" and "Source:" in body_text and copy_h >= 44,
+                    f"sandbox={sandbox} copy_h={copy_h}",
+                )
+                shared.goto(f"{WEB}/e/not-a-real-environment-000000000000")
+                shared.wait_for_selector("[role=alert]", timeout=10000)
+                check("a link to nothing says so and shows no frame", shared.query_selector("iframe") is None)
+                shared.close()
+            else:
+                check("the library holds the Environment that was just made", False)
+
             # ── Stage ─────────────────────────────────────────────────────────────────────────────────────────────────
             page.click("button:has-text('Open')")
             page.wait_for_selector("[role=dialog]")

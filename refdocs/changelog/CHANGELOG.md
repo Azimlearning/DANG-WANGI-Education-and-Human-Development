@@ -28,6 +28,13 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-16: Share links (P7)
+- **Changed:** `web/app/e/[id]/page.tsx` (new route), `web/lib/library.ts` (`fetchEnvironment`, `shareUrl`, id check), `web/components/ShareButton.tsx` (copy with a by-hand fallback), `web/components/Peek.tsx` (the button), tests, `eval/smoke/web_smoke.py` (two new checks).
+- **Decided:** a link is just `/e/<id>` and the page fetches the block through `GET /library/<id>`, which goes through the same delivery gate as `/ask`; the browser re-hashes before rendering, exactly as for a fresh answer. A withdrawn, stale or tampered Environment shows the server's own "not available" message and no frame. The Peek card now has two actions (Open, Copy link), which is the limit our own rule allows.
+- **Deviations:** none from the plan. The API has no auth (D-11), so a link only works while the web app can reach the API; making links work for the public is part of the deploy gate, not this change.
+- **Verified:** `pnpm --filter web test`: 30 passed; `pnpm exec next build` builds the dynamic route; `uv run python eval/smoke/web_smoke.py`: 20 of 20 in Chromium (the shared page shows the frame with `sandbox="allow-scripts"`, the provenance and a 44 px copy button; a link to nothing shows an alert and no frame).
+- **Noted, not changed:** ids are guessable only as far as their 12 hex digits of the page hash; there are no private links. Offline single-file export, Bahasa Melayu and the MCP-Apps-shaped bridge are still not built.
+
 ### 2026-10-16: Request limits and a spend view (P7 deploy-gate items)
 - **Changed:** `api/limits.py` (new: sliding-window `RateLimiter`, `ConcurrencyGate` with slot expiry), `api/app.py` (`/ask` admission dependency, slot released when the stream ends, `GET /spend`), `api/llm/ledger.py` (`summary()`), `api/core/errors.py` and `packages/schema/src/errors.ts` (error code `rate_limited`, HTTP 429), regenerated `api/schema/generated.py`, `web/lib/stream.ts` (accepts the new code), settings `RATE_LIMIT_PER_MINUTE` (20) and `MAX_CONCURRENT_ASKS` (3), `env_setup.md`, the deploy-gate checklist (annotated, boxes left unticked), STATUS.
 - **Decided:** limits are in-process and per worker, keyed by client address, because the API is single-operator (D-11); a proxied or multi-worker deploy must also limit at the proxy. The concurrency cap matters more than the rate: each question can launch Chromium.
