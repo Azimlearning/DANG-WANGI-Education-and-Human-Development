@@ -28,6 +28,12 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-16: Clean-checkout rebuild, file map, README reconciled
+- **Changed:** `refdocs/guides/file_map.md` (new), `README.md` (status, setup, usage, layout were still the pre-implementation text), STATUS (two known gaps closed, one ledger row).
+- **Diagnosed:** the README still said "scaffolded, pre-implementation. Nothing is built" and showed "not yet runnable" markers. Stale docs mislead the next reader, so they were corrected.
+- **Verified:** a fresh clone of `claude/lucid-newton-du7irc` at 65f1f7d into an empty folder, then with no manual steps: `uv sync`, `pnpm install --frozen-lockfile`, `pnpm --filter @synapse/kit build` (hash equals the lock), `pnpm codegen:check` OK, ruff and pyright clean, typecheck in 3 packages, Kit 324 and web 40 passed, `next build` builds both routes, `uv run pytest -q` 581 passed 1 skipped, the browser smoke 21 of 21, and `eval/environments/build.py` 17 Environments with the regenerated report identical to the committed one. Nothing was missing from git or undeclared.
+- **Noted, not changed:** this was Linux with the container's Node 22 and pnpm 10.28, not the Windows machine (Node 24.11, pnpm 10.12); that run is still owed locally.
+
 ### 2026-10-16: Device-local progress (P6, D-33)
 - **Changed:** Kit `conceptCheck` (reports the first answer; Kit 0.1.0 relocked, D-29), `web/lib/progress.ts` and test, `web/components/ProgressPanel.tsx` and test, `web/components/EnvironmentFrame.tsx` (records the event), `web/app/page.tsx` (the panel), a concept check added to the Hooke's law Plan, smoke check, D-33.
 - **Decided:** D-33. First answer only; mastery in words; an export code with a checksum; no account and no server copy.

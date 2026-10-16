@@ -81,6 +81,8 @@ What has actually been run, not what has been written. A row here needs a real c
 
 | 2026-10-16 | Whole repo after limits, share links, export and progress | `uv run pytest -q`; `pnpm -r test`; `eval/l6`; `eval/hostile`; `eval/environments/build.py`; `eval/smoke/web_smoke.py` | 581 passed 1 skipped; Kit 324, web 40; L6 56 of 61 refused, 0 of 12 false positives; hostile 20 of 20; 17 Environments; smoke 21 of 21 |
 
+| 2026-10-16 | Clean-checkout rebuild | Fresh `git clone` of the pushed branch into an empty folder; `uv sync`; `pnpm install --frozen-lockfile`; `pnpm --filter @synapse/kit build`; `pnpm codegen:check`; ruff, pyright, typecheck; `pnpm -r test`; `pnpm --filter web build`; `uv run pytest -q`; `eval/smoke/web_smoke.py --no-build`; `eval/environments/build.py` | All succeeded with no manual steps: the Kit rebuilt to the locked hash `4da5421caad0`; 581 passed 1 skipped; Kit 324, web 40; smoke 21 of 21; 17 Environments; the regenerated report left the clone's git status clean (deterministic) |
+
 ---
 
 ## Known gaps
@@ -95,8 +97,8 @@ What has actually been run, not what has been written. A row here needs a real c
 - **Corpus legality is unconfirmed** (A-8). Four Chemistry experiment books are image-only PDFs with no text layer and need OCR, which is not installed.
 - **The deploy gate and auth do not exist** and are deliberately deferred (D-11). A per-client per-minute limit, a cap on questions in flight and `GET /spend` now exist (in-process, per worker); per-session and per-day limits, student accounts and the rest of `refdocs/guides/checklist.md` do not. The API must not be exposed.
 - **Accessibility is checked only statically and in the harness** (names, `aria-valuetext`, 44 px targets, no overflow at 360 px). No screen reader, reduced-motion or keyboard-only pass has been done in a real browser.
-- **No clean-checkout rebuild has been done.** `uv sync` and `pnpm install` were run incrementally, never from an empty clone.
-- **No file-structure doc and no parity doc** are written; the tree now exists, so a file map is worth writing at the start of P1.
+- **Clean-checkout rebuild: done 2026-10-16** from a fresh clone of the pushed branch (see the ledger). Not done on Windows.
+- **The file map is written** (`refdocs/guides/file_map.md`). No separate parity doc.
 - **No model has ever written a Plan.** The planner, the fills and the explainer are exercised only by deterministic fakes. Whether a real model produces Plans that pass the checks, what it costs and how often it needs the retry are all unmeasured (A-4). The first paid run answers this.
 - **The Free lane and the L4 wording check are not built.** A question the Kit cannot express gets the written answer; the `verifier_l4` pack is written but called by nothing.
 - **kit-guardian P3 findings:** all answered (B1, S1 to S12 and the notes). One reviewer, one round; a second pass should be run locally. One smoke run failed once and was not reproduced (see the CHANGELOG).
