@@ -1,13 +1,13 @@
 {
   "name": "@synapse/kit",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "node build.mjs && vitest run --passWithNoTests"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

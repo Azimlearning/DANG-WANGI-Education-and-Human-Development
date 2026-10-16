@@ -16,11 +16,12 @@ async function makeBlock(over: Partial<EnvironmentBlock> = {}): Promise<Environm
     meta: { status: "ready", error: null },
     title: "Why does a spring stretch?",
     lane: "instantiate",
-    label: "dev-fixture",
+    label: "model-checked",
     kitVersion: "0.0.1",
     htmlSha256: await sha256Hex(html),
     html,
     citations: [{ source: "UNVERIFIED (corpus not loaded until P2)", page: null, quote: null, verified: false }],
+    checked: { layers: ["postprocess", "scan", "render"], controlsExercised: 1, gridPoints: 0, referenceCases: 0, readouts: 1, models: [{ id: "mechanics.hookes", params: { k: 50 } }], limits: "Checked by code, not by a person." },
     planSummary: "A hand-written fixture.",
     ...over,
   };
@@ -88,10 +89,12 @@ describe("Peek and Stage", () => {
     expect(actions.length).toBeLessThanOrEqual(MAX_PEEK_ACTIONS);
     fireEvent.click(screen.getByRole("button", { name: "Open" }));
     expect(onOpen).toHaveBeenCalledOnce();
-    expect(screen.getByText(/Development fixture/)).toBeTruthy();
+    expect(screen.getByText(/Checked by code, no verified textbook source/)).toBeTruthy();
+    expect(screen.getByText(/What was checked/)).toBeTruthy();
+    expect(screen.getByText(/Science model: mechanics.hookes \(k = 50\)/)).toBeTruthy();
     expect(screen.getByText(/Instantiate/)).toBeTruthy();
     expect(screen.getByText(/not verified/)).toBeTruthy();
-    expect(screen.getByText(/NOT checked against the textbook/)).toBeTruthy();
+    expect(screen.getByText(/Checked by code, not by a person\./)).toBeTruthy();
   });
 
   it("Stage is a dialog with a Back button that also closes on Escape", async () => {

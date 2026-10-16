@@ -28,7 +28,10 @@ await build({
   bundle: true,
   format: "iife",
   globalName: "__synapse_kit",
-  footer: { js: "window.Synapse=__synapse_kit.Synapse;" },
+  // Defined once, non-writable and non-configurable: generated code can neither replace nor redefine the Kit (kit-guardian S4).
+  footer: {
+    js: 'Object.defineProperty(window,"Synapse",{value:__synapse_kit.Synapse,writable:false,configurable:false,enumerable:true});',
+  },
   minify: true,
   target: "es2020",
   legalComments: "none",

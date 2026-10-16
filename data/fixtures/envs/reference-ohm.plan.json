@@ -1,0 +1,29 @@
+{
+  "id": "reference-ohm",
+  "title": "How does resistance change the current?",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "A hand-written fixture composed over Kit 0.1.0: a voltage slider, a resistance slider, the Ohm's law micro-model and a current readout.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (corpus not loaded until P2)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "models": [
+    {
+      "id": "electricity.ohm",
+      "params": {}
+    }
+  ],
+  "controls": [
+    "voltage",
+    "resistance"
+  ],
+  "readouts": [
+    "Current"
+  ]
+}

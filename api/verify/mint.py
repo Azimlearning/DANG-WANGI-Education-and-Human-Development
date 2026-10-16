@@ -27,9 +27,9 @@ from api import postprocess
 from api.schema.generated import Citation, Lane, TrustLabel
 from api.verify.render import INTERACTION_SECONDS, render_check
 
-P0_ALLOWED_LABELS: frozenset[str] = frozenset({"dev-fixture"})
-"""`kit-verified` is unreachable until L1 and L3 exist (P1); `reviewed` and `canonical` need a human (P5). Widening this set is a
-declared change with an ADR, not an edit."""
+ALLOWED_LABELS: frozenset[str] = frozenset({"model-checked"})
+"""D-21. `kit-verified` is unreachable until a citation can be verified against the corpus (P2); `reviewed` and `canonical` need a
+human (P5). Widening this set is a declared change with an ADR, not an edit."""
 
 _KIT_VERSIONS_IN_HTML = re.compile(r"/vendor/kit/(\d+\.\d+\.\d+)/")
 
@@ -55,6 +55,10 @@ class Checked:
     layers: tuple[str, ...]
     controls_exercised: int
     readouts: int
+    grid_points: int
+    reference_cases: int
+    models: tuple[tuple[str, tuple[tuple[str, float], ...]], ...]
+    """Each science micro-model used, as (id, ((parameter, value), ...))."""
     interaction_seconds: float
 
 
@@ -157,7 +161,7 @@ def env_id_for(slug: str, sha: str) -> str:
 
 
 def guard_label(lane: str, label: str, citations: tuple[Citation, ...]) -> None:
-    """Hard constraints 3 and 4 as code. Today only `dev-fixture` is reachable; the rules below stay so that widening the
+    """Hard constraints 3 and 4 as code. Today only `model-checked` is reachable; the rules below stay so that widening the
     allowed set later cannot also widen what a label promises."""
     if not citations:
         # Hard constraints 4 and 11: where no source exists the Environment says so. An empty list says nothing at all.
@@ -169,9 +173,11 @@ def guard_label(lane: str, label: str, citations: tuple[Citation, ...]) -> None:
             raise VerificationFailed("label", "free_lane", "a Free-lane Environment cannot be 'kit-verified'")
         if not any(c.verified for c in citations):
             raise VerificationFailed("label", "ungrounded", "'kit-verified' needs a verified textbook citation")
-    if label not in P0_ALLOWED_LABELS:
+    if label not in ALLOWED_LABELS:
         raise VerificationFailed(
-            "label", "unreachable", f"label '{label}' is not reachable in P0 (L1 and L3 do not exist yet)"
+            "label",
+            "unreachable",
+            f"label '{label}' is not mintable yet (D-21: it needs a verified citation or a human)",
         )
 
 
@@ -188,6 +194,7 @@ def verify_environment(
     public_origin: str,
     kit_dist: Path,
     interaction_seconds: float = INTERACTION_SECONDS,
+    plan_models: list[dict] | None = None,
 ) -> VerifiedEnvironment:
     """Check `raw_html` end to end and return the minted `VerifiedEnvironment`, or raise `VerificationFailed`."""
     cited = tuple(citations)
@@ -202,12 +209,19 @@ def verify_environment(
             "kit", "version_mismatch", f"HTML loads Kit {sorted(used)} but the plan says {kit_version}"
         )
 
-    processed = postprocess.run(raw_html, public_origin=public_origin)
+    processed = postprocess.run(
+        raw_html, public_origin=public_origin, kit_version=None if lane == "free" else kit_version
+    )
     if isinstance(processed, postprocess.PostprocessReject):
         raise VerificationFailed(processed.stage, processed.rule, processed.reason)
 
     report = render_check(
-        processed, kit_dist=kit_dist, public_origin=public_origin, interaction_seconds=interaction_seconds
+        processed,
+        kit_dist=kit_dist,
+        public_origin=public_origin,
+        interaction_seconds=interaction_seconds,
+        plan_models=plan_models,
+        kit_lane=lane != "free",
     )
     refusal = report.refusal()
     if refusal is not None:
@@ -226,9 +240,14 @@ def verify_environment(
         citations=cited,
         plan_summary=plan_summary,
         checked=Checked(
-            layers=("postprocess", "scan", "render"),
+            layers=("postprocess", "scan", "render", "provenance", "grid", "reference")
+            if lane != "free"
+            else ("postprocess", "scan", "render"),
             controls_exercised=len(report.controls),
             readouts=report.readouts,
+            grid_points=report.grid_points,
+            reference_cases=report.reference_cases,
+            models=tuple(report.models),
             interaction_seconds=round(report.interaction_seconds, 1),
         ),
     )

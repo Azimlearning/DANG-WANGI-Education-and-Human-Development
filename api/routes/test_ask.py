@@ -70,11 +70,11 @@ def test_stream_order_is_meta_text_environment_done_and_every_event_validates(cl
     assert set(middle) == {"text_delta"}
 
 
-def test_meta_and_block_carry_the_honest_p0_label_and_lane(client: TestClient) -> None:
+def test_meta_and_block_carry_the_honest_label_and_lane(client: TestClient, kit_version: str) -> None:
     events = _events(client)
     meta, block = events[0], next(e for e in events if isinstance(e, EnvironmentEvent)).block
-    assert (meta.lane, meta.label, meta.kitVersion) == ("instantiate", "dev-fixture", "0.0.1")
-    assert (block.lane, block.label) == ("instantiate", "dev-fixture")
+    assert (meta.lane, meta.label, meta.kitVersion) == ("instantiate", "model-checked", kit_version)
+    assert (block.lane, block.label) == ("instantiate", "model-checked")
     assert block.citations[0].verified is False
     assert block.htmlSha256 == hashlib.sha256(block.html.encode("utf-8")).hexdigest()
 
@@ -171,10 +171,10 @@ def test_cors_allows_only_the_public_origin(client: TestClient) -> None:
     assert "access-control-allow-origin" not in other.headers
 
 
-def test_the_kit_is_served_same_origin_and_cannot_be_escaped(client: TestClient) -> None:
-    js = client.get("/vendor/kit/0.0.1/core.js")
+def test_the_kit_is_served_same_origin_and_cannot_be_escaped(client: TestClient, kit_version: str) -> None:
+    js = client.get(f"/vendor/kit/{kit_version}/core.js")
     assert js.status_code == 200
     assert "Synapse" in js.text
-    assert client.get("/vendor/kit/0.0.1/manifest.json").json()["version"] == "0.0.1"
+    assert client.get(f"/vendor/kit/{kit_version}/manifest.json").json()["version"] == kit_version
     assert client.get("/vendor/kit/../../pyproject.toml").status_code in (404, 400)
     assert client.get("/vendor/kit/%2e%2e/%2e%2e/pyproject.toml").status_code == 404

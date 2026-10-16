@@ -2,12 +2,29 @@
   "id": "reference-spring",
   "title": "Why does a spring stretch?",
   "lane": "instantiate",
-  "label": "dev-fixture",
-  "kitVersion": "0.0.1",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
   "planSummary": "A hand-written fixture composed over Kit v0: a load slider, the Hooke's law micro-model, and an extension readout. Checked by the L0 scan and the render harness only.",
   "citations": [
-    {"source": "UNVERIFIED (corpus not loaded until P2)", "page": null, "quote": null, "verified": false}
+    {
+      "source": "UNVERIFIED (corpus not loaded until P2)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
   ],
-  "controls": ["load"],
-  "readouts": ["Extension"]
+  "controls": [
+    "load"
+  ],
+  "readouts": [
+    "Extension"
+  ],
+  "models": [
+    {
+      "id": "mechanics.hookes",
+      "params": {
+        "k": 50
+      }
+    }
+  ]
 }

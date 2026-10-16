@@ -23,7 +23,6 @@ def store_path(settings: Settings):
 def seed_reference(settings: Settings, interaction_seconds: float | None = None) -> str:
     fixtures = settings.data_dir / "fixtures" / "envs"
     plan = json.loads((fixtures / f"{REFERENCE_SLUG}.plan.json").read_text(encoding="utf-8"))
-    extra = {} if interaction_seconds is None else {"interaction_seconds": interaction_seconds}
     env = verify_environment(
         slug=plan["id"],
         title=plan["title"],
@@ -35,7 +34,8 @@ def seed_reference(settings: Settings, interaction_seconds: float | None = None)
         plan_summary=plan["planSummary"],
         public_origin=settings.public_origin,
         kit_dist=settings.kit_dist_dir,
-        **extra,
+        plan_models=plan.get("models"),
+        **({} if interaction_seconds is None else {"interaction_seconds": interaction_seconds}),
     )
     SqliteEnvironmentStore(store_path(settings)).put_verified(env)
     return env.env_id

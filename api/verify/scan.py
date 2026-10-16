@@ -120,3 +120,45 @@ def script_source_scan(html: str) -> ScanReject | None:
 def scan(html: str) -> ScanReject | None:
     """L0 in full: the forbidden-API deny list, then the script-source allow list. The first hit wins."""
     return forbidden_api_scan(html) or script_source_scan(html)
+
+
+# ── rules that apply to Kit lanes (Instantiate and Compose) only ───────────────────────────────────────────────────────
+# In a Kit lane every number on the page must come from the Kit, so the ways a page could draw or inject a number the DOM text scan
+# cannot see are closed: canvas drawing, images (including data URIs) and CSS generated content. The Free lane (no Kit, `model-checked`
+# at most) is exempt. This is defence in depth; the L1 audit is the real check.
+KIT_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"<\s*canvas\b", re.IGNORECASE), "canvas"),
+    (re.compile(r"\bgetContext\b"), "canvas context"),
+    (re.compile(r"\b(?:fillText|strokeText)\b"), "canvas text"),
+    (re.compile(r"<\s*img\b", re.IGNORECASE), "image"),
+    (re.compile(r"data\s*:\s*image", re.IGNORECASE), "image data URL"),
+    (re.compile(r"\bcontent\s*:\s*[\"'`]", re.IGNORECASE), "CSS generated content"),
+    (re.compile(r"::?(?:before|after)\b", re.IGNORECASE), "CSS pseudo-element"),
+    (re.compile(r"<\s*(?:video|audio|source|track|svg\s+[^>]*\bimage)\b", re.IGNORECASE), "media element"),
+]
+
+_SCRIPT_TAG = re.compile(r"<script\b[^>]*>", re.IGNORECASE)
+_SRC = re.compile(r"\bsrc\s*=\s*[\"']([^\"']*)[\"']", re.IGNORECASE)
+
+
+def kit_lane_scan(html: str) -> ScanReject | None:
+    scannable = strip_csp_meta(html)
+    hits = [label for pattern, label in KIT_LANE_PATTERNS if pattern.search(scannable)]
+    if hits:
+        return ScanReject("kit_lane", "not allowed in a Kit-lane Environment: " + ", ".join(hits))
+    return None
+
+
+def kit_first_script(html: str, kit_version: str) -> ScanReject | None:
+    """The Kit must be the FIRST script and appear exactly once, so no page script runs before it can capture the DOM functions it
+    relies on (a later script could patch them) and so `window.Synapse` cannot be pre-defined by the page."""
+    expected = f"/vendor/kit/{kit_version}/core.js"
+    tags = _SCRIPT_TAG.findall(strip_csp_meta(html))
+    if not tags:
+        return ScanReject("kit_first", "a Kit-lane Environment must load the Kit")
+    first = _SRC.search(tags[0])
+    if not first or first.group(1) != expected:
+        return ScanReject("kit_first", f"the first script must be the Kit ({expected})")
+    if sum(1 for t in tags if (m := _SRC.search(t)) and m.group(1) == expected) != 1:
+        return ScanReject("kit_first", "the Kit must be loaded exactly once")
+    return None

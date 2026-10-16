@@ -23,6 +23,17 @@ class BlockMeta(BaseModel):
     error: ErrorEnvelope | None
 
 
+class CheckedSummary(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    layers: list[str]
+    controlsExercised: int
+    gridPoints: int
+    referenceCases: int
+    readouts: int
+    models: list[ModelUse]
+    limits: str
+
+
 class Citation(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
     source: str
@@ -48,6 +59,7 @@ class EnvironmentBlock(BaseModel):
     htmlSha256: str
     html: str
     citations: list[Citation]
+    checked: CheckedSummary
     planSummary: str
 
 
@@ -80,6 +92,12 @@ class MetaEvent(BaseModel):
     kitVersion: str
 
 
+class ModelUse(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    id: str
+    params: dict[str, float]
+
+
 class StreamErrorEvent(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
     type: Literal['error']
@@ -102,10 +120,11 @@ Lane = Literal['instantiate', 'compose', 'free']
 
 StreamEvent = Annotated[MetaEvent | TextDeltaEvent | EnvironmentEvent | StreamErrorEvent | DoneEvent, Field(discriminator='type')]
 
-TrustLabel = Literal['dev-fixture', 'kit-verified', 'model-checked', 'reviewed', 'canonical']
+TrustLabel = Literal['kit-verified', 'model-checked', 'reviewed', 'canonical']
 
 AskRequest.model_rebuild()
 BlockMeta.model_rebuild()
+CheckedSummary.model_rebuild()
 Citation.model_rebuild()
 DoneEvent.model_rebuild()
 EnvironmentBlock.model_rebuild()
@@ -113,5 +132,6 @@ EnvironmentEvent.model_rebuild()
 ErrorEnvelope.model_rebuild()
 FieldIssue.model_rebuild()
 MetaEvent.model_rebuild()
+ModelUse.model_rebuild()
 StreamErrorEvent.model_rebuild()
 TextDeltaEvent.model_rebuild()

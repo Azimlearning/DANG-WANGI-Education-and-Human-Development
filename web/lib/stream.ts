@@ -2,10 +2,10 @@
 // types from @synapse/schema (no runtime validator), so every event is checked structurally here before it is used. An event
 // whose type this client does not know, and a block whose type is not "Environment", are IGNORED, never a crash (a newer server
 // may send more than this client understands).
-import type { EnvironmentBlock, ErrorEnvelope, StreamEvent } from "@synapse/schema";
+import type { CheckedSummary, EnvironmentBlock, ErrorEnvelope, StreamEvent } from "@synapse/schema";
 
 const LANES = ["instantiate", "compose", "free"] as const;
-const LABELS = ["dev-fixture", "kit-verified", "model-checked", "reviewed", "canonical"] as const;
+const LABELS = ["kit-verified", "model-checked", "reviewed", "canonical"] as const;
 const STATUSES = ["empty", "loading", "partial", "ready", "error"] as const;
 const CODES = [
   "validation_failed",
@@ -32,6 +32,32 @@ export function parseErrorEnvelope(v: unknown): ErrorEnvelope | null {
   return { code: v.code, message: v.message, issues, retryable: v.retryable };
 }
 
+const isCount = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0;
+
+export function parseCheckedSummary(v: unknown): CheckedSummary | null {
+  if (!isRec(v) || !Array.isArray(v.layers) || !v.layers.every(isStr) || !isStr(v.limits) || !Array.isArray(v.models)) return null;
+  if (!isCount(v.controlsExercised) || !isCount(v.gridPoints) || !isCount(v.referenceCases) || !isCount(v.readouts)) return null;
+  const models = [];
+  for (const m of v.models) {
+    if (!isRec(m) || !isStr(m.id) || !isRec(m.params)) return null;
+    const params: Record<string, number> = {};
+    for (const [k, val] of Object.entries(m.params)) {
+      if (typeof val !== "number" || !Number.isFinite(val)) return null;
+      params[k] = val;
+    }
+    models.push({ id: m.id, params });
+  }
+  return {
+    layers: v.layers as string[],
+    controlsExercised: v.controlsExercised,
+    gridPoints: v.gridPoints,
+    referenceCases: v.referenceCases,
+    readouts: v.readouts,
+    models,
+    limits: v.limits,
+  };
+}
+
 export function parseEnvironmentBlock(v: unknown): EnvironmentBlock | null {
   if (!isRec(v) || v.type !== "Environment") return null; // an unknown block type is ignored
   if (!isStr(v.id) || !v.id || !isStr(v.title) || !isStr(v.kitVersion) || !isStr(v.htmlSha256) || !isStr(v.html) || !isStr(v.planSummary)) return null;
@@ -39,6 +65,8 @@ export function parseEnvironmentBlock(v: unknown): EnvironmentBlock | null {
   if (!isRec(v.meta) || !oneOf(STATUSES, v.meta.status)) return null;
   const error = v.meta.error === null ? null : parseErrorEnvelope(v.meta.error);
   if (v.meta.error !== null && error === null) return null;
+  const checked = parseCheckedSummary(v.checked);
+  if (!checked) return null;
   if (!Array.isArray(v.citations)) return null;
   const citations = [];
   for (const c of v.citations) {
@@ -57,6 +85,7 @@ export function parseEnvironmentBlock(v: unknown): EnvironmentBlock | null {
     htmlSha256: v.htmlSha256,
     html: v.html,
     citations,
+    checked,
     planSummary: v.planSummary,
   };
 }

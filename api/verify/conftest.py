@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from api.kit import latest_version
 from api.schema.generated import Citation
 from api.verify.mint import VerifiedEnvironment, verify_environment
 
@@ -22,8 +23,8 @@ def mint(kit_dist: Path, name: str = "reference-spring.html", **overrides) -> Ve
         title="Why does a spring stretch?",
         raw_html=fixture_html(name),
         lane="instantiate",
-        label="dev-fixture",
-        kit_version="0.0.1",
+        label="model-checked",
+        kit_version=latest_version(kit_dist),
         citations=[Citation(source="UNVERIFIED (corpus not loaded until P2)", page=None, quote=None, verified=False)],
         plan_summary="A hand-written fixture.",
         public_origin=ORIGIN,

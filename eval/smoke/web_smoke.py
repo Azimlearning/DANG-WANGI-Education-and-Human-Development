@@ -62,11 +62,15 @@ def crafted_block(html: str, sha: str | None = None) -> dict:
         "meta": {"status": "ready", "error": None},
         "title": "Crafted",
         "lane": "instantiate",
-        "label": "dev-fixture",
+        "label": "model-checked",
         "kitVersion": "0.0.1",
         "htmlSha256": sha or hashlib.sha256(html.encode()).hexdigest(),
         "html": html,
         "citations": [{"source": "UNVERIFIED", "page": None, "quote": None, "verified": False}],
+        "checked": {
+            "layers": ["scan"], "controlsExercised": 0, "gridPoints": 0, "referenceCases": 0, "readouts": 0,
+            "models": [], "limits": "A crafted block used only by the smoke test.",
+        },
         "planSummary": "A crafted block used only by the smoke test.",
     }
 
@@ -74,7 +78,7 @@ def crafted_block(html: str, sha: str | None = None) -> dict:
 def serve_crafted(page: Page, block: dict) -> None:
     body = sse(
         [
-            {"type": "meta", "requestId": "r", "lane": "instantiate", "label": "dev-fixture", "kitVersion": "0.0.1"},
+            {"type": "meta", "requestId": "r", "lane": "instantiate", "label": "model-checked", "kitVersion": "0.0.1"},
             {"type": "text_delta", "text": "crafted"},
             {"type": "environment", "block": block},
             {"type": "done"},
@@ -213,7 +217,7 @@ def main() -> int:
             body = page.inner_text("body")
             check(
                 "provenance shows label, lane, source and limits",
-                all(s in body for s in ("Development fixture", "Instantiate", "Source:", "Limits:", "not verified")),
+                all(s in body for s in ("Checked by code", "Instantiate", "Source:", "What was checked", "Limits:", "not verified")),
             )
 
             # ── Stage ─────────────────────────────────────────────────────────────────────────────────────────────────

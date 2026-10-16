@@ -19,6 +19,31 @@ from api.verify import scan as l0
 from api.verify.mint import VerificationFailed, guard_label, html_sha256, kit_bundle_sha256
 from api.verify.store import SqliteEnvironmentStore
 
+LIMITS: dict[str, str] = {
+    "model-checked": (
+        "Checked by code, not by a person. No textbook source has been verified, so the science may not match the syllabus."
+    ),
+    "kit-verified": "Checked by code against audited Kit models with a verified textbook source. A person has not reviewed it.",
+    "reviewed": "A person checked it against the textbook page.",
+    "canonical": "A person checked it against the textbook page and approved it.",
+}
+
+
+def checked_summary(checked: dict, label: str) -> dict:
+    """The wire `CheckedSummary` from the stored record. Raises KeyError or ValueError on an unusable record."""
+    return {
+        "layers": [str(x) for x in checked["layers"]],
+        "controlsExercised": int(checked["controls_exercised"]),
+        "gridPoints": int(checked["grid_points"]),
+        "referenceCases": int(checked["reference_cases"]),
+        "readouts": int(checked["readouts"]),
+        "models": [
+            {"id": str(m["id"]), "params": {str(k): float(v) for k, v in m["params"].items()}}
+            for m in checked["models"]
+        ],
+        "limits": LIMITS[label],
+    }
+
 
 def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, kit_dist: Path) -> EnvironmentBlock:
     """Return the block for `env_id`, or raise `VerificationFailed` with stage 'gate'."""
@@ -55,6 +80,11 @@ def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, k
     except VerificationFailed as failure:
         raise VerificationFailed("gate", failure.rule, failure.reason) from failure
 
+    try:
+        checked = checked_summary(record.checked, record.label)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise VerificationFailed("gate", "bad_record", f"the stored 'checked' record is unusable: {exc}") from exc
+
     return EnvironmentBlock.model_validate(
         {
             "type": "Environment",
@@ -67,6 +97,7 @@ def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, k
             "htmlSha256": record.html_sha256,
             "html": record.html,
             "citations": [c.model_dump() for c in citations],
+            "checked": checked,
             "planSummary": record.plan_summary,
         }
     )

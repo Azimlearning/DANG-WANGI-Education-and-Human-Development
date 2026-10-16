@@ -1,8 +1,13 @@
-// Kit v0 core: a tiny observable. The Kit API is ASSUMED (A-2): `readout` accepts only observables, so a number can never
-// be typed by hand into a readout (the generator cannot fake a result; L1 in P1 makes that check structural).
+// Kit core: a tiny observable. The Kit API is ASSUMED (A-2).
+//
+// `readout` accepts only observables the Kit created. That check is by private registry (see provenance.ts), not by shape, so it is a
+// real boundary for "this value came from the Kit". It says nothing about where the value came from: that is the provenance node,
+// which the L1 audit reads. A public `observable(x)` is kind `free` and a `map` written by generated code is kind `derived` with
+// `user: true`; the verifier refuses a readout that depends on either.
+
+import { isObservable, nodeOf, track, type ProvNode } from "./provenance";
 
 export interface Observable<T> {
-  readonly __observable: true;
   get(): T;
   set(value: T): void;
   subscribe(listener: (value: T) => void): () => void;
@@ -12,20 +17,26 @@ export interface Observable<T> {
 export interface ObservableOptions<T> {
   /** Applied to every value written, including the initial one (a slider clamps here). */
   transform?: (value: T) => T;
+  /** Computed observables cannot be written. */
+  readOnly?: boolean;
 }
 
-export function observable<T>(initial: T, options: ObservableOptions<T> = {}): Observable<T> {
+/** Internal: an observable with an explicit provenance node. Not exposed on `Synapse`. */
+export function create<T>(initial: T, node: ProvNode, options: ObservableOptions<T> = {}): Observable<T> {
   const transform = options.transform ?? ((v: T) => v);
   let current = transform(initial);
   const listeners = new Set<(value: T) => void>();
+  const write = (value: T) => {
+    const next = transform(value);
+    if (Object.is(next, current)) return;
+    current = next;
+    for (const listener of [...listeners]) listener(current);
+  };
   const self: Observable<T> = {
-    __observable: true,
     get: () => current,
     set(value: T) {
-      const next = transform(value);
-      if (Object.is(next, current)) return;
-      current = next;
-      for (const listener of [...listeners]) listener(current);
+      if (options.readOnly) throw new TypeError("this observable is computed and read-only");
+      write(value);
     },
     subscribe(listener) {
       listeners.add(listener);
@@ -34,21 +45,26 @@ export function observable<T>(initial: T, options: ObservableOptions<T> = {}): O
       };
     },
     map<U>(fn: (value: T) => U): Observable<U> {
-      const derived = observable<U>(fn(current));
-      // Derived values are recomputed from the source and cannot be written directly.
-      const write = derived.set;
-      self.subscribe((value) => write(fn(value)));
-      return {
-        ...derived,
-        set() {
-          throw new TypeError("a derived observable is read-only");
-        },
-      };
+      const derived = create<U>(fn(current), { kind: "derived", inputs: { x: self }, user: true }, { readOnly: true });
+      self.subscribe((value) => feed(derived, fn(value)));
+      return derived;
     },
   };
-  return self;
+  writers.set(self, write);
+  return track(self, node);
 }
 
-export function isObservable(value: unknown): value is Observable<unknown> {
-  return typeof value === "object" && value !== null && (value as { __observable?: unknown }).__observable === true;
+// Computed observables are updated by whoever computed them, through a private writer.
+const writers = new WeakMap<object, (value: never) => void>();
+export function feed<T>(obs: Observable<T>, value: T): void {
+  const write = writers.get(obs) as ((value: T) => void) | undefined;
+  if (!write) throw new TypeError("not a Kit observable");
+  write(value);
 }
+
+/** Public: a free observable. Fine for UI state; the verifier refuses a readout that depends on one. */
+export function observable<T>(initial: T, options: Omit<ObservableOptions<T>, "readOnly"> = {}): Observable<T> {
+  return create(initial, { kind: "free" }, options);
+}
+
+export { isObservable, nodeOf };

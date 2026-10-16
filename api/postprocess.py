@@ -201,10 +201,24 @@ def size_cap(html: str, max_bytes: int = MAX_BYTES) -> str | PostprocessReject:
     return html
 
 
-def run(html: str, *, public_origin: str, max_bytes: int = MAX_BYTES) -> str | PostprocessReject:
-    """The ordered chain. Returns the processed HTML or the first refusal."""
+def kit_lane_rules(html: str, kit_version: str) -> str | PostprocessReject:
+    hit = l0.kit_first_script(html, kit_version) or l0.kit_lane_scan(html)
+    if hit is not None:
+        return PostprocessReject("scan", hit.rule, hit.reason)
+    return html
+
+
+def run(
+    html: str, *, public_origin: str, max_bytes: int = MAX_BYTES, kit_version: str | None = None
+) -> str | PostprocessReject:
+    """The ordered chain. Returns the processed HTML or the first refusal. `kit_version` turns on the Kit-lane rules."""
     for rule in (strip_comments, enforce_single_document, scan_rule):
         result = rule(html)
+        if isinstance(result, PostprocessReject):
+            return result
+        html = result
+    if kit_version is not None:
+        result = kit_lane_rules(html, kit_version)
         if isinstance(result, PostprocessReject):
             return result
         html = result

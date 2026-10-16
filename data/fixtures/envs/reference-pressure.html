@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How does pressure change with depth?</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  // reference-pressure: Physics Form 5 forces and pressure, a walking illustration for fluids.pressure_depth.
+  var env = Synapse.environment({
+    title: "How does pressure change with depth?",
+    note: "Pressure in a liquid increases with depth. Here water has a density of 1000 kg/m3 and g is taken as 10 m/s2."
+  });
+  var depth = Synapse.slider(env, { id: "depth", label: "Depth", unit: "m", min: 0, max: 20, value: 5, grid: 20 });
+  var pressure = Synapse.pressureDepth({ depth: depth, density: 1000, g: 10 });
+  Synapse.readout(env, { label: "Pressure", unit: "kPa", value: Synapse.convert(pressure, "Pa", "kPa"), digits: 1 });
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

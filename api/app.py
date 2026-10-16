@@ -15,6 +15,7 @@ from fastapi.sse import EventSourceResponse
 from api import postprocess
 from api.core.errors import HTTP_STATUS, BadRequest, NotFound, SynapseError, envelope_from_exception
 from api.core.settings import Settings, load_settings
+from api.kit import latest_version
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
@@ -39,12 +40,11 @@ from api.verify.store import SqliteEnvironmentStore
 log = logging.getLogger(__name__)
 
 MAX_QUESTION_CHARS = 500
-P0_KIT_VERSION = "0.0.1"
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or load_settings()
-    app = FastAPI(title="Synapse v4 API", version="0.0.1")
+    app = FastAPI(title="Synapse v4 API", version="0.1.0")
     app.state.settings = settings
     app.state.store = SqliteEnvironmentStore(store_path(settings))
     app.state.ledger = build_ledger(settings)
@@ -100,7 +100,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """P0: every question gets the reference Environment, delivered through the gate. There is no planner yet (P3)."""
         store: SqliteEnvironmentStore = request.app.state.store
         yield MetaEvent(
-            type="meta", requestId=uuid.uuid4().hex, lane="instantiate", label="dev-fixture", kitVersion=P0_KIT_VERSION
+            type="meta",
+            requestId=uuid.uuid4().hex,
+            lane="instantiate",
+            label="model-checked",
+            kitVersion=latest_version(settings.kit_dist_dir),
         )
         try:
             reply = await llm_for(request).complete(

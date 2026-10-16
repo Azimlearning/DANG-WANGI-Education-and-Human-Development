@@ -71,6 +71,9 @@ class SqliteEnvironmentStore:
             "layers": list(env.checked.layers),
             "controls_exercised": env.checked.controls_exercised,
             "readouts": env.checked.readouts,
+            "grid_points": env.checked.grid_points,
+            "reference_cases": env.checked.reference_cases,
+            "models": [{"id": mid, "params": dict(params)} for mid, params in env.checked.models],
             "interaction_seconds": env.checked.interaction_seconds,
         }
         with closing(self._connect()) as db, db:

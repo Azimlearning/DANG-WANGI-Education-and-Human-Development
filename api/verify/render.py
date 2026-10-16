@@ -5,7 +5,9 @@
 # network is closed except the Kit, the scripted interaction is time-boxed, and 360 px width and 44 px touch targets are checked.
 """The render harness (verification layer "render"): runs the Environment in headless Chromium the way the web app will.
 
-It asserts: `synapse_ready` within 5 s; every declared control (`[data-synapse-control]`) changes at least one declared readout
+It also drives every control through its declared grid, both extremes and every min/mid/max combination (L2), reads the Kit's audit at
+each position, and hands the audits to api/verify/provenance.py: L1 (grounded, unaltered numbers) and L3 (each readout against an
+independent reference). It asserts: `synapse_ready` within 5 s; every declared control (`[data-synapse-control]`) changes at least one declared readout
 (`[data-synapse-readout]`) within 1 s; no uncaught exception, console error or blocked request during a scripted interaction;
 no horizontal overflow at 360 px; touch targets of at least 44 px. Anything else is a refusal that names the rule, and the control.
 
@@ -14,6 +16,7 @@ Sync Playwright is used on purpose: call this from a thread (`asyncio.to_thread`
 
 from __future__ import annotations
 
+import itertools
 import json
 import time
 from dataclasses import dataclass, field
@@ -23,11 +26,15 @@ from urllib.parse import urlparse
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Frame, Route, sync_playwright
 
+from api.verify import provenance as prov
+
 READY_TIMEOUT_MS = 5_000
 CONTROL_WIRE_TIMEOUT_MS = 1_000
 INTERACTION_SECONDS = 10.0
 MIN_TOUCH_TARGET_PX = 44
 PHONE_WIDTH_PX = 360
+MAX_GRID_POINTS = 500
+MAX_PROBLEMS = 20
 
 HARNESS = """<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">
 <script>
@@ -70,6 +77,13 @@ class RenderReport:
     overflow_px: float = 0.0
     interaction_seconds: float = 0.0
     harness_error: str = ""
+    audit0: dict | None = None
+    problems_l1: list[prov.Problem] = field(default_factory=list)
+    problems_l23: list[prov.Problem] = field(default_factory=list)
+    grid_points: int = 0
+    grid_truncated: bool = False
+    reference_cases: int = 0
+    models: list[tuple[str, tuple[tuple[str, float], ...]]] = field(default_factory=list)
 
     def refusal(self, require_controls: bool = True) -> tuple[str, str] | None:
         """The first failed rule as (rule, reason), or None when the Environment passed."""
@@ -88,6 +102,8 @@ class RenderReport:
             )
         if self.duplicate_controls:
             return ("duplicate_control", f"control id '{self.duplicate_controls[0]}' is declared more than once")
+        if self.problems_l1:
+            return (self.problems_l1[0].rule, self.problems_l1[0].reason)
         if require_controls and not self.controls:
             return ("no_controls", "no declared control found ([data-synapse-control])")
         for c in self.controls:
@@ -102,6 +118,8 @@ class RenderReport:
                     "unstable_readout",
                     f"readouts changed without input or did not return to the same values around control '{c.id}'",
                 )
+        if self.problems_l23:
+            return (self.problems_l23[0].rule, self.problems_l23[0].reason)
         if self.a11y_problems:
             return ("a11y", self.a11y_problems[0])
         for c in self.controls:
@@ -136,6 +154,8 @@ def render_check(
     public_origin: str,
     require_controls: bool = True,
     interaction_seconds: float = INTERACTION_SECONDS,
+    plan_models: list[dict] | None = None,
+    kit_lane: bool = True,
 ) -> RenderReport:
     """Run `html` in headless Chromium. `html` is the post-processed document (it carries our CSP)."""
     report = RenderReport()
@@ -189,7 +209,7 @@ def render_check(
 
             if report.ready:
                 try:
-                    _exercise(page, report, interaction_seconds)
+                    _exercise(page, report, interaction_seconds, plan_models, kit_lane)
                 except PlaywrightError as exc:
                     report.harness_error = str(exc).splitlines()[0]
             try:
@@ -262,7 +282,9 @@ def _poke(page) -> None:
         page.keyboard.press(key)
 
 
-def _exercise(page, report: RenderReport, interaction_seconds: float) -> None:
+def _exercise(
+    page, report: RenderReport, interaction_seconds: float, plan_models: list[dict] | None = None, kit_lane: bool = True
+) -> None:
     frame = _frame(page)
     report.readouts = len(_readout_texts(frame))
 
@@ -318,6 +340,9 @@ def _exercise(page, report: RenderReport, interaction_seconds: float) -> None:
 
     report.a11y_problems = list(frame.evaluate(_A11Y_JS))
 
+    if kit_lane:
+        _audit_and_sweep(frame, handles, report, plan_models)
+
     # Scripted interaction: sweep every declared control and press real input for the time box.
     start = time.monotonic()
     while time.monotonic() - start < interaction_seconds:
@@ -331,3 +356,86 @@ def _exercise(page, report: RenderReport, interaction_seconds: float) -> None:
     report.overflow_px = float(
         frame.evaluate("Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)")
     )
+
+
+# ── L1, L2, L3: the Kit's audit at every grid and extreme position ──────────────────────────────────────────────────────
+
+_AUDIT_JS = "() => (window.Synapse && typeof window.Synapse.audit === 'function') ? window.Synapse.audit() : null"
+
+
+def _audit(frame: Frame) -> dict | None:
+    try:
+        return frame.evaluate(_AUDIT_JS)
+    except PlaywrightError as exc:
+        message = str(exc).lower()
+        if "navigat" in message or "context was destroyed" in message or "target closed" in message:
+            raise
+        return None  # the audit function itself threw: L1 reports kit_missing
+
+
+def _set_value(handle, value: float) -> None:  # noqa: ANN001
+    handle.evaluate(
+        "(el, v) => { el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); }",
+        value,
+    )
+
+
+def _positions(c: dict) -> list[float]:
+    return [c["min"] + (c["max"] - c["min"]) * i / c["grid"] for i in range(int(c["grid"]) + 1)]
+
+
+def _points(controls: list[dict]) -> tuple[list[dict[str, float]], bool]:
+    """Default point; each control across its grid with the others at default; every min, mid, max combination. Capped."""
+    defaults = {c["id"]: float(c["default"]) for c in controls}
+    ids = [c["id"] for c in controls]
+    points: list[dict[str, float]] = [dict(defaults)]
+    for c in controls:
+        points += [{**defaults, c["id"]: float(v)} for v in _positions(c)]
+    levels = [[c["min"], (c["min"] + c["max"]) / 2, c["max"]] for c in controls]
+    points += [dict(zip(ids, map(float, combo), strict=True)) for combo in itertools.product(*levels)]
+    seen: set[tuple] = set()
+    unique: list[dict[str, float]] = []
+    for pt in points:
+        key = tuple(sorted(pt.items()))
+        if key not in seen:
+            seen.add(key)
+            unique.append(pt)
+    return unique[:MAX_GRID_POINTS], len(unique) > MAX_GRID_POINTS
+
+
+def _add(found: list[prov.Problem], new: list[prov.Problem]) -> None:
+    for problem in new:
+        if problem not in found and len(found) < MAX_PROBLEMS:
+            found.append(problem)
+
+
+def _audit_and_sweep(frame: Frame, handles: list, report: RenderReport, plan_models: list[dict] | None) -> None:
+    first = _audit(frame)
+    report.audit0 = first
+    _add(report.problems_l1, prov.l1_problems(first))
+    if first is None:
+        return
+    _add(report.problems_l1, prov.plan_problems(first, plan_models))
+    for r in first.get("readouts", []):
+        for m in prov.models_in(r["chain"]):
+            if m not in report.models:
+                report.models.append(m)
+
+    by_id = {h.get_attribute("data-synapse-control"): h for h in handles}
+    controls = [c for c in first.get("controls", []) if c["id"] in by_id]
+    points, report.grid_truncated = _points(controls)
+    for pt in points:
+        for control_id, value in pt.items():
+            _set_value(by_id[control_id], value)
+        snapshot = _audit(frame)
+        report.grid_points += 1
+        _add(report.problems_l1, prov.l1_problems(snapshot))
+        if snapshot is not None:
+            l3, compared = prov.l3_problems(snapshot)
+            report.reference_cases += compared
+            _add(report.problems_l23, l3)
+        if len(report.problems_l1) >= MAX_PROBLEMS:
+            break
+    defaults = {c["id"]: float(c["default"]) for c in controls}
+    for control_id, value in defaults.items():
+        _set_value(by_id[control_id], value)

@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from api import postprocess
+from api.kit import latest_version
 from api.schema.generated import Citation, EnvironmentBlock
 from api.verify.conftest import ORIGIN, mint
 from api.verify.gate import deliver
@@ -34,8 +35,9 @@ def minted(kit_dist: Path) -> VerifiedEnvironment:
         title="Why does a spring stretch?",
         raw_html=fixture_html("reference-spring.html"),
         lane="instantiate",
-        label="dev-fixture",
-        kit_version="0.0.1",
+        label="model-checked",
+        kit_version=latest_version(kit_dist),
+        plan_models=[{"id": "mechanics.hookes", "params": {"k": 50}}],
         citations=[Citation(source="UNVERIFIED (corpus not loaded until P2)", page=None, quote=None, verified=False)],
         plan_summary="A hand-written fixture.",
         public_origin=ORIGIN,
@@ -44,8 +46,11 @@ def minted(kit_dist: Path) -> VerifiedEnvironment:
 
 
 def test_good_fixture_is_minted_with_what_was_checked(minted: VerifiedEnvironment) -> None:
-    assert minted.label == "dev-fixture"
-    assert minted.checked.layers == ("postprocess", "scan", "render")
+    assert minted.label == "model-checked"
+    assert minted.checked.layers == ("postprocess", "scan", "render", "provenance", "grid", "reference")
+    assert minted.checked.grid_points >= 11  # the load slider's whole grid plus the extremes
+    assert minted.checked.reference_cases == minted.checked.grid_points  # one readout, compared at every position
+    assert minted.checked.models == (("mechanics.hookes", (("k", 50.0),)),)
     assert minted.checked.controls_exercised == 1
     assert minted.checked.readouts == 1
     assert minted.checked.interaction_seconds >= 10.0
@@ -61,7 +66,7 @@ def test_good_fixture_is_stored_and_the_gate_returns_a_block_with_the_stored_has
     assert isinstance(block, EnvironmentBlock)
     assert block.htmlSha256 == stored.html_sha256 == minted.html_sha256
     assert html_sha256(block.html) == block.htmlSha256
-    assert block.label == "dev-fixture"
+    assert block.label == "model-checked"
     assert block.lane == "instantiate"
     assert block.citations[0].verified is False
 
@@ -88,13 +93,13 @@ def test_bad_dead_control_is_refused_at_render_naming_the_control(kit_dist: Path
     assert "'load'" in err.value.reason
 
 
-def test_bad_bypass_is_NOT_caught_yet_and_that_gap_is_documented(kit_dist: Path) -> None:
-    """A hand-written wrong number in a readout moves with the slider, so the render layer cannot see it. Catching it is L1 (P1).
-    When L1 lands this test must be flipped to expect a refusal; until then it pins the honest state: P0 does not detect it."""
-    minted = mint(kit_dist, "reference-spring.bad-bypass.html")
-    assert (
-        minted.label == "dev-fixture"
-    )  # the only label reachable today, and the one that promises nothing about correctness
+def test_bad_bypass_is_now_refused_by_l1_as_a_readout_mismatch(kit_dist: Path) -> None:
+    """P0 could only document this gap: a hand-typed wrong number in a readout moves with the slider, so the render layer saw nothing
+    wrong. L1 compares the text with the value the Kit formats from the observable, so it is refused (flipped from the P0 test)."""
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, "reference-spring.bad-bypass.html")
+    assert (err.value.stage, err.value.rule) == ("render", "readout_mismatch")
+    assert "0.400 m" in err.value.reason and "0.200 m" in err.value.reason
 
 
 def test_one_byte_tamper_of_the_stored_html_is_refused_by_the_gate(
@@ -270,7 +275,7 @@ def test_the_scan_would_catch_an_alias_and_a_closure_peek(tmp_path: Path) -> Non
         ("canonical", "needs_human"),
         ("reviewed", "needs_human"),
         ("kit-verified", "ungrounded"),
-        ("model-checked", "unreachable"),
+        ("dev-fixture", "unreachable"),
     ],
 )
 def test_only_dev_fixture_is_reachable_in_p0(kit_dist: Path, label: str, rule: str) -> None:
@@ -457,18 +462,18 @@ def test_S6_unnamed_controls_and_readouts_are_refused(kit_dist: Path) -> None:
 
 
 def test_S2_a_kit_whose_bytes_changed_under_the_same_semver_makes_stored_environments_stale(
-    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path
+    minted: VerifiedEnvironment, tmp_path: Path, kit_dist: Path, kit_version: str
 ) -> None:
     store = SqliteEnvironmentStore(tmp_path / "envs.db")
     store.put_verified(minted)
     altered = tmp_path / "kit"
     shutil.copytree(kit_dist, altered)
-    core = altered / "0.0.1" / "core.js"
+    core = altered / kit_version / "core.js"
     core.write_bytes(core.read_bytes() + b"\n/* behaviour changed, version not bumped */")
     with pytest.raises(VerificationFailed) as err:
         deliver(store, minted.env_id, public_origin=ORIGIN, kit_dist=altered)
     assert err.value.rule == "stale_kit"
-    assert minted.kit_sha256 == hashlib.sha256((kit_dist / "0.0.1" / "core.js").read_bytes()).hexdigest()
+    assert minted.kit_sha256 == hashlib.sha256((kit_dist / kit_version / "core.js").read_bytes()).hexdigest()
 
 
 def test_S2_the_gate_refuses_a_csp_that_is_not_first(
@@ -531,14 +536,18 @@ def test_N4_the_same_html_cannot_be_stored_again_under_a_different_claim(
         store.put_verified(same_bytes_other_title)
 
 
-def test_N7_html_that_loads_a_different_kit_than_the_plan_says_is_refused(kit_dist: Path, tmp_path: Path) -> None:
+def test_N7_html_that_loads_a_different_kit_than_the_plan_says_is_refused(
+    kit_dist: Path, tmp_path: Path, kit_version: str
+) -> None:
     from api.verify.conftest import fixture_html
 
     other = tmp_path / "kit"
     shutil.copytree(kit_dist, other)
-    shutil.copytree(other / "0.0.1", other / "0.0.2")
+    major, minor, patch = (int(x) for x in kit_version.split("."))
+    bumped = f"{major}.{minor}.{patch + 1}"
+    shutil.copytree(other / kit_version, other / bumped)
     with pytest.raises(VerificationFailed) as err:
-        mint(other, raw_html=fixture_html("reference-spring.html"), kit_version="0.0.2")
+        mint(other, raw_html=fixture_html("reference-spring.html"), kit_version=bumped)
     assert (err.value.stage, err.value.rule) == ("kit", "version_mismatch")
 
 
@@ -548,3 +557,195 @@ def test_B1_the_gate_side_check_also_rejects_a_comment_before_the_csp() -> None:
     assert not postprocess.csp_is_first(f"<!-- <head> -->\n<!doctype html><html><head>{tag}</head></html>", ORIGIN)
     assert not postprocess.csp_is_first(f"<!-- <head>\n{tag}", ORIGIN)
     assert not postprocess.csp_is_first(f"<?xml version='1.0'?><html><head>{tag}</head></html>", ORIGIN)
+
+
+# ── P1: provenance (L1), grid and extremes (L2), numeric cross-check (L3), end to end through the real browser ──────────
+
+
+def variant(old: str, new: str, name: str = "reference-spring.html") -> str:
+    from api.verify.conftest import fixture_html
+
+    html = fixture_html(name)
+    assert old in html, f"the fixture no longer contains {old!r}"
+    return html.replace(old, new, 1)
+
+
+def refused(kit_dist: Path, raw_html: str, **kw) -> VerificationFailed:
+    with pytest.raises(VerificationFailed) as err:
+        mint(kit_dist, raw_html=raw_html, **kw)
+    return err.value
+
+
+HOOKES_PLAN = [{"id": "mechanics.hookes", "params": {"k": 50}}]
+
+
+def test_L1_a_constant_wrapped_in_a_free_observable_is_ungrounded(kit_dist: Path) -> None:
+    html = variant("value: extension,", "value: Synapse.observable(0.04),")
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "ungrounded_readout")
+
+
+def test_L1_arithmetic_written_in_the_page_is_refused(kit_dist: Path) -> None:
+    html = variant("value: extension,", "value: extension.map(function (x) { return x * 2; }),")
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "unaudited_arithmetic")
+
+
+def test_L1_an_object_that_only_looks_like_an_observable_is_refused(kit_dist: Path) -> None:
+    forged = "{ get: function () { return 0.04; }, set: function () {}, subscribe: function () { return function () {}; }, map: function () {} }"
+    e = refused(kit_dist, variant("value: extension,", f"value: {forged},"))
+    assert e.stage == "render" and e.rule in (
+        "ready",
+        "errors",
+    )  # readout() throws, so the page never gets as far as ready
+
+
+def test_L1_a_number_typed_into_a_paragraph_is_refused(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();",
+        "var p = document.createElement('p'); p.textContent = 'Extension is 0.04 m'; env.stage.appendChild(p);\n  Synapse.bridge.ready();",
+    )
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "unowned_number")
+
+
+def test_L1_a_script_cannot_mark_its_own_element_as_kit_owned(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();",
+        "var p = document.createElement('p'); p.textContent = '0.04 m'; p.setAttribute('data-synapse-owned', ''); env.stage.appendChild(p);\n  Synapse.bridge.ready();",
+    )
+    assert refused(kit_dist, html).rule == "unowned_number"
+
+
+def test_L1_editing_the_study_note_after_it_was_made_is_refused(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.bridge.ready();",
+        "document.querySelector('.syn-note').textContent = 'The spring stretches 0.9 m.';\n  Synapse.bridge.ready();",
+    )
+    assert refused(kit_dist, html).rule == "owned_changed"
+
+
+def test_L1_a_number_in_sanctioned_copy_must_be_backed(kit_dist: Path) -> None:
+    ok = variant(
+        "Synapse.bridge.ready();", "Synapse.text(env, 'The spring constant is 50 N/m.');\n  Synapse.bridge.ready();"
+    )
+    assert mint(kit_dist, raw_html=ok, plan_models=HOOKES_PLAN).env_id
+    bad = variant(
+        "Synapse.bridge.ready();", "Synapse.text(env, 'At 2 N the extension is 0.05 m.');\n  Synapse.bridge.ready();"
+    )
+    assert refused(kit_dist, bad).rule == "unbacked_copy_number"
+
+
+def test_L1_replacing_or_redefining_the_kit_global_does_not_work(kit_dist: Path) -> None:
+    redefine = variant(
+        "Synapse.bridge.ready();",
+        "Object.defineProperty(window, 'Synapse', { value: { audit: function () { return null; } } });\n  Synapse.bridge.ready();",
+    )
+    e = refused(kit_dist, redefine)
+    assert e.stage == "render" and e.rule in ("errors", "ready")
+    # A plain assignment is silently ignored by a non-writable property; the page keeps working with the REAL Kit and is not fooled.
+    assign = variant(
+        "Synapse.bridge.ready();",
+        "window.Synapse = { audit: function () { return null; } };\n  Synapse.bridge.ready();",
+    )
+    assert mint(kit_dist, raw_html=assign, plan_models=HOOKES_PLAN).checked.models
+
+
+def test_L1_the_kit_must_be_the_first_script_and_loaded_once(kit_dist: Path, kit_version: str) -> None:
+    first = variant(
+        f'<script src="/vendor/kit/{kit_version}/core.js"></script>',
+        f'<script>window.x = 1;</script>\n<script src="/vendor/kit/{kit_version}/core.js"></script>',
+    )
+    e = refused(kit_dist, first)
+    assert (e.stage, e.rule) == ("scan", "kit_first")
+    twice = variant(
+        f'<script src="/vendor/kit/{kit_version}/core.js"></script>',
+        f'<script src="/vendor/kit/{kit_version}/core.js"></script>\n<script src="/vendor/kit/{kit_version}/core.js"></script>',
+    )
+    assert refused(kit_dist, twice).rule == "kit_first"
+    assert (
+        refused(kit_dist, "<!doctype html><html><head></head><body><script>1</script></body></html>").rule
+        == "kit_first"
+    )
+
+
+@pytest.mark.parametrize(
+    ("snippet", "label"),
+    [
+        ("var c = document.createElement('canvas'); c.getContext('2d').fillText('0.04 m', 0, 0);", "canvas"),
+        ("var i = document.createElement('img'); i.src = 'data:image/png;base64,AAAA';", "image"),
+        (
+            "var s = document.createElement('style'); s.textContent = 'p::before { content: \"0.04 m\" }'; document.head.appendChild(s);",
+            "CSS",
+        ),
+    ],
+)
+def test_L1_ways_to_show_a_number_the_dom_scan_cannot_see_are_closed_in_kit_lanes(
+    kit_dist: Path, snippet: str, label: str
+) -> None:
+    e = refused(kit_dist, variant("Synapse.bridge.ready();", snippet + "\n  Synapse.bridge.ready();"))
+    assert (e.stage, e.rule) == ("scan", "kit_lane")
+    assert label.lower() in e.reason.lower()
+
+
+def test_L1_the_free_lane_is_exempt_from_the_kit_lane_rules_but_gets_no_kit_layers() -> None:
+    out = postprocess.run(
+        "<!doctype html><html><head></head><body><canvas></canvas><script>1</script></body></html>",
+        public_origin=ORIGIN,
+    )
+    assert isinstance(out, str)  # no kit_version given: no Kit-lane rules
+
+
+def test_L3_a_changed_model_parameter_is_a_plan_mismatch(kit_dist: Path) -> None:
+    html = variant("k: 50", "k: 25")
+    e = refused(kit_dist, html, plan_models=HOOKES_PLAN)
+    assert (e.stage, e.rule) == ("render", "plan_mismatch")
+    assert "k" in e.reason and "25" in e.reason
+
+
+def test_L3_a_page_that_drops_its_model_for_a_constant_is_a_plan_mismatch(kit_dist: Path) -> None:
+    html = variant("value: extension,", 'value: Synapse.constant(0.04, { label: "Extension", unit: "m" }),')
+    assert refused(kit_dist, html, plan_models=HOOKES_PLAN).rule == "plan_mismatch"
+
+
+def test_L3_a_physics_bug_planted_in_the_kit_bundle_is_caught_by_the_independent_reference(
+    kit_dist: Path, tmp_path: Path, kit_version: str
+) -> None:
+    """The Kit formats its own value, so its text always agrees with it; only the independent Python reference can see that the
+    value is wrong. Here Hooke's law in the bundle is made 10 percent too large."""
+    patched = tmp_path / "kit"
+    shutil.copytree(kit_dist, patched)
+    core = patched / kit_version / "core.js"
+    source = core.read_text(encoding="utf-8")
+    assert "fn:({load:e,k:t})=>e/t," in source
+    core.write_text(source.replace("fn:({load:e,k:t})=>e/t,", "fn:({load:e,k:t})=>e/t*1.1,"), encoding="utf-8")
+    e = refused(patched, variant("k: 50", "k: 50"), kit_version=kit_version)
+    assert (e.stage, e.rule) == ("render", "numeric_mismatch")
+    assert "independent reference" in e.reason
+
+
+def test_L2_every_grid_position_and_both_extremes_are_exercised(minted: VerifiedEnvironment) -> None:
+    assert minted.checked.grid_points >= 11
+    assert "grid" in minted.checked.layers and "reference" in minted.checked.layers
+
+
+@pytest.mark.parametrize("name", ["reference-ohm.html", "reference-pressure.html"])
+def test_the_ohm_and_pressure_fixtures_are_minted_with_their_models_checked(kit_dist: Path, name: str) -> None:
+    import json
+
+    from api.verify.conftest import FIXTURES
+
+    plan = json.loads((FIXTURES / name.replace(".html", ".plan.json")).read_text(encoding="utf-8"))
+    env = mint(kit_dist, name, slug=plan["id"], title=plan["title"], plan_models=plan["models"])
+    assert [m[0] for m in env.checked.models] == [m["id"] for m in plan["models"]]
+    assert env.checked.reference_cases > 20
+
+
+def test_ohm_with_a_constant_resistance_and_a_changed_parameter_are_both_checked(kit_dist: Path) -> None:
+    """A two-control model: the sweep covers every min/mid/max combination, so a wrong value at one corner would still be found."""
+    from api.verify.conftest import FIXTURES
+
+    html = (FIXTURES / "reference-ohm.html").read_text(encoding="utf-8")
+    env = mint(kit_dist, raw_html=html, slug="reference-ohm", plan_models=[{"id": "electricity.ohm", "params": {}}])
+    assert env.checked.controls_exercised == 2
+    assert env.checked.grid_points >= 13 + 20  # both grids, with the other control at its default

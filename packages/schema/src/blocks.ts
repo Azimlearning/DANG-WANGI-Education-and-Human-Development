@@ -11,10 +11,11 @@ import type { ErrorEnvelope } from "./errors";
 export type Lane = "instantiate" | "compose" | "free";
 
 /**
- * The trust label the student sees. `dev-fixture` is a P0-only label for hand-written fixtures and is removed in P1.
- * `kit-verified` needs a textbook citation; `canonical` needs human review (hard constraints 3 and 4).
+ * The trust label the student sees (D-21). `model-checked`: passed every deterministic layer, no verified textbook source.
+ * `kit-verified`: also has a citation whose quote was verified against the corpus (P2). `reviewed` and `canonical` need a
+ * human (hard constraints 3 and 4).
  */
-export type TrustLabel = "dev-fixture" | "kit-verified" | "model-checked" | "reviewed" | "canonical";
+export type TrustLabel = "kit-verified" | "model-checked" | "reviewed" | "canonical";
 
 export type BlockStatus = "empty" | "loading" | "partial" | "ready" | "error";
 
@@ -33,6 +34,29 @@ export interface Citation {
   verified: boolean;
 }
 
+/** A science micro-model an Environment uses, with the parameters it was built with. */
+export interface ModelUse {
+  id: string;
+  params: Record<string, number>;
+}
+
+/** What was actually checked, recorded by the verifier and shown to the student (enhancement N10, hard constraint 11). */
+export interface CheckedSummary {
+  /** The layers that ran, for example postprocess, scan, render, provenance, grid, reference. */
+  layers: string[];
+  /** @int */
+  controlsExercised: number;
+  /** @int */
+  gridPoints: number;
+  /** @int */
+  referenceCases: number;
+  /** @int */
+  readouts: number;
+  models: ModelUse[];
+  /** One plain sentence on what this does NOT show. */
+  limits: string;
+}
+
 export interface EnvironmentBlock {
   type: "Environment";
   /** Non-empty. Stable across updates: a later block with the same id replaces this one. */
@@ -47,6 +71,7 @@ export interface EnvironmentBlock {
   htmlSha256: string;
   html: string;
   citations: Citation[];
+  checked: CheckedSummary;
   /** One plain sentence on what was composed and what was checked. */
   planSummary: string;
 }

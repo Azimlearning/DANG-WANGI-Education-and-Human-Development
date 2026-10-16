@@ -7,11 +7,12 @@ const block = (over: Record<string, unknown> = {}) => ({
   meta: { status: "ready", error: null },
   title: "A spring",
   lane: "instantiate",
-  label: "dev-fixture",
+  label: "model-checked",
   kitVersion: "0.0.1",
   htmlSha256: "0".repeat(64),
   html: "<p>x</p>",
   citations: [{ source: "UNVERIFIED", page: null, quote: null, verified: false }],
+  checked: { layers: ["postprocess", "scan", "render"], controlsExercised: 1, gridPoints: 0, referenceCases: 0, readouts: 1, models: [{ id: "mechanics.hookes", params: { k: 50 } }], limits: "Checked by code, not by a person." },
   planSummary: "A fixture.",
   ...over,
 });
@@ -33,7 +34,7 @@ async function collect(it: AsyncGenerator<string>) {
 
 describe("parseStreamEvent", () => {
   it("accepts every event the server sends", () => {
-    expect(parseStreamEvent({ type: "meta", requestId: "r", lane: "instantiate", label: "dev-fixture", kitVersion: "0.0.1" })).toMatchObject({ type: "meta" });
+    expect(parseStreamEvent({ type: "meta", requestId: "r", lane: "instantiate", label: "model-checked", kitVersion: "0.0.1" })).toMatchObject({ type: "meta" });
     expect(parseStreamEvent({ type: "text_delta", text: "hi" })).toEqual({ type: "text_delta", text: "hi" });
     expect(parseStreamEvent({ type: "environment", block: block() })).toMatchObject({ type: "environment" });
     expect(parseStreamEvent({ type: "error", error: { code: "not_found", message: "m", issues: [{ path: "a", message: "b" }], retryable: false } })).toMatchObject({ type: "error" });
@@ -53,6 +54,10 @@ describe("parseStreamEvent", () => {
     expect(parseEnvironmentBlock(block({ html: 5 }))).toBeNull();
     expect(parseEnvironmentBlock(block({ citations: [{ source: "s", page: 1.5, quote: null, verified: false }] }))).toBeNull();
     expect(parseEnvironmentBlock(block({ meta: { status: "ready", error: { code: "x" } } }))).toBeNull();
+    expect(parseEnvironmentBlock(block({ label: "dev-fixture" }))).toBeNull(); // removed in P1 (D-21)
+    expect(parseEnvironmentBlock(block({ checked: undefined }))).toBeNull();
+    expect(parseEnvironmentBlock(block({ checked: { layers: ["scan"], controlsExercised: -1, gridPoints: 0, referenceCases: 0, readouts: 0, models: [], limits: "x" } }))).toBeNull();
+    expect(parseEnvironmentBlock(block({ checked: { layers: ["scan"], controlsExercised: 1, gridPoints: 0, referenceCases: 0, readouts: 0, models: [{ id: "m", params: { k: "5" } }], limits: "x" } }))).toBeNull();
   });
 });
 
@@ -93,7 +98,7 @@ describe("streamAsk", () => {
 
   it("yields validated events in order and skips what it does not understand", async () => {
     const body = sse([
-      { type: "meta", requestId: "r", lane: "instantiate", label: "dev-fixture", kitVersion: "0.0.1" },
+      { type: "meta", requestId: "r", lane: "instantiate", label: "model-checked", kitVersion: "0.0.1" },
       { type: "text_delta", text: "a" },
       { type: "from_the_future" },
       { type: "environment", block: { type: "SomethingNew" } },

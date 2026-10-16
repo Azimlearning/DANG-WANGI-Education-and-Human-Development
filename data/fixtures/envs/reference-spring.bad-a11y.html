@@ -3,22 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Unnamed controls</title>
+<title>Why does a spring stretch?</title>
 </head>
 <body>
-<script src="/vendor/kit/0.0.1/core.js"></script>
+<script src="/vendor/kit/0.1.0/core.js"></script>
 <script>
-  var env = Synapse.environment({ title: "Why does a spring stretch?", note: "A spring with unnamed controls." });
-  var inp = document.createElement("input");
-  inp.type = "range"; inp.min = "0"; inp.max = "10"; inp.value = "2";
-  inp.style.minHeight = "44px";
-  inp.setAttribute("data-synapse-control", "load");
-  env.controls.appendChild(inp);
-  var out = document.createElement("output");
-  out.setAttribute("data-synapse-readout", "Extension");
-  out.textContent = "0.040";
-  env.readouts.appendChild(out);
-  inp.addEventListener("input", function () { out.textContent = (Number(inp.value) / 50).toFixed(3); });
+  // reference-spring: a walking-skeleton illustration of the Instantiate lane. It is NOT the first vertical (D-09).
+  var env = Synapse.environment({
+    title: "Why does a spring stretch?",
+    note: "Hang a load on a spring and it stretches. Within the elastic limit the extension is proportional to the load: extension = load / k."
+  });
+  var load = Synapse.slider(env, { id: "load", label: "Load", unit: "N", min: 0, max: 10, value: 2, step: 0.1 });
+  var extension = Synapse.hookes({ k: 50, load: load });
+  Synapse.readout(env, { label: "Extension", unit: "m", value: extension, digits: 3 });
+  document.querySelector('label[for="syn-load"]').remove();
   Synapse.bridge.ready();
 </script>
 </body>

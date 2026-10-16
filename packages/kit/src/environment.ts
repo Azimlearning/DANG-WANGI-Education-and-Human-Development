@@ -1,8 +1,9 @@
-// `environment({title, note})` mounts the chrome every Environment shares: a title, a study-note card, a stage region,
-// controls and readouts. Styling uses CSS variables so the host can theme it. Touch targets are at least 44 px
-// (hard constraint 10). The stage region is the place a scene micro-component draws.
+// `environment({title, note})` mounts the chrome every Environment shares: a title, a study-note card, a stage region, controls and
+// readouts, using a small set of CSS variables. Touch targets are at least 44 px (hard constraint 10). Every element that carries
+// text is registered as Kit-owned with the text it must have, so the L1 audit can tell a Kit-made number from a typed one.
 
 import { installErrorHandlers } from "./bridge";
+import { copy, own } from "./provenance";
 
 export interface Environment {
   root: HTMLElement;
@@ -28,13 +29,19 @@ body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-
 .syn-env{max-width:720px;margin:0 auto;padding:16px;display:grid;gap:16px}
 .syn-env h1{font-size:1.4rem;margin:0}
 .syn-note{background:var(--syn-card);border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:12px 16px;color:var(--syn-muted)}
-.syn-stage{min-height:120px;border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:12px}
+.syn-stage{min-height:120px;border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:12px;display:grid;gap:8px}
 .syn-controls,.syn-readouts{display:grid;gap:12px}
 .syn-control{display:grid;gap:4px}
 .syn-control label{font-weight:600}
 .syn-control input[type=range]{width:100%;min-height:44px;accent-color:var(--syn-accent)}
 .syn-readout{display:flex;justify-content:space-between;align-items:center;min-height:44px;background:var(--syn-card);border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:8px 16px}
 .syn-readout output{font-weight:700;font-variant-numeric:tabular-nums}
+.syn-btn{min-height:44px;min-width:44px;padding:0 16px;border-radius:var(--syn-radius);border:1px solid var(--syn-border);background:var(--syn-card);color:var(--syn-fg);font:inherit;font-weight:600}
+.syn-text{margin:0;color:var(--syn-muted)}
+.syn-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.syn-graph{width:100%;height:auto;max-height:260px}
+.syn-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.syn-table th,.syn-table td{border:1px solid var(--syn-border);padding:6px 8px;text-align:right}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 `;
 
@@ -55,14 +62,16 @@ export function environment(options: EnvironmentOptions): Environment {
   }
   const root = document.createElement("main");
   root.className = "syn-env";
-  const h1 = document.createElement("h1");
+  const h1 = own(document.createElement("h1"), () => options.title);
   h1.textContent = options.title;
-  const note = div("syn-note");
+  const note = own(div("syn-note"), () => options.note);
   note.setAttribute("role", "note");
   note.textContent = options.note;
+  copy.push(options.title, options.note);
   const stage = div("syn-stage");
   stage.setAttribute("role", "region");
   stage.setAttribute("aria-label", options.stageText ?? "Stage");
+  if (options.stageText) copy.push(options.stageText);
   const controls = div("syn-controls");
   controls.setAttribute("role", "group");
   controls.setAttribute("aria-label", "Controls");

@@ -1,0 +1,31 @@
+{
+  "id": "reference-pressure",
+  "title": "How does pressure change with depth?",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "A hand-written fixture composed over Kit 0.1.0: a depth slider, the liquid-pressure micro-model for water with g = 10, and a pressure readout in kilopascals.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (corpus not loaded until P2)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "models": [
+    {
+      "id": "fluids.pressure_depth",
+      "params": {
+        "density": 1000,
+        "g": 10
+      }
+    }
+  ],
+  "controls": [
+    "depth"
+  ],
+  "readouts": [
+    "Pressure"
+  ]
+}
