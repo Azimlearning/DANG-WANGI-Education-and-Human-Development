@@ -34,7 +34,14 @@ async function collect(it: AsyncGenerator<string>) {
 
 describe("parseStreamEvent", () => {
   it("accepts every event the server sends", () => {
-    expect(parseStreamEvent({ type: "meta", requestId: "r", lane: "instantiate", label: "model-checked", kitVersion: "0.0.1" })).toMatchObject({ type: "meta" });
+    expect(parseStreamEvent({ type: "meta", requestId: "r", kitVersion: "0.0.1" })).toMatchObject({ type: "meta" });
+    expect(parseStreamEvent({ type: "stage", layer: "plan", status: "degraded", note: "n" })).toEqual({ type: "stage", layer: "plan", status: "degraded", note: "n" });
+    expect(parseStreamEvent({ type: "stage", layer: "plan", status: "start", note: null })).toMatchObject({ type: "stage" });
+    expect(parseStreamEvent({ type: "stage", layer: "plan", status: "weird", note: null })).toBeNull();
+    const draft = { title: "t", goal: "g", pattern: "simulation", note: "n", controls: [{ label: "Load", unit: "N" }], readouts: [{ label: "Extension", unit: "m" }], hasGraph: true, hasTable: false, steps: ["s"] };
+    expect(parseStreamEvent({ type: "plan", draft })).toMatchObject({ type: "plan" });
+    expect(parseStreamEvent({ type: "plan", draft: { ...draft, controls: [{ label: 1 }] } })).toBeNull();
+    expect(parseStreamEvent({ type: "plan", draft: { ...draft, hasGraph: "yes" } })).toBeNull();
     expect(parseStreamEvent({ type: "text_delta", text: "hi" })).toEqual({ type: "text_delta", text: "hi" });
     expect(parseStreamEvent({ type: "environment", block: block() })).toMatchObject({ type: "environment" });
     expect(parseStreamEvent({ type: "error", error: { code: "not_found", message: "m", issues: [{ path: "a", message: "b" }], retryable: false } })).toMatchObject({ type: "error" });
@@ -98,7 +105,7 @@ describe("streamAsk", () => {
 
   it("yields validated events in order and skips what it does not understand", async () => {
     const body = sse([
-      { type: "meta", requestId: "r", lane: "instantiate", label: "model-checked", kitVersion: "0.0.1" },
+      { type: "meta", requestId: "r", kitVersion: "0.0.1" },
       { type: "text_delta", text: "a" },
       { type: "from_the_future" },
       { type: "environment", block: { type: "SomethingNew" } },

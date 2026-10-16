@@ -1,8 +1,9 @@
 "use client";
 
-import type { EnvironmentBlock, ErrorEnvelope } from "@synapse/schema";
+import type { EnvironmentBlock, ErrorEnvelope, PlanDraft } from "@synapse/schema";
 import { useCallback, useRef, useState } from "react";
 import { Peek } from "../components/Peek";
+import { PeekSkeleton } from "../components/PeekSkeleton";
 import { Stage } from "../components/Stage";
 import { AskError, streamAsk } from "../lib/stream";
 
@@ -13,6 +14,8 @@ export default function Home() {
   const [text, setText] = useState("");
   const [block, setBlock] = useState<EnvironmentBlock | null>(null);
   const [error, setError] = useState<ErrorEnvelope | string | null>(null);
+  const [draft, setDraft] = useState<PlanDraft | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [staged, setStaged] = useState(false);
   const abort = useRef<AbortController | null>(null);
@@ -27,12 +30,21 @@ export default function Home() {
       setBusy(true);
       setText("");
       setBlock(null);
+      setDraft(null);
+      setNote(null);
       setError(null);
       setStaged(false);
       try {
         for await (const event of streamAsk(q, { baseUrl: API_BASE, signal: abort.current.signal })) {
           if (event.type === "text_delta") setText((t) => t + event.text);
-          else if (event.type === "environment") setBlock(event.block);
+          else if (event.type === "plan") setDraft(event.draft);
+          else if (event.type === "stage" && event.status === "degraded") {
+            setNote(event.note);
+            setDraft(null);
+          } else if (event.type === "environment") {
+            setBlock(event.block);
+            setDraft(null);
+          }
           else if (event.type === "error") setError(event.error);
         }
       } catch (err) {
@@ -73,6 +85,14 @@ export default function Home() {
       <div aria-live="polite" data-testid="answer">
         {text ? <p>{text}</p> : null}
       </div>
+
+      {note ? (
+        <p role="status" data-testid="degraded-note" className="rounded-xl p-3 text-sm" style={{ background: "var(--card)", color: "var(--muted)" }}>
+          {note}
+        </p>
+      ) : null}
+
+      {draft && !block ? <PeekSkeleton draft={draft} /> : null}
 
       {error ? (
         <p role="alert" className="rounded-xl p-4 text-sm" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>

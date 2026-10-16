@@ -159,7 +159,7 @@ validation set, with at least {pct(gate["min_coverage"])} coverage. Test numbers
 |---|---|---|---|---|
 {chr(10).join(gates)}
 
-Coverage is the share of questions the model answers without the LLM. A head that is "not useful as a gate" is not used by the router.
+The router never trusts a local `none` for the topic head and asks the fallback instead (on the 24-question golden set for the first vertical, 7 of 24 topics were wrongly `none`; a keyword second opinion was tried and was no better than chance). Coverage is the share of questions the model answers without the LLM. A head that is "not useful as a gate" is not used by the router.
 
 ## Most confident topic errors on the test set
 

@@ -67,8 +67,12 @@ async def route(
     for head in ("topic", "domain", "pattern", "complexity"):
         prediction = local.get(head)
         g = gates.get(head) if gates else None
+        # A local "none" is never trusted: the class is weak (see the model card) and a wrong "none" costs the student their Environment, while
+        # asking the fallback costs one small call. Everything else is gated by the head's calibrated threshold.
+        trusted = not (head == "topic" and prediction is not None and prediction.label == "none")
         if (
-            prediction is not None
+            trusted
+            and prediction is not None
             and g is not None
             and g.useful
             and g.threshold is not None

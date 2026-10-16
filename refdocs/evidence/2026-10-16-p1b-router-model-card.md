@@ -47,7 +47,7 @@ validation set, with at least 20.0% coverage. Test numbers are then measured onc
 | pattern | 0.648 | 35.4% / 90.3% | 36.2% / 92.8% | yes |
 | complexity | 0.833 | 37.0% / 90.7% | 35.1% / 91.0% | yes |
 
-Coverage is the share of questions the model answers without the LLM. A head that is "not useful as a gate" is not used by the router.
+The router never trusts a local `none` for the topic head and asks the fallback instead (on the 24-question golden set for the first vertical, 7 of 24 topics were wrongly `none`; a keyword second opinion was tried and was no better than chance). Coverage is the share of questions the model answers without the LLM. A head that is "not useful as a gate" is not used by the router.
 
 ## Most confident topic errors on the test set
 

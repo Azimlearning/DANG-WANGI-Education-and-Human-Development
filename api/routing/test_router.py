@@ -161,3 +161,14 @@ def test_the_matcher_states_that_its_accuracy_is_unmeasured() -> None:
 
     assert "accuracy is unmeasured" in (mod.__doc__ or "")
     assert isinstance(default_matcher(), MisconceptionMatcher)
+
+
+def test_a_local_none_for_the_topic_is_never_trusted_and_goes_to_the_llm(model, gates) -> None:  # noqa: ANN001
+    llm, provider = fake_llm()
+    q = "Who won the football match last night in the league and what was the score at the end?"
+    local = model.predict(q)["topic"]
+    assert local.label == "none"  # the model says none for this one
+    always = {h: gate_module.HeadGate(True, 0.0) for h in gates}
+    r = run(route(q, model=model, gates=always, llm=llm))
+    assert r.topic.source == "llm_fallback" and r.domain.source == "local"
+    assert len(provider.calls) == 1 and '"topic"' in provider.calls[0].prompt

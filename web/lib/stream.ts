@@ -2,7 +2,7 @@
 // types from @synapse/schema (no runtime validator), so every event is checked structurally here before it is used. An event
 // whose type this client does not know, and a block whose type is not "Environment", are IGNORED, never a crash (a newer server
 // may send more than this client understands).
-import type { CheckedSummary, EnvironmentBlock, ErrorEnvelope, StreamEvent } from "@synapse/schema";
+import type { CheckedSummary, EnvironmentBlock, ErrorEnvelope, PlanDraft, StreamEvent } from "@synapse/schema";
 
 const LANES = ["instantiate", "compose", "free"] as const;
 const LABELS = ["kit-verified", "model-checked", "reviewed", "canonical"] as const;
@@ -90,15 +90,40 @@ export function parseEnvironmentBlock(v: unknown): EnvironmentBlock | null {
   };
 }
 
+const parts = (v: unknown): { label: string; unit: string }[] | null => {
+  if (!Array.isArray(v)) return null;
+  const out = [];
+  for (const p of v) {
+    if (!isRec(p) || !isStr(p.label) || !isStr(p.unit)) return null;
+    out.push({ label: p.label, unit: p.unit });
+  }
+  return out;
+};
+
+export function parsePlanDraft(v: unknown): PlanDraft | null {
+  if (!isRec(v) || !isStr(v.title) || !isStr(v.goal) || !isStr(v.pattern) || !isStr(v.note)) return null;
+  const controls = parts(v.controls);
+  const readouts = parts(v.readouts);
+  if (!controls || !readouts || typeof v.hasGraph !== "boolean" || typeof v.hasTable !== "boolean") return null;
+  if (!Array.isArray(v.steps) || !v.steps.every(isStr)) return null;
+  return { title: v.title, goal: v.goal, pattern: v.pattern, note: v.note, controls, readouts, hasGraph: v.hasGraph, hasTable: v.hasTable, steps: v.steps as string[] };
+}
+
 /** One decoded JSON value to a StreamEvent, or null for anything this client does not understand. */
 export function parseStreamEvent(v: unknown): StreamEvent | null {
   if (!isRec(v)) return null;
   switch (v.type) {
     case "meta":
-      if (isStr(v.requestId) && oneOf(LANES, v.lane) && oneOf(LABELS, v.label) && isStr(v.kitVersion)) {
-        return { type: "meta", requestId: v.requestId, lane: v.lane, label: v.label, kitVersion: v.kitVersion };
+      return isStr(v.requestId) && isStr(v.kitVersion) ? { type: "meta", requestId: v.requestId, kitVersion: v.kitVersion } : null;
+    case "stage":
+      if (isStr(v.layer) && oneOf(["start", "done", "degraded"] as const, v.status) && (v.note === null || isStr(v.note))) {
+        return { type: "stage", layer: v.layer, status: v.status, note: v.note };
       }
       return null;
+    case "plan": {
+      const draft = parsePlanDraft(v.draft);
+      return draft ? { type: "plan", draft } : null;
+    }
     case "text_delta":
       return isStr(v.text) ? { type: "text_delta", text: v.text } : null;
     case "environment": {

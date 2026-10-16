@@ -35,7 +35,7 @@ from api.kit import latest_version  # noqa: E402
 SHOTS = REPO / "test-results" / "web-smoke"
 API = "http://localhost:8000"
 WEB = "http://localhost:3000"
-TITLE = "Why does a spring stretch?"
+TITLE = "Hooke's law: how does a spring stretch?"
 RESULTS: list[tuple[str, bool, str]] = []
 
 
@@ -122,26 +122,15 @@ def main() -> int:
     procs: list[subprocess.Popen] = []
     tmp = Path(tempfile.mkdtemp(prefix="synapse-smoke-"))
     try:
-        # A private data directory seeded with the verified reference Environment.
-        shutil.copytree(REPO / "data" / "fixtures", tmp / "fixtures")
-        env = {**os.environ, "SYNAPSE_LLM_MODE": "fake", "DATA_DIR": str(tmp), "PUBLIC_ORIGIN": WEB}
+        # A private data directory: /ask runs the whole pipeline on fakes and verifies the Environment in a real browser.
+        env = {
+            **os.environ,
+            "SYNAPSE_LLM_MODE": "fake",
+            "DATA_DIR": str(tmp),
+            "PUBLIC_ORIGIN": WEB,
+            "VERIFY_INTERACTION_SECONDS": "3",
+        }
         env.pop("ANTHROPIC_API_KEY", None)
-        seed = subprocess.run(
-            [
-                sys.executable,
-                "-c",
-                "from api.core.settings import load_settings; from api.seed import seed_reference; "
-                "print(seed_reference(load_settings(env_file=None), interaction_seconds=1.0))",
-            ],
-            cwd=REPO,
-            env=env,
-            capture_output=True,
-            text=True,
-        )
-        if seed.returncode != 0:
-            print(seed.stdout + seed.stderr)
-            return 1
-        check("seed: reference Environment verified and stored", True, seed.stdout.strip())
 
         if build:
             subprocess.run([pnpm, "--filter", "web", "build"], cwd=REPO, check=True, capture_output=True)
@@ -179,9 +168,20 @@ def main() -> int:
 
             # ── the real path: ask, Peek, controls ──────────────────────────────────────────────────────────────────────
             page.goto(WEB)
-            page.fill("#q", "why does a spring stretch")
+            page.fill("#q", "Why does a spring stretch when I hang a weight on it?")
             page.click("button[type=submit]")
-            page.wait_for_selector(f'iframe[title="{TITLE}"]', timeout=30_000)
+            # The loading skeleton is drawn from the streamed plan before the Environment is verified (D-23).
+            page.wait_for_selector(f'article[aria-label="{TITLE} (draft)"]', timeout=30_000)
+            check(
+                "the loading skeleton appears before the Environment",
+                page.query_selector("iframe") is None,
+                "draft card, no frame yet",
+            )
+            page.wait_for_selector(f'iframe[title="{TITLE}"]', timeout=60_000)
+            check(
+                "the skeleton is replaced by the verified Environment",
+                page.query_selector('article[aria-label$="(draft)"]') is None,
+            )
             text = page.inner_text('[data-testid="answer"]')
             check("a streamed explanation appears", text.startswith("[fake:explain:"), text[:40])
 

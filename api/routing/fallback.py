@@ -12,6 +12,7 @@ import re
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
 from api.prompts import load
+from api.routing.keywords import best_topic
 
 PURPOSE = "route"
 _JSON = re.compile(r"\{.*\}", re.DOTALL)
@@ -62,12 +63,17 @@ async def ask(
 
 
 def fake_responder(request: LLMRequest) -> str:
-    """Deterministic development reply: the first allowed value of every field (and `none` for the topic). Spends nothing."""
+    """Deterministic development reply: the first allowed value of every field, the keyword finder's topic, and that topic's subject as the domain. Spends nothing."""
     allowed = {
         m.group(1): json.loads(m.group(2))
         for m in re.finditer(r'^- "(\w+)": one of (\[.*\])$', request.prompt, re.MULTILINE)
     }
     reply: dict[str, object] = {head: values[0] for head, values in allowed.items()}
     if '- "topic"' in request.prompt:
-        reply["topic"] = "none"
+        question = re.search(r'Question:\n"""\n(.*?)\n"""', request.prompt, re.DOTALL)
+        reply["topic"] = best_topic(question.group(1)) if question else "none"
+    if "domain" in reply and reply.get("topic", "none") != "none":
+        subject = str(reply["topic"]).split("_form")[0]
+        if subject in allowed["domain"]:
+            reply["domain"] = subject
     return json.dumps(reply)
