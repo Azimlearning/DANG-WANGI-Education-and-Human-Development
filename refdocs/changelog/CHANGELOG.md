@@ -28,6 +28,13 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-16: Cloud build closed; handoff to the local session
+- **Changed:** `refdocs/guides/local_handoff.md` (new: the ordered prompt for the first local session), README and STATUS point to it. The branch was merged into `main`.
+- **Decided:** the remaining work is ordered Windows reproduction, live provider wiring, corpus and evidence, the first paid run, adversarial review, models, the remaining PRD product features, the deploy gate, then the study. Spaced repetition is dropped (it was never in the PRD).
+- **Deviations:** none.
+- **Verified:** the handoff's counts and commands were taken from the clean-checkout run (581 passed 1 skipped, Kit hash 4da5421caad0, smoke 21 of 21); `eval/golden/run.py` was read to confirm it is fakes-only, and the handoff says so.
+- **Known issues / next steps:** everything in the handoff.
+
 ### 2026-10-16: Clean-checkout rebuild, file map, README reconciled
 - **Changed:** `refdocs/guides/file_map.md` (new), `README.md` (status, setup, usage, layout were still the pre-implementation text), STATUS (two known gaps closed, one ledger row).
 - **Diagnosed:** the README still said "scaffolded, pre-implementation. Nothing is built" and showed "not yet runnable" markers. Stale docs mislead the next reader, so they were corrected.

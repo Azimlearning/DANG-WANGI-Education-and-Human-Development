@@ -74,6 +74,7 @@ The textbook corpus is never in the repository: point `CORPUS_DIR` at a local fo
 | [`refdocs/guides/env_setup.md`](refdocs/guides/env_setup.md) | Every setting and where to get it |
 | [`refdocs/guides/checklist.md`](refdocs/guides/checklist.md) | Pre-ship and deploy-gate checklist |
 | [`refdocs/guides/file_map.md`](refdocs/guides/file_map.md) | Where everything is and what it is for |
+| [`refdocs/guides/local_handoff.md`](refdocs/guides/local_handoff.md) | The prompt for the first local session: everything left to finish the project |
 | [`CLAUDE.md`](CLAUDE.md) | Operating brief for AI sessions on this repo |
 
 ## License
