@@ -244,7 +244,7 @@ def _set_control(handle, which: str) -> None:  # noqa: ANN001
     )
 
 
-# Every element a user could operate must be a declared control; an undeclared one would never be exercised.
+# Every element a user could operate must be a declared control (or a Kit action button, which the audit proves the Kit made).
 _INTERACTIVE = "input, select, textarea, button, [role=slider], [role=button], [contenteditable], a[href]"
 
 _A11Y_JS = """() => {
@@ -298,7 +298,7 @@ def _exercise(
 
     undeclared = frame.eval_on_selector_all(
         _INTERACTIVE,
-        """els => els.filter(e => !e.hasAttribute('data-synapse-control')).map(e =>
+        """els => els.filter(e => !e.hasAttribute('data-synapse-control') && !e.hasAttribute('data-synapse-action')).map(e =>
             '<' + e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '>')""",
     )
     report.undeclared_controls = list(undeclared)
@@ -430,8 +430,8 @@ def _audit_and_sweep(frame: Frame, handles: list, report: RenderReport, plan_mod
     if first is None:
         return
     _add(report.problems_l1, prov.plan_problems(first, plan_models))
-    for r in first.get("readouts", []):
-        for m in prov.models_in(r["chain"]):
+    for _, chain in prov.all_chains(first):
+        for m in prov.models_in(chain):
             if m not in report.models:
                 report.models.append(m)
 

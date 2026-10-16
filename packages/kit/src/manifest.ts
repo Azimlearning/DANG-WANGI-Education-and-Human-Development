@@ -50,6 +50,27 @@ export const manifestEntries: ManifestEntry[] = [
     doc: "Shows an observable's current value with its unit, announced politely to screen readers. Do not edit the element.",
   },
   {
+    id: "reset",
+    kind: "interaction",
+    signature: "reset(env, {label?: string}?): HTMLButtonElement",
+    precondition: "Call after every slider has been created; it restores the controls that exist at click time.",
+    doc: "A button that returns every control to its starting value. The readouts follow.",
+  },
+  {
+    id: "table",
+    kind: "ui",
+    signature: "table(env, {caption: string, columns: {label, unit, value: Observable<number>, digits?}[]}): HTMLTableElement",
+    precondition: "1 to 6 columns, each a Kit observable that derives from a control through a science model (or is a declared constant). At most 30 rows.",
+    doc: "A results table with Record and Clear buttons. Record appends one row of the columns' current values.",
+  },
+  {
+    id: "graph",
+    kind: "scene",
+    signature: "graph(env, {title: string, x: Observable<number>, y: Observable<number>, yLabel: string, yUnit: string, digits?: number}): SVGSVGElement",
+    precondition: "x is a slider created before the graph; y derives from controls through a science model. Create it after every slider so it redraws when they change.",
+    doc: "Plots y against the whole range of x, with a marker at the current value and a hidden table as the text equivalent.",
+  },
+  {
     id: "text",
     kind: "ui",
     signature: "text(env, content: string): HTMLParagraphElement",

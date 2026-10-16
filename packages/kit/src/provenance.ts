@@ -141,7 +141,39 @@ export interface ConstantRecord {
   value: number;
 }
 
+/** A value a table column or a graph shows. The verifier treats it like a readout: its chain must be grounded and its unit right. */
+export interface SeriesRecord {
+  kind: "graph" | "table";
+  title: string;
+  label: string;
+  unit: string;
+  digits: number;
+  obs: { get(): number };
+  /** Graph only: the control that is the x axis and the sampled (x, y) points currently drawn. */
+  xControl?: string;
+  points?: () => [number, number][];
+}
+
+/** Buttons the Kit made (reset, record, clear). Held privately so the audit can tell them from a button a script made. */
+const actionElements = new WeakSet<Element>();
+export interface ActionRecord {
+  kind: string;
+  label: string;
+}
+
 export const controls: ControlRecord[] = [];
+export const series: SeriesRecord[] = [];
+export const actions: ActionRecord[] = [];
+
+export function registerAction(el: Element, kind: string, label: string): void {
+  actionElements.add(el);
+  actions.push({ kind, label });
+  copy.push(label);
+}
+
+export function isAction(el: Element): boolean {
+  return actionElements.has(el);
+}
 export const readouts: ReadoutRecord[] = [];
 export const constants: ConstantRecord[] = [];
 /** Sanctioned static copy: titles, notes, labels and `text()` calls. Numbers inside are checked against backed values. */
@@ -153,6 +185,8 @@ export function resetForTests(): void {
   ownedAttributes.clear();
   controls.length = 0;
   readouts.length = 0;
+  series.length = 0;
+  actions.length = 0;
   constants.length = 0;
   copy.length = 0;
 }

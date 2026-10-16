@@ -2,12 +2,13 @@
 // serialisable data and reads the page through DOM functions captured when the bundle loaded, so a script that runs later cannot patch
 // `Node.prototype.textContent` to hide a mismatch. (The verifier also requires the Kit to be the first script in the document.)
 
-import { constants, controls, copy, describe, isOwned, ownedAttr, ownedEntries, readouts, type ChainNode } from "./provenance";
+import { actions, constants, controls, copy, describe, isAction, isOwned, ownedAttr, ownedEntries, readouts, series, type ChainNode } from "./provenance";
 
 const textGet = Object.getOwnPropertyDescriptor(Node.prototype, "textContent")?.get;
 const makeWalker = Document.prototype.createTreeWalker;
 const getAttr = Element.prototype.getAttribute;
 const getAttrNames = Element.prototype.getAttributeNames;
+const hasAttr = Element.prototype.hasAttribute;
 const shadowRootOf = Object.getOwnPropertyDescriptor(Element.prototype, "shadowRoot")?.get;
 // Attributes whose value is spoken, shown as a tooltip or used as a placeholder or alternative.
 const WORDS_ATTRS = ["aria-label", "aria-valuetext", "aria-description", "aria-roledescription", "title", "alt", "placeholder"];
@@ -37,6 +38,12 @@ export interface AuditRecord {
   unownedNumbers: { text: string; parent: string }[];
   /** Spoken or tooltip attributes holding a digit that the Kit did not set (or whose value was changed). */
   unownedAttributeNumbers: { attribute: string; value: string; element: string }[];
+  /** Values shown by tables and graphs, with their chains; a graph also lists the (x, y) points it drew. */
+  series: { kind: string; title: string; label: string; unit: string; digits: number; value: number; chain: ChainNode; xControl?: string; points?: [number, number][] }[];
+  /** Buttons the Kit made. */
+  actions: { kind: string; label: string }[];
+  /** Elements carrying data-synapse-action that no Kit component made. */
+  forgedActions: number;
   /** Elements with a shadow root: their content cannot be audited, so the verifier refuses them. */
   shadowRoots: number;
 }
@@ -58,9 +65,11 @@ export function audit(version: string): AuditRecord {
 
   const attrs: { attribute: string; value: string; element: string }[] = [];
   let shadowRoots = 0;
+  let forgedActions = 0;
   const all = document.body.querySelectorAll("*");
   for (const el of Array.from(all)) {
     if (shadowRootOf && Reflect.apply(shadowRootOf, el, [])) shadowRoots += 1;
+    if (Reflect.apply(hasAttr, el, ["data-synapse-action"]) && !isAction(el)) forgedActions += 1;
     for (const name of Reflect.apply(getAttrNames, el, []) as string[]) {
       const lower = name.toLowerCase();
       if (!WORDS_ATTRS.includes(lower)) continue;
@@ -99,6 +108,19 @@ export function audit(version: string): AuditRecord {
       };
     }),
     constants: constants.map((c) => ({ ...c })),
+    series: series.map((r) => ({
+      kind: r.kind,
+      title: r.title,
+      label: r.label,
+      unit: r.unit,
+      digits: r.digits,
+      value: r.obs.get(),
+      chain: describe(r.obs),
+      ...(r.xControl !== undefined ? { xControl: r.xControl } : {}),
+      ...(r.points ? { points: r.points() } : {}),
+    })),
+    actions: actions.map((a) => ({ ...a })),
+    forgedActions,
     copy: copy.map((text) => ({ text, numbers: text.match(COPY_NUMBER) ?? [] })),
     ownedMismatches: ownedEntries().flatMap(([el, expected]) => {
       const actual = textOf(el);

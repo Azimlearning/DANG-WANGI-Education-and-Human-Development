@@ -202,7 +202,7 @@ Not decisions: guesses made to keep moving. Each one must be confirmed or killed
 
 1. **A-5 ASSUMED:** the oracle ladder, and that textbook worked examples can serve as an independent reference. Measured at P2.
 2. **A-2 ASSUMED:** the Kit API shape and size guess. Replaced by the P0 census and P1 spikes.
-3. **A-10 ASSUMED:** headless Chromium in a no-network container is adequate isolation for a public deploy. P1 spike.
+3. **A-10 PARTLY CONFIRMED (P1 spike, 2026-10-16):** the harness verifies with no network under `unshare --net` at no measurable cost (`refdocs/evidence/2026-10-16-p1-isolation-spike.md`); `RLIMIT_AS` breaks Chromium, so memory needs a cgroup; a browser exploit is not covered. Still ASSUMED for the exploit case. The hosting option is the owner's at the deploy gate.
 4. **A-11 ASSUMED:** the reading of "public students, no accounts" plus "single user, no auth". Needs the owner's confirmation.
 5. **A-8 ASSUMED:** the corpus may be used locally and quoted briefly with citation. Unconfirmed legally.
 6. **A-4 ASSUMED:** Compose lane cost is well below v3's about $0.19. Measured at P3.

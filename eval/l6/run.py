@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -45,6 +46,7 @@ LAYER_OF_RULE = {
     "kit_not_intact": "L1 provenance",
     "kit_missing": "L1 provenance",
     "plan_mismatch": "L1 provenance (plan)",
+    "forged_action": "L1 provenance",
     "wrong_unit": "L1 provenance",
     # L3: reference
     "numeric_mismatch": "L3 reference",
@@ -114,9 +116,10 @@ def run_one(m: Mutation, work: Path) -> Outcome:
         shutil.copytree(KIT_DIST / version, dist / version)
         core = dist / version / "core.js"
         text = core.read_text(encoding="utf-8")
-        if m.kit_edit[0] not in text:
+        patched, count = re.subn(m.kit_edit[0], m.kit_edit[1], text, count=1)
+        if count != 1:
             raise AssertionError(f"{m.id}: Kit anchor not found: {m.kit_edit[0]!r}")
-        core.write_text(text.replace(m.kit_edit[0], m.kit_edit[1], 1), encoding="utf-8")
+        core.write_text(patched, encoding="utf-8")
     try:
         minted = verify_environment(
             slug=plan["id"],

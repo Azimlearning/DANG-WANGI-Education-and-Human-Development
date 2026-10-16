@@ -798,3 +798,52 @@ def test_L1_a_readout_forged_at_load_is_seen_before_any_input_redraws_it(kit_dis
     )
     e = refused(kit_dist, html)
     assert (e.stage, e.rule) == ("render", "readout_mismatch")
+
+
+# ── core components: reset, table, graph ───────────────────────────────────────────────────────────────────────────────
+
+
+OHM_GRAPH = "reference-ohm-graph.html"
+OHM_PLAN = [{"id": "electricity.ohm", "params": {}}]
+
+
+def test_the_graph_table_and_reset_fixture_is_minted_with_its_curve_checked(kit_dist: Path) -> None:
+    e = mint(kit_dist, OHM_GRAPH, slug="reference-ohm-graph", plan_models=OHM_PLAN)
+    assert e.checked.models == (("electricity.ohm", ()),)
+    # one current readout, three table or graph series, and every point of the curve compared with the reference
+    assert e.checked.reference_cases > 100
+
+
+def test_L1_a_graph_fed_by_a_free_observable_is_ungrounded(kit_dist: Path) -> None:
+    html = variant("y: current,", "y: Synapse.observable(1),", OHM_GRAPH)
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "ungrounded_readout")
+
+
+def test_L1_a_graph_with_the_wrong_unit_is_refused(kit_dist: Path) -> None:
+    e = refused(kit_dist, variant('yUnit: "A"', 'yUnit: "mA"', OHM_GRAPH))
+    assert (e.stage, e.rule) == ("render", "wrong_unit")
+
+
+def test_L1_a_table_column_with_the_wrong_unit_is_refused(kit_dist: Path) -> None:
+    e = refused(kit_dist, variant('label: "Current", unit: "A"', 'label: "Current", unit: "V"', OHM_GRAPH))
+    assert (e.stage, e.rule) == ("render", "wrong_unit")
+
+
+def test_L1_a_button_that_only_claims_to_be_a_kit_action_is_refused(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.reset(env);",
+        "Synapse.reset(env); var b = document.createElement('button'); b.textContent = 'Go'; b.setAttribute('data-synapse-action', 'reset'); env.controls.appendChild(b);",
+        OHM_GRAPH,
+    )
+    e = refused(kit_dist, html)
+    assert (e.stage, e.rule) == ("render", "forged_action")
+
+
+def test_L1_a_plain_button_is_still_an_undeclared_control(kit_dist: Path) -> None:
+    html = variant(
+        "Synapse.reset(env);",
+        "Synapse.reset(env); var b = document.createElement('button'); b.textContent = 'Go'; env.controls.appendChild(b);",
+        OHM_GRAPH,
+    )
+    assert refused(kit_dist, html).rule == "undeclared_control"

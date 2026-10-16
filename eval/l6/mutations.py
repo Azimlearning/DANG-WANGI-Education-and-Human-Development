@@ -8,6 +8,7 @@ the pinned expectation. The classes here are the ones someone thought of. They a
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
@@ -15,6 +16,18 @@ READY = "Synapse.bridge.ready();"
 SPRING = "reference-spring.html"
 OHM = "reference-ohm.html"
 PRESSURE = "reference-pressure.html"
+OHM_GRAPH = "reference-ohm-graph.html"
+
+
+def patch_fn(names: list[str], body: str) -> tuple[str, str]:
+    """A (regex, replacement) that rewrites a built science model's `fn` body. The bundle is minified, so the destructured argument
+    names change from build to build; the pattern captures them and `body` refers to the arguments as {name}."""
+    pattern = r"fn:\(\{" + ",".join(f"{n}:(\\w+)" for n in names) + r"\}\)=>[^,]+?(?=,citation:)"
+    args = ",".join(f"{n}:\\{i + 1}" for i, n in enumerate(names))
+    filled = body
+    for i, n in enumerate(names):
+        filled = filled.replace("{" + n + "}", f"\\{i + 1}")
+    return pattern, "fn:({" + args + "})=>" + filled
 
 
 @dataclass(frozen=True)
@@ -52,7 +65,7 @@ MUTATIONS: list[Mutation] = [
         "Hooke's model multiplies load by k instead of dividing",
         SPRING,
         "refuse",
-        kit_edit=("fn:({load:e,k:t})=>e/t", "fn:({load:e,k:t})=>e*t"),
+        kit_edit=patch_fn(["load", "k"], "{load}*{k}"),
     ),
     Mutation(
         "kit-hookes-offset",
@@ -60,7 +73,7 @@ MUTATIONS: list[Mutation] = [
         "Hooke's model adds a 1 mm offset",
         SPRING,
         "refuse",
-        kit_edit=("fn:({load:e,k:t})=>e/t", "fn:({load:e,k:t})=>e/t+0.001"),
+        kit_edit=patch_fn(["load", "k"], "{load}/{k}+0.001"),
     ),
     Mutation(
         "kit-hookes-high-load",
@@ -68,7 +81,7 @@ MUTATIONS: list[Mutation] = [
         "Hooke's model saturates above 8 N",
         SPRING,
         "refuse",
-        kit_edit=("fn:({load:e,k:t})=>e/t", "fn:({load:e,k:t})=>Math.min(e,8)/t"),
+        kit_edit=patch_fn(["load", "k"], "Math.min({load},8)/{k}"),
     ),
     Mutation(
         "kit-ohm-power",
@@ -76,7 +89,7 @@ MUTATIONS: list[Mutation] = [
         "Ohm's model returns V times R",
         OHM,
         "refuse",
-        kit_edit=("fn:({voltage:e,resistance:t})=>e/t", "fn:({voltage:e,resistance:t})=>e*t"),
+        kit_edit=patch_fn(["voltage", "resistance"], "{voltage}*{resistance}"),
     ),
     Mutation(
         "kit-ohm-swapped",
@@ -84,7 +97,7 @@ MUTATIONS: list[Mutation] = [
         "Ohm's model divides resistance by voltage",
         OHM,
         "refuse",
-        kit_edit=("fn:({voltage:e,resistance:t})=>e/t", "fn:({voltage:e,resistance:t})=>t/Math.max(e,1e-9)"),
+        kit_edit=patch_fn(["voltage", "resistance"], "{resistance}/Math.max({voltage},1e-9)"),
     ),
     Mutation(
         "kit-pressure-halved",
@@ -92,7 +105,7 @@ MUTATIONS: list[Mutation] = [
         "pressure model drops a factor of two",
         PRESSURE,
         "refuse",
-        kit_edit=("fn:({depth:e,density:t,g:n})=>e*t*n", "fn:({depth:e,density:t,g:n})=>e*t*n/2"),
+        kit_edit=patch_fn(["depth", "density", "g"], "{depth}*{density}*{g}/2"),
     ),
     Mutation(
         "kit-pressure-ignores-g",
@@ -100,7 +113,7 @@ MUTATIONS: list[Mutation] = [
         "pressure model uses 9.81 whatever g the page sets",
         PRESSURE,
         "refuse",
-        kit_edit=("fn:({depth:e,density:t,g:n})=>e*t*n", "fn:({depth:e,density:t,g:n})=>e*t*9.81"),
+        kit_edit=patch_fn(["depth", "density", "g"], "{depth}*{density}*9.81"),
     ),
     Mutation(
         "kit-convert-wrong-factor",
@@ -108,7 +121,7 @@ MUTATIONS: list[Mutation] = [
         "the Kit converts Pa to kPa by 100",
         PRESSURE,
         "refuse",
-        kit_edit=('kPa:{dim:"pressure",toSI:1e3}', 'kPa:{dim:"pressure",toSI:100}'),
+        kit_edit=(re.escape('kPa:{dim:"pressure",toSI:1e3}'), 'kPa:{dim:"pressure",toSI:100}'),
     ),
     Mutation(
         "kit-hookes-narrow-spike",
@@ -116,7 +129,7 @@ MUTATIONS: list[Mutation] = [
         "Hooke's model is wrong only at exactly 3.14159 N (between grid points)",
         SPRING,
         "refuse",
-        kit_edit=("fn:({load:e,k:t})=>e/t", "fn:({load:e,k:t})=>Math.abs(e-3.14159)<1e-9?0:e/t"),
+        kit_edit=patch_fn(["load", "k"], "Math.abs({load}-3.14159)<1e-9?0:{load}/{k}"),
         known_miss=True,
         note="Verification samples defaults, grids and extremes; a bug confined to an unsampled point passes.",
     ),
@@ -415,6 +428,51 @@ MUTATIONS: list[Mutation] = [
             "var w = document.createElement('div'); w.style.width = '900px'; w.style.height = '10px'; env.stage.appendChild(w);"
         ),
     ),
+    # ── core component defects ─────────────────────────────────────────────────────────────────────────────────────────────
+    Mutation(
+        "comp-graph-free-observable",
+        "provenance",
+        "a graph fed by a free observable",
+        OHM_GRAPH,
+        "refuse",
+        edit=sub("y: current,", "y: Synapse.observable(1),"),
+    ),
+    Mutation(
+        "comp-graph-wrong-unit",
+        "physics",
+        "a graph labelled mA that plots amperes",
+        OHM_GRAPH,
+        "refuse",
+        edit=sub('yUnit: "A"', 'yUnit: "mA"'),
+    ),
+    Mutation(
+        "comp-table-wrong-unit",
+        "physics",
+        "a table column labelled V that records amperes",
+        OHM_GRAPH,
+        "refuse",
+        edit=sub('label: "Current", unit: "A"', 'label: "Current", unit: "V"'),
+    ),
+    Mutation(
+        "comp-forged-action",
+        "trust",
+        "a script-made button claiming to be a Kit action",
+        OHM_GRAPH,
+        "refuse",
+        edit=sub(
+            "Synapse.reset(env);",
+            "Synapse.reset(env); var b = document.createElement('button'); b.textContent = 'Go'; b.setAttribute('data-synapse-action', 'reset'); env.controls.appendChild(b);",
+        ),
+    ),
+    Mutation(
+        "kit-ohm-graph-power",
+        "physics",
+        "Ohm's model returns V times R (seen through a graph and a table)",
+        OHM_GRAPH,
+        "refuse",
+        kit_edit=patch_fn(["voltage", "resistance"], "{voltage}*{resistance}"),
+    ),
+    Mutation("neutral-ohm-graph", "neutral", "the unmodified graph, table and reset page", OHM_GRAPH, "accept"),
     # ── neutral controls: harmless edits that must be accepted (false-positive measure) ─────────────────────────────────────
     Mutation(
         "neutral-title",

@@ -361,3 +361,53 @@ def test_a_readout_unit_must_match_the_unit_of_what_it_shows() -> None:
     ok["readouts"][0]["unit"] = "mm"
     ok["readouts"][0]["displayed"] = ok["readouts"][0]["expected"] = "0.040 mm"
     assert "wrong_unit" in rules(p.l1_problems(ok))
+
+
+def series_audit(points: list[list[float]] | None = None, value: float = 0.04) -> dict:
+    audit = good_audit()
+    audit["series"] = [
+        {
+            "kind": "graph",
+            "title": "t",
+            "label": "Extension",
+            "unit": "m",
+            "digits": 3,
+            "value": value,
+            "xControl": "load",
+            "points": points if points is not None else [[0, 0], [5, 0.1], [10, 0.2]],
+            "chain": audit["readouts"][0]["chain"],
+        }
+    ]
+    return audit
+
+
+def test_a_graph_curve_is_rederived_point_by_point_from_the_reference() -> None:
+    audit = series_audit()
+    assert p.l1_problems(audit) == []
+    problems, compared = p.l3_problems(audit)
+    assert problems == [] and compared == 1 + 1 + 3  # the readout, the series value, three curve points
+    bad = p.l3_problems(series_audit(points=[[0, 0], [5, 0.11], [10, 0.2]]))[0]
+    assert rules(bad) == ["numeric_mismatch"] and "load=5" in bad[0].reason
+    assert rules(p.l3_problems(series_audit(value=0.05))[0]) == ["numeric_mismatch"]
+
+
+def test_a_series_is_held_to_the_same_chain_and_unit_rules_as_a_readout() -> None:
+    audit = series_audit()
+    audit["series"][0]["chain"] = {"kind": "free"}
+    assert rules(p.l1_problems(audit)) == ["ungrounded_readout"]
+    audit = series_audit()
+    audit["series"][0]["unit"] = "mm"
+    assert rules(p.l1_problems(audit)) == ["wrong_unit"]
+
+
+def test_a_model_used_only_by_a_graph_still_counts_against_the_plan() -> None:
+    audit = series_audit()
+    audit["readouts"] = []
+    assert p.plan_problems(audit, [{"id": "mechanics.hookes", "params": {"k": 50}}]) == []
+    assert rules(p.plan_problems(audit, [])) == ["plan_mismatch"]
+
+
+def test_forged_actions_are_refused() -> None:
+    audit = good_audit()
+    audit["forgedActions"] = 1
+    assert rules(p.l1_problems(audit)) == ["forged_action"]

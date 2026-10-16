@@ -95,6 +95,13 @@ def evaluate_chain(chain: dict, controls: dict[str, float], constants: dict[str,
     raise ValueError(f"cannot evaluate a {kind!r} node")
 
 
+def all_chains(audit: dict) -> list[tuple[str, dict]]:
+    """Every value the page shows, as (what it is, its provenance chain): readouts, table columns and graph series."""
+    found = [(f"readout '{r['label']}'", r["chain"]) for r in audit.get("readouts", [])]
+    found += [(f"{x['kind']} '{x['label']}'", x["chain"]) for x in audit.get("series", [])]
+    return found
+
+
 def models_in(chain: dict) -> list[tuple[str, tuple[tuple[str, float], ...]]]:
     """Every science model in a chain as (id, ((param, value), ...)), in a stable order, without repeats."""
     found: list[tuple[str, tuple[tuple[str, float], ...]]] = []
@@ -121,8 +128,8 @@ def backed_numbers(audit: dict) -> list[float]:
         values += [c["min"], c["max"], c["default"]]
         values += [c["min"] + (c["max"] - c["min"]) * i / c["grid"] for i in range(c["grid"] + 1)]
     values += [c["value"] for c in audit.get("constants", [])]
-    for r in audit.get("readouts", []):
-        for _, params in models_in(r["chain"]):
+    for _, chain in all_chains(audit):
+        for _, params in models_in(chain):
             values += [v for _, v in params]
     return values
 
@@ -191,6 +198,16 @@ def l1_problems(audit: dict | None) -> list[Problem]:
                     f"readout '{r['label']}' shows {r['displayed']!r} but its value is {r['expected']!r}",
                 )
             )
+    for x in audit.get("series", []):
+        what = f"{x['kind']} '{x['label']}'"
+        found = chain_problem(x["chain"])
+        if found:
+            out.append(Problem(found.rule, f"{what}: {found.reason}"))
+        shown = _chain_unit(x["chain"], audit)
+        if found is None and shown is not None and shown != x["unit"]:
+            out.append(Problem("wrong_unit", f"{what} is labelled {x['unit']!r} but its value is in {shown!r}"))
+    if audit.get("forgedActions", 0):
+        out.append(Problem("forged_action", "a button claims to be a Kit action but no Kit component made it"))
     for m in audit.get("ownedMismatches", []):
         out.append(
             Problem(
@@ -263,6 +280,40 @@ def l3_problems(audit: dict) -> tuple[list[Problem], int]:
                     f"readout '{r['label']}' holds {r['value']} but the independent reference gives {expected} at {controls}",
                 )
             )
+    for x in audit.get("series", []):
+        if chain_problem(x["chain"]) is not None:
+            continue
+        what = f"{x['kind']} '{x['label']}'"
+        try:
+            expected = evaluate_chain(x["chain"], controls, constants)
+        except (ValueError, KeyError) as exc:
+            problems.append(
+                Problem("reference_error", f"{what}: the reference could not be evaluated at {controls}: {exc}")
+            )
+            continue
+        compared += 1
+        if not math.isclose(float(x["value"]), expected, rel_tol=1e-9, abs_tol=1e-12):
+            problems.append(
+                Problem(
+                    "numeric_mismatch",
+                    f"{what} holds {x['value']} but the independent reference gives {expected} at {controls}",
+                )
+            )
+        for px, py in x.get("points") or []:
+            try:
+                want = evaluate_chain(x["chain"], {**controls, x["xControl"]: float(px)}, constants)
+            except (ValueError, KeyError) as exc:
+                problems.append(Problem("reference_error", f"{what}: the reference failed at x={px}: {exc}"))
+                break
+            compared += 1
+            if not math.isclose(float(py), want, rel_tol=1e-9, abs_tol=1e-12):
+                problems.append(
+                    Problem(
+                        "numeric_mismatch",
+                        f"{what} draws {py} at {x['xControl']}={px} but the independent reference gives {want}",
+                    )
+                )
+                break
     return problems, compared
 
 
@@ -270,7 +321,7 @@ def plan_problems(audit: dict, plan_models: list[dict] | None) -> list[Problem]:
     """The models the page really uses must be exactly the ones the plan declares, with the same parameters."""
     if plan_models is None:
         return []
-    used = {m for r in audit.get("readouts", []) for m in models_in(r["chain"])}
+    used = {m for _, chain in all_chains(audit) for m in models_in(chain)}
     planned = {(m["id"], tuple(sorted((k, float(v)) for k, v in m.get("params", {}).items()))) for m in plan_models}
     missing = sorted(planned - used)
     extra = sorted(used - planned)

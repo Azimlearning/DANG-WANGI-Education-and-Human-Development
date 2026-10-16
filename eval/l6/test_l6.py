@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from api.kit import latest_version
@@ -33,7 +34,7 @@ def test_every_kit_edit_anchor_exists_in_the_built_bundle() -> None:
     core = (KIT / latest_version(KIT) / "core.js").read_text(encoding="utf-8")
     for m in MUTATIONS:
         if m.kit_edit:
-            assert m.kit_edit[0] in core, m.id
+            assert re.search(m.kit_edit[0], core), m.id
 
 
 def test_the_known_misses_are_exactly_the_pinned_set() -> None:

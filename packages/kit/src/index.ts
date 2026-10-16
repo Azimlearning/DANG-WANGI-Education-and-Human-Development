@@ -7,18 +7,21 @@ import { error, event, installErrorHandlers, ready } from "./bridge";
 import { constant } from "./constant";
 import { convert } from "./convert";
 import { environment } from "./environment";
+import { graph } from "./graph";
 import { KIT_VERSION } from "./manifest";
 import { observable } from "./observable";
 import { readout } from "./readout";
+import { reset } from "./reset";
 import { hookes } from "./science/hookes";
 import { ohm } from "./science/ohm";
 import { pressureDepth } from "./science/pressure_depth";
 import { slider } from "./slider";
+import { table } from "./table";
 import { text } from "./text";
 
 const bridge = Object.freeze({ ready, event, error, installErrorHandlers });
 
-export const components = { observable, environment, slider, readout, text, constant, convert, hookes, ohm, pressureDepth, bridge };
+export const components = { observable, environment, slider, readout, reset, graph, table, text, constant, convert, hookes, ohm, pressureDepth, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);

@@ -5,14 +5,17 @@ import { state as bridgeState } from "./bridge";
 import { constant } from "./constant";
 import { convert } from "./convert";
 import { environment } from "./environment";
+import { graph } from "./graph";
 import { components, KIT_VERSION, manifestEntries, Synapse } from "./index";
 import { observable } from "./observable";
 import { isObservable, resetForTests } from "./provenance";
 import { readout } from "./readout";
+import { reset } from "./reset";
 import { hookes } from "./science/hookes";
 import { ohm } from "./science/ohm";
 import { pressureDepth } from "./science/pressure_depth";
 import { slider } from "./slider";
+import { table } from "./table";
 import { text } from "./text";
 
 beforeEach(() => {
@@ -307,7 +310,7 @@ describe("the public surface", () => {
   });
   it("exposes no way to create an observable that the registry would accept except through the Kit", () => {
     expect(Object.keys(Synapse).sort()).toEqual(
-      ["audit", "bridge", "constant", "convert", "environment", "hookes", "observable", "ohm", "pressureDepth", "readout", "slider", "text", "version"].sort(),
+      ["audit", "bridge", "constant", "convert", "environment", "graph", "hookes", "observable", "ohm", "pressureDepth", "readout", "reset", "slider", "table", "text", "version"].sort(),
     );
   });
 });
@@ -327,5 +330,92 @@ describe("manifest", () => {
       }
     }
     expect(KIT_VERSION).toBe("0.1.0");
+  });
+});
+
+describe("reset, table and graph", () => {
+  it("reset puts every control back to its starting value and the readout follows", () => {
+    const { env, load, extension } = spring();
+    reset(env);
+    load.set(8);
+    expect(extension.get()).toBeCloseTo(0.16, 12);
+    document.querySelector<HTMLButtonElement>("[data-synapse-action=reset]")!.click();
+    expect(load.get()).toBe(2);
+    expect(extension.get()).toBeCloseTo(0.04, 12);
+  });
+
+  it("table records the current values as Kit-owned cells and Clear removes them", () => {
+    const { env, load, extension } = spring();
+    table(env, { caption: "Results", columns: [{ label: "Load", unit: "N", value: load, digits: 1 }, { label: "Extension", unit: "m", value: extension, digits: 3 }] });
+    const record = document.querySelector<HTMLButtonElement>("[data-synapse-action=record]")!;
+    record.click();
+    load.set(5);
+    record.click();
+    const cells = Array.from(document.querySelectorAll("tbody td")).map((c) => c.textContent);
+    expect(cells).toEqual(["2.0", "0.040", "5.0", "0.100"]);
+    const a = audit(KIT_VERSION);
+    expect(a.unownedNumbers).toEqual([]);
+    expect(a.ownedMismatches).toEqual([]);
+    expect(a.series.map((x) => [x.kind, x.label, x.unit])).toEqual([["table", "Load", "N"], ["table", "Extension", "m"]]);
+    document.querySelector<HTMLTableCellElement>("tbody td")!.textContent = "9.9";
+    expect(audit(KIT_VERSION).ownedMismatches.map((m) => m.actual)).toContain("9.9");
+    document.querySelector<HTMLButtonElement>("[data-synapse-action=clear]")!.click();
+    expect(document.querySelectorAll("tbody tr")).toHaveLength(0);
+  });
+
+  it("table refuses a value that is not a Kit observable and a bad column count", () => {
+    const { env } = spring();
+    expect(() => table(env, { caption: "x", columns: [{ label: "A", unit: "m", value: { get: () => 1 } as never }] })).toThrow(TypeError);
+    expect(() => table(env, { caption: "x", columns: [] })).toThrow(RangeError);
+  });
+
+  it("graph samples the whole range, restores x, and keeps every number in an owned element", () => {
+    const { env, load, extension } = spring();
+    graph(env, { title: "Extension grows with load.", x: load, y: extension, yLabel: "Extension", yUnit: "m", digits: 3 });
+    expect(load.get()).toBe(2);
+    const a = audit(KIT_VERSION);
+    const g = a.series.find((x) => x.kind === "graph")!;
+    expect(g.xControl).toBe("load");
+    expect(g.points![0]).toEqual([0, 0]);
+    expect(g.points![g.points!.length - 1]![0]).toBe(10);
+    expect(g.points![g.points!.length - 1]![1]).toBeCloseTo(0.2, 12);
+    expect(a.unownedNumbers).toEqual([]);
+    expect(a.ownedMismatches).toEqual([]);
+    expect(a.unownedAttributeNumbers).toEqual([]);
+    const rows = document.querySelectorAll("table.syn-sr tbody tr");
+    expect(rows).toHaveLength(11);
+    expect(rows[10]!.textContent).toBe("100.200");
+  });
+
+  it("graph redraws when another control changes", () => {
+    const env = environment({ title: "Ohm", note: "Current depends on voltage and resistance." });
+    const voltage = slider(env, { id: "voltage", label: "Voltage", unit: "V", min: 0, max: 12, value: 6 });
+    const resistance = slider(env, { id: "resistance", label: "Resistance", unit: "ohm", min: 1, max: 20, value: 4 });
+    const current = ohm({ voltage, resistance });
+    graph(env, { title: "Current against voltage.", x: voltage, y: current, yLabel: "Current", yUnit: "A", digits: 3 });
+    const before = audit(KIT_VERSION).series[0]!.points!.at(-1)![1];
+    resistance.set(2);
+    const after = audit(KIT_VERSION).series[0]!.points!.at(-1)![1];
+    expect(before).toBeCloseTo(3, 12);
+    expect(after).toBeCloseTo(6, 12);
+    expect(voltage.get()).toBe(6);
+  });
+
+  it("graph refuses an x that is not a slider and a y that is not a Kit observable", () => {
+    const { env, extension } = spring();
+    expect(() => graph(env, { title: "t", x: extension, y: extension, yLabel: "E", yUnit: "m" })).toThrow(TypeError);
+    const { load } = { load: slider(env, { id: "other", label: "Other", unit: "N", min: 0, max: 1, value: 0 }) };
+    expect(() => graph(env, { title: "t", x: load, y: { get: () => 1 } as never, yLabel: "E", yUnit: "m" })).toThrow(TypeError);
+  });
+
+  it("the audit counts a look-alike action button a script made", () => {
+    const { env } = spring();
+    reset(env);
+    expect(audit(KIT_VERSION).forgedActions).toBe(0);
+    const b = document.createElement("button");
+    b.setAttribute("data-synapse-action", "reset");
+    env.controls.appendChild(b);
+    expect(audit(KIT_VERSION).forgedActions).toBe(1);
+    expect(audit(KIT_VERSION).actions).toEqual([{ kind: "reset", label: "Reset" }]);
   });
 });
