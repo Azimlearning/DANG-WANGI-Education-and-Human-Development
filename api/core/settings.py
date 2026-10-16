@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     public_origin: str = "http://localhost:3000"
     """The origin the web app is served from. The injected CSP names it, because an opaque-origin srcdoc makes 'self' match nothing."""
     log_level: str = "INFO"
+    verify_interaction_seconds: float = 10.0
+    """How long the render harness presses controls and inputs while verifying one Environment. Tests use 1; do not go below 5 for real use."""
 
     anthropic_api_key: SecretStr | None = None
     openrouter_api_key: SecretStr | None = None

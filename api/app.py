@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import uuid
 from collections.abc import AsyncIterator
 
 from fastapi import Depends, FastAPI, Request
@@ -13,28 +12,22 @@ from fastapi.responses import JSONResponse
 from fastapi.sse import EventSourceResponse
 
 from api import postprocess
-from api.core.errors import HTTP_STATUS, BadRequest, NotFound, SynapseError, envelope_from_exception
+from api.core.errors import HTTP_STATUS, BadRequest, SynapseError, envelope_from_exception
 from api.core.settings import Settings, load_settings
-from api.kit import latest_version
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.service import LLMService
-from api.llm.types import LLMRequest
+from api.pipeline.run import Deps
+from api.pipeline.run import run as run_pipeline
 from api.schema.generated import (
     AskRequest,
     DoneEvent,
-    EnvironmentEvent,
     ErrorEnvelope,
     FieldIssue,
-    MetaEvent,
     StreamErrorEvent,
     StreamEvent,
-    TextDeltaEvent,
 )
-from api.seed import REFERENCE_SLUG, store_path
-from api.sse import split_text
+from api.seed import store_path
 from api.static import mount_kit
-from api.verify.gate import deliver
-from api.verify.mint import VerificationFailed
 from api.verify.store import SqliteEnvironmentStore
 
 log = logging.getLogger(__name__)
@@ -97,42 +90,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/ask", response_class=EventSourceResponse)
     async def ask(request: Request, question: str = Depends(checked_question)) -> AsyncIterator[StreamEvent]:
-        """P0: every question gets the reference Environment, delivered through the gate. There is no planner yet (P3)."""
-        store: SqliteEnvironmentStore = request.app.state.store
-        yield MetaEvent(
-            type="meta",
-            requestId=uuid.uuid4().hex,
-            lane="instantiate",
-            label="model-checked",
-            kitVersion=latest_version(settings.kit_dist_dir),
-        )
+        """The Mark 3 pipeline (D-23) on whatever LLM service is configured: fakes by default, nothing paid without the owner's go."""
         try:
-            reply = await llm_for(request).complete(
-                LLMRequest(prompt=question, purpose="explain", tier="light", max_tokens=300)
-            )
-            for chunk in split_text(reply.text):
-                yield TextDeltaEvent(type="text_delta", text=chunk)
-
-            env_id = store.latest_id(REFERENCE_SLUG)
-            if env_id is None:
-                raise NotFound("No reference Environment is stored. Run `uv run python -m api.seed` first.")
-            block = deliver(store, env_id, public_origin=settings.public_origin, kit_dist=settings.kit_dist_dir)
-            yield EnvironmentEvent(type="environment", block=block)
-        except VerificationFailed as failure:
-            log.warning("delivery refused stage=%s rule=%s", failure.stage, failure.rule)
-            yield StreamErrorEvent(
-                type="error",
-                error=ErrorEnvelope(
-                    code="verification_refused",
-                    message="This Environment failed a check and was not delivered.",
-                    issues=[FieldIssue(path=f"{failure.stage}/{failure.rule}", message=failure.reason)],
-                    retryable=False,
-                ),
-            )
-        except Exception as exc:
-            if not isinstance(exc, SynapseError):
-                log.exception("unexpected failure in /ask")
+            llm = llm_for(request)
+        except SynapseError as exc:  # live mode without a provider: a clean error event, not a broken stream
             yield StreamErrorEvent(type="error", error=envelope_from_exception(exc))
-        yield DoneEvent(type="done")
+            yield DoneEvent(type="done")
+            return
+        deps = Deps(
+            kit_dist=settings.kit_dist_dir,
+            public_origin=settings.public_origin,
+            store=request.app.state.store,
+            llm=llm,
+            trace_path=settings.data_dir / "traces.jsonl",
+            interaction_seconds=settings.verify_interaction_seconds,
+        )
+        async for event in run_pipeline(question, deps):
+            yield event
 
     return app

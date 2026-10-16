@@ -26,6 +26,12 @@ def build_llm_service(
 ) -> LLMService:
     """Fake mode: one free fake provider. Live mode: not built until P3."""
     if settings.synapse_llm_mode == "fake":
-        provider = FakeProvider(fake_responder) if fake_responder else FakeProvider()
+        if fake_responder is None:
+            from api.pipeline.fakes import (
+                fake_responder as pipeline_fakes,
+            )  # purpose-aware fakes for the pipeline (route, plan, fill)
+
+            fake_responder = pipeline_fakes
+        provider = FakeProvider(fake_responder)
         return LLMService(provider, None, ledger)
     raise ProviderUnavailable("Live LLM providers are not built until P3. Set SYNAPSE_LLM_MODE=fake.")

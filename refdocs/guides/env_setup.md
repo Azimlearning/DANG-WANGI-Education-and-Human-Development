@@ -24,6 +24,7 @@ Last updated: 2026-10-16
 |---|---|---|
 | `OPENROUTER_API_KEY` | none | Enables an OpenRouter fallback route when Anthropic is unavailable or out of credit |
 | `KIT_DIST_DIR` | `./packages/kit/dist` | Where the built Kit lives (`<semver>/core.js`, `manifest.json`). The API serves it at `/vendor/kit/` and the render harness reads it. Build it with `pnpm --filter @synapse/kit build` |
+| `VERIFY_INTERACTION_SECONDS` | `10` | How long the render harness presses controls and inputs while verifying one Environment (the longer, the more conditional behaviour it can reach). Tests use `1`. Not a secret |
 | `DATA_DIR` | `./data` | Where local stores and the default spend ledger live |
 | `LEDGER_PATH` | `<DATA_DIR>/ledger.db` | Overrides the spend ledger file. Keep ONE ledger so the monthly cap covers every run |
 | `LOG_LEVEL` | `INFO` | API log verbosity |

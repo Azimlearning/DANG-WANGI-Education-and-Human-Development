@@ -391,8 +391,24 @@ _ENTRIES = [
         "free_lane",
         "The skeleton cannot take this plan; the part falls to the Free lane.",
     ),
-    _e("BUDGET", "PIPE-002", "pipeline", "degrade", "text_only", "The request used its call budget; answer in words."),
-    _e("INTAKE", "PIPE-003", "intake", "block", "text_only", "The question could not be accepted."),
+    _e(
+        "BUDGET",
+        "PIPE-002",
+        "pipeline",
+        "degrade",
+        "text_only",
+        "The request used its call budget; answer in words.",
+        "This question used up the steps it is allowed, so you are getting the written answer.",
+    ),
+    _e(
+        "INTAKE",
+        "PIPE-003",
+        "intake",
+        "block",
+        "text_only",
+        "The question could not be accepted.",
+        "That question cannot be answered here. Try a science question from your Form 4 or Form 5 textbook.",
+    ),
 ]
 
 REGISTRY: dict[str, FailCheck] = dict(_ENTRIES)
