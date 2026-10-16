@@ -7,15 +7,23 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from api.core.errors import ProviderUnavailable
-from api.core.settings import Settings
+from api.core.settings import ConfigError, Settings
 from api.llm.ledger import SpendLedger, engine_for
 from api.llm.providers.fake import FakeProvider
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
 
 
+def _require_live_prerequisites(settings: Settings) -> None:
+    """Live mode never runs uncapped, whatever path built the Settings (load_settings checks too, but Settings can be constructed directly)."""
+    missing = settings.missing_for_mode()
+    if missing:
+        raise ConfigError(missing)
+
+
 def build_ledger(settings: Settings) -> SpendLedger:
     """The ledger at the configured path, capped by LLM_MONTHLY_CAP_USD (None: uncapped, which only fake mode allows)."""
+    _require_live_prerequisites(settings)
     return SpendLedger(engine_for(settings.resolved_ledger_path()), settings.llm_monthly_cap_usd)
 
 

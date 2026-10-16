@@ -16,7 +16,7 @@ from pathlib import Path
 from api import postprocess
 from api.schema.generated import BlockMeta, Citation, EnvironmentBlock
 from api.verify import scan as l0
-from api.verify.mint import VerificationFailed, guard_label, html_sha256, kit_bundle_sha256
+from api.verify.mint import Evidence, VerificationFailed, guard_label, html_sha256, kit_bundle_sha256
 from api.verify.store import SqliteEnvironmentStore
 
 LIMITS: dict[str, str] = {
@@ -45,7 +45,9 @@ def checked_summary(checked: dict, label: str) -> dict:
     }
 
 
-def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, kit_dist: Path) -> EnvironmentBlock:
+def deliver(
+    store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, kit_dist: Path, evidence: Evidence | None = None
+) -> EnvironmentBlock:
     """Return the block for `env_id`, or raise `VerificationFailed` with stage 'gate'."""
     record = store.get_record(env_id)
     if record is None:
@@ -58,6 +60,9 @@ def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, k
     hit = l0.scan(record.html)
     if hit is not None:
         raise VerificationFailed("gate", hit.rule, hit.reason)
+
+    if store.status(env_id) != "active":
+        raise VerificationFailed("gate", "withdrawn", f"Environment '{env_id}' was withdrawn and is not delivered")
 
     if not postprocess.csp_is_first(record.html, public_origin):
         raise VerificationFailed(
@@ -76,7 +81,7 @@ def deliver(store: SqliteEnvironmentStore, env_id: str, *, public_origin: str, k
 
     citations = tuple(Citation.model_validate(c) for c in record.citations)
     try:
-        guard_label(record.lane, record.label, citations)
+        guard_label(record.lane, record.label, citations, evidence)
     except VerificationFailed as failure:
         raise VerificationFailed("gate", failure.rule, failure.reason) from failure
 

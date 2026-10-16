@@ -49,6 +49,13 @@ class ProviderUnavailable(SynapseError):
     retryable = True
 
 
+class ProviderRejected(SynapseError):
+    """The provider refused for a reason a retry cannot fix (its balance, its key, our request). This is NOT the spend cap; the message says so."""
+
+    code = "provider_unavailable"
+    retryable = False
+
+
 class VerificationRefused(SynapseError):
     """An Environment failed a verification layer. `issues` names the layer and the reason."""
 

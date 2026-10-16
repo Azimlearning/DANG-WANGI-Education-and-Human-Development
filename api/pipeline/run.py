@@ -52,7 +52,7 @@ from api.schema.generated import (
 )
 from api.sse import split_text
 from api.verify.gate import deliver
-from api.verify.mint import VerificationFailed, VerifiedEnvironment, verify_environment
+from api.verify.mint import Evidence, VerificationFailed, VerifiedEnvironment, verify_environment
 from api.verify.store import SqliteEnvironmentStore
 
 log = logging.getLogger(__name__)
@@ -105,6 +105,7 @@ class Deps:
     trace_path: Path | None = None
     interaction_seconds: float = 10.0
     use_router: bool = True
+    evidence: Evidence | None = None
     verify_fn: Callable[..., VerifiedEnvironment] | None = None
     """Test seam: replaces verify_environment (it must have the same keyword arguments)."""
 
@@ -142,6 +143,11 @@ class _Run:
 
     async def call(self, request: LLMRequest, layer: str) -> str:  # noqa: ARG002
         return (await self.complete(request)).text
+
+
+def canonical_question(question: str) -> str:
+    """Lowercase words only, single spaces: 'Why does a spring stretch?' and 'why does a SPRING stretch' are the same question."""
+    return " ".join(re.findall(r"[a-z0-9]+", question.lower()))
 
 
 def _stage(layer: str, status: str, note: str | None = None) -> StageEvent:
@@ -239,6 +245,30 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
         yield TextDeltaEvent(type="text_delta", text=chunk)
     t.add("explain", "ok", started)
     yield _stage("explain", "done")
+
+    # 2b library hit: the same canonical question gets the same verified Environment back with no planning, no verification run and no further model
+    # call. The gate re-checks it exactly as for a fresh one (a stale, tampered or withdrawn Environment is not served), and a refusal falls through to
+    # generating a new one.
+    canon = canonical_question(r.q)
+    cached_id = r.deps.store.lookup_question(canon)
+    if cached_id is not None:
+        started = time.monotonic()
+        try:
+            block = deliver(
+                r.deps.store,
+                cached_id,
+                public_origin=r.deps.public_origin,
+                kit_dist=r.deps.kit_dist,
+                evidence=r.deps.evidence,
+            )
+        except VerificationFailed as failure:
+            t.add("library", "refused", started, rule=failure.rule)
+        else:
+            t.add("library", "hit", started, env_id=cached_id[:12])
+            t.outcome = f"library:{block.lane}"
+            yield _stage("library", "done", "Found in the library.")
+            yield EnvironmentEvent(type="environment", block=block)
+            return
 
     pattern = SUPPORTED_PATTERNS.get(str(decision.pattern.value), "simulation")
     if decision.topic.value == "none":
@@ -338,6 +368,7 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
             kit_dist=r.deps.kit_dist,
             interaction_seconds=r.deps.interaction_seconds,
             plan_models=plan.model_summaries(),
+            evidence=r.deps.evidence,
         )
     except VerificationFailed as failure:
         entry = failchecks.get(failure.rule)
@@ -354,13 +385,20 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     started = time.monotonic()
     r.deps.store.put_verified(env)
     try:
-        block = deliver(r.deps.store, env.env_id, public_origin=r.deps.public_origin, kit_dist=r.deps.kit_dist)
+        block = deliver(
+            r.deps.store,
+            env.env_id,
+            public_origin=r.deps.public_origin,
+            kit_dist=r.deps.kit_dist,
+            evidence=r.deps.evidence,
+        )
     except VerificationFailed as failure:
         t.add("deliver", "refused", started, rule=failure.rule)
         t.outcome = "text_only"
         yield _stage("deliver", "degraded", failchecks.get(failure.rule).student_message)
         return
     t.add("deliver", "ok", started, env_id=env.env_id[:12])
+    r.deps.store.remember_question(canon, env.env_id)
     t.outcome = lane
     yield EnvironmentEvent(type="environment", block=block)
 

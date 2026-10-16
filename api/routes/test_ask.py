@@ -163,3 +163,52 @@ def test_the_kit_is_served_same_origin_and_cannot_be_escaped(client: TestClient,
     assert client.get(f"/vendor/kit/{kit_version}/manifest.json").json()["version"] == kit_version
     assert client.get("/vendor/kit/../../pyproject.toml").status_code in (404, 400)
     assert client.get("/vendor/kit/%2e%2e/%2e%2e/pyproject.toml").status_code == 404
+
+
+# ── the library and its lifecycle (P5) ─────────────────────────────────────────────────────────────────────────────────────
+
+
+def _environment_id(client: TestClient) -> str:
+    return next(e for e in _events(client) if isinstance(e, EnvironmentEvent)).block.id
+
+
+def test_a_repeated_question_is_served_from_the_library_with_no_new_plan(client: TestClient) -> None:
+    first = _events(client)
+    calls_after_first = len(client.app.state.ledger.rows())  # type: ignore[attr-defined]
+    second = _events(client, "WHY does a spring stretch, when I hang a weight on it")  # same canonical question
+    block_a = next(e for e in first if isinstance(e, EnvironmentEvent)).block
+    block_b = next(e for e in second if isinstance(e, EnvironmentEvent)).block
+    assert block_a.id == block_b.id and block_a.htmlSha256 == block_b.htmlSha256
+    new_purposes = [r["purpose"] for r in client.app.state.ledger.rows()[calls_after_first:]]  # type: ignore[attr-defined]
+    assert "plan" not in new_purposes  # no planning for a library hit
+    assert not any(e.type == "plan" for e in second)
+    assert any(e.type == "stage" and e.layer == "library" for e in second)
+
+
+def test_the_library_lists_the_environment_and_serves_it_through_the_gate(client: TestClient) -> None:
+    env_id = _environment_id(client)
+    cards = client.get("/library").json()["environments"]
+    assert [c["id"] for c in cards] == [env_id] and cards[0]["stale"] is False and cards[0]["status"] == "active"
+    served = client.get(f"/library/{env_id}")
+    assert served.status_code == 200 and served.json()["label"] == "model-checked"
+
+
+def test_flagging_counts_but_withdrawing_takes_it_down_and_the_cache_then_regenerates(client: TestClient) -> None:
+    env_id = _environment_id(client)
+    assert client.post(f"/library/{env_id}/flag", json={"note": "the units look odd"}).json() == {"flags": 1}
+    assert client.get(f"/library/{env_id}").status_code == 200  # a flag alone does not remove it
+    assert client.post(f"/library/{env_id}/withdraw", json={"note": "checking"}).json() == {"status": "withdrawn"}
+    gone = client.get(f"/library/{env_id}")
+    assert gone.status_code == 422 or gone.status_code >= 400
+    assert gone.json()["issues"][0]["path"] == "gate/withdrawn"
+    # The cached question no longer serves the withdrawn Environment; the pipeline makes a fresh one.
+    again = _events(client)
+    assert any(e.type == "plan" for e in again)
+    assert client.post(f"/library/{env_id}/restore").json() == {"status": "active"}
+
+
+def test_library_actions_on_an_unknown_environment_are_404_and_bodies_are_strict(client: TestClient) -> None:
+    assert client.post("/library/nope-000000000000/flag", json={"note": "x"}).status_code == 404
+    env_id = _environment_id(client)
+    assert client.post(f"/library/{env_id}/flag", json={"note": ""}).status_code == 422
+    assert client.post(f"/library/{env_id}/flag", json={"note": "x", "extra": 1}).status_code == 422

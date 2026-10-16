@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import logging
 
-from api.core.errors import BadRequest, ProviderUnavailable
+from api.core.errors import BadRequest, ProviderRejected, ProviderUnavailable, SpendCapExceeded
 from api.llm.ledger import SpendLedger
-from api.llm.pricing import cost_usd, estimate_call_cost
+from api.llm.pricing import cost_usd, estimate_call_cost, estimate_input_tokens
 from api.llm.providers.base import Provider, ProviderFailure
 from api.llm.types import MAX_OUTPUT_TOKENS, LLMRequest, LLMResult
 
@@ -29,6 +29,14 @@ class LLMService:
         """What the monthly cap still allows (None: no cap). For up-front checks before a big job."""
         return self._ledger.remaining_usd()
 
+    def ensure_budget(self, projected_usd: float) -> None:
+        """Refuse a run up front when the cap cannot cover its projected worst case (a sweep must not start and then hit the cap half way)."""
+        remaining = self.remaining_usd()
+        if remaining is not None and remaining < projected_usd:
+            raise SpendCapExceeded(
+                f"The run is projected to cost up to ${projected_usd:.2f} but only ${remaining:.2f} of this month's cap remains. Nothing was sent."
+            )
+
     async def complete(self, request: LLMRequest) -> LLMResult:
         if not 1 <= request.max_tokens <= MAX_OUTPUT_TOKENS:
             raise BadRequest(f"max_tokens must be between 1 and {MAX_OUTPUT_TOKENS}.")
@@ -40,28 +48,42 @@ class LLMService:
             try:
                 response = await provider.complete(request, model)
             except ProviderFailure as failure:
+                # A timeout or a truncated reply may still have been billed: book the estimated input cost rather than nothing.
+                billed = (
+                    cost_usd(provider.name, model, estimate_input_tokens(request), 0)
+                    if failure.kind in ("timeout", "truncated")
+                    else 0.0
+                )
                 self._ledger.settle(
                     reservation,
                     provider=provider.name,
                     model=model,
                     tokens_in=0,
                     tokens_out=0,
-                    cost_usd=0.0,
+                    cost_usd=billed,
                     purpose=request.purpose,
                     status="failed",
                 )
-                log.warning("provider_failed provider=%s reason=%s", provider.name, failure.reason)
+                log.warning(
+                    "provider_failed provider=%s kind=%s reason=%s", provider.name, failure.kind, failure.reason
+                )
+                if failure.kind in ("credit_exhausted", "auth", "bad_request"):
+                    raise ProviderRejected(
+                        f"The provider refused the request ({failure.kind.replace('_', ' ')}). This is the provider's balance, key or our request, "
+                        "not the spend cap, and retrying will not help."
+                    ) from failure
                 last_failure = failure
                 continue
             except BaseException:
-                # Cancellation or a bug: release the reservation, then let it propagate.
+                # Cancellation (a client closing the stream) or a bug: the provider may already have billed the input, so book that, release the
+                # reservation, then let the exception propagate.
                 self._ledger.settle(
                     reservation,
                     provider=provider.name,
                     model=model,
                     tokens_in=0,
                     tokens_out=0,
-                    cost_usd=0.0,
+                    cost_usd=cost_usd(provider.name, model, estimate_input_tokens(request), 0),
                     purpose=request.purpose,
                     status="failed",
                 )

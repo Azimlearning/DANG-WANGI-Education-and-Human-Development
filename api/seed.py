@@ -11,6 +11,7 @@ import json
 from api.core.settings import Settings, load_settings
 from api.schema.generated import Citation
 from api.verify.mint import verify_environment
+from api.verify.render import INTERACTION_SECONDS
 from api.verify.store import SqliteEnvironmentStore
 
 REFERENCE_SLUG = "reference-spring"
@@ -35,7 +36,7 @@ def seed_reference(settings: Settings, interaction_seconds: float | None = None)
         public_origin=settings.public_origin,
         kit_dist=settings.kit_dist_dir,
         plan_models=plan.get("models"),
-        **({} if interaction_seconds is None else {"interaction_seconds": interaction_seconds}),
+        interaction_seconds=INTERACTION_SECONDS if interaction_seconds is None else interaction_seconds,
     )
     SqliteEnvironmentStore(store_path(settings)).put_verified(env)
     return env.env_id

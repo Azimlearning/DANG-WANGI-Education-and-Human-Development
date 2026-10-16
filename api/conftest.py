@@ -25,7 +25,7 @@ def no_network(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(socket, "getaddrinfo", _refuse)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Remove every setting from the process environment so a developer's shell cannot leak into a test."""
     for name in (

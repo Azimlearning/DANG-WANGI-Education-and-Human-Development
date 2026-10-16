@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Literal, Protocol
 
 from api.llm.types import LLMRequest, ProviderResponse, Tier
+
+# transient: try the fallback. timeout: the call may have been billed. truncated: the reply hit max_tokens (billed). credit_exhausted and auth: the
+# provider's balance or key is the problem, NOT the spend cap; retrying or falling back is wrong, so the whole run stops. bad_request: our request is wrong.
+FailureKind = Literal["transient", "timeout", "truncated", "credit_exhausted", "auth", "bad_request"]
 
 
 class ProviderFailure(Exception):
@@ -15,10 +19,11 @@ class ProviderFailure(Exception):
     a key or a response body.
     """
 
-    def __init__(self, provider: str, reason: str):
+    def __init__(self, provider: str, reason: str, kind: FailureKind = "transient"):
         super().__init__(f"{provider}: {reason}")
         self.provider = provider
         self.reason = reason
+        self.kind = kind
 
 
 class Provider(Protocol):

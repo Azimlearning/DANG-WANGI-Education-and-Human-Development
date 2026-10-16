@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from api.core.errors import ProviderUnavailable, SpendCapExceeded
+from api.core.errors import ProviderRejected, ProviderUnavailable, SpendCapExceeded
 from api.core.settings import ConfigError, load_settings
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.ledger import SpendLedger, engine_for
@@ -79,6 +79,7 @@ def test_live_mode_builds_no_provider_in_p0(monkeypatch: pytest.MonkeyPatch, tmp
     monkeypatch.setenv("SYNAPSE_LLM_MODE", "live")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-not-real")
     monkeypatch.setenv("LLM_MONTHLY_CAP_USD", "5")
+    monkeypatch.setenv("LEDGER_PATH", str(tmp_path / "ledger.db"))
     settings = load_settings(env_file=None).model_copy(update={"data_dir": tmp_path})
     with pytest.raises(ProviderUnavailable):
         build_llm_service(settings, build_ledger(settings))
@@ -130,3 +131,76 @@ async def test_failed_attempt_is_recorded_as_failed_and_costs_nothing(tmp_path: 
     (row,) = ledger.rows()
     assert row["status"] == "failed"
     assert row["cost_usd"] == 0.0
+
+
+async def test_a_timeout_is_booked_at_its_input_cost_not_nothing(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path, cap=10.0)
+    service = LLMService(
+        FakeProvider(name="anthropic", models=ANTHROPIC_MODELS, fail_with="timed out", fail_kind="timeout"),
+        None,
+        ledger,
+    )
+    with pytest.raises(ProviderUnavailable):
+        await service.complete(LLMRequest(prompt="x" * 3000, purpose="plan"))
+    (row,) = ledger.rows()
+    assert row["status"] == "failed" and row["cost_usd"] > 0
+
+
+@pytest.mark.parametrize("kind", ["credit_exhausted", "auth", "bad_request"])
+async def test_a_failure_a_retry_cannot_fix_stops_at_once_and_says_it_is_not_the_cap(tmp_path: Path, kind: str) -> None:
+    ledger = _ledger(tmp_path, cap=10.0)
+    first = FakeProvider(name="anthropic", models=ANTHROPIC_MODELS, fail_with="rejected", fail_kind=kind)  # type: ignore[arg-type]
+    fallback = FakeProvider(name="fallbackco", models=ANTHROPIC_MODELS)
+    service = LLMService(first, fallback, ledger)
+    with pytest.raises(ProviderRejected) as err:
+        await service.complete(LLMRequest(prompt="hi", purpose="plan"))
+    assert "not the spend cap" in str(err.value) and err.value.retryable is False
+    assert fallback.calls == []  # a balance or key problem is never retried on another provider
+
+
+async def test_a_cancelled_call_is_booked_for_its_input_and_the_cancellation_propagates(tmp_path: Path) -> None:
+    import asyncio
+
+    class Hangs:
+        name = "anthropic"
+
+        def model_for(self, tier):  # noqa: ANN001, ANN201
+            return ANTHROPIC_MODELS[tier]
+
+        async def complete(self, request, model):  # noqa: ANN001, ANN201
+            await asyncio.sleep(10)
+
+    ledger = _ledger(tmp_path, cap=10.0)
+    service = LLMService(Hangs(), None, ledger)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
+    task = asyncio.create_task(service.complete(LLMRequest(prompt="x" * 3000, purpose="plan")))
+    await asyncio.sleep(0.05)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    (row,) = ledger.rows()
+    assert row["cost_usd"] > 0 and ledger.remaining_usd() == pytest.approx(10.0 - row["cost_usd"])
+
+
+async def test_a_run_whose_worst_case_does_not_fit_the_cap_is_refused_before_it_starts(tmp_path: Path) -> None:
+    service = LLMService(FakeProvider(name="anthropic", models=ANTHROPIC_MODELS), None, _ledger(tmp_path, cap=0.50))
+    service.ensure_budget(0.40)
+    with pytest.raises(SpendCapExceeded):
+        service.ensure_budget(0.80)
+    assert (
+        LLMService(FakeProvider(), None, _ledger(tmp_path / "u", cap=None)).ensure_budget(99.0) is None
+    )  # no cap: nothing to check
+
+
+@pytest.mark.usefixtures("clean_env")
+def test_live_mode_is_never_built_uncapped_or_with_a_relative_ledger_even_without_load_settings(tmp_path: Path) -> None:
+    from api.core.settings import Settings
+
+    def settings(**kw: object) -> Settings:
+        return Settings.model_validate({"synapse_llm_mode": "live", "anthropic_api_key": "sk-x", **kw})
+
+    with pytest.raises(ConfigError) as err:
+        build_ledger(settings(ledger_path=str(tmp_path / "l.db")))
+    assert "LLM_MONTHLY_CAP_USD" in str(err.value)
+    with pytest.raises(ConfigError) as err:
+        build_ledger(settings(llm_monthly_cap_usd=1))
+    assert "LEDGER_PATH" in str(err.value)

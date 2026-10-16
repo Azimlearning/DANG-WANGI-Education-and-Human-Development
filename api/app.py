@@ -10,10 +10,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.sse import EventSourceResponse
+from pydantic import BaseModel, ConfigDict, Field
 
 from api import postprocess
-from api.core.errors import HTTP_STATUS, BadRequest, SynapseError, envelope_from_exception
+from api.core.errors import HTTP_STATUS, BadRequest, NotFound, SynapseError, envelope_from_exception
 from api.core.settings import Settings, load_settings
+from api.kit import built_versions
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.service import LLMService
 from api.pipeline.run import Deps
@@ -28,11 +30,30 @@ from api.schema.generated import (
 )
 from api.seed import store_path
 from api.static import mount_kit
+from api.verify.gate import deliver
+from api.verify.mint import VerificationFailed, kit_bundle_sha256
 from api.verify.store import SqliteEnvironmentStore
 
 log = logging.getLogger(__name__)
 
 MAX_QUESTION_CHARS = 500
+
+
+class _Note(BaseModel):
+    """The body of a flag or a withdrawal: one short note."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    note: str = Field(min_length=1, max_length=240)
+
+
+def evidence_for(settings: Settings):  # noqa: ANN201
+    """The corpus-backed evidence source, or None when no corpus is configured (then `kit-verified` is unreachable, by design)."""
+    if settings.corpus_dir is None:
+        return None
+    from api.evidence.citations import Evidence
+    from api.evidence.corpus import Corpus
+
+    return Evidence(Corpus.load(settings.corpus_dir))
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -104,8 +125,60 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             llm=llm,
             trace_path=settings.data_dir / "traces.jsonl",
             interaction_seconds=settings.verify_interaction_seconds,
+            evidence=evidence_for(settings),
         )
         async for event in run_pipeline(question, deps):
             yield event
+
+    # ── the library and its lifecycle (P5). Single operator, no auth (D-11): these must not be exposed until the deploy gate. ──────────────────────
+
+    def current_kit_shas() -> dict[str, str | None]:
+        return {v: kit_bundle_sha256(settings.kit_dist_dir, v) for v in built_versions(settings.kit_dist_dir)}
+
+    @app.get("/library")
+    async def library(request: Request) -> dict:
+        return {"environments": request.app.state.store.library(current_kit_shas())}
+
+    @app.get("/library/{env_id}")
+    async def library_item(env_id: str, request: Request) -> JSONResponse:
+        """One Environment through the delivery gate, exactly as /ask delivers it."""
+        try:
+            block = deliver(
+                request.app.state.store,
+                env_id,
+                public_origin=settings.public_origin,
+                kit_dist=settings.kit_dist_dir,
+                evidence=evidence_for(settings),
+            )
+        except VerificationFailed as failure:
+            envelope = ErrorEnvelope(
+                code="verification_refused",
+                message="This Environment is not available.",
+                issues=[FieldIssue(path=f"{failure.stage}/{failure.rule}", message=failure.reason)],
+                retryable=False,
+            )
+            return JSONResponse(envelope.model_dump(), status_code=HTTP_STATUS["verification_refused"])
+        return JSONResponse(block.model_dump(mode="json"))
+
+    def _known(request: Request, env_id: str) -> SqliteEnvironmentStore:
+        store: SqliteEnvironmentStore = request.app.state.store
+        if store.get_record(env_id) is None:
+            raise NotFound(f"No verified Environment '{env_id}'.")
+        return store
+
+    @app.post("/library/{env_id}/flag")
+    async def flag(env_id: str, body: _Note, request: Request) -> dict:
+        """Anyone can say an Environment looks wrong. A flag is recorded and counted; it does not take the Environment down by itself."""
+        return {"flags": _known(request, env_id).flag(env_id, body.note)}
+
+    @app.post("/library/{env_id}/withdraw")
+    async def withdraw(env_id: str, body: _Note, request: Request) -> dict:
+        _known(request, env_id).withdraw(env_id, body.note)
+        return {"status": "withdrawn"}
+
+    @app.post("/library/{env_id}/restore")
+    async def restore(env_id: str, request: Request) -> dict:
+        _known(request, env_id).restore(env_id)
+        return {"status": "active"}
 
     return app

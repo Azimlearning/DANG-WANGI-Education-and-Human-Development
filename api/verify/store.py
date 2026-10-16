@@ -56,6 +56,16 @@ class SqliteEnvironmentStore:
                 "citations TEXT NOT NULL, plan_summary TEXT NOT NULL, checked TEXT NOT NULL, state TEXT NOT NULL, "
                 "reason TEXT, created_at TEXT NOT NULL)"
             )
+            # The library and lifecycle (P5). These tables hold decisions ABOUT stored Environments, never their content, so the verified rows stay immutable.
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS lifecycle (env_id TEXT PRIMARY KEY, status TEXT NOT NULL, reason TEXT NOT NULL, changed_at TEXT NOT NULL)"
+            )
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS flags (id INTEGER PRIMARY KEY AUTOINCREMENT, env_id TEXT NOT NULL, note TEXT NOT NULL, created_at TEXT NOT NULL)"
+            )
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS questions (canon TEXT PRIMARY KEY, env_id TEXT NOT NULL, created_at TEXT NOT NULL)"
+            )
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self._path)
@@ -192,3 +202,83 @@ class SqliteEnvironmentStore:
         with closing(self._connect()) as db:
             rows = db.execute("SELECT state, COUNT(*) FROM environments GROUP BY state").fetchall()
         return {str(state): int(n) for state, n in rows}
+
+    # ── library and lifecycle (P5) ──────────────────────────────────────────────────────────────────────────────────────────────
+
+    def status(self, env_id: str) -> str:
+        """`active` or `withdrawn`. A withdrawn Environment is never delivered (the gate checks), whatever its row says."""
+        with closing(self._connect()) as db:
+            row = db.execute("SELECT status FROM lifecycle WHERE env_id = ?", (env_id,)).fetchone()
+        return "active" if row is None else str(row[0])
+
+    def withdraw(self, env_id: str, reason: str) -> None:
+        self._set_status(env_id, "withdrawn", reason)
+
+    def restore(self, env_id: str) -> None:
+        self._set_status(env_id, "active", "restored")
+
+    def _set_status(self, env_id: str, status: str, reason: str) -> None:
+        if self.get_record(env_id) is None:
+            raise KeyError(f"no verified Environment '{env_id}'")
+        with closing(self._connect()) as db, db:
+            db.execute(
+                "INSERT INTO lifecycle (env_id, status, reason, changed_at) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(env_id) DO UPDATE SET status = excluded.status, reason = excluded.reason, changed_at = excluded.changed_at",
+                (env_id, status, reason[:240], datetime.now(UTC).isoformat()),
+            )
+
+    def flag(self, env_id: str, note: str) -> int:
+        """Record that someone thinks this Environment is wrong. Returns the number of flags it now has. Flags never change what is delivered by themselves."""
+        if self.get_record(env_id) is None:
+            raise KeyError(f"no verified Environment '{env_id}'")
+        with closing(self._connect()) as db, db:
+            db.execute(
+                "INSERT INTO flags (env_id, note, created_at) VALUES (?, ?, ?)",
+                (env_id, note[:240], datetime.now(UTC).isoformat()),
+            )
+            return int(db.execute("SELECT COUNT(*) FROM flags WHERE env_id = ?", (env_id,)).fetchone()[0])
+
+    def flag_count(self, env_id: str) -> int:
+        with closing(self._connect()) as db:
+            return int(db.execute("SELECT COUNT(*) FROM flags WHERE env_id = ?", (env_id,)).fetchone()[0])
+
+    def remember_question(self, canon: str, env_id: str) -> None:
+        """The question cache: the same canonical question gets the same Environment next time, with no model call. Replaces an older entry."""
+        with closing(self._connect()) as db, db:
+            db.execute(
+                "INSERT INTO questions (canon, env_id, created_at) VALUES (?, ?, ?) "
+                "ON CONFLICT(canon) DO UPDATE SET env_id = excluded.env_id, created_at = excluded.created_at",
+                (canon, env_id, datetime.now(UTC).isoformat()),
+            )
+
+    def lookup_question(self, canon: str) -> str | None:
+        with closing(self._connect()) as db:
+            row = db.execute("SELECT env_id FROM questions WHERE canon = ?", (canon,)).fetchone()
+        return None if row is None else str(row[0])
+
+    def library(self, current_kit_sha: dict[str, str | None]) -> list[dict]:
+        """One card per verified Environment, newest first. `current_kit_sha` maps a Kit version to the sha256 of its CURRENT build (None when not built);
+        an Environment made with other bytes is `stale` and is not delivered until it is verified again."""
+        with closing(self._connect()) as db:
+            rows = db.execute(
+                "SELECT e.env_id, e.title, e.lane, e.label, e.kit_version, e.kit_sha256, e.checked, "
+                "COALESCE(l.status, 'active'), (SELECT COUNT(*) FROM flags f WHERE f.env_id = e.env_id) "
+                "FROM environments e LEFT JOIN lifecycle l ON l.env_id = e.env_id WHERE e.state = 'verified' ORDER BY e.created_at DESC"
+            ).fetchall()
+        cards = []
+        for env_id, title, lane, label, kit_version, kit_sha, checked, status, flags in rows:
+            data = json.loads(checked)
+            cards.append(
+                {
+                    "id": env_id,
+                    "title": title,
+                    "lane": lane,
+                    "label": label,
+                    "kitVersion": kit_version,
+                    "status": status,
+                    "stale": current_kit_sha.get(kit_version) != kit_sha,
+                    "flags": int(flags),
+                    "models": [m["id"] for m in data.get("models", [])],
+                }
+            )
+        return cards

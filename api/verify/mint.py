@@ -21,13 +21,13 @@ import hashlib
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 from api import postprocess
 from api.schema.generated import Citation, Lane, TrustLabel
 from api.verify.render import INTERACTION_SECONDS, render_check
 
-ALLOWED_LABELS: frozenset[str] = frozenset({"model-checked"})
+ALLOWED_LABELS: frozenset[str] = frozenset({"model-checked", "kit-verified"})
 """D-21. `kit-verified` is unreachable until a citation can be verified against the corpus (P2); `reviewed` and `canonical` need a
 human (P5). Widening this set is a declared change with an ADR, not an edit."""
 
@@ -160,19 +160,40 @@ def env_id_for(slug: str, sha: str) -> str:
     return f"{slug}-{sha[:12]}"
 
 
-def guard_label(lane: str, label: str, citations: tuple[Citation, ...]) -> None:
-    """Hard constraints 3 and 4 as code. Today only `model-checked` is reachable; the rules below stay so that widening the
-    allowed set later cannot also widen what a label promises."""
+class Evidence(Protocol):
+    """What the verifier needs from the corpus: re-prove that a citation's quotation is on its page."""
+
+    def verify(self, citation: Citation) -> bool: ...
+
+
+def guard_label(lane: str, label: str, citations: tuple[Citation, ...], evidence: Evidence | None = None) -> None:
+    """Hard constraints 3 and 4 as code. `kit-verified` is reachable only with an evidence source that re-proves EVERY citation; `reviewed` and
+    `canonical` need a person and are never mintable here."""
     if not citations:
         # Hard constraints 4 and 11: where no source exists the Environment says so. An empty list says nothing at all.
         raise VerificationFailed("grounding", "no_citation", "state a source, or an explicit UNVERIFIED citation")
+    for c in citations:
+        if c.verified and (evidence is None or not evidence.verify(c)):
+            raise VerificationFailed(
+                "grounding",
+                "citation_unproved",
+                f"a citation claims to be verified but its quotation cannot be found in the corpus: {c.source!r}",
+            )
     if label in ("reviewed", "canonical"):
         raise VerificationFailed("label", "needs_human", f"'{label}' needs human review; the verifier cannot grant it")
     if label == "kit-verified":
         if lane == "free":
             raise VerificationFailed("label", "free_lane", "a Free-lane Environment cannot be 'kit-verified'")
-        if not any(c.verified for c in citations):
-            raise VerificationFailed("label", "ungrounded", "'kit-verified' needs a verified textbook citation")
+        if not all(c.verified for c in citations):
+            raise VerificationFailed(
+                "label", "ungrounded", "'kit-verified' needs every citation to be a verified textbook quotation"
+            )
+        if evidence is None:
+            raise VerificationFailed(
+                "label",
+                "no_evidence",
+                "'kit-verified' needs the corpus to re-prove its citations, and none is configured",
+            )
     if label not in ALLOWED_LABELS:
         raise VerificationFailed(
             "label",
@@ -208,10 +229,11 @@ def verify_environment(
     kit_dist: Path,
     interaction_seconds: float = INTERACTION_SECONDS,
     plan_models: list[dict] | None = None,
+    evidence: Evidence | None = None,
 ) -> VerifiedEnvironment:
     """Check `raw_html` end to end and return the minted `VerifiedEnvironment`, or raise `VerificationFailed`."""
     cited = tuple(citations)
-    guard_label(lane, label, cited)
+    guard_label(lane, label, cited, evidence)
 
     kit_sha = kit_bundle_sha256(kit_dist, kit_version)
     if kit_sha is None:

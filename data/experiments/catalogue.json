@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "cell_size_agar",
+      "subject": "biology",
+      "form": 4,
+      "topic": "biology_form4_movement_of_substances",
+      "title": "Why are cells small? Agar cubes",
+      "aim": "To find how the surface area to volume ratio changes with the size of a cube",
+      "source": null,
+      "status": "authored",
+      "models": [
+        "biology.sa_to_v_cube"
+      ],
+      "plan_id": "cell_size_agar",
+      "confirmed_by_person": false,
+      "note": "Authored by the assistant from the KSSM topic name and general knowledge of SPM practicals. Not yet matched to a page of the owner's documents."
+    },
+    {
+      "id": "compensation_point",
+      "subject": "biology",
+      "form": 5,
+      "topic": "biology_form5_leaf_structure_function",
+      "title": "Light intensity and photosynthesis in a leaf",
+      "aim": "To find the light intensity at which a leaf takes in no net carbon dioxide",
+      "source": null,
+      "status": "authored",
+      "models": [
+        "biology.photosynthesis_net"
+      ],
+      "plan_id": "compensation_point",
+      "confirmed_by_person": false,
+      "note": "Authored by the assistant from the KSSM topic name and general knowledge of SPM practicals. Not yet matched to a page of the owner's documents."
+    },
+    {
+      "id": "titration_virtual",
+      "subject": "chemistry",
+      "form": 4,
+      "topic": "chemistry_form4_acids_bases_salts",
+      "title": "Titration: finding a concentration",
+      "aim": "To find the concentration of a sodium hydroxide solution by titration with hydrochloric acid",
+      "source": null,
+      "status": "authored",
+      "models": [
+        "chemistry.titration_concentration"
+      ],
+      "plan_id": "titration_virtual",
+      "confirmed_by_person": false,
+      "note": "Authored by the assistant from the KSSM topic name and general knowledge of SPM practicals. Not yet matched to a page of the owner's documents."
+    },
+    {
+      "id": "heat_of_neutralisation",
+      "subject": "chemistry",
+      "form": 5,
+      "topic": "chemistry_form5_thermochemistry",
+      "title": "Heat of neutralisation",
+      "aim": "To find the heat released when an acid is neutralised by an alkali",
+      "source": null,
+      "status": "authored",
+      "models": [
+        "chemistry.heat_energy"
+      ],
+      "plan_id": "heat_of_neutralisation",
+      "confirmed_by_person": false,
+      "note": "Authored by the assistant from the KSSM topic name and general knowledge of SPM practicals. Not yet matched to a page of the owner's documents."
+    },
+    {
+      "id": "hookes_amali",
+      "subject": "physics",
+      "form": 5,
+      "topic": "physics_form5_force_and_elasticity",
+      "title": "Hooke's law: how does a spring stretch?",
+      "aim": "To find how the extension of a spring depends on the load",
+      "source": null,
+      "status": "authored",
+      "models": [
+        "mechanics.hookes"
+      ],
+      "plan_id": "hookes_amali",
+      "confirmed_by_person": false,
+      "note": "Authored by the assistant from the KSSM topic name and general knowledge of SPM practicals. Not yet matched to a page of the owner's documents."
+    }
+  ]
+}
