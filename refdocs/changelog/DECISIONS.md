@@ -268,6 +268,14 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** A saved copy cannot be updated, withdrawn or fixed once someone has downloaded it; the file says so. The hash check runs in the file's own script, so someone who edits the whole file (script included) defeats it; the check protects against accidental damage and a changed payload, not against a person who rewrites the wrapper. Rejected: shipping the file without the check (no integrity at all), and loading the Kit from a CDN (needs a network). Not built: chapter packs (many Environments in one file) and signing the file.
 
+## D-33: Progress is device-local, counts only the first answer, and is described in words (2026-10-16)
+
+**Decision.** The Kit's `conceptCheck` tells the host how the student's FIRST answer went (`synapse_event`, control `concept_check`, value `correct` or `incorrect`). The web host keeps, per Environment id, the number of tries and correct answers in `localStorage` (`web/lib/progress.ts`), shows them as "Just started", "Getting there" or "Secure" (`Secure` needs at least two right answers and 70 percent), and offers an export code (`SYN1.<base64url JSON>.<checksum>`) to move it to another device. There is no account, no server copy, no analytics.
+
+**Why.** P6 asks for a learner map without accounts (D-11, public students). Counting only the first answer stops a student from guessing through the options and being scored as secure. A percentage from two or three answers would claim more than it knows, so the label is in words with the raw counts beside it.
+
+**Trade-offs / rejected.** The record is the student's own and is editable (the checksum only catches a mistyped code), so nothing may depend on it being true: it is for the student, not for a teacher or a grade. A generated page could in principle post a fake event; the scan forbids `postMessage` in generated code and the Kit owns the bridge, but the data is self-regarding anyway. Storage can be blocked or cleared: every access is guarded and the app works without it. Rejected: a server-side learner profile (needs accounts and consent), and spaced repetition scheduling until there is real usage data.
+
 ---
 
 ## Working assumptions (`ASSUMED:`)

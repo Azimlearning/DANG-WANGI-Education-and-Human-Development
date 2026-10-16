@@ -6,6 +6,7 @@
 import type { EnvironmentBlock } from "@synapse/schema";
 import { useEffect, useRef, useState } from "react";
 import { checkBlockHash } from "../lib/hash";
+import { load, record, save } from "../lib/progress";
 import { parseBridgeMessage, SANDBOX } from "../lib/sandbox";
 
 type Phase = { kind: "checking" } | { kind: "ok" } | { kind: "refused"; reason: string };
@@ -46,6 +47,11 @@ export function EnvironmentFrame({
       if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return; // only our own frame
       const message = parseBridgeMessage(e.data);
       if (message?.type === "synapse_error") setRuntimeError(message.message);
+      if (message?.type === "synapse_event" && message.control === "concept_check" && (message.value === "correct" || message.value === "incorrect")) {
+        // The first answer to a concept check, kept on this device only (P6). A failure to store is silent: progress is a convenience.
+        save(record(load(), { id: block.id, title: block.title }, message.value));
+        window.dispatchEvent(new Event("synapse-progress"));
+      }
       if (message?.type === "synapse_violation") {
         // The Kit watched itself and found the page showing something it did not make. Nothing it shows can be trusted: close it.
         const reason = "This Environment changed what it was showing in a way the checker does not allow, so it was closed.";
@@ -55,7 +61,7 @@ export function EnvironmentFrame({
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onRefused]);
+  }, [onRefused, block.id, block.title]);
 
   if (phase.kind === "checking") {
     return (

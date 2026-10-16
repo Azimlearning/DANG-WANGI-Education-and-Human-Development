@@ -3,6 +3,7 @@
 // that (it is prose), and the page says nothing more than "correct" or "not quite" plus the author's explanation.
 
 import type { Environment } from "./environment";
+import { event as hostEvent } from "./bridge";
 import { copy, own, registerAction } from "./provenance";
 
 export interface ConceptCheckOptions {
@@ -31,6 +32,7 @@ export function conceptCheck(env: Environment, options: ConceptCheckOptions): HT
   group.setAttribute("role", "group");
   group.setAttribute("aria-label", "Options");
   let feedback = "";
+  let answered = false;
   const result = own(document.createElement("p"), () => feedback);
   result.setAttribute("role", "status");
   const why = own(document.createElement("p"), () => (feedback ? explanation : ""));
@@ -42,6 +44,11 @@ export function conceptCheck(env: Environment, options: ConceptCheckOptions): HT
     b.setAttribute("data-synapse-action", "choose");
     registerAction(b, "choose", text);
     b.addEventListener("click", () => {
+      // The host keeps a device-local record of how the FIRST answer went (P6). Later clicks only show the feedback again.
+      if (!answered) {
+        answered = true;
+        hostEvent("concept_check", i === correct ? "correct" : "incorrect");
+      }
       feedback = i === correct ? "Correct." : "Not quite.";
       result.textContent = feedback;
       why.textContent = explanation;

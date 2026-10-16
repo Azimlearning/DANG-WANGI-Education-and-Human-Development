@@ -4,6 +4,7 @@ import type { EnvironmentBlock, ErrorEnvelope, PlanDraft } from "@synapse/schema
 import { useCallback, useRef, useState } from "react";
 import { Peek } from "../components/Peek";
 import { PeekSkeleton } from "../components/PeekSkeleton";
+import { ProgressPanel } from "../components/ProgressPanel";
 import { Stage } from "../components/Stage";
 import { AskError, streamAsk } from "../lib/stream";
 
@@ -104,6 +105,8 @@ export default function Home() {
           {typeof error !== "string" && error.issues.length > 0 ? ` (${error.issues.map((i) => `${i.path}: ${i.message}`).join("; ")})` : ""}
         </p>
       ) : null}
+
+      <ProgressPanel />
 
       {block && !staged ? <Peek block={block} onOpen={() => setStaged(true)} /> : null}
       {block && staged ? <Stage block={block} onBack={() => setStaged(false)} /> : null}

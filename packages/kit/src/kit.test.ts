@@ -646,6 +646,23 @@ describe("pedagogy components", () => {
     expect(() => hintLadder(env, { hints: [] })).toThrow(RangeError);
   });
 
+  it("conceptCheck tells the host how the FIRST answer went, once", () => {
+    const sent: unknown[] = [];
+    const before = bridgeState.poster;
+    bridgeState.poster = (m) => sent.push(m);
+    try {
+      const { env } = spring();
+      conceptCheck(env, { question: "Which is it?", options: ["a", "b", "c"], correct: 2, explanation: "because" });
+      const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-synapse-action=choose]"));
+      buttons[0]!.click();
+      buttons[2]!.click();
+      buttons[1]!.click();
+      expect(sent).toEqual([{ type: "synapse_event", control: "concept_check", value: "incorrect" }]);
+    } finally {
+      bridgeState.poster = before;
+    }
+  });
+
   it("conceptCheck gives feedback only after a choice and says correct or not quite", () => {
     const { env } = spring();
     conceptCheck(env, { question: "What happens to the extension when the load doubles?", options: ["It halves", "It doubles", "It stays the same"], correct: 1, explanation: "Within the elastic limit the extension is proportional to the load." });

@@ -19,7 +19,7 @@
 | P3 | Mark 3 pipeline and the first vertical | 🔶 Done on fakes: router, planner, plan checks (PLAN-001 to 016), skeleton assembler, typed slot fills, verify with a drop-fills retry, mint, gate, deliver, loading skeleton, prompt packs, fail-check registry, golden set, hostile set, cost projection. **Not done:** the first paid run (owner), a live provider class, the Free lane, the L4 wording check. Review findings S4, S7, S8, S10 and notes remain |
 | P4 | Kit expansion by kit | ✅ Cloud scope done: 17 science models (5 Physics, 5 Biology, 7 Chemistry), about 180 planted bugs for the new ones, 17 Environments verified. Wording and scope are unchecked against the textbook |
 | P5 | Library and lifecycle | ✅ Cloud scope done: question cache through the gate, withdraw, restore, flag, stale by Kit hash, endpoints. Single operator (D-11) |
-| P6 | Pedagogy | 🔶 Hint ladder, concept check, predict card and worked solution built, planned and verified on six Environments. Not built: spaced practice, difficulty adaptation, misconception follow-up in the UI |
+| P6 | Pedagogy | 🔶 Hint ladder, concept check, predict card and worked solution built, planned and verified; device-local progress with an export code (D-33). Not built: spaced practice, difficulty adaptation, misconception follow-up in the UI, Amali mode scaffold, the exam mirror |
 | P7 | Reach and the deploy gate | 🔶 Built so far: store attestation (D-31), request limits and `/spend`, share links, the offline single-file export (D-32). Not built: Bahasa Melayu, chapter packs, the MCP-Apps-shaped bridge, per-session and per-day limits, the deploy gate itself |
 | P8 | Evidence and learner study | ⬜ Not started |
 
@@ -78,6 +78,8 @@ What has actually been run, not what has been written. A row here needs a real c
 | 2026-10-16 | Six more models and Environments | `pnpm -r test`; `uv run pytest -q`; `uv run python eval/environments/build.py`; `eval/l6/run.py`; `eval/hostile/run.py`; `eval/smoke/web_smoke.py --no-build` | Kit 315 passed; 504 passed 1 skipped; 17 Environments verified and delivered; L6 56 of 61 refused with no false positives; hostile 20 of 20; smoke 18 of 18 |
 
 | 2026-10-16 | Whole repo after the P3 review closed | `uv run pytest -q`; `pnpm -r test`; `eval/plans/fuzz.py` seeds 1 to 9; `eval/l6`, `eval/hostile`, `eval/environments/build.py`, `eval/smoke/web_smoke.py` | 565 passed 1 skipped; Kit 323, web 23; fuzz 0 parity gaps after two fixes; L6 56 of 61, 0 of 12 false positives; hostile 20 of 20; 17 Environments; smoke 18 of 18 (one earlier run 17 of 18, not reproduced) |
+
+| 2026-10-16 | Whole repo after limits, share links, export and progress | `uv run pytest -q`; `pnpm -r test`; `eval/l6`; `eval/hostile`; `eval/environments/build.py`; `eval/smoke/web_smoke.py` | 581 passed 1 skipped; Kit 324, web 40; L6 56 of 61 refused, 0 of 12 false positives; hostile 20 of 20; 17 Environments; smoke 21 of 21 |
 
 ---
 

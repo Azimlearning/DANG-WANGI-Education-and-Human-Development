@@ -100,5 +100,15 @@
       "It will stay the same"
     ],
     "reveal": "Set the load to 2 N, then to 4 N, and compare the two extensions."
+  },
+  "concept_check": {
+    "question": "Within the elastic limit, what happens to the extension of the spring when the load is doubled?",
+    "options": [
+      "It halves",
+      "It doubles",
+      "It stays the same"
+    ],
+    "correct": 1,
+    "explanation": "Within the elastic limit the extension is proportional to the load, so doubling the load doubles the extension."
   }
 }

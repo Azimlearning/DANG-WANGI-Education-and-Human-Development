@@ -242,6 +242,22 @@ def main() -> int:
                 ),
             )
 
+            # ── A concept-check answer is remembered on this device only ───────────────────────────────────────────────────────────
+            choices = page.frame_locator("iframe").first.locator("[data-synapse-action=choose]")
+            if choices.count() > 0:
+                choices.first.click()
+                page.wait_for_function(
+                    "[...document.querySelectorAll('summary')].some(s => s.textContent.includes('My progress (1)'))",
+                    timeout=5000,
+                )
+                stored = page.evaluate("localStorage.getItem('synapse.progress.v1')")
+                check(
+                    "the first concept-check answer is kept in this browser's storage and counted in My progress",
+                    bool(stored) and '"tries":1' in stored,
+                )
+            else:
+                check("the Environment has a concept check to answer", False)
+
             # ── A shared link opens the stored Environment through the gate ───────────────────────────────────────────────────────────
             import json as _json
             import urllib.request as _url

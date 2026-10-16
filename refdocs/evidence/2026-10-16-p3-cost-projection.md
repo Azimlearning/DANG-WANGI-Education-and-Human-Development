@@ -7,9 +7,9 @@
 
 | Case | USD per Environment | What it assumes |
 |---|---|---|
-| Low | **0.0091** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
-| High | **0.0402** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0546** | the high case with every plan retried once (retry rate 100 percent) |
+| Low | **0.0094** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
+| High | **0.0409** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0556** | the high case with every plan retried once (retry rate 100 percent) |
 | Hard bound | **0.0817** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
 
 Mean over the 24 golden questions (the hard bound is the largest), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
@@ -17,7 +17,7 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 ## Proposed first paid run (the amounts to confirm)
 
 1. **A canary of 1 question** first: up to **$0.08** (hard bound), expected under $0.05. It checks model ids, token counts and error handling for almost nothing.
-2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.08 to $0.49**, hard bound **$0.73**.
+2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.08 to $0.50**, hard bound **$0.73**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the cache hit rate, and whether the fail-check registry's hints fix a bad plan.
 - It would not measure: correctness against a textbook (the corpus is not loaded; labels stay `model-checked`, D-21).
@@ -49,14 +49,14 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0099 | 0.0426 | 0.0580 |
-| g02 | 0.0100 | 0.0429 | 0.0584 |
-| g03 | 0.0102 | 0.0432 | 0.0589 |
-| g04 | 0.0102 | 0.0433 | 0.0590 |
-| g05 | 0.0099 | 0.0426 | 0.0580 |
-| g06 | 0.0099 | 0.0425 | 0.0580 |
-| g07 | 0.0099 | 0.0426 | 0.0581 |
-| g08 | 0.0102 | 0.0432 | 0.0590 |
+| g01 | 0.0107 | 0.0447 | 0.0611 |
+| g02 | 0.0108 | 0.0450 | 0.0615 |
+| g03 | 0.0110 | 0.0453 | 0.0619 |
+| g04 | 0.0110 | 0.0454 | 0.0620 |
+| g05 | 0.0107 | 0.0447 | 0.0611 |
+| g06 | 0.0106 | 0.0447 | 0.0611 |
+| g07 | 0.0107 | 0.0448 | 0.0612 |
+| g08 | 0.0110 | 0.0454 | 0.0620 |
 | g09 | 0.0088 | 0.0396 | 0.0538 |
 | g10 | 0.0088 | 0.0396 | 0.0538 |
 | g11 | 0.0091 | 0.0402 | 0.0546 |

@@ -28,6 +28,13 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-16: Device-local progress (P6, D-33)
+- **Changed:** Kit `conceptCheck` (reports the first answer; Kit 0.1.0 relocked, D-29), `web/lib/progress.ts` and test, `web/components/ProgressPanel.tsx` and test, `web/components/EnvironmentFrame.tsx` (records the event), `web/app/page.tsx` (the panel), a concept check added to the Hooke's law Plan, smoke check, D-33.
+- **Decided:** D-33. First answer only; mastery in words; an export code with a checksum; no account and no server copy.
+- **Deviations:** none; "misconception follow-up" and "Amali mode" from the PRD's P6 list are not built.
+- **Verified:** `pnpm -r test`: Kit 324, web 40 (7 library tests for counting, words, the cap, round trips with non-ASCII titles, refusal of mistyped, truncated, forged and oversize codes, shape validation, and storage that is missing, throws or holds rubbish; 3 panel tests); `uv run python eval/environments/build.py`: 17 verified; `eval/smoke/web_smoke.py`: 21 of 21 (a real answer click in the sandboxed frame is kept in `localStorage` and counted in "My progress (1)").
+- **Noted, not changed:** the record is editable by the student and nothing may rely on it; a Kit change in a concept check's behaviour is a bundle change, so stored Environments made before this relock would be `stale_kit` (none are stored outside tests).
+
 ### 2026-10-16: Offline single-file export (P7, D-32)
 - **Changed:** `api/export.py` (new), `GET /library/<id>/export` in `api/app.py`, `web/components/Stage.tsx` ("Save a copy to use offline"), `api/test_export.py` (new), route test, D-32 and the PRD table.
 - **Decided:** D-32: the file embeds the Environment and the Kit with their SHA-256 values, re-hashes both before running, keeps the exact sandbox and prints the provenance; it is built only from a block the gate delivered.
