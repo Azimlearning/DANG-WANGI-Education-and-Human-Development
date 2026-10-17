@@ -120,10 +120,37 @@ async def test_http_errors_map_to_the_failure_kinds_the_service_acts_on(response
     assert raised.value.kind == kind
 
 
-async def test_a_reply_cut_off_at_max_tokens_is_a_truncation_failure() -> None:
+async def test_a_reply_cut_off_at_max_tokens_is_a_truncation_failure_that_carries_its_usage() -> None:
     with pytest.raises(ProviderFailure) as raised:
-        await provider(lambda _r: ok("partial", stop="max_tokens")).complete(REQ, "claude-sonnet-5-5")
+        await provider(lambda _r: ok("partial", stop="max_tokens", output_tokens=200)).complete(
+            REQ, "claude-sonnet-5-5"
+        )
     assert raised.value.kind == "truncated"
+    assert (raised.value.tokens_in, raised.value.tokens_out) == (10, 200)  # billed, so the ledger must see it
+
+
+async def test_a_refusal_is_a_failure_that_carries_its_usage_and_never_returns_text() -> None:
+    with pytest.raises(ProviderFailure) as raised:
+        await provider(lambda _r: ok("I can't help with that.", stop="refusal")).complete(REQ, "claude-sonnet-5-5")
+    assert raised.value.kind == "transient" and "refusal" in raised.value.reason
+    assert (raised.value.tokens_in, raised.value.tokens_out) == (10, 5)
+
+
+async def test_a_truncated_reply_is_booked_at_its_output_tokens_through_the_real_service_and_ledger(tmp_path) -> None:  # noqa: ANN001
+    from datetime import UTC, datetime
+
+    from api.core.errors import ProviderUnavailable
+    from api.llm.ledger import SpendLedger, engine_for
+    from api.llm.service import LLMService
+
+    ledger = SpendLedger(engine_for(tmp_path / "l.db"), 10.0, clock=lambda: datetime(2026, 10, 18, tzinfo=UTC))
+    p = provider(lambda _r: ok("partial", stop="max_tokens", input_tokens=500, output_tokens=4_000))
+    with pytest.raises(ProviderUnavailable):
+        await LLMService(p, None, ledger).complete(
+            LLMRequest(prompt="Why?", purpose="plan", tier="standard", max_tokens=4_000)
+        )
+    # Sonnet 5.5 at $2 in and $10 out per million: 500 in and 4000 out is $0.041, not the input-only $0.001.
+    assert ledger.month_total() == pytest.approx((500 * 2 + 4_000 * 10) / 1_000_000)
 
 
 async def test_an_empty_or_malformed_reply_is_a_transient_failure() -> None:
@@ -137,6 +164,17 @@ async def test_an_empty_or_malformed_reply_is_a_transient_failure() -> None:
         with pytest.raises(ProviderFailure) as raised:
             await provider(lambda _r, resp=response: resp).complete(REQ, "claude-sonnet-5-5")  # type: ignore[misc]
         assert raised.value.kind == "transient"
+    # An empty reply that did report usage was billed: its tokens travel with the failure. One with no readable usage carries none.
+    with pytest.raises(ProviderFailure) as billed:
+        await provider(
+            lambda _r: httpx.Response(
+                200, json={"content": [], "stop_reason": "end_turn", "usage": {"input_tokens": 7, "output_tokens": 9}}
+            )
+        ).complete(REQ, "claude-sonnet-5-5")
+    assert (billed.value.tokens_in, billed.value.tokens_out) == (7, 9)
+    with pytest.raises(ProviderFailure) as unread:
+        await provider(lambda _r: httpx.Response(200, text="not json")).complete(REQ, "claude-sonnet-5-5")
+    assert unread.value.tokens_in is None and unread.value.tokens_out is None
 
 
 async def test_timeouts_and_network_errors_are_classified() -> None:

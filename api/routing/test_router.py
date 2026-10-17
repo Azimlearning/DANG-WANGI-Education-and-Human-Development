@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import socket
 from pathlib import Path
 
 import pytest
@@ -106,11 +105,8 @@ def test_a_stale_gate_is_refused_so_the_model_is_not_trusted(model, tmp_path) ->
         gate_module.load(model, bad)
 
 
-def test_routing_uses_no_network(monkeypatch: pytest.MonkeyPatch, model, gates) -> None:  # noqa: ANN001
-    def refuse(*_a: object, **_k: object) -> None:
-        raise AssertionError("network used")
-
-    monkeypatch.setattr(socket.socket, "connect", refuse)
+@pytest.mark.usefixtures("no_network")
+def test_routing_uses_no_network(model, gates) -> None:  # noqa: ANN001
     llm, _ = fake_llm()
     run(route("why does a spring stretch", model=model, gates=gates, llm=llm))
 

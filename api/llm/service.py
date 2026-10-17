@@ -48,18 +48,24 @@ class LLMService:
             try:
                 response = await provider.complete(request, model)
             except ProviderFailure as failure:
-                # A timeout or a truncated reply may still have been billed: book the estimated input cost rather than nothing.
-                billed = (
-                    cost_usd(provider.name, model, estimate_input_tokens(request), 0)
-                    if failure.kind in ("timeout", "truncated")
-                    else 0.0
-                )
+                # A reply the provider billed and we then rejected (cut off, empty, refused) arrives with its real usage: book that, output
+                # included. A timeout may still have been billed with no usage to read: book the estimated input cost rather than nothing.
+                if failure.tokens_in is not None and failure.tokens_out is not None:
+                    tokens_in, tokens_out = failure.tokens_in, failure.tokens_out
+                    billed = cost_usd(provider.name, model, tokens_in, tokens_out)
+                else:
+                    tokens_in = tokens_out = 0
+                    billed = (
+                        cost_usd(provider.name, model, estimate_input_tokens(request), 0)
+                        if failure.kind in ("timeout", "truncated")
+                        else 0.0
+                    )
                 self._ledger.settle(
                     reservation,
                     provider=provider.name,
                     model=model,
-                    tokens_in=0,
-                    tokens_out=0,
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out,
                     cost_usd=billed,
                     purpose=request.purpose,
                     status="failed",

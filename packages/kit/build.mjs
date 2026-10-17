@@ -9,7 +9,7 @@ import { build } from "esbuild";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const relock = process.argv.includes("--relock");
@@ -61,7 +61,8 @@ if (lock[version] !== bundleSha256) {
 // Load the entries through esbuild too, so the manifest comes from the same TypeScript the tests check.
 const tmp = resolve(outdir, ".manifest.mjs");
 await build({ entryPoints: [resolve(here, "src/manifest.ts")], outfile: tmp, bundle: true, format: "esm", target: "es2020" });
-const { manifestEntries } = await import(tmp + "?t=" + Date.now());
+// A bare absolute path is not a valid import specifier on Windows ("c:" reads as a URL scheme), so go through a file URL.
+const { manifestEntries } = await import(pathToFileURL(tmp).href + "?t=" + Date.now());
 rmSync(tmp);
 writeFileSync(
   resolve(outdir, "manifest.json"),

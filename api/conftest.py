@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import socket
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -15,12 +16,32 @@ REPO = Path(__file__).resolve().parents[1]
 KIT_DIST = REPO / "packages" / "kit" / "dist"
 
 
+def _is_stdlib_socketpair_emulation(address: object) -> bool:
+    """Windows has no socketpair(), so the standard library (and so every asyncio event loop) emulates one with a
+    connect to a loopback port. That is not network access. Allow exactly that call: from `socket._fallback_socketpair`,
+    to a loopback address. A test that connects to 127.0.0.1 itself is still refused."""
+    caller = sys._getframe(2)
+    return (
+        caller.f_code.co_name == "_fallback_socketpair"
+        and caller.f_code.co_filename == socket.__file__
+        and isinstance(address, tuple)
+        and address[0] in ("127.0.0.1", "::1")
+    )
+
+
 @pytest.fixture
 def no_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    real_connect = socket.socket.connect
+
+    def _connect(self: socket.socket, address: object, *args: object, **kwargs: object) -> None:
+        if _is_stdlib_socketpair_emulation(address):
+            return real_connect(self, address, *args, **kwargs)  # type: ignore[arg-type]
+        raise AssertionError("network access attempted in a test that forbids it")
+
     def _refuse(*args: object, **kwargs: object) -> None:
         raise AssertionError("network access attempted in a test that forbids it")
 
-    monkeypatch.setattr(socket.socket, "connect", _refuse)
+    monkeypatch.setattr(socket.socket, "connect", _connect)
     monkeypatch.setattr(socket.socket, "connect_ex", _refuse)
     monkeypatch.setattr(socket, "getaddrinfo", _refuse)
 

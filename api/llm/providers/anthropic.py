@@ -1,5 +1,8 @@
-"""The Anthropic Messages API provider (live mode). Read against the current docs on 2026-10-16:
-https://platform.claude.com/docs/en/api/messages and /api/errors.
+"""The Anthropic Messages API provider (live mode). Read against the current docs on 2026-10-16 and re-read on 2026-10-18:
+https://platform.claude.com/docs/en/api/messages, /api/errors and /build-with-claude/working-with-messages. Confirmed on the 18th: a
+success body has `content[]` blocks (`text`, plus `thinking` that we ignore), `stop_reason` (`end_turn`, `max_tokens`, `refusal`, ...) and
+`usage.input_tokens` / `usage.output_tokens`; an error body is `{"type": "error", "error": {"type", "message"}, "request_id"}`; Opus 5.5
+rejects `thinking: disabled`, Sonnet 5.5 takes `between_tools`, Haiku 5.5 takes `disabled`.
 
 Plain httpx, no SDK: the call is one POST, which keeps the dependency list short and lets the tests stand a mock transport in place of the
 network. The provider does NOT retry (the service decides about fallback and the ledger books every attempt) and it never puts a key, a prompt or a
@@ -93,10 +96,14 @@ class AnthropicProvider:
             stop = data.get("stop_reason")
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
             raise ProviderFailure(self.name, "the reply was not a Messages API response", "transient") from exc
+        # From here the reply was real and billed, thinking tokens included, so every rejection below carries its usage for the ledger.
+        billed = {"tokens_in": tokens_in, "tokens_out": tokens_out}
         if stop == "max_tokens":
-            raise ProviderFailure(self.name, "the reply was cut off at max_tokens", "truncated")
+            raise ProviderFailure(self.name, "the reply was cut off at max_tokens", "truncated", **billed)
+        if stop == "refusal":
+            raise ProviderFailure(self.name, "the model declined to answer (stop_reason refusal)", "transient", **billed)
         if not text.strip():
-            raise ProviderFailure(self.name, f"the reply had no text (stop_reason {stop})", "transient")
+            raise ProviderFailure(self.name, f"the reply had no text (stop_reason {stop})", "transient", **billed)
         return ProviderResponse(
             text=text, model=str(data.get("model") or model), tokens_in=tokens_in, tokens_out=tokens_out
         )

@@ -13,6 +13,8 @@ from api.core.settings import ConfigError, load_settings
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.ledger import SpendLedger, engine_for
 from api.llm.models import ANTHROPIC_MODELS
+from api.llm.providers.anthropic import AnthropicProvider
+from api.llm.providers.base import ProviderFailure
 from api.llm.providers.fake import FakeProvider
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
@@ -74,15 +76,62 @@ def test_live_mode_rejects_a_zero_cap(monkeypatch: pytest.MonkeyPatch) -> None:
         load_settings(env_file=None)
 
 
-@pytest.mark.usefixtures("clean_env")
-def test_live_mode_builds_no_provider_in_p0(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.usefixtures("clean_env", "no_network")
+def test_live_mode_with_a_key_and_a_cap_builds_the_anthropic_provider_and_opens_no_socket(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setenv("SYNAPSE_LLM_MODE", "live")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-not-real")
     monkeypatch.setenv("LLM_MONTHLY_CAP_USD", "5")
     monkeypatch.setenv("LEDGER_PATH", str(tmp_path / "ledger.db"))
-    settings = load_settings(env_file=None).model_copy(update={"data_dir": tmp_path})
+    settings = load_settings(env_file=None)
+    ledger = build_ledger(settings)
+    service = build_llm_service(settings, ledger)
+    (provider,) = service._providers  # noqa: SLF001  # live mode has the one provider and no fallback
+    assert isinstance(provider, AnthropicProvider) and provider.name == "anthropic"
+    assert ledger.remaining_usd() == 5.0  # the cap is on the ledger the service writes to
+
+
+@pytest.mark.usefixtures("clean_env", "no_network")
+def test_live_mode_without_a_key_or_a_cap_builds_no_provider_even_without_load_settings(tmp_path: Path) -> None:
+    from api.core.settings import Settings
+
+    ledger = SpendLedger(engine_for(tmp_path / "l.db"), 5.0)
+    no_key = Settings.model_validate(
+        {"synapse_llm_mode": "live", "llm_monthly_cap_usd": 5, "ledger_path": str(tmp_path / "l.db")}
+    )
+    with pytest.raises(ConfigError) as err:
+        build_llm_service(no_key, ledger)
+    assert "ANTHROPIC_API_KEY" in str(err.value)
+    no_cap = Settings.model_validate(
+        {"synapse_llm_mode": "live", "anthropic_api_key": "sk-x", "ledger_path": str(tmp_path / "l.db")}
+    )
+    with pytest.raises(ConfigError) as err:
+        build_llm_service(no_cap, ledger)
+    assert "LLM_MONTHLY_CAP_USD" in str(err.value)
+
+
+async def test_a_billed_reply_the_service_then_rejects_is_booked_with_its_real_output_tokens(tmp_path: Path) -> None:
+    """A reply cut off at max_tokens was billed in full, thinking included. Booking only the input would let the cap be exceeded."""
+
+    class CutOff:
+        name = "anthropic"
+
+        def model_for(self, tier):  # noqa: ANN001, ANN201
+            return ANTHROPIC_MODELS[tier]
+
+        async def complete(self, request, model):  # noqa: ANN001, ANN201
+            raise ProviderFailure("anthropic", "cut off", "truncated", tokens_in=1_000, tokens_out=16_000)
+
+    ledger = _ledger(tmp_path, cap=10.0)
+    service = LLMService(CutOff(), None, ledger)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
     with pytest.raises(ProviderUnavailable):
-        build_llm_service(settings, build_ledger(settings))
+        await service.complete(LLMRequest(prompt="x", purpose="plan", tier="standard", max_tokens=16_000))
+    (row,) = ledger.rows()
+    # Sonnet 5.5: $2 in, $10 out per million tokens.
+    assert row["status"] == "failed" and (row["tokens_in"], row["tokens_out"]) == (1_000, 16_000)
+    assert row["cost_usd"] == pytest.approx((1_000 * 2 + 16_000 * 10) / 1_000_000)
+    assert ledger.month_total() == pytest.approx(row["cost_usd"])
 
 
 async def test_request_over_the_cap_is_refused_before_the_provider(tmp_path: Path) -> None:

@@ -19,11 +19,23 @@ class ProviderFailure(Exception):
     a key or a response body.
     """
 
-    def __init__(self, provider: str, reason: str, kind: FailureKind = "transient"):
+    def __init__(
+        self,
+        provider: str,
+        reason: str,
+        kind: FailureKind = "transient",
+        *,
+        tokens_in: int | None = None,
+        tokens_out: int | None = None,
+    ):
         super().__init__(f"{provider}: {reason}")
         self.provider = provider
         self.reason = reason
         self.kind = kind
+        # Set only when the provider answered and reported usage for a reply it then rejected (cut off at max_tokens, empty, refused).
+        # That reply was billed, output included, so the service books these counts instead of an input-only estimate.
+        self.tokens_in = tokens_in
+        self.tokens_out = tokens_out
 
 
 class Provider(Protocol):

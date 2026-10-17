@@ -4,9 +4,9 @@
 
 **Build philosophy:** walking skeleton first. One Environment, end to end, through the full trust path (generate, scan, render, mint, gate, sandbox) on fakes, before building the second of anything. Evidence is measured, never asserted. The Kit grows from measured gaps.
 
-**Next:** the local session. Its prompt is `refdocs/guides/local_handoff.md`.
+**Next:** the local session is under way (started 2026-10-18; its prompt is `refdocs/guides/local_handoff.md`). Steps 0 and 1 are done in code; the session now waits on the owner for the API key and cap, the corpus consent and the textbook files (Step 2), and the first paid run (Step 3).
 
-**Right now:** everything that can be built on fakes in the cloud is built: P0, P1, P1b done; P2, P3, P4, P5 and P6 done for their cloud scope. The Mark 3 pipeline (D-23) runs end to end on fakes with real Chromium verification and produces **17 verified Environments, 5 Physics, 5 Biology and 7 Chemistry** (D-19 asked for 3 per subject), each with a hand-written Plan. No paid call has ever been made; the live provider is written and mock-tested but not wired in. **What waits for the owner:** the first paid run, to be done locally (the Anthropic provider is written and mock-tested but not wired into `SYNAPSE_LLM_MODE=live`; confirm an amount; proposed canary up to $0.08, then 9 questions, projected $0.08 to $0.49, hard bound $0.73, suggested `LLM_MONTHLY_CAP_USD` $1.00; see `refdocs/evidence/2026-10-16-p3-cost-projection.md`), loading the textbook corpus locally (A-8), matching the catalogue to the owner's experiment documents, and a fresh adversarial review. The kit-guardian P3 review is answered except the items listed under Known gaps.
+**Right now:** everything that can be built on fakes in the cloud is built: P0, P1, P1b done; P2, P3, P4, P5 and P6 done for their cloud scope. The Mark 3 pipeline (D-23) runs end to end on fakes with real Chromium verification and produces **17 verified Environments, 5 Physics, 5 Biology and 7 Chemistry** (D-19 asked for 3 per subject), each with a hand-written Plan. No paid call has ever been made. The live provider is now wired into `SYNAPSE_LLM_MODE=live` (D-34) and proved only against a mock transport. **What waits for the owner:** the first paid run, to be done locally (confirm an amount; proposed canary up to $0.08, then 9 questions, projected $0.08 to $0.49, hard bound $0.73, suggested `LLM_MONTHLY_CAP_USD` $1.00; see `refdocs/evidence/2026-10-16-p3-cost-projection.md`), loading the textbook corpus locally (A-8), matching the catalogue to the owner's experiment documents, and a fresh adversarial review. The kit-guardian P3 review is answered except the items listed under Known gaps.
 
 ---
 
@@ -18,7 +18,7 @@
 | P1b | Models track (trained local models) | ✅ Cloud scope done: audited dataset, baselines, trained and exported router, parity, gates, model card, router with LLM fallback, misconception matcher. Retrain on the full KSSM data and an embedding comparison are deferred to local |
 | P1 | Kit core and verification harness | ✅ Cloud scope done and verified (provenance, L1 to L3, L6 baseline, hostile set, isolation spike, reset/table/graph, two review rounds of which the second did not complete). Open: a fresh adversarial review, and the host-side DOM check noted in D-24 |
 | P2 | Evidence: corpus, retrieval, citations | ✅ Cloud scope done: corpus format, BM25, exact quotation proof, `kit-verified` rule at mint and gate, experiment catalogue (metadata). Proved against a synthetic corpus only; the real corpus is loaded locally (A-8) |
-| P3 | Mark 3 pipeline and the first vertical | 🔶 Done on fakes: router, planner, plan checks (PLAN-001 to 016), skeleton assembler, typed slot fills, verify with a drop-fills retry, mint, gate, deliver, loading skeleton, prompt packs, fail-check registry, golden set, hostile set, cost projection. **Not done:** the first paid run (owner), a live provider class, the Free lane, the L4 wording check. Review findings S4, S7, S8, S10 and notes remain |
+| P3 | Mark 3 pipeline and the first vertical | 🔶 Done on fakes: router, planner, plan checks (PLAN-001 to 016), skeleton assembler, typed slot fills, verify with a drop-fills retry, mint, gate, deliver, loading skeleton, prompt packs, fail-check registry, golden set, hostile set, cost projection. **Not done:** the first paid run (owner), the Free lane, the L4 wording check. The live provider class is wired (D-34) and mock-tested. Review findings S4, S7, S8, S10 and notes remain |
 | P4 | Kit expansion by kit | ✅ Cloud scope done: 17 science models (5 Physics, 5 Biology, 7 Chemistry), about 180 planted bugs for the new ones, 17 Environments verified. Wording and scope are unchecked against the textbook |
 | P5 | Library and lifecycle | ✅ Cloud scope done: question cache through the gate, withdraw, restore, flag, stale by Kit hash, endpoints. Single operator (D-11) |
 | P6 | Pedagogy | 🔶 Hint ladder, concept check, predict card and worked solution built, planned and verified; device-local progress with an export code (D-33). Not built: spaced practice, difficulty adaptation, misconception follow-up in the UI, Amali mode scaffold, the exam mirror |
@@ -85,6 +85,10 @@ What has actually been run, not what has been written. A row here needs a real c
 
 | 2026-10-16 | Clean-checkout rebuild | Fresh `git clone` of the pushed branch into an empty folder; `uv sync`; `pnpm install --frozen-lockfile`; `pnpm --filter @synapse/kit build`; `pnpm codegen:check`; ruff, pyright, typecheck; `pnpm -r test`; `pnpm --filter web build`; `uv run pytest -q`; `eval/smoke/web_smoke.py --no-build`; `eval/environments/build.py` | All succeeded with no manual steps: the Kit rebuilt to the locked hash `4da5421caad0`; 581 passed 1 skipped; Kit 324, web 40; smoke 21 of 21; 17 Environments; the regenerated report left the clone's git status clean (deterministic) |
 
+| 2026-10-18 | Windows reproduction (Node 24.11.0, pnpm 10.28.0, Python 3.13.14, uv 0.11.26) | `uv sync`; `pnpm install --frozen-lockfile`; `uv run playwright install chromium`; `pnpm --filter @synapse/kit build`; `pnpm codegen:check`; `ruff check .`; `pyright api eval`; `pnpm -r typecheck`; `pnpm -r test`; `pnpm --filter web build`; `uv run pytest -q`; `eval/environments/build.py` | Kit hash `4da5421caad0` equals the lock on Windows; Kit 324 and web 40 passed; 589 passed 1 skipped (about 8 min); 17 Environments verified and the report unchanged; lint and types clean. Chromium headless shell was a 91 MiB download (free disk 13,965 to 13,494 MB). Three Windows-only faults fixed first (Kit build file URL, `no_network` vs the loopback `socketpair`, POSIX-only smoke) |
+| 2026-10-18 | Smoke on Windows, repeated | `uv run python eval/smoke/web_smoke.py --no-build`, 11 runs, output of each kept | 21 of 21 every time; the 17-of-18 seen once in the cloud did not reproduce. A free-port precheck was added and shown to fire. The Linux branch was not run (WSL has no distribution) |
+| 2026-10-18 | Live provider wiring and the ledger fix (D-34), no paid call | `uv run pytest api/llm api/routes api/test_network_guard.py` and the full suite | A truncated, empty or refused reply is booked at its real tokens (test: 1,000 in and 16,000 out on Sonnet 5.5 books $0.162); live mode with a key and cap builds `AnthropicProvider` and opens no socket; a rejected key gives a clean `provider_unavailable` event; any non-loopback connection or lookup in any test raises |
+
 ---
 
 ## Known gaps
@@ -99,7 +103,9 @@ What has actually been run, not what has been written. A row here needs a real c
 - **Corpus legality is unconfirmed** (A-8). Four Chemistry experiment books are image-only PDFs with no text layer and need OCR, which is not installed.
 - **The deploy gate and auth do not exist** and are deliberately deferred (D-11). A per-client per-minute limit, a cap on questions in flight and `GET /spend` now exist (in-process, per worker); per-session and per-day limits, student accounts and the rest of `refdocs/guides/checklist.md` do not. The API must not be exposed.
 - **Accessibility is checked only statically and in the harness** (names, `aria-valuetext`, 44 px targets, no overflow at 360 px). No screen reader, reduced-motion or keyboard-only pass has been done in a real browser.
-- **Clean-checkout rebuild: done 2026-10-16** from a fresh clone of the pushed branch (see the ledger). Not done on Windows.
+- **Clean-checkout rebuild: done 2026-10-16** from a fresh clone of the pushed branch (see the ledger), and reproduced on Windows on 2026-10-18 (also in the ledger) after three Windows-only fixes.
+- **The Linux branch of the smoke was not run after its Windows edit** (WSL here has no distribution). The POSIX calls are the ones it used before; run it once on Linux or in CI.
+- **`.env.example` is behind** and the permission settings deny the tools access to it. Paste these names with blank or safe values: `DATA_DIR=./data`, `LEDGER_PATH=` (absolute path; required in live mode), `LOG_LEVEL=INFO`, `KIT_DIST_DIR=./packages/kit/dist`, `VERIFY_INTERACTION_SECONDS=10`, `CORPUS_DIR=`, `STORE_ATTESTATION_KEY=`, `RATE_LIMIT_PER_MINUTE=20`, `MAX_CONCURRENT_ASKS=3`.
 - **The file map is written** (`refdocs/guides/file_map.md`). No separate parity doc.
 - **No model has ever written a Plan.** The planner, the fills and the explainer are exercised only by deterministic fakes. Whether a real model produces Plans that pass the checks, what it costs and how often it needs the retry are all unmeasured (A-4). The first paid run answers this.
 - **The Free lane and the L4 wording check are not built.** A question the Kit cannot express gets the written answer; the `verifier_l4` pack is written but called by nothing.
@@ -112,18 +118,18 @@ What has actually been run, not what has been written. A row here needs a real c
 
 - **Load the textbook corpus** (A-8): set `CORPUS_DIR`, ingest with `api/evidence/ingest.py`, then re-run the breadth set and add real citations to the Plans. Four Chemistry experiment books are image-only and need OCR.
 - **Match the experiment catalogue** (`data/experiments/catalogue.json`) to the owner's experiment documents; every entry says `confirmed_by_person: false`.
-- **The first paid run** (needs the owner's confirmed amount and a live provider class built against the provider SDK's current docs, rule 6).
-- **Run all suites on the Windows machine** and confirm Kit sha and bytes are stable across platforms (line endings, esbuild version).
+- **The first paid run** (needs the owner's confirmed amount). The live provider class is wired and checked against the current docs (2026-10-18, D-34); `eval/golden/run.py --live` is not yet built.
+- ~~**Run all suites on the Windows machine** and confirm Kit sha and bytes are stable across platforms (line endings, esbuild version).~~ Done 2026-10-18: the Kit sha equals the lock on Windows (checkout is CRLF via `core.autocrlf=true`; the bundle and the prompt hashes do not depend on it).
 - **A fresh kit-guardian pass over D-24** (the second round was stopped by a safety classifier). Run it locally, ideally with a person watching.
 - **Router retrain** on the full KSSM ingestion and an embedding comparison (D-20, A-9); download sizes were not testable here.
 - **Model card check by a person:** the router measures agreement with an LLM teacher; sample 50 held-out questions and judge the labels yourself.
 
 The work ran in a Linux container, not on the Windows dev machine. These were noted and left for a local Claude Code session:
 
-- **`.env.example`**: the permission settings blocked reading and editing it. Add `DATA_DIR`, `LEDGER_PATH`, `LOG_LEVEL` and `KIT_DIST_DIR` (all optional; documented in `refdocs/guides/env_setup.md`).
-- **Windows toolchain**: nothing here was run on the Windows machine (Node 24.11.0, pnpm 10.12.1, Python 3.13.14, uv 0.11.26; the container had Node 22.22.0, pnpm 10.28.0, Python 3.13.16, uv 0.11.32). Run `uv sync`, `pnpm install` and the suites there. A-12 stays ASSUMED.
-- **Playwright Chromium**: it was preinstalled here (about 920 MB at `/opt/pw-browsers`), so no download happened. Locally run `uv run playwright install chromium` (Playwright is pinned to 1.56.0) and record the download size and free disk (17 GB free on C: at 94 percent when last checked).
-- **`eval/smoke/web_smoke.py` is POSIX-only** (process groups via `start_new_session` and `killpg`). It needs a small adaptation, or WSL, on Windows.
-- **Current uv and pnpm docs** (CLAUDE.md rule 6): docs.astral.sh and pnpm.io were unreachable, so config was written against `--help` output and Next's bundled docs. Re-read them.
-- **Smoke screenshots** are written to `test-results/web-smoke/` (gitignored), so they exist only in the container. Rerun the smoke locally to get them.
+- **`.env.example`**: STILL OPEN. The permission settings deny the tools access to it; the lines to paste are under Known gaps.
+- ~~**Windows toolchain**~~ Done 2026-10-18 on Node 24.11.0, pnpm 10.28.0 (the pinned `packageManager`), Python 3.13.14, uv 0.11.26. A-12 is confirmed for this machine.
+- ~~**Playwright Chromium**~~ Done 2026-10-18: a 91 MiB headless shell download (about 470 MB on disk); 13.5 GB free on C: at 95 percent afterwards.
+- ~~**`eval/smoke/web_smoke.py` is POSIX-only**~~ Adapted 2026-10-18 (new process group and `taskkill /T /F` on Windows); the Linux branch is unchanged but was not re-run.
+- ~~**Current uv and pnpm docs**~~ Re-read 2026-10-18: uv config is current; pnpm `onlyBuiltDependencies` works on 10.28 and is removed in pnpm 11 (`allowBuilds`, from 10.26).
+- ~~**Smoke screenshots**~~ Regenerated locally in `test-results/web-smoke/` by the 2026-10-18 runs.
 - **The Task 5 manual check** (see the good fixture's slider move a readout) was replaced by the smoke; do a quick look locally.

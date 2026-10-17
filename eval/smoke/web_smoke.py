@@ -18,6 +18,7 @@ import json
 import os
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -42,6 +43,38 @@ RESULTS: list[tuple[str, bool, str]] = []
 def check(name: str, ok: bool, detail: str = "") -> None:
     RESULTS.append((name, ok, detail))
     print(f"{'PASS' if ok else 'FAIL'}  {name}" + (f"  ({detail})" if detail else ""), flush=True)
+
+
+def spawn(cmd: list[str], env: dict[str, str]) -> subprocess.Popen:
+    """Start a server in its own process group so `terminate` can take down the whole tree (`pnpm start` spawns node)."""
+    options: dict = {"cwd": REPO, "env": env, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
+    if sys.platform == "win32":
+        options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        options["start_new_session"] = True
+    return subprocess.Popen(cmd, **options)
+
+
+def terminate(proc: subprocess.Popen) -> None:
+    if sys.platform == "win32":
+        # No process groups to signal on Windows: ask taskkill to end the process and every child it started.
+        subprocess.run(
+            ["taskkill", "/PID", str(proc.pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+        )
+        return
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+
+
+def require_free_port(port: int) -> None:
+    """The smoke starts its own servers on fixed ports. If something already answers there (a server left over from an
+    earlier run), `wait_http` would succeed against it and every later check would test the wrong process."""
+    with socket.socket() as probe:
+        probe.settimeout(0.5)
+        if probe.connect_ex(("127.0.0.1", port)) == 0:
+            raise SystemExit(f"port {port} is already in use: stop whatever is listening there and run the smoke again")
 
 
 def wait_http(url: str, seconds: float = 60) -> None:
@@ -120,6 +153,8 @@ def main() -> int:
     pnpm = shutil.which("pnpm") or "pnpm"
     SHOTS.mkdir(parents=True, exist_ok=True)
     procs: list[subprocess.Popen] = []
+    require_free_port(8000)
+    require_free_port(3000)
     tmp = Path(tempfile.mkdtemp(prefix="synapse-smoke-"))
     try:
         # A private data directory: /ask runs the whole pipeline on fakes and verifies the Environment in a real browser.
@@ -134,26 +169,8 @@ def main() -> int:
 
         if build:
             subprocess.run([pnpm, "--filter", "web", "build"], cwd=REPO, check=True, capture_output=True)
-        procs.append(
-            subprocess.Popen(
-                [sys.executable, "-m", "uvicorn", "api.main:app", "--port", "8000"],
-                cwd=REPO,
-                env=env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True,
-            )
-        )
-        procs.append(
-            subprocess.Popen(
-                [pnpm, "--filter", "web", "start"],
-                cwd=REPO,
-                env=env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True,
-            )
-        )
+        procs.append(spawn([sys.executable, "-m", "uvicorn", "api.main:app", "--port", "8000"], env))
+        procs.append(spawn([pnpm, "--filter", "web", "start"], env))
         wait_http(f"{API}/health")
         wait_http(WEB)
 
@@ -354,10 +371,7 @@ def main() -> int:
             browser.close()
     finally:
         for proc in procs:
-            try:
-                os.killpg(proc.pid, signal.SIGTERM)
-            except ProcessLookupError:
-                pass
+            terminate(proc)
         shutil.rmtree(tmp, ignore_errors=True)
 
     failed = [r for r in RESULTS if not r[1]]

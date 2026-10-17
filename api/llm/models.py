@@ -2,8 +2,8 @@
 # provider exists (P3); OpenRouter ids are not carried over because nothing uses them yet.
 """Model ids per provider and tier (heavy, standard, light).
 
-Ids and prices were checked against the provider's models and pricing pages on 2026-10-16 (see pricing.py). Re-check both before the first live
-call: they change.
+Ids and prices were checked against the provider's models and pricing pages on 2026-10-16 and again on 2026-10-18 (models overview: the three ids
+below are the Claude API ids and aliases, each retiring no sooner than September 2027; see pricing.py). Re-check both before a paid run: they change.
 """
 
 from __future__ import annotations

@@ -136,12 +136,41 @@ def test_an_unexpected_failure_does_not_leak_its_detail(client: TestClient, monk
     assert "secret" not in error.error.message and "/home" not in error.error.model_dump_json()
 
 
-def test_live_mode_without_a_provider_is_a_clean_error_event(kit_dist: Path, tmp_path: Path) -> None:
+@pytest.mark.usefixtures("no_network")
+def test_live_mode_with_a_rejected_key_is_a_clean_error_event_and_never_leaves_the_machine(
+    kit_dist: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Live mode builds the real Anthropic provider. Its client is swapped for a mock transport here, so the 401 comes from the test and no socket
+    is opened (the `no_network` guard would fail the test if one were)."""
+    import httpx
+
+    from api.llm.providers.anthropic import AnthropicProvider
+
+    seen: list[str] = []
+
+    def reject(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        return httpx.Response(
+            401, json={"type": "error", "error": {"type": "authentication_error", "message": "invalid x-api-key"}}
+        )
+
+    def mocked(key: str) -> AnthropicProvider:
+        return AnthropicProvider(key, client=httpx.AsyncClient(transport=httpx.MockTransport(reject)))
+
+    monkeypatch.setattr("api.llm.factory.AnthropicProvider", mocked)
     settings = _settings(
-        tmp_path / "data", kit_dist, synapse_llm_mode="live", anthropic_api_key="sk-test", llm_monthly_cap_usd=5
+        tmp_path / "data",
+        kit_dist,
+        synapse_llm_mode="live",
+        anthropic_api_key="sk-test",
+        llm_monthly_cap_usd=5,
+        ledger_path=tmp_path / "data" / "ledger.db",
     )
-    error = next(e for e in _events(TestClient(create_app(settings))) if e.type == "error")
-    assert error.error.code == "provider_unavailable" and error.error.retryable is True
+    events = _events(TestClient(create_app(settings)))
+    error = next(e for e in events if e.type == "error")
+    assert error.error.code == "provider_unavailable" and "not the spend cap" in error.error.message
+    assert not any(e.type == "environment" for e in events)  # a rejected key never produces a page
+    assert seen and set(seen) == {"https://api.anthropic.com/v1/messages"}
 
 
 def test_cors_allows_only_the_public_origin(client: TestClient) -> None:

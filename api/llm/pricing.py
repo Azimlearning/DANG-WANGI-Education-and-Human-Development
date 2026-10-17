@@ -3,8 +3,10 @@
 """Cost estimates, in USD, used to enforce the monthly cap before a call is sent.
 
 Prices are per million tokens (input, output), read from the provider's pricing page on 2026-10-16 (Opus 5.5 $4 and $20, Sonnet 5.5 $2 and
-$10, Haiku 5.5 $0.10 and $0.50 up to 100,000 prompt tokens, Haiku 4.5 $1 and $5). Prompt caching is not used, so only the base rates apply.
-Re-check against the pricing page before the first live call. Estimates are deliberately conservative: input tokens are over-counted and output is assumed to run to
+$10, Haiku 5.5 $0.10 and $0.50 up to 100,000 prompt tokens, Haiku 4.5 $1 and $5), and confirmed unchanged on 2026-10-18 (models overview and pricing
+pages). Prompt caching is not used, so only the base rates apply (cache reads are 5 percent of base input on Opus 5.5 and Sonnet 5.5 and 10 percent on
+Haiku 5.5, cache writes cost more than base; teach the ledger those rates, with a measured saving, before turning caching on).
+Re-check against the pricing page before a paid run. Estimates are deliberately conservative: input tokens are over-counted and output is assumed to run to
 max_tokens. An unknown model is priced as the dearest one, so a typo can only over-reserve.
 """
 
