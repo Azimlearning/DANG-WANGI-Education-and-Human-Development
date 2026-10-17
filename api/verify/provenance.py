@@ -15,7 +15,12 @@ from dataclasses import dataclass
 from api.verify.references import REFERENCES, UNIT_SI, evaluate_model, unit_factor
 
 GROUNDED_LEAVES = ("control", "constant")
-COPY_NUMBER = re.compile(r"(?<![A-Za-z0-9_.])-?\d+(?:\.\d+)?")
+# A number in a sentence, in any of the ways a person writes one: 12, 0.04, a leading-dot .99 (previously not seen at all, so ".99 m" was never checked),
+# and an exponent 5e1 (previously read as "5"). A digit run directly after a letter, digit, underscore or dot is part of an identifier or a longer
+# number ("H2O", "R1", "x.5", the "3" of "1.2.3"), not a quantity.
+COPY_NUMBER = re.compile(
+    r"(?<![A-Za-z0-9_.])-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|(?<![A-Za-z0-9_])-?\.\d+(?:[eE][+-]?\d+)?"
+)
 # A number is context, not a quantity, after these words ("Step 2", "Form 5") when it is a small whole number that is not followed by a
 # unit, or as a list marker ("1. ") at the start of a line. Anything else must be a backed value.
 COPY_CONTEXT = re.compile(
@@ -129,6 +134,19 @@ def input_unit_problems(chain: dict, audit: dict) -> list[Problem]:
                         f"{chain['id']} input '{name}' is in {have!r} but the model works in {want!r}",
                     )
                 )
+    if chain.get("kind") == "convert":
+        # A conversion multiplies by the factor for `from` to `to`. That is only right if the source really is in `from`: convert(metres, "mm", "m")
+        # has a correct factor, passes the unit label check (it reports `to`) and is recomputed identically by L3, yet shows a value 1000 times too
+        # small. An unknown source unit fails closed: a conversion of something whose unit nothing declares cannot be told from this.
+        source = (chain.get("inputs") or {}).get("x")
+        have = _chain_unit(source, audit) if isinstance(source, dict) else None
+        if have != chain.get("from"):
+            out.append(
+                Problem(
+                    "wrong_conversion_source",
+                    f"converts from {chain.get('from')!r} to {chain.get('to')!r} but its source is in {have!r}",
+                )
+            )
     for child in (chain.get("inputs") or {}).values():
         out += input_unit_problems(child, audit)
     return out

@@ -215,6 +215,38 @@ def test_an_unbacked_number_in_copy_is_refused(text: str) -> None:
     assert found and set(found) == {"unbacked_copy_number"}
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "The extension is .99 m.",  # a leading-dot decimal used to be invisible to the check
+        "It stretches by -.5 m.",
+        "The force is about 7e1 N.",  # the exponent form means 50, not 5
+        "A load of 1E-2 N.",
+    ],
+)
+def test_a_number_written_with_a_leading_dot_or_an_exponent_is_seen_and_refused_when_unbacked(text: str) -> None:
+    assert set(rules(p.copy_number_problems(with_copy(text)))) == {"unbacked_copy_number"}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Hold the load at x.5 on the ruler.",  # a name followed by .5 is an identifier, not a quantity
+        "See version 1.2.3 of the figure.",  # 1.2 is unbacked, but the trailing .3 is not a second number (it must not add one)
+    ],
+)
+def test_identifier_like_text_does_not_become_extra_numbers(text: str) -> None:
+    got = [m.group() for m in p.COPY_NUMBER.finditer(text)]
+    assert ".5" not in got and ".3" not in got and "3" not in got
+
+
+def test_the_number_pattern_reads_each_form_as_the_value_a_person_means() -> None:
+    values = lambda t: [float(m.group()) for m in p.COPY_NUMBER.finditer(t)]  # noqa: E731
+    assert values("0.04 m and .99 m and -.5 N") == [0.04, 0.99, -0.5]
+    assert values("5e1 N then 1E-2 m") == [50.0, 0.01]
+    assert values("R1 and H2O and x.5") == []
+
+
 def test_KNOWN_LIMIT_backing_compares_values_not_meaning() -> None:
     """A sentence may state "3 times as far" when 3 is also a grid position of some control: the check sees a backed value, not what the
     sentence claims about it. The same holds for any number that happens to equal a parameter. The L6 report lists this under the
@@ -379,11 +411,56 @@ def convert_audit(factor: float, source: str = "mm", target: str = "m") -> dict:
     return audit
 
 
+def convert_audit_from_a_control_in(unit: str, factor: float, source: str, target: str) -> dict:
+    audit = convert_audit(factor, source, target)
+    audit["controls"][0]["unit"] = unit
+    audit["readouts"][0]["unit"] = target
+    return audit
+
+
 def test_a_conversion_must_use_the_independent_unit_factor() -> None:
-    assert rules(p.l1_problems(convert_audit(0.001))) == []
-    assert "bad_unit_factor" in rules(p.l1_problems(convert_audit(0.01)))  # the Kit claims the wrong factor
-    assert "bad_unit_factor" in rules(p.l1_problems(convert_audit(1.0, "mm", "kg")))  # across dimensions
-    assert "bad_unit_factor" in rules(p.l1_problems(convert_audit(1.0, "furlong", "m")))  # unknown unit
+    # The control is declared in the conversion's starting unit, so only the factor and the dimensions are under test here.
+    def l1(factor: float, source: str = "mm", target: str = "m") -> list[str]:
+        return rules(p.l1_problems(convert_audit_from_a_control_in(source, factor, source, target)))
+
+    assert l1(0.001) == []
+    assert "bad_unit_factor" in l1(0.01)  # the Kit claims the wrong factor
+    assert "bad_unit_factor" in l1(1.0, "mm", "kg")  # across dimensions
+    assert "bad_unit_factor" in l1(1.0, "furlong", "m")  # unknown unit
+
+
+def test_a_conversion_must_start_from_the_unit_its_source_is_really_in() -> None:
+    """The conversion's factor is right and its label is right, so every other check agrees; only the source's unit exposes it."""
+    # A control in newtons cannot be converted "from mm".
+    assert "wrong_conversion_source" in rules(p.l1_problems(convert_audit(0.001)))
+    # The same conversion from a control that IS in mm is fine.
+    assert rules(p.l1_problems(convert_audit_from_a_control_in("mm", 0.001, "mm", "m"))) == []
+    # A model's output is in metres: converting it "from mm" shows a value 1000 times too small, labelled metres.
+    audit = good_audit()
+    audit["readouts"][0]["chain"] = {
+        "kind": "convert",
+        "from": "mm",
+        "to": "m",
+        "factor": 0.001,
+        "inputs": {"x": good_audit()["readouts"][0]["chain"]},
+    }
+    found = p.l1_problems(audit)
+    assert "wrong_conversion_source" in rules(found)
+    assert any("'m'" in f.reason and "'mm'" in f.reason for f in found)
+    # Converting that same output from its real unit, m to mm, and labelling it mm, is accepted.
+    audit["readouts"][0]["chain"].update({"from": "m", "to": "mm", "factor": 1000.0})
+    audit["readouts"][0]["unit"] = "mm"
+    assert "wrong_conversion_source" not in rules(p.l1_problems(audit))
+    # A source whose unit nothing declares fails closed rather than passing.
+    audit["controls"][0]["unit"] = ""
+    audit["readouts"][0]["chain"] = {
+        "kind": "convert",
+        "from": "mm",
+        "to": "m",
+        "factor": 0.001,
+        "inputs": {"x": {"kind": "control", "id": "ghost", "min": 0, "max": 1, "grid": 2, "default": 0}},
+    }
+    assert "wrong_conversion_source" in rules(p.l1_problems(audit))
 
 
 def test_the_kit_unit_table_and_the_independent_one_agree() -> None:

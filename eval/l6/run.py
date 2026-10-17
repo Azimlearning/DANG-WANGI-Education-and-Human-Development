@@ -218,6 +218,8 @@ them. So this is a regression baseline that gets harder as it grows, not an unbi
 
 The harness reports the first failed rule, so this is "first to refuse", not "every layer that would have refused".
 
+A defect whose own behaviour runs on a timer (`struct-self-moving-readout`) is refused by L1 (`control_mismatch`) or by L2 (`unstable_readout`) depending on which the harness sees first, and that varies from run to run (seen on Windows on 2026-10-18, where repeated runs gave both). It is refused every time; only the attribution moves, so a regenerated report can differ in these two rows without any change in what the verifier catches.
+
 | Layer | Defects refused first by it |
 |---|---|
 {layer_rows}

@@ -304,6 +304,14 @@ _ENTRIES = [
         "Make readouts only with Synapse.readout.",
     ),
     _e("control_mismatch", "L1-020", "L1 provenance", "block", "retry_fill", "A control must hold the value it shows."),
+    _e(
+        "wrong_conversion_source",
+        "L1-021",
+        "L1 provenance",
+        "block",
+        "retry_plan",
+        "Convert from the unit the value is really in: a conversion's starting unit must be the unit of its source.",
+    ),
     # L3 reference and plan
     _e(
         "numeric_mismatch",

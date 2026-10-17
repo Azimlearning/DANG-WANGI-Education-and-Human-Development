@@ -2,8 +2,10 @@
 
 Provenance: the list in `data/misconceptions.json` is ported from Synapse v1 (`Synapse/backend/app/knowledge/misconceptions.py`, commit
 835a2cefda285b4282ea4d0dbf986d1ff08abdb2); the matcher is new in v4. Five entries cannot train a classifier, so this ranks entries by word overlap
-with the question and says how strongly. **Its accuracy is unmeasured**: there is no labelled set of student questions that do and do not
-state each misconception, and the list is tiny. Treat a match as a suggestion for the Diagnostician (P6), never as a diagnosis.
+with the question and says how strongly. **First measured 2026-10-18** (refdocs/evidence/2026-10-18-p1b-misconception-matcher.md, a 50-question probe set
+written by the same author, so not independent): the right entry came first for all 20 statements of a misconception, but it also fired on 17 of 30
+neutral or off-topic questions at the shipped threshold. It is a topic detector. Treat a match as a reason to offer a probe question (P6), never as
+a diagnosis.
 """
 
 from __future__ import annotations

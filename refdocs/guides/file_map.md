@@ -76,6 +76,10 @@
 
 `refdocs/STATUS.md` (where we are), `synapse-v4-PRD.md` (what and why), `changelog/{CHANGELOG,DECISIONS}.md`, `plans/`, `execution/`, `guides/{env_setup,checklist,file_map}.md`. The order of authority is in `CLAUDE.md`.
 
+## Test guard
+
+`conftest.py` at the repo root makes every test refuse a connection or a name lookup to anything but loopback (D-34); `api/conftest.py` adds the stricter `no_network` fixture. `eval/models/` also holds the router spot check and the misconception probe set and its evaluation.
+
 ## Not in git
 
 `packages/kit/dist/`, `web/.next/`, `.venv/`, `node_modules/`, `data/ledger.db`, the local textbook corpus (`CORPUS_DIR`), any `.env`.

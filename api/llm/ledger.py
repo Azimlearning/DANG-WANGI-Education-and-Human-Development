@@ -64,6 +64,10 @@ class SpendLedger:
         self._pending = 0.0
         metadata.create_all(engine)
 
+    def close(self) -> None:
+        """Release the SQLite file. Windows cannot delete a database file that a pooled connection still holds open (Linux can)."""
+        self._engine.dispose()
+
     def month_total(self) -> float:
         month = self._clock().strftime("%Y-%m")
         with self._engine.connect() as conn:

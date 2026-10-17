@@ -62,7 +62,8 @@ async def pipeline_all(questions: list[dict]) -> list[dict]:
     out = []
     with tempfile.TemporaryDirectory() as tmp:
         settings = Settings(_env_file=None, data_dir=Path(tmp), kit_dist_dir=REPO / "packages" / "kit" / "dist")  # type: ignore[call-arg]
-        llm = build_llm_service(settings, build_ledger(settings))
+        ledger = build_ledger(settings)
+        llm = build_llm_service(settings, ledger)
         deps = pipeline.Deps(
             kit_dist=settings.kit_dist_dir,
             public_origin=settings.public_origin,
@@ -70,18 +71,21 @@ async def pipeline_all(questions: list[dict]) -> list[dict]:
             llm=llm,
             interaction_seconds=2.0,
         )
-        for q in questions:
-            events = [e async for e in pipeline.run(q["question"], deps)]
-            env = next((e.block for e in events if e.type == "environment"), None)
-            degraded = [e.note for e in events if e.type == "stage" and e.status == "degraded"]
-            out.append(
-                {
-                    "id": q["id"],
-                    "environment": env.title if env else None,
-                    "lane": env.lane if env else None,
-                    "degraded": degraded,
-                }
-            )
+        try:
+            for q in questions:
+                events = [e async for e in pipeline.run(q["question"], deps)]
+                env = next((e.block for e in events if e.type == "environment"), None)
+                degraded = [e.note for e in events if e.type == "stage" and e.status == "degraded"]
+                out.append(
+                    {
+                        "id": q["id"],
+                        "environment": env.title if env else None,
+                        "lane": env.lane if env else None,
+                        "degraded": degraded,
+                    }
+                )
+        finally:
+            ledger.close()  # Windows cannot remove the temp directory while the ledger file is open
     return out
 
 

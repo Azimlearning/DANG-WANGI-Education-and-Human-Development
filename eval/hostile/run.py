@@ -91,8 +91,11 @@ def question_case(case: dict) -> Result:
             kit_dist_dir=KIT_DIST,
             ledger_path=Path(tmp) / "ledger.db",
         )
-        client = TestClient(create_app(settings))
-        response = client.post("/ask", json={"question": " ".join([word] * times)})
+        app = create_app(settings)
+        try:
+            response = TestClient(app).post("/ask", json={"question": " ".join([word] * times)})
+        finally:
+            app.state.ledger.close()  # Windows cannot remove the temp directory while the ledger file is open
         blocked = response.status_code == 400
         return Result(case, "api_validation" if blocked else "", "", f"HTTP {response.status_code}")
 

@@ -284,6 +284,14 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** Booking the exact usage trusts the provider's `usage` field (the service already took the larger of reported and computed cost on success). The guard's failure is an `AssertionError`, deliberately not an `httpx` error, so no retry or fallback path can convert it into a quiet "transient" failure. Rejected: raising `max_tokens`-style estimates for every failure (over-reserves on honest 5xx errors), and relying on each test to remember a fixture. On Windows the standard library emulates `socketpair` with a loopback connect, which the stricter `no_network` fixture exempts only when it comes from `socket._fallback_socketpair`.
 
+## D-35: A conversion must start from the unit its source is in; sentence numbers include `.99` and `5e1` (2026-10-18)
+
+**Decision.** (1) L1 refuses a unit conversion whose starting unit is not the unit of its source (`wrong_conversion_source`, L1-021, repair route `retry_plan`). An unknown source unit fails closed. (2) The copy-number pattern in `api/verify/provenance.py` now reads a leading-dot decimal (`.99`) and an exponent (`5e1` is 50) as numbers; a digit run after a letter, digit, underscore or dot is still part of an identifier.
+
+**Why.** Both came from the third kit-guardian round (2026-10-18). The agent was stopped by a safety classifier before it ran any page, so these two were not proven by an attack; each was a question about ordinary code, answered by reading it and by a data-level test with hand-built dicts. (1) `convert()` checks the factor for `from` to `to`, `_chain_unit` reports a conversion's unit as `to`, and L3 recomputes the same chain, so `convert(<metres>, "mm", "m")` passed every check while showing a value 1000 times too small, labelled metres; the existing test even applied an "mm" conversion to a control declared in newtons and expected no problem. (2) `.99 m` produced no number, so a Kit-owned sentence stating it was never compared with the backed values.
+
+**Trade-offs / rejected.** Both fixes are in Python, so the Kit bundle (and its locked hash) is untouched and no stored Environment goes stale. The Kit's `convert()` still does not check at runtime; the verifier is the gate. Failing closed on an unknown source unit could refuse a legitimate page whose control has no unit; none of the 17 Environments is affected. **Not fixed, UNPROVEN:** three leads in `packages/kit/src/audit.ts` (list markers on elements other than `ol`/`ul`/`li`; text in `<head>` made visible; `script`/`style` text given a visible `display`) are recorded in `refdocs/evidence/2026-10-18-p1-guardian-round3.md` for a run with a person watching.
+
 ---
 
 ## Working assumptions (`ASSUMED:`)

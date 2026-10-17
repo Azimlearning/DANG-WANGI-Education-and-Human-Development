@@ -1,0 +1,65 @@
+{
+  "provenance": "Written 2026-10-18 by the build assistant for the first measurement of api/models/misconceptions.py. The matcher was written by the same assistant family, so the two are not independent: a teacher should replace or extend this set. No textbook text. Questions are original.",
+  "kinds": {
+    "positive": "the student states (or asks from inside) the named misconception; the matcher should return that id first",
+    "neutral": "a question on the same topic that states no misconception; the matcher should return nothing",
+    "offtopic": "a question on another topic; the matcher should return nothing"
+  },
+  "items": [
+    {"q": "Does osmosis make water flow towards the side that has more water?", "kind": "positive", "id": "osmosis-inverted-gradient"},
+    {"q": "I think in osmosis the water goes to wherever there is lots of water already, right?", "kind": "positive", "id": "osmosis-inverted-gradient"},
+    {"q": "Why does water travel to the area with more water molecules during osmosis?", "kind": "positive", "id": "osmosis-inverted-gradient"},
+    {"q": "In osmosis, water moves toward the dilute side because there is more water there, correct?", "kind": "positive", "id": "osmosis-inverted-gradient"},
+    {"q": "What is osmosis?", "kind": "neutral", "id": null},
+    {"q": "How do I show osmosis using a potato strip experiment?", "kind": "neutral", "id": null},
+    {"q": "Why does a plant cell become turgid when it is placed in pure water?", "kind": "neutral", "id": null},
+    {"q": "Explain the difference between osmosis and diffusion.", "kind": "neutral", "id": null},
+
+    {"q": "Isn't ionic bonding just atoms sharing electrons like covalent bonding?", "kind": "positive", "id": "bonding-sharing-vs-transfer"},
+    {"q": "Ionic and covalent bonds are the same thing, aren't they?", "kind": "positive", "id": "bonding-sharing-vs-transfer"},
+    {"q": "In sodium chloride the sodium and chlorine share electrons, so it is a covalent bond, right?", "kind": "positive", "id": "bonding-sharing-vs-transfer"},
+    {"q": "Both ionic and covalent bonds involve sharing electrons between atoms, correct?", "kind": "positive", "id": "bonding-sharing-vs-transfer"},
+    {"q": "How is an ionic bond formed between sodium and chlorine?", "kind": "neutral", "id": null},
+    {"q": "Why do simple covalent compounds have low melting points?", "kind": "neutral", "id": null},
+    {"q": "Draw the electron arrangement of a water molecule.", "kind": "neutral", "id": null},
+    {"q": "What is the difference between ionic and covalent bonds?", "kind": "neutral", "id": null},
+
+    {"q": "Does an object need a force pushing it all the time to keep moving?", "kind": "positive", "id": "newton-force-needed-to-keep-moving"},
+    {"q": "If I stop pushing the trolley it stops, so a force is needed to keep it moving, right?", "kind": "positive", "id": "newton-force-needed-to-keep-moving"},
+    {"q": "A ball rolling along the floor needs a continuous force or it would stop by itself, doesn't it?", "kind": "positive", "id": "newton-force-needed-to-keep-moving"},
+    {"q": "Why can't anything keep going without a force acting on it?", "kind": "positive", "id": "newton-force-needed-to-keep-moving"},
+    {"q": "State Newton's first law of motion.", "kind": "neutral", "id": null},
+    {"q": "Explain inertia using a bus that brakes suddenly.", "kind": "neutral", "id": null},
+    {"q": "What is friction and how does it affect a rolling ball?", "kind": "neutral", "id": null},
+    {"q": "Why does a car need seat belts?", "kind": "neutral", "id": null},
+
+    {"q": "Do plants get their food from the soil through the roots?", "kind": "positive", "id": "photosynthesis-food-from-soil"},
+    {"q": "Plants eat the nutrients in the soil as their food, right?", "kind": "positive", "id": "photosynthesis-food-from-soil"},
+    {"q": "Where do plants take in their food, is it from the ground?", "kind": "positive", "id": "photosynthesis-food-from-soil"},
+    {"q": "Since plants absorb their food from the soil, why do they need leaves at all?", "kind": "positive", "id": "photosynthesis-food-from-soil"},
+    {"q": "What is photosynthesis?", "kind": "neutral", "id": null},
+    {"q": "Write the word equation for photosynthesis.", "kind": "neutral", "id": null},
+    {"q": "Why are leaves green?", "kind": "neutral", "id": null},
+    {"q": "What factors affect the rate of photosynthesis?", "kind": "neutral", "id": null},
+
+    {"q": "Is the current used up by the bulb so less current goes back to the battery?", "kind": "positive", "id": "current-used-up"},
+    {"q": "Does the current get used up as it flows round the circuit?", "kind": "positive", "id": "current-used-up"},
+    {"q": "The bulb uses up some current, so the current after the bulb is smaller, right?", "kind": "positive", "id": "current-used-up"},
+    {"q": "Why does less current return to the cell after it passes through the resistor?", "kind": "positive", "id": "current-used-up"},
+    {"q": "What is the unit of electric current?", "kind": "neutral", "id": null},
+    {"q": "How do I connect an ammeter in a series circuit?", "kind": "neutral", "id": null},
+    {"q": "State Ohm's law.", "kind": "neutral", "id": null},
+    {"q": "What is the difference between series and parallel circuits?", "kind": "neutral", "id": null},
+
+    {"q": "What is the capital of France?", "kind": "offtopic", "id": null},
+    {"q": "How tall is Mount Kinabalu?", "kind": "offtopic", "id": null},
+    {"q": "What is a vector quantity?", "kind": "offtopic", "id": null},
+    {"q": "How does a hydraulic jack work?", "kind": "offtopic", "id": null},
+    {"q": "Explain the stages of mitosis.", "kind": "offtopic", "id": null},
+    {"q": "What is the pH of lemon juice?", "kind": "offtopic", "id": null},
+    {"q": "Write a short poem about the sea.", "kind": "offtopic", "id": null},
+    {"q": "How do vaccines work?", "kind": "offtopic", "id": null},
+    {"q": "Why is the sky blue?", "kind": "offtopic", "id": null},
+    {"q": "What are alkanes?", "kind": "offtopic", "id": null}
+  ]
+}

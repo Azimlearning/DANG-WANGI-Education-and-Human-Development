@@ -152,10 +152,13 @@ def test_every_ported_citation_is_marked_unverified_and_has_provenance() -> None
     assert all(e["source_verified"] is False for e in data["entries"])
 
 
-def test_the_matcher_states_that_its_accuracy_is_unmeasured() -> None:
+def test_the_matcher_is_honest_about_what_it_is_and_points_at_its_measurement() -> None:
     import api.models.misconceptions as mod
 
-    assert "accuracy is unmeasured" in (mod.__doc__ or "")
+    doc = mod.__doc__ or ""
+    assert "topic detector" in doc and "never as\na diagnosis" in doc
+    evidence = Path(mod.__file__).resolve().parents[2] / "refdocs" / "evidence" / "2026-10-18-p1b-misconception-matcher.md"
+    assert "2026-10-18-p1b-misconception-matcher.md" in doc and evidence.exists()
     assert isinstance(default_matcher(), MisconceptionMatcher)
 
 
