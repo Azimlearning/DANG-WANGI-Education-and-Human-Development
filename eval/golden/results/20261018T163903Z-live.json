@@ -1,0 +1,248 @@
+{
+  "started_at": "2026-10-18T16:39:03+00:00",
+  "approved_usd": 0.2,
+  "exemplars": false,
+  "spent_usd": 0.079989,
+  "projection": {
+    "low": 0.0608,
+    "high": 0.1286,
+    "hard_bound": 0.2511
+  },
+  "stopped": null,
+  "questions": [
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 2042
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 3785,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "no corpus configured"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12141,
+          "models": [
+            "mechanics.hookes"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 15
+        }
+      ],
+      "id": "g01",
+      "question": "Why does a spring stretch when I hang a weight on it?",
+      "expected_topic": "physics_form5_force_and_elasticity",
+      "environment": "Why a spring stretches",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 20.9,
+      "cost_usd": 0.025691,
+      "projected_high_usd": 0.047119,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1559,
+          "tokens_out": 38,
+          "cost_usd": 0.0001749,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 847,
+          "tokens_out": 247,
+          "cost_usd": 0.004164,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8526,
+          "tokens_out": 430,
+          "cost_usd": 0.021352,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1223
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4387,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "no corpus configured"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 13655,
+          "models": [
+            "electricity.ohm"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 15
+        }
+      ],
+      "id": "g09",
+      "question": "What happens to the current if I raise the resistance in a circuit?",
+      "expected_topic": "physics_form5_electricity",
+      "environment": "Resistance and current",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 21.9,
+      "cost_usd": 0.025607,
+      "projected_high_usd": 0.041512,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1560,
+          "tokens_out": 33,
+          "cost_usd": 0.0001725,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 865,
+          "tokens_out": 223,
+          "cost_usd": 0.00396,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8537,
+          "tokens_out": 440,
+          "cost_usd": 0.021474,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1172
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4698,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "no corpus configured"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12326,
+          "models": [
+            "fluids.pressure_depth"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 14
+        }
+      ],
+      "id": "g17",
+      "question": "How does the pressure change as a diver goes deeper in water?",
+      "expected_topic": "physics_form5_forces_and_pressure",
+      "environment": "Pressure as a diver goes deeper",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 21.4,
+      "cost_usd": 0.028692,
+      "projected_high_usd": 0.040008,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1559,
+          "tokens_out": 36,
+          "cost_usd": 0.0001739,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 859,
+          "tokens_out": 301,
+          "cost_usd": 0.004728,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 9020,
+          "tokens_out": 575,
+          "cost_usd": 0.02379,
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

@@ -28,7 +28,14 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
-### 2026-10-18: The second paid run (no exemplar): 1 of 3, a pipeline defect found, `prompt:` fix not yet re-measured ($0.1507 of the approved $0.30)
+### 2026-10-18: The third paid run (same 3 questions after the fix): 3 of 3 at the first attempt, $0.0800 of the approved $0.20
+- **Reported:** the owner chose "up to $0.20" to re-measure the same three no-exemplar questions after the `prompt:` fix.
+- **Ran:** `echo 0.20 | uv run python eval/golden/run.py --live --no-exemplar --ids g01,g09,g17`. **3 of 3 questions got an Environment**, all plans passed at the first attempt, 3 calls each, $0.0800 (about $0.027 each). The chosen models were the right ones (`mechanics.hookes`, `electricity.ohm`, `fluids.pressure_depth`). Raw results `eval/golden/results/20261018T163903Z-live.json`.
+- **Eval delta, now measured:** before the fix 1 of 3 Environments and 1 of 6 plan attempts passed ($0.1507); after, 3 of 3 and 3 of 3 ($0.0800). A sample of three on topics that have Plans in the Kit: it shows the dominant failure is gone, not a pass rate.
+- **Noted:** the planner chose g = 10 for the liquid pressure Environment where the textbook uses 9.81; the label is `model-checked` and says so. A small table of well-known constants checked against the textbook would catch it; not built. A max-length question can still bring a plan request close to the 7,000-token cap (largest golden request 6,856); an over-cap request now degrades instead of failing.
+- **Verified:** the run itself; the full suite (655 passed, 1 skipped) before the `prompt:` commit.
+
+### 2026-10-18: The second paid run (no exemplar): 1 of 3, a pipeline defect found, `prompt:` fix re-measured in the next entry ($0.1507 of the approved $0.30)
 - **Reported:** the owner chose "3 questions, up to $0.30" for a no-exemplar run (g01, g09, g17).
 - **Ran:** `echo 0.30 | uv run python eval/golden/run.py --live --no-exemplar --ids g01,g09,g17`. **1 of 3 questions got an Environment** ($0.1507; 4 calls and about $0.05 each, including the plan retry). Plan attempts: 1 of 6 passed. PLAN-002 (an invented model id) fired in 3 of 6; also PLAN-001 once and PLAN-003 with PLAN-004 once.
 - **Diagnosed (free, offline):** the prompt never contained the model id. The Kit pack shows the component name `hookes(...)`; the Plan needs `mechanics.hookes`; the id appeared in the prompt only inside the answer-key exemplar. Measured over the 24 golden questions with the exemplar withheld: the needed id was in 0 of 24 prompts. The pack also did not distinguish a model's inputs from its params. The canary's first-attempt success therefore came from copying the exemplar.
