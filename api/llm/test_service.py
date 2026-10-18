@@ -278,3 +278,41 @@ async def test_the_spend_summary_splits_by_purpose_and_model_and_counts_failed_c
     assert s["spent_usd"] == pytest.approx(sum(s["by_model"].values())) and s["remaining_usd"] == pytest.approx(
         1.0 - s["spent_usd"]
     )
+
+
+async def test_the_all_time_budget_holds_across_months_when_the_monthly_cap_has_reset(tmp_path: Path) -> None:
+    """The owner's limit is for the whole project. The monthly cap resets on the 1st; the all-time budget must not."""
+    now = {"t": datetime(2026, 10, 30, tzinfo=UTC)}
+    ledger = SpendLedger(engine_for(tmp_path / "l.db"), 5.0, clock=lambda: now["t"], total_cap_usd=0.05)
+    service = LLMService(FakeProvider(lambda _r: "y" * 5000, name="anthropic", models=ANTHROPIC_MODELS), None, ledger)
+    request = LLMRequest(prompt="x" * 30, purpose="plan", max_tokens=1_000)  # a worst case of about $0.01
+    await service.complete(request)
+    await service.complete(request)
+    spent = ledger.all_time_total()
+    assert spent > 0.02
+    now["t"] = datetime(2026, 11, 2, tzinfo=UTC)  # a new month: the monthly cap sees nothing spent
+    assert ledger.month_total() == 0.0 and ledger.all_time_total() == pytest.approx(spent)
+    with pytest.raises(SpendCapExceeded, match="all-time"):
+        await service.complete(LLMRequest(prompt="x" * 30, purpose="plan", max_tokens=4_000))  # $0.04 worst case would pass $0.05 in all
+    assert ledger.remaining_usd() == pytest.approx(0.05 - spent)  # the smaller of the two caps
+
+
+def test_without_an_all_time_budget_nothing_changes_and_the_summary_shows_both(tmp_path: Path) -> None:
+    plain = SpendLedger(engine_for(tmp_path / "a.db"), 1.0)
+    assert plain.remaining_usd() == 1.0 and plain.summary()["total_cap_usd"] is None
+    both = SpendLedger(engine_for(tmp_path / "b.db"), 1.0, total_cap_usd=0.25)
+    assert both.remaining_usd() == 0.25 and both.summary()["total_cap_usd"] == 0.25 and both.summary()["all_time_spent_usd"] == 0.0
+    only_total = SpendLedger(engine_for(tmp_path / "c.db"), None, total_cap_usd=0.25)
+    assert only_total.remaining_usd() == 0.25
+
+
+def test_the_all_time_budget_setting_reaches_the_ledger_the_service_writes_to(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SYNAPSE_LLM_MODE", "live")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-not-real")
+    monkeypatch.setenv("LLM_MONTHLY_CAP_USD", "5")
+    monkeypatch.setenv("LLM_TOTAL_CAP_USD", "2")
+    monkeypatch.setenv("LEDGER_PATH", str(tmp_path / "ledger.db"))
+    settings = load_settings(env_file=None)
+    ledger = build_ledger(settings)
+    assert settings.llm_total_cap_usd == 2.0 and ledger.remaining_usd() == 2.0
+    ledger.close()

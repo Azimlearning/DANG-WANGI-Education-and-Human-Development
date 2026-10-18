@@ -6,7 +6,7 @@
 
 | What | Where | In git |
 |---|---|---|
-| The owner's zip | `textbook-and-experiments-sample.zip` in the repo root (moved out by the owner when convenient) | **No** (`*.zip`, `*.pdf` ignored since 2026-10-18) |
+| The owner's zip | Deleted 2026-10-19 at the owner's request, after checking that all 28 files were unpacked at identical sizes | Never tracked (`*.zip`, `*.pdf` are ignored) |
 | Unpacked PDFs | `C:\Users\User\synapse-corpus\raw\` | No |
 | The text corpus | `C:\Users\User\synapse-corpus\text\` (`CORPUS_DIR` points here) | No |
 | Quotations | `CORPUS_DIR\citations.json` (local) | **No** |

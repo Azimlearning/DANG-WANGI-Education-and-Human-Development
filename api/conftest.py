@@ -54,6 +54,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "ANTHROPIC_API_KEY",
         "OPENROUTER_API_KEY",
         "LLM_MONTHLY_CAP_USD",
+        "LLM_TOTAL_CAP_USD",
         "PUBLIC_ORIGIN",
         "DATA_DIR",
         "KIT_DIST_DIR",

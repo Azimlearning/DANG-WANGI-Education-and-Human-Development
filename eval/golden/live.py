@@ -99,12 +99,17 @@ def parse_amount(text: str) -> float | None:
 def describe(settings: Settings, ledger: SpendLedger, projection: Projection, count: int) -> str:
     spent = ledger.month_total()
     cap = settings.llm_monthly_cap_usd or 0.0
+    budget = []
+    if settings.llm_total_cap_usd is not None:
+        total, left = ledger.all_time_total(), max(settings.llm_total_cap_usd - ledger.all_time_total(), 0.0)
+        budget = [f"  budget:    ${settings.llm_total_cap_usd:.2f} for the whole project; ${total:.4f} spent in all; ${left:.4f} remains"]
     return "\n".join(
         [
             "A PAID run with the real provider.",
             f"  models:    plan and explain {ANTHROPIC_MODELS['standard']}, route and fill {ANTHROPIC_MODELS['light']}",
             f"  ledger:    {settings.resolved_ledger_path()}",
             f"  cap:       ${cap:.2f} a month; ${spent:.4f} spent so far; ${cap - spent:.4f} remains",
+            *budget,
             f"  questions: {count}",
             f"  projected: ${projection.low:.4f} (low) to ${projection.high:.4f} (high)",
             f"  hard bound: ${projection.hard_bound:.4f}, what the ledger would reserve if every call took its longest path and every reply ran to its limit",
@@ -243,7 +248,7 @@ def main_live(
         if not use_exemplars:
             print("  NO exemplar: the planner gets no worked example, so this measures planning from the schema and the Kit alone (prompts are shorter,")
             print("  so the projection above is somewhat high; failures and retries are likelier).")
-        remaining = (settings.llm_monthly_cap_usd or 0.0) - ledger.month_total()
+        remaining = ledger.remaining_usd() or 0.0  # the smaller of the monthly cap and the all-time budget
         if projection.hard_bound > remaining:
             print(f"Not sent. The hard bound ${projection.hard_bound:.2f} does not fit in the ${remaining:.2f} that remains of the cap. Run fewer questions.")
             return 1
@@ -254,7 +259,7 @@ def main_live(
         # The amount typed is a ceiling, not just a gate to start: this run's ledger is capped at what was already spent plus the approved amount, so the
         # ledger refuses any call that could pass it (the monthly cap still applies underneath).
         run_cap = min(settings.llm_monthly_cap_usd or 0.0, ledger.month_total() + approved)
-        run_ledger = SpendLedger(engine_for(settings.resolved_ledger_path()), run_cap)
+        run_ledger = SpendLedger(engine_for(settings.resolved_ledger_path()), run_cap, total_cap_usd=settings.llm_total_cap_usd)
         try:
             llm = build_llm_service(settings.model_copy(update={"llm_monthly_cap_usd": run_cap}), run_ledger)
             # A fresh store each run: a question already in the library is answered without the planner, which would hide what the planner does.

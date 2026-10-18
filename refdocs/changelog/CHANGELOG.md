@@ -28,6 +28,14 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-19: An all-time spend budget, the remaining-work map, the supervised-review procedure, the zip deleted
+- **Reported:** the owner cannot spend more than $2 on the whole project, asked what is needed to finish `.env`, how to proceed with the safety review, how complete the project is and what is pending, and asked to delete the textbook zip.
+- **Diagnosed:** the cap wired so far is MONTHLY: the ledger resets on the 1st, so it cannot enforce a $2 limit for the whole project. October's spend would look like a fresh start in November.
+- **Changed:** `LLM_TOTAL_CAP_USD` (new setting): an all-time budget on the ledger file, enforced beside the monthly cap in `SpendLedger.reserve`, folded into `remaining_usd()`, shown in `/spend` and in the paid-run script's ask, and carried into the run ledger the script builds; `api/conftest.py` clears it from tests; `env_setup.md`; new `refdocs/guides/remaining_work.md` and `refdocs/guides/guardian_pass.md`; the execution doc's note on the zip.
+- **Deleted at the owner's request:** `textbook-and-experiments-sample.zip` (1 GB, never tracked). Checked first: all 28 files in it exist unpacked in `C:/Users/User/synapse-corpus/raw` at identical sizes, and the 26-document corpus is built. The unpacked PDFs and the corpus text remain; they are outside the repository.
+- **Decided:** the percentage in `remaining_work.md` (about 60 percent hackathon-level, about 65 percent of the PRD) is the author's judgement with the arithmetic shown, not a measurement. The cheapest credible demo route is a static gallery of the 16 `kit-verified` Environments as offline files, with no server or model call.
+- **Verified:** `pytest api/llm eval/golden` 70 passed, including that October's spend still counts against the all-time budget after the monthly cap resets in November; the full suite is run before the commit.
+
 ### 2026-10-18: The third paid run (same 3 questions after the fix): 3 of 3 at the first attempt, $0.0800 of the approved $0.20
 - **Reported:** the owner chose "up to $0.20" to re-measure the same three no-exemplar questions after the `prompt:` fix.
 - **Ran:** `echo 0.20 | uv run python eval/golden/run.py --live --no-exemplar --ids g01,g09,g17`. **3 of 3 questions got an Environment**, all plans passed at the first attempt, 3 calls each, $0.0800 (about $0.027 each). The chosen models were the right ones (`mechanics.hookes`, `electricity.ohm`, `fluids.pressure_depth`). Raw results `eval/golden/results/20261018T163903Z-live.json`.

@@ -25,7 +25,9 @@ def _require_live_prerequisites(settings: Settings) -> None:
 def build_ledger(settings: Settings) -> SpendLedger:
     """The ledger at the configured path, capped by LLM_MONTHLY_CAP_USD (None: uncapped, which only fake mode allows)."""
     _require_live_prerequisites(settings)
-    return SpendLedger(engine_for(settings.resolved_ledger_path()), settings.llm_monthly_cap_usd)
+    return SpendLedger(
+        engine_for(settings.resolved_ledger_path()), settings.llm_monthly_cap_usd, total_cap_usd=settings.llm_total_cap_usd
+    )
 
 
 def build_llm_service(

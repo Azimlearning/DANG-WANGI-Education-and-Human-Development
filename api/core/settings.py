@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr | None = None
     openrouter_api_key: SecretStr | None = None
     llm_monthly_cap_usd: float | None = None
+    llm_total_cap_usd: float | None = None
+    """An all-time budget for the whole project, enforced beside the monthly cap (which resets on the 1st). Unset: only the monthly cap applies."""
 
     def resolved_ledger_path(self) -> Path:
         return self.ledger_path if self.ledger_path is not None else self.data_dir / "ledger.db"

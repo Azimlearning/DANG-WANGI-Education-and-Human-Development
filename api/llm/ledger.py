@@ -56,9 +56,12 @@ class SpendLedger:
         engine: Engine,
         monthly_cap_usd: float | None,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        total_cap_usd: float | None = None,
     ):
         self._engine = engine
         self._cap = monthly_cap_usd
+        self._total_cap = total_cap_usd
+        """An all-time ceiling on this ledger file, enforced beside the monthly cap: the monthly cap resets on the 1st, a project budget does not."""
         self._clock = clock
         self._lock = threading.Lock()
         self._pending = 0.0
@@ -75,6 +78,10 @@ class SpendLedger:
                 select(func.coalesce(func.sum(spend_ledger.c.cost_usd), 0.0)).where(spend_ledger.c.month == month)
             ).scalar_one()
         return float(total)
+
+    def all_time_total(self) -> float:
+        with self._engine.connect() as conn:
+            return float(conn.execute(select(func.coalesce(func.sum(spend_ledger.c.cost_usd), 0.0))).scalar_one())
 
     def summary(self) -> dict:
         """This month's spend for the operator: total, cap, what remains, and the split by purpose and by model. No prompt or reply text is ever stored."""
@@ -106,6 +113,8 @@ class SpendLedger:
             "spent_usd": round(self.month_total(), 6),
             "cap_usd": self._cap,
             "remaining_usd": None if self._cap is None else round(self.remaining_usd() or 0.0, 6),
+            "total_cap_usd": self._total_cap,
+            "all_time_spent_usd": round(self.all_time_total(), 6),
             "calls": calls,
             "failed_calls": failed,
             "by_purpose": {k: round(v, 6) for k, v in sorted(by_purpose.items())},
@@ -113,11 +122,16 @@ class SpendLedger:
         }
 
     def remaining_usd(self) -> float | None:
-        """Cap minus this month's spend and in-flight reservations; None when there is no cap."""
-        if self._cap is None:
+        """What may still be spent: the smaller of the monthly cap and the all-time cap, each less what is spent and in flight; None when there is no cap."""
+        if self._cap is None and self._total_cap is None:
             return None
         with self._lock:
-            return max(self._cap - self.month_total() - self._pending, 0.0)
+            room = [
+                cap - spent - self._pending
+                for cap, spent in ((self._cap, self.month_total() if self._cap is not None else 0.0), (self._total_cap, self.all_time_total() if self._total_cap is not None else 0.0))
+                if cap is not None
+            ]
+            return max(min(room), 0.0)
 
     def reserve(self, estimate_usd: float) -> Reservation:
         """Claim budget for one call, or raise SpendCapExceeded. Call before the provider."""
@@ -136,6 +150,20 @@ class SpendLedger:
                         f"Monthly LLM cap of ${self._cap:.2f} would be exceeded "
                         f"(${spent:.4f} spent this month, this call may cost up to "
                         f"${estimate_usd:.4f}). The call was not sent."
+                    )
+            if self._total_cap is not None:
+                lifetime = self.all_time_total()
+                if lifetime + self._pending + estimate_usd > self._total_cap:
+                    log.warning(
+                        "total_cap_refused cap_usd=%s spent_usd=%.6f in_flight_usd=%.6f estimate_usd=%.6f",
+                        self._total_cap,
+                        lifetime,
+                        self._pending,
+                        estimate_usd,
+                    )
+                    raise SpendCapExceeded(
+                        f"The all-time LLM budget of ${self._total_cap:.2f} would be exceeded "
+                        f"(${lifetime:.4f} spent in all, this call may cost up to ${estimate_usd:.4f}). The call was not sent."
                     )
             self._pending += estimate_usd
             return Reservation(estimate_usd)

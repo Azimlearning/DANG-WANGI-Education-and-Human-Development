@@ -14,6 +14,7 @@ Last updated: 2026-10-16
 |---|---|---|---|---|
 | `SYNAPSE_LLM_MODE` | Yes (defaults to `fake`) | Set by you: `fake` or `live` | API | `fake` uses a deterministic fake model and makes no network call. `live` is paid and needs the two rows below |
 | `LLM_MONTHLY_CAP_USD` | Yes in `live` mode | Set by you, in US dollars | API LLM seam | Calls are refused before sending if they would exceed it. The API refuses to start in `live` mode without it |
+| `LLM_TOTAL_CAP_USD` | No (recommended) | Set by you, in US dollars | API LLM seam | An ALL-TIME budget for the whole project, enforced beside the monthly cap: the monthly cap resets on the 1st, this does not. A call that would take the ledger file past it is refused before sending. The paid-run script shows it and counts it in what remains |
 | `ANTHROPIC_API_KEY` | Yes in `live` mode | https://console.anthropic.com (API keys) | API | Server side only. Never `NEXT_PUBLIC_` |
 | `NEXT_PUBLIC_API_BASE_URL` | Yes for the web app | Your API address, `http://localhost:8000` locally | Web | Public by design: it is a URL, not a secret |
 | `PUBLIC_ORIGIN` | Yes | The origin the web app is served from, `http://localhost:3000` locally | API (CSP injection) | The artifact CSP names this origin explicitly (ADR D-06) |

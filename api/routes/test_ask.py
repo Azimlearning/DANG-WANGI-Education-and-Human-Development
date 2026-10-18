@@ -288,11 +288,14 @@ def test_a_full_server_refuses_with_429_and_a_finished_stream_frees_its_slot(kit
 def test_spend_reports_the_month_against_the_cap_and_holds_no_text(client: TestClient) -> None:
     body = client.get("/spend").json()
     assert body["spent_usd"] == 0 and body["cap_usd"] is None and body["remaining_usd"] is None and body["calls"] >= 0
+    assert body["total_cap_usd"] is None and body["all_time_spent_usd"] == 0  # numbers only: the endpoint still holds no text
     assert set(body) == {
         "month",
         "spent_usd",
         "cap_usd",
         "remaining_usd",
+        "total_cap_usd",
+        "all_time_spent_usd",
         "calls",
         "failed_calls",
         "by_purpose",
