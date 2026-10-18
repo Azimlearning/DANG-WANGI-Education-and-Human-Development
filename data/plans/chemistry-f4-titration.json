@@ -58,7 +58,7 @@
     "Set the end point to 20 cm3 and press Record.",
     "Try 10 cm3 and 40 cm3 as well."
   ],
-  "citation_ids": [],
+  "citation_ids": ["titr_formula", "titr_endpoint"],
   "presentation": "stage",
   "custom": [],
   "id": "titration_virtual",
@@ -66,7 +66,7 @@
   "goal": "Find the concentration of sodium hydroxide from the volume needed to neutralise an acid.",
   "pattern": "virtual_experiment",
   "topic": "chemistry_form4_acids_bases_salts",
-  "note": "At the end point the acid and the alkali have neutralised each other exactly. For hydrochloric acid and sodium hydroxide, one mole of acid reacts with one mole of alkali.",
+  "note": "The end point is where the indicator changes colour, and the acid and the alkali are then taken to have neutralised each other. For hydrochloric acid and sodium hydroxide, one mole of acid reacts with one mole of alkali.",
   "controls": [
     {
       "id": "vb",

@@ -5,7 +5,7 @@
   "pattern": "simulation",
   "topic": "physics_form5_forces_and_pressure",
   "experiment_ref": null,
-  "note": "Pressure in a liquid increases with depth. Here water has a density of 1000 kg/m3 and g is taken as 10 m/s2.",
+  "note": "Pressure in a liquid increases with depth. Here water has a density of 1000 kg/m3 and g is taken as 9.81 m/s2, as in the textbook's worked problems.",
   "controls": [
     {
       "id": "depth",
@@ -24,7 +24,7 @@
       "model": "fluids.pressure_depth",
       "params": {
         "density": 1000,
-        "g": 10
+        "g": 9.81
       },
       "inputs": {
         "depth": "depth"
@@ -56,7 +56,7 @@
     "Move the depth from 0 m to 20 m and watch the pressure grow."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["pressure_liquid", "pressure_g"],
   "presentation": "stage",
   "custom": [],
   "hints": [

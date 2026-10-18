@@ -50,7 +50,7 @@
     "Raise the light a little at a time and press Record each time.",
     "Find the light intensity where the net uptake is zero."
   ],
-  "citation_ids": [],
+  "citation_ids": ["comp_point"],
   "presentation": "stage",
   "custom": [],
   "id": "compensation_point",

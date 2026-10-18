@@ -50,15 +50,15 @@
     "Set the rise to 10 °C and press Record.",
     "Compare the heat for each rise."
   ],
-  "citation_ids": [],
+  "citation_ids": ["heat_q", "heat_neut"],
   "presentation": "stage",
   "custom": [],
   "id": "heat_of_neutralisation",
-  "title": "Heat of neutralisation",
+  "title": "Heat released by a temperature rise",
   "goal": "Work out the heat released from the rise in temperature.",
   "pattern": "virtual_experiment",
   "topic": "chemistry_form5_thermochemistry",
-  "note": "The heat released is taken up by the solution: Q = m c (change in temperature). Here the solution has a mass of 100 g and a specific heat capacity of 4.2 J/(g °C).",
+  "note": "The heat released is taken up by the solution: Q = m c (change in temperature). The heat of neutralisation is this heat per mole of water formed. Here the solution has a mass of 100 g and a specific heat capacity of 4.2 J/(g °C).",
   "controls": [
     {
       "id": "rise",

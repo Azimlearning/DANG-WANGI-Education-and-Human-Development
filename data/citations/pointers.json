@@ -1,0 +1,316 @@
+{
+  "pointers": {
+    "hooke_law": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 36,
+      "claim": "States Hooke's law: the extension is directly proportional to the applied force within the elastic limit.",
+      "topics": [
+        "physics_form5_force_and_elasticity"
+      ],
+      "models": [
+        "mechanics.hookes"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "newton2_law": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 70,
+      "claim": "States Newton's second law as the rate of change of momentum being proportional to the force; the same page derives F = ma.",
+      "topics": [
+        "physics_form4_kinematics_dynamics_momentum"
+      ],
+      "models": [
+        "physics.newton_second"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "newton2_fma": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 71,
+      "claim": "Names F = ma as the formula for solving problems about force, mass and acceleration.",
+      "topics": [
+        "physics_form4_kinematics_dynamics_momentum"
+      ],
+      "models": [
+        "physics.newton_second"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "wave_speed_eq": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 186,
+      "claim": "States that the speed of a wave is the product of frequency and wavelength, v = f lambda.",
+      "topics": [
+        "physics_form4_waves"
+      ],
+      "models": [
+        "physics.wave_speed"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "wave_freq_src": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 205,
+      "claim": "Frequency is set by the source; a change of medium changes the speed and so the wavelength (page 205).",
+      "topics": [
+        "physics_form4_waves"
+      ],
+      "models": [
+        "physics.wave_speed"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "ohm_v_prop": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 111,
+      "claim": "For an ohmic conductor the potential difference is directly proportional to the current.",
+      "topics": [
+        "physics_form5_electricity"
+      ],
+      "models": [
+        "electricity.ohm"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "ohm_v_ir": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 134,
+      "claim": "Gives V = IR from Ohm's law, so current = voltage / resistance.",
+      "topics": [
+        "physics_form5_electricity"
+      ],
+      "models": [
+        "electricity.ohm"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "pressure_liquid": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 50,
+      "claim": "States P = h rho g for the pressure at depth h in a liquid of density rho.",
+      "topics": [
+        "physics_form5_forces_and_pressure"
+      ],
+      "models": [
+        "fluids.pressure_depth"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "pressure_g": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 57,
+      "claim": "Worked problems take the density of water as 1000 kg m-3 and g as 9.81 m s-2.",
+      "topics": [
+        "physics_form5_forces_and_pressure"
+      ],
+      "models": [
+        "fluids.pressure_depth"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "dilution_moles": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 174,
+      "claim": "The moles of solute do not change on dilution, which gives M1V1 = M2V2 (formula shown on the page).",
+      "topics": [
+        "chemistry_form4_acids_bases_salts"
+      ],
+      "models": [
+        "chemistry.dilution"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "molar_volume": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 64,
+      "claim": "Molar volume is 22.4 dm3 mol-1 at STP and 24 dm3 mol-1 at room conditions.",
+      "topics": [
+        "chemistry_form4_chemical_formulae_and_equations"
+      ],
+      "models": [
+        "chemistry.gas_volume"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "mole_mass": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 59,
+      "claim": "Learning standard linking molar mass, mass and moles; the formula n = mass / molar mass is on page 62.",
+      "topics": [
+        "chemistry_form4_chemical_formulae_and_equations"
+      ],
+      "models": [
+        "chemistry.moles_from_mass"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "mole_formula": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 63,
+      "claim": "Gives mass = moles x molar mass, which rearranges to n = mass / molar mass.",
+      "topics": [
+        "chemistry_form4_chemical_formulae_and_equations"
+      ],
+      "models": [
+        "chemistry.moles_from_mass"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "ph_formula": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 153,
+      "claim": "Defines pH = -log[H+] with the concentration in mol dm-3.",
+      "topics": [
+        "chemistry_form4_acids_bases_salts"
+      ],
+      "models": [
+        "chemistry.ph_from_h"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "ph_higher": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 157,
+      "claim": "A higher hydrogen ion concentration gives a lower pH.",
+      "topics": [
+        "chemistry_form4_acids_bases_salts"
+      ],
+      "models": [
+        "chemistry.ph_from_h"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "rate_def": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 231,
+      "claim": "Defines the rate of reaction as change in quantity over time taken.",
+      "topics": [
+        "chemistry_form4_rate_of_reaction"
+      ],
+      "models": [
+        "chemistry.average_rate"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "rate_avg": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 235,
+      "claim": "Defines the average rate; the page then gives total volume of gas collected / time taken.",
+      "topics": [
+        "chemistry_form4_rate_of_reaction"
+      ],
+      "models": [
+        "chemistry.average_rate"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "titr_formula": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 182,
+      "claim": "Gives MaVa / MbVb = a / b for a neutralisation, used to find an unknown concentration.",
+      "topics": [
+        "chemistry_form4_acids_bases_salts"
+      ],
+      "models": [
+        "chemistry.titration_concentration"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "titr_endpoint": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 180,
+      "claim": "Defines the end point of a titration as where the indicator changes colour.",
+      "topics": [
+        "chemistry_form4_acids_bases_salts"
+      ],
+      "models": [
+        "chemistry.titration_concentration"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "heat_q": {
+      "doc": "textbook-chemistry-chemistry-f5",
+      "page": 130,
+      "claim": "Gives Q = mc theta for the heat released into a solution of mass m.",
+      "topics": [
+        "chemistry_form5_thermochemistry"
+      ],
+      "models": [
+        "chemistry.heat_energy"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "heat_neut": {
+      "doc": "textbook-chemistry-chemistry-f5",
+      "page": 135,
+      "claim": "Defines the heat of neutralisation as per mole of water formed (about -57 kJ mol-1 on page 139).",
+      "topics": [
+        "chemistry_form5_thermochemistry"
+      ],
+      "models": [
+        "chemistry.heat_energy"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "tsa_v": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 133,
+      "claim": "States that a bigger organism has a smaller total surface area to volume ratio (stated for organisms; the cube is a model of it).",
+      "topics": [
+        "biology_form4_movement_of_substances"
+      ],
+      "models": [
+        "biology.sa_to_v_cube"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "magnif": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 18,
+      "claim": "States that a drawing's magnification factor is given as length of drawing over length of specimen (worked on page 18).",
+      "topics": [
+        "biology_form4_cell_structure_function"
+      ],
+      "models": [
+        "biology.magnification"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "osmo_hypo": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 65,
+      "claim": "Plant cells in a hypotonic solution take in water by osmosis.",
+      "topics": [
+        "biology_form4_movement_of_substances"
+      ],
+      "models": [
+        "biology.percent_change_mass"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "osmo_pct": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 69,
+      "claim": "The practical records the percentage of difference in mass of potato strips against sucrose concentration.",
+      "topics": [
+        "biology_form4_movement_of_substances"
+      ],
+      "models": [
+        "biology.percent_change_mass"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "comp_point": {
+      "doc": "textbook-biology-form-5-dlp-biology-form-5",
+      "page": 61,
+      "claim": "States the compensation point: the rate of photosynthesis equals the rate of respiration.",
+      "topics": [
+        "biology_form5_leaf_structure_function"
+      ],
+      "models": [
+        "biology.photosynthesis_net"
+      ],
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    }
+  }
+}

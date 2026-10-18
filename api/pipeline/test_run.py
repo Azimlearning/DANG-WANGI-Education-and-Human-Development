@@ -232,3 +232,102 @@ def test_a_refused_page_with_fills_is_retried_once_without_them(tmp_path: Path, 
     records = [r for r in trace_records(deps) if r["layer"] == "verify"]
     assert records[0]["status"] == "refused" and records[0]["detail"]["retry"] == "drop_fills"
     assert records[-1]["status"] == "ok"
+
+
+# ── grounding: a Plan's citations decide the label (hard constraint 4) ─────────────────────────────────────────────────────
+
+SYNTHETIC_DOC = "synthetic-physics"
+SYNTHETIC_QUOTE = "In this made-up test passage a coiled wire grows longer in step with the weight it carries, until it is overloaded."
+
+
+def grounded_deps(tmp_path: Path, kit_dist: Path, *, citation_ids: list[str], quote: str = SYNTHETIC_QUOTE, topics=None, models=None):  # noqa: ANN001, ANN201
+    """A pipeline whose planner names `citation_ids`, over a SYNTHETIC corpus and pointer file (the real corpus is local and never in a test)."""
+    from api.evidence.corpus import Corpus
+    from api.evidence.registry import CitationBook
+
+    corpus_dir = tmp_path / "corpus"
+    corpus_dir.mkdir()
+    (corpus_dir / f"{SYNTHETIC_DOC}.jsonl").write_text(
+        json.dumps({"page": 7, "text": f"Hooke's law. {SYNTHETIC_QUOTE} Next."}) + "\n", encoding="utf-8"
+    )
+    (corpus_dir / "citations.json").write_text(json.dumps({"quotes": {"hookes_synth": quote}}), encoding="utf-8")
+    pointers = tmp_path / "pointers.json"
+    pointers.write_text(
+        json.dumps(
+            {
+                "pointers": {
+                    "hookes_synth": {
+                        "doc": SYNTHETIC_DOC,
+                        "page": 7,
+                        "claim": "extension is proportional to load",
+                        "topics": topics or ["physics_form5_force_and_elasticity"],
+                        "models": ["mechanics.hookes"] if models is None else models,
+                        "checked_by": "synthetic test",
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    book = CitationBook.load(Corpus.load(corpus_dir), corpus_dir, pointers)
+
+    def responder(request: LLMRequest) -> str:
+        if request.purpose == "plan":
+            return json.dumps({**GOLDEN_SPRING, "citation_ids": citation_ids})
+        return fakes.fake_responder(request)
+
+    return deps_for(tmp_path, kit_dist, responder, evidence=book.evidence, citations=book)
+
+
+def environment_of(events: list):  # noqa: ANN201
+    return next(e.block for e in events if e.type == "environment")
+
+
+def test_a_plan_whose_citation_the_corpus_proves_and_supports_is_minted_kit_verified_and_the_gate_re_proves_it(
+    tmp_path: Path, kit_dist: Path
+) -> None:
+    deps, _ = grounded_deps(tmp_path, kit_dist, citation_ids=["hookes_synth"])
+    block = environment_of(collect(SPRING, deps))
+    assert block.label == "kit-verified"
+    (citation,) = block.citations
+    assert citation.verified and citation.source == SYNTHETIC_DOC and citation.page == 7 and citation.quote == SYNTHETIC_QUOTE
+    ground = next(r for r in trace_records(deps) if r["layer"] == "ground")
+    assert ground["status"] == "ok" and ground["detail"]["label"] == "kit-verified"
+    # Delivery repeats the proof: with the corpus gone the same stored row is refused, not served on trust.
+    from api.verify.gate import deliver
+
+    stored_id = block.id
+    refused = None
+    try:
+        deliver(deps.store, stored_id, public_origin=deps.public_origin, kit_dist=kit_dist, evidence=None)
+    except Exception as exc:  # noqa: BLE001
+        refused = exc
+    assert refused is not None
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "why"),
+    [
+        ({"citation_ids": ["no_such_citation"]}, "a citation did not prove"),
+        ({"citation_ids": ["hookes_synth"], "quote": "A spring stretches in proportion to the load on it."}, "a citation did not prove"),
+        ({"citation_ids": ["hookes_synth"], "topics": ["biology_form4_osmosis"], "models": []}, "a citation did not prove"),  # supports neither this topic nor this model
+        ({"citation_ids": []}, "the plan names no citation"),
+    ],
+)
+def test_a_citation_that_does_not_prove_or_does_not_support_the_plan_never_earns_kit_verified(
+    tmp_path: Path, kit_dist: Path, kwargs: dict, why: str
+) -> None:
+    deps, _ = grounded_deps(tmp_path, kit_dist, **kwargs)
+    block = environment_of(collect(SPRING, deps))
+    assert block.label == "model-checked" and not block.citations[0].verified
+    assert block.citations[0].source.startswith("UNVERIFIED (no textbook page has been checked")
+    ground = next(r for r in trace_records(deps) if r["layer"] == "ground")
+    assert ground["detail"]["why"] == why and ground["detail"]["label"] == "model-checked"
+
+
+def test_without_a_corpus_the_label_and_the_citation_are_what_they_always_were(tmp_path: Path, kit_dist: Path) -> None:
+    deps, _ = deps_for(tmp_path, kit_dist, fakes.fake_responder)
+    block = environment_of(collect(SPRING, deps))
+    assert block.label == "model-checked" and block.citations[0].source == "UNVERIFIED (corpus not loaded until P2)"
+    ground = next(r for r in trace_records(deps) if r["layer"] == "ground")
+    assert ground["detail"]["why"] == "no corpus configured"

@@ -17,7 +17,7 @@
     "Try collecting 30 cm3 of gas in 60 s, and then in 20 s."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["rate_def", "rate_avg"],
   "presentation": "stage",
   "custom": [],
   "id": "rate_of_reaction",

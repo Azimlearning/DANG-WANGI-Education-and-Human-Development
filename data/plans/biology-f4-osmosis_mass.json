@@ -17,7 +17,7 @@
     "Set the final mass to 6 g and then to 14 g and compare the sign of the change."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["osmo_hypo", "osmo_pct"],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",

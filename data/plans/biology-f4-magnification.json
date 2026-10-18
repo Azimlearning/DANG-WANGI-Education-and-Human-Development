@@ -17,7 +17,7 @@
     "Keep the actual size the same and make the image size larger, then smaller."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["magnif"],
   "presentation": "stage",
   "custom": [],
   "id": "magnification_lab",

@@ -8,7 +8,7 @@
     "The same mass gives different amounts of different substances. Try 20 g and then 100 g."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["mole_mass", "mole_formula"],
   "presentation": "stage",
   "custom": [],
   "id": "mole_calculator",

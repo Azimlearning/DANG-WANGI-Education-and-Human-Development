@@ -92,3 +92,12 @@ Keys live in `.env` (git-ignored) and are read server-side only. Never commit a 
 | Pyodide or WebAssembly Python for kernels | Python in the browser | Heavy, large attack surface; Arcana v2 rejected it too | PRD section 5 |
 | One agent per capability | Clear names | Violates the trust-boundary rule for an agent (Arcana v2 D-30) | PRD section 3 |
 | Accounts, payments, teacher dashboards | Retention and revenue | Owner chose single-operator, no auth; devices and links cover the need | D-11 |
+
+## Local tools added 2026-10-18 (Step 2, textbook corpus; not part of the cloud or CI install)
+
+| Tool | Version | Licence | Use |
+|---|---|---|---|
+| pypdf | 6.21.1 | BSD-3-Clause | Reads the text layer of the owner's textbook PDFs (`api/evidence/ingest.py`). Not OCR. Docs: pypdf.readthedocs.io, "Extract text from a PDF" |
+| fonttools | 4.67.0 | MIT | Optional pypdf dependency that decodes CFF Type1 font encodings; without it pypdf warned and could garble characters |
+
+Both are in the `local` dependency group (`uv run --group local ...`). An OCR tool for the five image-only Chemistry experiment books is not chosen yet.

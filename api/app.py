@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 from collections.abc import AsyncIterator
+from functools import lru_cache
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -48,14 +50,34 @@ class _Note(BaseModel):
     note: str = Field(min_length=1, max_length=240)
 
 
+@lru_cache(maxsize=2)
+def _corpus_at(directory: Path):  # noqa: ANN202
+    """The corpus is read once per process, not once per request (it is thousands of pages to parse and index). It is read-only at run time: after
+    re-ingesting, restart the API."""
+    from api.evidence.corpus import Corpus
+
+    return Corpus.load(directory)
+
+
 def evidence_for(settings: Settings):  # noqa: ANN201
     """The corpus-backed evidence source, or None when no corpus is configured (then `kit-verified` is unreachable, by design)."""
     if settings.corpus_dir is None:
         return None
     from api.evidence.citations import Evidence
-    from api.evidence.corpus import Corpus
 
-    return Evidence(Corpus.load(settings.corpus_dir))
+    return Evidence(_corpus_at(settings.corpus_dir))
+
+
+@lru_cache(maxsize=2)
+def _book_at(directory: Path):  # noqa: ANN202
+    from api.evidence.registry import CitationBook
+
+    return CitationBook.load(_corpus_at(directory), directory)
+
+
+def citations_for(settings: Settings):  # noqa: ANN201
+    """Resolves a Plan's citation ids to corpus-proved citations, or None when no corpus is configured."""
+    return None if settings.corpus_dir is None else _book_at(settings.corpus_dir)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -148,6 +170,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             trace_path=settings.data_dir / "traces.jsonl",
             interaction_seconds=settings.verify_interaction_seconds,
             evidence=evidence_for(settings),
+            citations=citations_for(settings),
         )
         async for event in run_pipeline(question, deps):
             yield event

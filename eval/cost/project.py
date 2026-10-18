@@ -167,14 +167,14 @@ Mean over the {n} golden questions (the hard bound is the largest), from the rea
 2. **Then {SMOKE_QUESTIONS} questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **${smoke_low:.2f} to ${smoke_pess:.2f}**, hard bound **${smoke_worst:.2f}**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the cache hit rate, and whether the fail-check registry's hints fix a bad plan.
-- It would not measure: correctness against a textbook (the corpus is not loaded; labels stay `model-checked`, D-21).
-- **Not yet possible: a live provider class does not exist (D-15), and the seam's prerequisites are listed below. Nothing is sent until the owner replies with an amount and the provider is built.**
+- It would not measure: whether the content is right. That is checked by reading the textbook pages against each Plan (Step 2, D-36), and a model-written Plan can only earn `kit-verified` by naming citation ids that exist and support it. A teacher's judgement is not measured at all.
+- **The live provider is wired (D-34) and has only been run against a mock transport. Nothing is sent until the owner replies with an amount; the seam's prerequisites are listed below.**
 
 ## What must exist before the first live call (from the cost audit)
 
 - Done: live mode refuses to build without a key, a positive cap and an absolute ledger path; a provider failure that retrying cannot fix (balance, key, bad request) stops the run and says it is not the cap; timed-out and cancelled calls are booked at their input cost, not zero; `LLMService.ensure_budget` refuses a run whose worst case does not fit; tests no longer inherit a shell's `SYNAPSE_LLM_MODE`.
-- To do in the provider class: construct the client with no SDK retries and an explicit timeout; map usage including any cache tokens (or do not use caching and drop the low case); add explicit price entries for the model ids actually used, checked against the provider's pages (`claude-haiku-5-5` and `claude-fable-5-1` are not in the table and would be priced as the dearest known); check that the model id `claude-haiku-4-5` is still served.
-- To do in the live smoke script: print the ledger path and the month-to-date total, call `ensure_budget`, and take the ledger from settings, never a temporary folder.
+- Done in the provider class (D-34, re-checked against the provider's pages on 2026-10-18): plain httpx with no retries and a 90 s timeout; usage mapped including cache tokens (caching is off, so the low case's cache saving is optimistic); explicit prices for the three tier models; a reply that was billed and then rejected (cut off at max_tokens, empty, refused) is booked at its real tokens, so the cap cannot be under-counted.
+- To do in the live run script (`eval/golden/run.py --live`, not yet built): print the ledger path and the month-to-date total, call `ensure_budget`, take the ledger from settings (never a temporary folder), print this projection, refuse without `LLM_MONTHLY_CAP_USD`, and require a typed confirmation.
 
 ## Size of the real prompts (characters, rounded)
 
@@ -183,7 +183,7 @@ Mean over the {n} golden questions (the hard bound is the largest), from the rea
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
 
-1. Prices are `api/llm/pricing.py`'s, marked ASSUMED (unchecked against the provider's pricing page). Models: plan and explain on the standard tier, route fallback and fill on the light tier.
+1. Prices are `api/llm/pricing.py`'s, checked against the provider's models and pricing pages on 2026-10-18 (Opus 5.5 $4 and $20, Sonnet 5.5 $2 and $10, Haiku 5.5 $0.10 and $0.50 per million tokens). Models: plan and explain on the standard tier, route fallback and fill on the light tier.
 2. Tokens: {TOKEN_RATIO_LOW} characters per token (low) or {TOKEN_RATIO_HIGH} (high). A provider's tokenizer differs.
 3. Output sizes: plan = the golden plan's JSON length times {OUT_PLAN_SCALE[0]} (low) or {OUT_PLAN_SCALE[1]} (high); explain {OUT_EXPLAIN[0]} to {OUT_EXPLAIN[1]} tokens; route fallback {OUT_ROUTE[0]} to {OUT_ROUTE[1]}; fill {OUT_FILL[0]} to {OUT_FILL[1]}. The hard bound assumes every reply runs to its max_tokens.
 4. The router fallback is called for {int(P_ROUTE_FALLBACK * 100)} percent of questions (the pattern and complexity heads clear their gates for about a third of questions, and a local `none` topic always goes to the fallback).

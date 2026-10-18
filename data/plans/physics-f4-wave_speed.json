@@ -17,7 +17,7 @@
     "Keep the wavelength at its starting value and move the frequency from its smallest to its largest."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["wave_speed_eq", "wave_freq_src"],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -25,7 +25,7 @@
   "title": "Wave speed: frequency and wavelength",
   "goal": "See how the speed of a wave depends on its frequency and its wavelength.",
   "topic": "physics_form4_waves",
-  "note": "The speed of a wave is the frequency multiplied by the wavelength: v = f x wavelength. In a real medium the speed is fixed by the medium, so changing the frequency changes the wavelength. Here you can set both to see the product.",
+  "note": "The speed of a wave is the frequency multiplied by the wavelength: v = f x wavelength. In a real wave the frequency is set by the source and the speed by the medium, so the wavelength follows. Here you can set both to see the product.",
   "controls": [
     {
       "id": "frequency",

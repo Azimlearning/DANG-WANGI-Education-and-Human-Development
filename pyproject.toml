@@ -20,6 +20,10 @@ dev = [
     "pytest-asyncio>=1.4.0",
     "ruff>=0.17.1",
 ]
+local = [
+    "fonttools>=4.67.0",
+    "pypdf>=6.21.1",
+]
 ml = [
     "numpy>=2.5.4",
     "scikit-learn>=1.9.1",

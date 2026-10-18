@@ -59,3 +59,8 @@ data/ledger*
 # Test and browser artefacts
 playwright-report/
 test-results/
+
+# Textbooks and archives: never commit (CLAUDE.md hard constraint 13). The corpus lives in CORPUS_DIR, outside git.
+*.zip
+*.pdf
+corpus/

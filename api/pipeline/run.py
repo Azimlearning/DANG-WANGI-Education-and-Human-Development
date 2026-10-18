@@ -27,6 +27,7 @@ from pydantic import ValidationError
 
 from api import kitmanifest
 from api.core.errors import SynapseError, envelope_from_exception
+from api.evidence.registry import CitationBook
 from api.kit import latest_version
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
@@ -34,11 +35,11 @@ from api.models.misconceptions import default_matcher
 from api.pipeline import failchecks, fill, prompts
 from api.pipeline import plan as plan_module
 from api.pipeline.assemble import Assembled, AssemblyGap, assemble, scope_names
+from api.pipeline.grounding import grounding
 from api.pipeline.plan import Plan
 from api.pipeline.plan_checks import PlanIssue, check, issue_from_validation, repair
 from api.routing.router import Route, route
 from api.schema.generated import (
-    Citation,
     DoneEvent,
     EnvironmentEvent,
     ErrorEnvelope,
@@ -72,7 +73,6 @@ SUPPORTED_PATTERNS = {
     "explorable_diagram": "simulation",
     "data_visualization": "simulation",
 }
-UNVERIFIED_CITATION = Citation(source="UNVERIFIED (corpus not loaded until P2)", page=None, quote=None, verified=False)
 
 
 @dataclass
@@ -108,6 +108,8 @@ class Deps:
     interaction_seconds: float = 10.0
     use_router: bool = True
     evidence: Evidence | None = None
+    citations: CitationBook | None = None
+    """Resolves a Plan's citation ids to corpus-proved citations. Used only together with `evidence` (the same corpus), or nothing is grounded."""
     verify_fn: Callable[..., VerifiedEnvironment] | None = None
     """Test seam: replaces verify_environment (it must have the same keyword arguments)."""
 
@@ -374,15 +376,17 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     verify = r.deps.verify_fn or verify_environment
 
     async def _verify(the_plan: Plan, the_page: Assembled, the_lane: Lane):  # noqa: ANN202
+        cites, earned, why = grounding(r.deps.citations, r.deps.evidence, the_plan)
+        t.add("ground", "ok" if why["grounded"] else "degraded", time.monotonic(), label=earned, **{k: v for k, v in why.items() if k != "grounded"})
         return await asyncio.to_thread(
             verify,
             slug=the_plan.id,
             title=the_plan.title,
             raw_html=the_page.html,
             lane=the_lane,
-            label="model-checked",
+            label=earned,  # type: ignore[arg-type]  # "kit-verified" or "model-checked", from `grounding`
             kit_version=r.version,
-            citations=[UNVERIFIED_CITATION],
+            citations=cites,
             plan_summary=the_plan.goal,
             public_origin=r.deps.public_origin,
             kit_dist=r.deps.kit_dist,

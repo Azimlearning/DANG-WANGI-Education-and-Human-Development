@@ -89,7 +89,7 @@
     "Move the load to 10 N and press Record.",
     "Compare the extension each time the load doubles."
   ],
-  "citation_ids": [],
+  "citation_ids": ["hooke_law"],
   "presentation": "stage",
   "custom": [],
   "predict": {

@@ -2,7 +2,7 @@
 
 Turn a Malaysian Form 4 or 5 KSSM science question into a verified, interactive **environment**: raw HTML/JS assembled over a vetted library of micro-components (34 so far), with the textbook evidence and an honest trust label beside it.
 
-**Status:** the pipeline runs end to end on deterministic fakes and produces 17 verified Environments across Physics, Biology and Chemistry. No paid model call has ever been made, and no textbook corpus is loaded. See [`refdocs/STATUS.md`](refdocs/STATUS.md) for exactly what is and is not done.
+**Status:** the pipeline runs end to end on deterministic fakes and produces 16 verified Environments across Physics, Biology and Chemistry. With the owner's local textbook corpus loaded, each carries a citation that the corpus re-proves word for word, and all 16 are `kit-verified` (not yet reviewed by a teacher). No paid model call has ever been made. See [`refdocs/STATUS.md`](refdocs/STATUS.md) for exactly what is and is not done.
 
 ## What it does
 

@@ -17,7 +17,7 @@
     "Set the amount to 2 mol and compare the two volumes."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["molar_volume"],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",

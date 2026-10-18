@@ -65,7 +65,9 @@
 
 | Path | What |
 |---|---|
-| `data/plans/*.json` | The 17 hand-written golden Plans (one per Environment) |
+| `data/plans/*.json` | The 16 hand-written golden Plans (one per Environment); `data/plans/unsupported/` holds Plans no textbook states |
+| `data/citations/pointers.json` | Citation id to document, PDF page, claim, topics, models and who checked it. Pointers only: no textbook text |
+| `api/evidence/registry.py`, `api/pipeline/grounding.py` | Resolve a Plan's citation ids against the local corpus; decide `kit-verified` or `model-checked` |
 | `data/experiments/catalogue.json` | Experiment metadata only; nothing matched to the owner's documents yet |
 | `data/models/router/`, `api/models/artifacts/` | Router training data splits, metrics and the shipped model |
 | `data/kssm_topics.json`, `data/misconceptions.json`, `data/hostile/`, `data/fixtures/` | Taxonomy, misconception list, hostile inputs, hand-written fixture pages |
@@ -78,7 +80,7 @@
 
 ## Test guard
 
-`conftest.py` at the repo root makes every test refuse a connection or a name lookup to anything but loopback (D-34); `api/conftest.py` adds the stricter `no_network` fixture. `eval/models/` also holds the router spot check and the misconception probe set and its evaluation.
+`conftest.py` at the repo root makes every test refuse a connection or a name lookup to anything but loopback (D-34); `api/conftest.py` adds the stricter `no_network` fixture. `eval/models/` also holds the router spot check and the misconception probe set and its evaluation. `eval/evidence/leak_check.py` finds textbook text in any file git would add; run it before `git add` (rule 13).
 
 ## Not in git
 

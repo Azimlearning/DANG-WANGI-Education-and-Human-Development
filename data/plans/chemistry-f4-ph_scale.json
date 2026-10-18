@@ -17,7 +17,7 @@
     "Compare a concentration of 0.001 mol/dm3 with 1 mol/dm3."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["ph_formula", "ph_higher"],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -25,7 +25,7 @@
   "title": "The pH scale and hydrogen ion concentration",
   "goal": "See how the pH of a solution changes with the concentration of hydrogen ions.",
   "topic": "chemistry_form4_acids_bases_salts",
-  "note": "The pH of a solution is a measure of its hydrogen ion concentration: pH = -log10 of the concentration in mol/dm3. A higher concentration of hydrogen ions gives a lower pH, and each tenfold change in the concentration changes the pH by one unit.",
+  "note": "The pH of a solution is a measure of its hydrogen ion concentration: pH = -log10 of the concentration in mol/dm3. A higher concentration of hydrogen ions gives a lower pH.",
   "controls": [
     {
       "id": "h_conc",

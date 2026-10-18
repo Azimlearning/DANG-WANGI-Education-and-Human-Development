@@ -63,7 +63,7 @@
     "Try a resistance of 4 ohm and then 20 ohm at the same voltage."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["ohm_v_prop", "ohm_v_ir"],
   "presentation": "stage",
   "custom": [],
   "concept_check": {

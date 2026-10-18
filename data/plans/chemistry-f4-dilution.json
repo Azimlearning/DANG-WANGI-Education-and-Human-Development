@@ -17,7 +17,7 @@
     "Make the final volume 25 cm3, then 250 cm3, and compare."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["dilution_moles"],
   "presentation": "stage",
   "custom": [],
   "id": "dilution_lab",

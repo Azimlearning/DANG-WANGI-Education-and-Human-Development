@@ -49,7 +49,7 @@
     "Set the side to 3 cm and press Record.",
     "Compare the three ratios."
   ],
-  "citation_ids": [],
+  "citation_ids": ["tsa_v"],
   "presentation": "stage",
   "custom": [],
   "id": "cell_size_agar",
@@ -57,7 +57,7 @@
   "goal": "See how the surface area to volume ratio changes as a cube gets bigger.",
   "pattern": "virtual_experiment",
   "topic": "biology_form4_movement_of_substances",
-  "note": "Substances enter a cell through its surface, but they are used by its whole volume. A cube with a bigger side has a smaller surface area to volume ratio.",
+  "note": "Substances enter a cell through its surface, but they are used by its whole volume. A cube with a bigger side has a smaller surface area to volume ratio. The textbook states this for whole organisms; the cube is a model of the same idea.",
   "controls": [
     {
       "id": "side",

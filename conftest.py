@@ -12,6 +12,8 @@ import socket
 
 import pytest
 
+from api.core.settings import Settings
+
 _LOOPBACK = {"localhost", "127.0.0.1", "::1", "0.0.0.0", ""}  # noqa: S104 - a name to allow, not an address to bind
 
 
@@ -50,3 +52,11 @@ def _no_external_network(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(socket.socket, "connect", connect)
     monkeypatch.setattr(socket.socket, "connect_ex", connect_ex)
     monkeypatch.setattr(socket, "getaddrinfo", getaddrinfo)
+
+
+@pytest.fixture(autouse=True)
+def _ignore_the_developers_dotenv(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`Settings` reads `.env` by default, so a test written for "no key configured" would pass or fail depending on whose machine it runs on, and would
+    carry a real key into the test process (it surfaced on 2026-10-18 the day the owner created `.env`). No test sees the file. A test that wants a file
+    passes `_env_file=` itself; the process environment is cleared separately by `clean_env` in api/conftest.py."""
+    monkeypatch.setitem(Settings.model_config, "env_file", None)

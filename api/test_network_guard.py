@@ -36,3 +36,14 @@ async def test_a_real_anthropic_provider_cannot_send_a_request_from_a_test() -> 
     provider = AnthropicProvider("not-a-real-key", client=httpx.AsyncClient(timeout=5))
     with pytest.raises(AssertionError, match="api.anthropic.com"):
         await provider.complete(LLMRequest(prompt="x", purpose="explain", max_tokens=5), "claude-haiku-5-5")
+
+
+def test_no_test_sees_the_developers_dotenv(tmp_path, monkeypatch) -> None:  # noqa: ANN001
+    """`Settings()` would read a `.env` in the working directory. In a test it must not, and an explicit `_env_file` still works."""
+    from api.core.settings import Settings
+
+    (tmp_path / ".env").write_text("LLM_MONTHLY_CAP_USD=7\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("LLM_MONTHLY_CAP_USD", raising=False)
+    assert Settings().llm_monthly_cap_usd is None  # pyright: ignore[reportCallIssue]
+    assert Settings(_env_file=tmp_path / ".env").llm_monthly_cap_usd == 7  # pyright: ignore[reportCallIssue]

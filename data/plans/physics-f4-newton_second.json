@@ -17,7 +17,7 @@
     "Try a mass of 2 kg and then 10 kg at the same force."
   ],
   "steps": [],
-  "citation_ids": [],
+  "citation_ids": ["newton2_law", "newton2_fma"],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
