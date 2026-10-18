@@ -1,0 +1,159 @@
+{
+  "started_at": "2026-10-18T15:51:41+00:00",
+  "approved_usd": 0.3,
+  "exemplars": false,
+  "spent_usd": 0.150683,
+  "projection": {
+    "low": 0.0601,
+    "high": 0.1275,
+    "hard_bound": 0.2495
+  },
+  "stopped": null,
+  "questions": [
+    {
+      "id": "g01",
+      "question": "Why does a spring stretch when I hang a weight on it?",
+      "expected_topic": "physics_form5_force_and_elasticity",
+      "environment": null,
+      "lane": null,
+      "label": null,
+      "degraded": [
+        "The interactive page could not be planned safely, so you are getting the written answer."
+      ],
+      "errors": [],
+      "seconds": 14.7,
+      "cost_usd": 0.050537,
+      "projected_high_usd": 0.046783,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1559,
+          "tokens_out": 38,
+          "cost_usd": 0.0001749,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 847,
+          "tokens_out": 332,
+          "cost_usd": 0.005014,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8400,
+          "tokens_out": 627,
+          "cost_usd": 0.02307,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8639,
+          "tokens_out": 500,
+          "cost_usd": 0.022278,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "g09",
+      "question": "What happens to the current if I raise the resistance in a circuit?",
+      "expected_topic": "physics_form5_electricity",
+      "environment": "Resistance and current",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 24.2,
+      "cost_usd": 0.048386,
+      "projected_high_usd": 0.041159,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1560,
+          "tokens_out": 29,
+          "cost_usd": 0.0001705,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 861,
+          "tokens_out": 222,
+          "cost_usd": 0.003942,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8402,
+          "tokens_out": 610,
+          "cost_usd": 0.022904,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8640,
+          "tokens_out": 409,
+          "cost_usd": 0.02137,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "g17",
+      "question": "How does the pressure change as a diver goes deeper in water?",
+      "expected_topic": "physics_form5_forces_and_pressure",
+      "environment": null,
+      "lane": null,
+      "label": null,
+      "degraded": [
+        "The interactive page could not be planned safely, so you are getting the written answer."
+      ],
+      "errors": [],
+      "seconds": 13.8,
+      "cost_usd": 0.05176,
+      "projected_high_usd": 0.039518,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1559,
+          "tokens_out": 36,
+          "cost_usd": 0.0001739,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 859,
+          "tokens_out": 284,
+          "cost_usd": 0.004558,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8777,
+          "tokens_out": 499,
+          "cost_usd": 0.022544,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 8887,
+          "tokens_out": 671,
+          "cost_usd": 0.024484,
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

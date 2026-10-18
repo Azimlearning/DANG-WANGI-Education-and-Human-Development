@@ -25,6 +25,11 @@ from api.prompts import DIR, estimate_tokens, load
 
 MAX_KIT_PACK = 15
 REQUEST_TOKEN_CAP = 7000
+
+
+class RequestTooLarge(ValueError):
+    """A request over the token cap. A ValueError, so existing callers and tests that expect one still work; the pipeline catches this one kind."""
+
 BASE_COMPONENTS = ("environment", "slider", "readout", "reset", "bridge")
 PATTERN_COMPONENTS = {
     "simulation": ("text", "graph", "convert", "constant"),
@@ -32,8 +37,17 @@ PATTERN_COMPONENTS = {
 }
 
 
-def _signature_line(entry: dict) -> str:
-    return f"- {entry['signature']}\n  use when: {entry.get('useWhen', '')}\n  needs: {entry['precondition']}"
+def _signature_line(entry: dict, manifest: Manifest | None = None) -> str:
+    line = f"- {entry['signature']}\n  use when: {entry.get('useWhen', '')}\n  needs: {entry['precondition']}"
+    model = manifest.models.get(entry["modelId"]) if manifest is not None and entry.get("modelId") else None
+    if model is not None:
+        # The Plan names a science model by its model id, which the signature above does not contain. Without this line the planner has to guess the id
+        # (first real run without an exemplar: PLAN-002 in 3 of 6 attempts) and cannot tell which names are inputs and which are fixed parameters.
+        # Short on purpose: the units are already in the `needs:` line, and what inputs and params mean is said once in the planner pack.
+        inputs = ", ".join(model.inputs) or "none"
+        params = ", ".join(model.params) or "none"
+        line += f'\n  in a Plan: "model": "{model.model_id}", inputs: {inputs}, params: {params}'
+    return line
 
 
 def kit_pack_for_plan(plan: Plan, manifest: Manifest) -> list[str]:
@@ -75,7 +89,7 @@ def kit_pack_for_question(
 
 
 def render_kit_pack(names: list[str], manifest: Manifest) -> str:
-    return "\n".join(_signature_line(manifest.components[n]) for n in names if manifest.has(n))
+    return "\n".join(_signature_line(manifest.components[n], manifest) for n in names if manifest.has(n))
 
 
 def failure_modes_text(layers: tuple[str, ...] = ("plan", "L1 provenance", "L2 behaviour")) -> str:
@@ -93,7 +107,7 @@ def pattern_pack(pattern: str) -> str:
 def _check(system: str, user: str) -> None:
     total = estimate_tokens(system) + estimate_tokens(user)
     if total > REQUEST_TOKEN_CAP:
-        raise ValueError(f"the request would be about {total} tokens, over the cap of {REQUEST_TOKEN_CAP}")
+        raise RequestTooLarge(f"the request would be about {total} tokens, over the cap of {REQUEST_TOKEN_CAP}")
 
 
 def issues_text(issues: list[PlanIssue]) -> str:

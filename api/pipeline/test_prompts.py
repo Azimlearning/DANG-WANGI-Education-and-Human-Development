@@ -214,3 +214,32 @@ def test_an_evaluation_can_withhold_the_exemplar_and_the_default_still_includes_
     assert golden_title not in (without.system or "") + without.prompt
     assert "(none)" in (without.system or "") + without.prompt
     assert len((without.system or "") + without.prompt) < len((with_example.system or "") + with_example.prompt)
+
+
+def test_every_golden_question_shows_the_planner_the_exact_id_of_the_model_it_needs_even_without_an_exemplar(
+    manifest: kitmanifest.Manifest,
+) -> None:
+    """The first real run without an exemplar failed with invented model ids because the id appeared nowhere in the prompt (it only ever appeared inside
+    the answer-key exemplar). Offline, before the fix: 0 of 24 prompts contained the model id they needed; after: all of them."""
+    questions = json.loads((pp.PLANS_DIR.parents[1] / "eval" / "golden" / "vertical.json").read_text(encoding="utf-8"))["questions"]
+    needed: dict[str, set[str]] = {}
+    for path in sorted(pp.PLANS_DIR.glob("*.json")):
+        golden = json.loads(path.read_text(encoding="utf-8"))
+        needed.setdefault(golden["topic"], set()).update(m["model"] for m in golden["models"])
+    checked = 0
+    for q in questions:
+        request = pp.plan_request(
+            q["question"], f"topic={q['expect_topic']}", "simulation", manifest, topic=q["expect_topic"], use_exemplar=False
+        )
+        text = (request.system or "") + request.prompt
+        for model_id in needed[q["expect_topic"]]:
+            assert f'"model": "{model_id}"' in text, f"{q['id']}: the prompt never names {model_id}"
+            checked += 1
+    assert checked >= len(questions)
+
+
+def test_a_science_model_line_names_its_id_its_inputs_its_params_and_its_unit(manifest: kitmanifest.Manifest) -> None:
+    line = pp.render_kit_pack(["hookes"], manifest)
+    assert '"model": "mechanics.hookes"' in line
+    assert 'in a Plan: "model": "mechanics.hookes", inputs: load, params: k' in line
+    assert "in a Plan:" not in pp.render_kit_pack(["slider", "readout"], manifest)  # components that are not science models get no such line

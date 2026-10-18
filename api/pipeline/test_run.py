@@ -331,3 +331,38 @@ def test_without_a_corpus_the_label_and_the_citation_are_what_they_always_were(t
     assert block.label == "model-checked" and block.citations[0].source == "UNVERIFIED (corpus not loaded until P2)"
     ground = next(r for r in trace_records(deps) if r["layer"] == "ground")
     assert ground["detail"]["why"] == "no corpus configured"
+
+
+def test_a_refused_plan_leaves_the_checks_own_words_and_the_model_ids_in_the_trace(tmp_path: Path, kit_dist: Path) -> None:
+    """The first real run without an exemplar failed with PLAN-002 and the trace kept only the code: which model had the planner invented? Now it says."""
+
+    def invents_a_model(request: LLMRequest) -> str:
+        if request.purpose == "plan":
+            plan = json.loads(json.dumps(GOLDEN_SPRING))
+            plan["models"][0]["model"] = "physics.spring_extension"
+            return json.dumps(plan)
+        return fakes.fake_responder(request)
+
+    deps, _ = deps_for(tmp_path, kit_dist, invents_a_model)
+    events = collect(SPRING, deps)
+    assert "environment" not in kinds(events) and degraded(events)
+    refused = [r for r in trace_records(deps) if r["layer"] == "plan_checks" and r["status"] == "refused"]
+    assert len(refused) == 2  # the attempt and its one retry
+    for record in refused:
+        assert "PLAN-002" in record["detail"]["codes"]
+        assert record["detail"]["models"] == ["physics.spring_extension"]
+        assert any("physics.spring_extension" in note for note in record["detail"]["issues"])
+
+
+def test_a_request_over_the_token_cap_degrades_to_words_and_sends_nothing(
+    tmp_path: Path, kit_dist: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The cap check used to raise out of the pipeline as an internal error. Now the student gets the written answer and the trace says why."""
+    from api.pipeline import prompts
+
+    monkeypatch.setattr(prompts, "REQUEST_TOKEN_CAP", 3000)  # above the small route and explain requests, below the plan request
+    deps, provider = deps_for(tmp_path, kit_dist, fakes.fake_responder)
+    events = collect(SPRING, deps)
+    assert "environment" not in kinds(events) and "error" not in kinds(events) and degraded(events)
+    assert not [c for c in provider.calls if c.purpose == "plan"]  # nothing was sent for the plan
+    assert any(r["status"] == "request_too_large" for r in trace_records(deps))

@@ -73,6 +73,20 @@ def project(questions: list[dict]) -> Projection:
     )
 
 
+def _trace_of_last_run(path: Path | None) -> list[dict]:
+    """The planning and verification records of the question that just ran, from the pipeline's trace file, so a refused plan can be diagnosed from the
+    results file alone (which model id the planner invented, which binding was wrong) without paying for another run."""
+    if path is None or not path.exists():
+        return []
+    last = path.read_text(encoding="utf-8").strip().splitlines()[-1]
+    keep = ("route", "plan", "plan_checks", "assemble", "ground", "verify", "deliver")
+    return [
+        {"layer": r["layer"], "status": r["status"], "ms": r["ms"], **{k: v for k, v in r["detail"].items() if k in ("attempt", "codes", "issues", "models", "why", "label", "lane", "problems")}}
+        for r in json.loads(last)["records"]
+        if r["layer"] in keep
+    ]
+
+
 def parse_amount(text: str) -> float | None:
     """A typed dollar amount ("0.75" or "$0.75"), or None if it is not a positive number."""
     try:
@@ -162,6 +176,7 @@ async def run_live(
         ]
         records.append(
             {
+                "trace": _trace_of_last_run(deps.trace_path),
                 "id": q["id"],
                 "question": q["question"],
                 "expected_topic": q["expect_topic"],

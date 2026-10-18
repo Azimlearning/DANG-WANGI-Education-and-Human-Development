@@ -116,6 +116,12 @@ class Deps:
     """Test seam: replaces verify_environment (it must have the same keyword arguments)."""
 
 
+def _issue_notes(issues: list[PlanIssue]) -> list[str]:
+    """What the plan checks said, short, for the trace: a code alone cannot tell you WHICH model the planner invented or which binding was wrong. The text
+    is ours (the checks' messages), not the model's reply, and carries no student text."""
+    return [f"{i.code} {i.path}: {i.message}"[:240] for i in issues[:6]]
+
+
 class BudgetExceeded(Exception):
     pass
 
@@ -318,11 +324,21 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
             t.outcome = "text_only"
             yield _stage("plan", "degraded", failchecks.get("BUDGET").student_message)
             return
+        except prompts.RequestTooLarge as exc:
+            # Raised before anything is sent: nothing was spent. The student gets the written answer instead of an internal error.
+            t.add("plan", "request_too_large", started, attempt=attempt, note=str(exc)[:200])
+            t.outcome = "text_only"
+            yield _stage(
+                "plan",
+                "degraded",
+                "The interactive page could not be planned safely, so you are getting the written answer.",
+            )
+            return
         try:
             candidate = plan_module.parse(raw)
         except ValidationError as exc:
             issues = [issue_from_validation(exc)]
-            t.add("plan", "invalid", started, attempt=attempt, codes=[i.code for i in issues])
+            t.add("plan", "invalid", started, attempt=attempt, codes=[i.code for i in issues], issues=_issue_notes(issues))
             continue
         found = check(candidate, r.manifest)
         fixed = repair(candidate, found)
@@ -331,7 +347,15 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
             candidate = fixed
         if found:
             issues = found
-            t.add("plan_checks", "refused", started, attempt=attempt, codes=[i.code for i in found])
+            t.add(
+                "plan_checks",
+                "refused",
+                started,
+                attempt=attempt,
+                codes=[i.code for i in found],
+                issues=_issue_notes(found),
+                models=[m.model for m in candidate.models],
+            )
             continue
         plan = candidate
         t.add("plan_checks", "ok", started, attempt=attempt)

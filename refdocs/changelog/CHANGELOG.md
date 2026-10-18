@@ -28,6 +28,14 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-18: The second paid run (no exemplar): 1 of 3, a pipeline defect found, `prompt:` fix not yet re-measured ($0.1507 of the approved $0.30)
+- **Reported:** the owner chose "3 questions, up to $0.30" for a no-exemplar run (g01, g09, g17).
+- **Ran:** `echo 0.30 | uv run python eval/golden/run.py --live --no-exemplar --ids g01,g09,g17`. **1 of 3 questions got an Environment** ($0.1507; 4 calls and about $0.05 each, including the plan retry). Plan attempts: 1 of 6 passed. PLAN-002 (an invented model id) fired in 3 of 6; also PLAN-001 once and PLAN-003 with PLAN-004 once.
+- **Diagnosed (free, offline):** the prompt never contained the model id. The Kit pack shows the component name `hookes(...)`; the Plan needs `mechanics.hookes`; the id appeared in the prompt only inside the answer-key exemplar. Measured over the 24 golden questions with the exemplar withheld: the needed id was in 0 of 24 prompts. The pack also did not distinguish a model's inputs from its params. The canary's first-attempt success therefore came from copying the exemplar.
+- **Changed:** `prompts._signature_line` (model id, inputs, params and units on every science model line), `api/prompts/planner.v2.md` (v1 kept; one rule about copying the id), the trace (the plan checks' messages and the model ids tried), `eval/golden/live.py` (the results file carries each question's planning records), tests. Commit prefix `prompt:` with its eval delta in `refdocs/evidence/2026-10-18-p3-canary.md`.
+- **Eval delta:** offline 0 of 24 to 24 of 24 prompts containing the needed id. The paid delta (same three questions) is NOT yet measured; until it is, the fix is unproven.
+- **Verified:** `pytest api/pipeline eval/golden` pass; the full suite is run before the commit.
+
 ### 2026-10-18: The first paid run: a one-question canary ($0.0283 of the approved $0.20)
 - **Reported:** the owner replied "Go" and then, asked for an amount, chose "up to $0.20" for the g01 canary. Work continues on `main` at the owner's request (the branch was fast-forwarded into `main` first).
 - **Ran:** `echo 0.20 | uv run python eval/golden/run.py --live --ids g01`. The run's ledger was capped at the approved $0.20 and the $3.00 monthly cap sat underneath. Result: an Environment (Compose, `model-checked`) at the first plan attempt, 3 model calls, 21 s, **$0.028347**, which equals the ledger and is inside the projection ($0.0216 to $0.0468). Raw results `eval/golden/results/20261018T153907Z-live.json`; analysis `refdocs/evidence/2026-10-18-p3-canary.md`.
