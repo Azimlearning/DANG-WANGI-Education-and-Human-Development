@@ -108,6 +108,8 @@ class Deps:
     interaction_seconds: float = 10.0
     use_router: bool = True
     evidence: Evidence | None = None
+    use_exemplars: bool = True
+    """False gives the planner no worked example (evaluation only; see `prompts.plan_request`)."""
     citations: CitationBook | None = None
     """Resolves a Plan's citation ids to corpus-proved citations. Used only together with `evidence` (the same corpus), or nothing is grounded."""
     verify_fn: Callable[..., VerifiedEnvironment] | None = None
@@ -303,7 +305,13 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
         yield _stage("plan", "start")
         try:
             request = prompts.plan_request(
-                r.q, route_text, pattern, r.manifest, issues=issues, topic=str(decision.topic.value)
+                r.q,
+                route_text,
+                pattern,
+                r.manifest,
+                issues=issues,
+                topic=str(decision.topic.value),
+                use_exemplar=r.deps.use_exemplars,
             )
             raw = await r.call(request, "plan")
         except BudgetExceeded:

@@ -202,3 +202,15 @@ def test_the_exemplar_is_a_golden_plan_of_the_same_topic_and_only_that(manifest:
     req = pp.plan_request("A question", "topic=x", "simulation", manifest, topic=topic)
     assert "(none)" not in req.prompt.split("Nearest worked example")[1].split("Routing")[0]
     assert pp.exemplar_for("anything", topic, "simulation") is not None
+
+
+def test_an_evaluation_can_withhold_the_exemplar_and_the_default_still_includes_it(manifest: kitmanifest.Manifest) -> None:
+    """For a topic with a golden Plan the exemplar is the answer; measuring a planner needs the option to take it away."""
+    topic = "physics_form5_force_and_elasticity"
+    with_example = pp.plan_request("Why does a spring stretch?", "route", "simulation", manifest, topic=topic)
+    without = pp.plan_request("Why does a spring stretch?", "route", "simulation", manifest, topic=topic, use_exemplar=False)
+    golden_title = json.loads((pp.PLANS_DIR / "physics-f5-hookes_amali.json").read_text(encoding="utf-8"))["title"]
+    assert golden_title in (with_example.system or "") + with_example.prompt
+    assert golden_title not in (without.system or "") + without.prompt
+    assert "(none)" in (without.system or "") + without.prompt
+    assert len((without.system or "") + without.prompt) < len((with_example.system or "") + with_example.prompt)

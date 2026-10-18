@@ -96,6 +96,7 @@ def main() -> int:
     ap.add_argument("--pipeline", action="store_true")
     ap.add_argument("--set", default="vertical", choices=SETS)
     ap.add_argument("--live", action="store_true", help="PAID: run the selected questions through the real provider (asks for the amount first)")
+    ap.add_argument("--no-exemplar", action="store_true", help="with --live: give the planner no worked example (the golden Plan for the topic IS the answer)")
     ap.add_argument("--ids", default="", help="comma-separated question ids to run (default: all in the set)")
     args = ap.parse_args()
     questions = load(args.set)
@@ -108,7 +109,7 @@ def main() -> int:
     if args.live:
         from eval.golden.live import main_live
 
-        return main_live(questions)
+        return main_live(questions, use_exemplars=not args.no_exemplar)
     routed = asyncio.run(route_all(questions))
     right = sum(r["expect"] == r["got"] for r in routed)
     local = sum(r["source"] == "local" for r in routed)

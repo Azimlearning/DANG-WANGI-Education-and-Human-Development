@@ -180,3 +180,39 @@ def test_a_refusal_a_retry_cannot_fix_stops_the_run_instead_of_asking_the_rest_o
     assert len(result["questions"]) == 1 and "retrying will not help" in result["stopped"]
     assert result["questions"][0]["errors"] == [{"code": "provider_unavailable", "retryable": False}]
     assert Refuses.calls <= 2  # the router fallback and the explainer of the first question, not three questions' worth
+
+
+def test_the_no_exemplar_switch_reaches_the_pipeline_and_the_record(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: dict = {}
+
+    async def fake_run_live(*args, use_exemplars=True, **kw):  # noqa: ANN002, ANN003, ANN202
+        seen["use_exemplars"] = use_exemplars
+        return {"questions": [], "spent_usd": 0.0, "stopped": None, "path": "none"}
+
+    monkeypatch.setattr(live, "run_live", fake_run_live)
+    assert live.main_live(questions(), ask=lambda _p: "0.2", env_file=write_env(tmp_path), use_exemplars=False) == 0
+    assert seen["use_exemplars"] is False
+    assert live.main_live(questions(), ask=lambda _p: "0.2", env_file=write_env(tmp_path)) == 0 and seen["use_exemplars"] is True
+
+
+def test_a_pipeline_run_without_exemplars_gives_the_planner_no_worked_example(tmp_path: Path) -> None:
+    prompts_seen: list[str] = []
+
+    def spy(request):  # noqa: ANN001, ANN202
+        if request.purpose == "plan":
+            prompts_seen.append((request.system or "") + request.prompt)
+        return fakes.fake_responder(request)
+
+    settings = Settings(_env_file=write_env(tmp_path)).model_copy(update={"synapse_llm_mode": "live"})  # pyright: ignore[reportCallIssue]
+    ledger = build_ledger(settings)
+    llm = LLMService(FakeProvider(spy, name="anthropic", models=ANTHROPIC_MODELS), None, ledger)
+    qs = questions(1)
+    try:
+        asyncio.run(
+            live.run_live(
+                settings, llm, ledger, qs, live.project(qs), 5.0, tmp_path / "s.db", out_dir=tmp_path / "r", interaction_seconds=1.0, use_exemplars=False
+            )
+        )
+    finally:
+        ledger.close()
+    assert prompts_seen and "Hooke's law: how does a spring stretch?" not in prompts_seen[0]

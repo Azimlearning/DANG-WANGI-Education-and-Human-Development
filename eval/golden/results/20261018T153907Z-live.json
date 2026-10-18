@@ -1,0 +1,52 @@
+{
+  "started_at": "2026-10-18T15:39:07+00:00",
+  "approved_usd": 0.2,
+  "spent_usd": 0.028347,
+  "projection": {
+    "low": 0.0216,
+    "high": 0.0468,
+    "hard_bound": 0.0835
+  },
+  "stopped": null,
+  "questions": [
+    {
+      "id": "g01",
+      "question": "Why does a spring stretch when I hang a weight on it?",
+      "expected_topic": "physics_form5_force_and_elasticity",
+      "environment": "Why does a spring stretch?",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 21.1,
+      "cost_usd": 0.028347,
+      "projected_high_usd": 0.046783,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1559,
+          "tokens_out": 38,
+          "cost_usd": 0.0001749,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 847,
+          "tokens_out": 233,
+          "cost_usd": 0.004024,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 9229,
+          "tokens_out": 569,
+          "cost_usd": 0.024148,
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

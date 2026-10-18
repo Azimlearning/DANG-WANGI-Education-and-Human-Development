@@ -139,10 +139,13 @@ def plan_request(
     exemplar: Plan | None = None,
     issues: list[PlanIssue] | None = None,
     topic: str | None = None,
+    use_exemplar: bool = True,
 ) -> LLMRequest:
+    """`use_exemplar=False` gives the planner no worked example (an evaluation switch): for a topic with a hand-written golden Plan the exemplar IS the
+    answer, so a planner measured with it shows plumbing and cost, not whether a model can plan an Environment on its own."""
     core, planner = load("core"), load("planner")
     schema = (DIR / planner_schema()).read_text(encoding="utf-8")
-    example = exemplar or exemplar_for(question, topic, pattern)
+    example = (exemplar or exemplar_for(question, topic, pattern)) if use_exemplar else None
     stable, variable = planner.render_parts(
         schema=schema.strip(),
         pattern_pack=pattern_pack(pattern),

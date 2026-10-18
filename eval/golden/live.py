@@ -122,6 +122,7 @@ async def run_live(
     store_path: Path,
     out_dir: Path = RESULTS,
     interaction_seconds: float | None = None,
+    use_exemplars: bool = True,
 ) -> dict:
     book = evidence = None
     if settings.corpus_dir is not None and settings.corpus_dir.is_dir():
@@ -136,6 +137,7 @@ async def run_live(
         trace_path=settings.data_dir / "traces.jsonl",
         interaction_seconds=interaction_seconds or settings.verify_interaction_seconds,
         evidence=evidence,
+        use_exemplars=use_exemplars,
         citations=book,
     )
     started_at = datetime.now(UTC)
@@ -188,6 +190,7 @@ async def run_live(
     result = {
         "started_at": started_at.isoformat(timespec="seconds"),
         "approved_usd": approved_usd,
+        "exemplars": use_exemplars,
         "spent_usd": round(ledger.month_total() - start_total, 6),
         "projection": {"low": round(projection.low, 4), "high": round(projection.high, 4), "hard_bound": round(projection.hard_bound, 4)},
         "stopped": stopped,
@@ -200,7 +203,13 @@ async def run_live(
     return result
 
 
-def main_live(questions: list[dict], *, ask: Callable[[str], str] = input, env_file: Path | None = REPO / ".env") -> int:
+def main_live(
+    questions: list[dict],
+    *,
+    ask: Callable[[str], str] = input,
+    env_file: Path | None = REPO / ".env",
+    use_exemplars: bool = True,
+) -> int:
     """Exit codes: 0 ran, 1 not approved (nothing sent), 2 not configured (nothing sent)."""
     try:
         settings = Settings(_env_file=env_file).model_copy(update={"synapse_llm_mode": "live"})  # pyright: ignore[reportCallIssue]
@@ -216,6 +225,9 @@ def main_live(questions: list[dict], *, ask: Callable[[str], str] = input, env_f
     try:
         projection = project(questions)
         print(describe(settings, ledger, projection, len(questions)))
+        if not use_exemplars:
+            print("  NO exemplar: the planner gets no worked example, so this measures planning from the schema and the Kit alone (prompts are shorter,")
+            print("  so the projection above is somewhat high; failures and retries are likelier).")
         remaining = (settings.llm_monthly_cap_usd or 0.0) - ledger.month_total()
         if projection.hard_bound > remaining:
             print(f"Not sent. The hard bound ${projection.hard_bound:.2f} does not fit in the ${remaining:.2f} that remains of the cap. Run fewer questions.")
@@ -232,7 +244,9 @@ def main_live(questions: list[dict], *, ask: Callable[[str], str] = input, env_f
             llm = build_llm_service(settings.model_copy(update={"llm_monthly_cap_usd": run_cap}), run_ledger)
             # A fresh store each run: a question already in the library is answered without the planner, which would hide what the planner does.
             store_path = settings.data_dir / "store" / f"golden-live-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}.db"
-            result = asyncio.run(run_live(settings, llm, run_ledger, questions, projection, approved, store_path))
+            result = asyncio.run(
+                run_live(settings, llm, run_ledger, questions, projection, approved, store_path, use_exemplars=use_exemplars)
+            )
         finally:
             run_ledger.close()
         made = sum(1 for r in result["questions"] if r["environment"])
