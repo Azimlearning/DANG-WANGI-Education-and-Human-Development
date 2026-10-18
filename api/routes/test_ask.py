@@ -314,3 +314,19 @@ def test_the_export_endpoint_serves_a_single_file_for_a_stored_environment_and_r
     assert (
         client.get(f"/library/{block.id}/export").status_code == 422
     )  # a withdrawn Environment is not exported either
+
+
+def test_a_corpus_folder_that_does_not_exist_stops_the_api_at_start_naming_the_setting(kit_dist: Path, tmp_path: Path) -> None:
+    from api.core.settings import ConfigError
+
+    with pytest.raises(ConfigError) as err:
+        create_app(_settings(tmp_path / "data", kit_dist, corpus_dir=tmp_path / "no-such-corpus"))
+    assert "CORPUS_DIR" in str(err.value) and "does not exist" in str(err.value)
+
+
+def test_a_readable_corpus_is_loaded_at_start_and_a_corpus_free_app_still_starts(kit_dist: Path, tmp_path: Path) -> None:
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "doc.jsonl").write_text('{"page": 1, "text": "a synthetic page"}\n', encoding="utf-8")
+    create_app(_settings(tmp_path / "a", kit_dist, corpus_dir=corpus)).state.ledger.close()
+    create_app(_settings(tmp_path / "b", kit_dist)).state.ledger.close()

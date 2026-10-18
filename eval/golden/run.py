@@ -3,6 +3,8 @@ Environment for each question? Free (fakes). The set is pinned by hash (hard con
 
     uv run python eval/golden/run.py            # router only, instant
     uv run python eval/golden/run.py --pipeline # the full pipeline per question in real Chromium (about 15 seconds each)
+    uv run python eval/golden/run.py --live --ids g01   # PAID, real provider. See eval/golden/live.py: it states the projected cost, then waits
+                                                         # for you to type the most you approve; there is no flag that supplies the amount.
 """
 
 from __future__ import annotations
@@ -93,8 +95,20 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pipeline", action="store_true")
     ap.add_argument("--set", default="vertical", choices=SETS)
+    ap.add_argument("--live", action="store_true", help="PAID: run the selected questions through the real provider (asks for the amount first)")
+    ap.add_argument("--ids", default="", help="comma-separated question ids to run (default: all in the set)")
     args = ap.parse_args()
     questions = load(args.set)
+    if args.ids:
+        wanted = [i.strip() for i in args.ids.split(",") if i.strip()]
+        unknown = sorted(set(wanted) - {q["id"] for q in questions})
+        if unknown:
+            raise SystemExit(f"unknown question ids {unknown} in the '{args.set}' set")
+        questions = [q for q in questions if q["id"] in wanted]
+    if args.live:
+        from eval.golden.live import main_live
+
+        return main_live(questions)
     routed = asyncio.run(route_all(questions))
     right = sum(r["expect"] == r["got"] for r in routed)
     local = sum(r["source"] == "local" for r in routed)

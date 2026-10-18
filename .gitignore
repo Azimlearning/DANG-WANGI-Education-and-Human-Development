@@ -55,6 +55,7 @@ data/*.sqlite
 data/store/
 data/cache/
 data/ledger*
+data/traces.jsonl
 
 # Test and browser artefacts
 playwright-report/

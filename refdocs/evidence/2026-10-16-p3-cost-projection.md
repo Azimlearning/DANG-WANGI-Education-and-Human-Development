@@ -7,31 +7,31 @@
 
 | Case | USD per Environment | What it assumes |
 |---|---|---|
-| Low | **0.0094** | no plan retry, no slot fill, the stable prefix cached, 4 characters per token, short outputs |
-| High | **0.0411** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0559** | the high case with every plan retried once (retry rate 100 percent) |
-| Hard bound | **0.0817** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
+| Low | **0.0201** | no plan retry, no slot fill, 4 characters per token, short outputs (no caching in any case) |
+| High | **0.0426** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0581** | the high case with every plan retried once (retry rate 100 percent) |
+| Hard bound | **0.0845** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
 
 Mean over the 24 golden questions (the hard bound is the largest), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amounts to confirm)
 
-1. **A canary of 1 question** first: up to **$0.08** (hard bound), expected under $0.05. It checks model ids, token counts and error handling for almost nothing.
-2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.08 to $0.50**, hard bound **$0.73**.
+1. **A canary of 1 question** first: up to **$0.0845** (hard bound), expected about $0.020 to $0.043. It checks model ids, token counts and error handling for almost nothing.
+2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.18 to $0.52**, hard bound **$0.76**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
-- What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the cache hit rate, and whether the fail-check registry's hints fix a bad plan.
+- What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the real characters per token and any hidden thinking tokens, and whether the fail-check registry's hints fix a bad plan.
 - It would not measure: whether the content is right. That is checked by reading the textbook pages against each Plan (Step 2, D-36), and a model-written Plan can only earn `kit-verified` by naming citation ids that exist and support it. A teacher's judgement is not measured at all.
 - **The live provider is wired (D-34) and has only been run against a mock transport. Nothing is sent until the owner replies with an amount; the seam's prerequisites are listed below.**
 
 ## What must exist before the first live call (from the cost audit)
 
 - Done: live mode refuses to build without a key, a positive cap and an absolute ledger path; a provider failure that retrying cannot fix (balance, key, bad request) stops the run and says it is not the cap; timed-out and cancelled calls are booked at their input cost, not zero; `LLMService.ensure_budget` refuses a run whose worst case does not fit; tests no longer inherit a shell's `SYNAPSE_LLM_MODE`.
-- Done in the provider class (D-34, re-checked against the provider's pages on 2026-10-18): plain httpx with no retries and a 90 s timeout; usage mapped including cache tokens (caching is off, so the low case's cache saving is optimistic); explicit prices for the three tier models; a reply that was billed and then rejected (cut off at max_tokens, empty, refused) is booked at its real tokens, so the cap cannot be under-counted.
+- Done in the provider class (D-34, re-checked against the provider's pages on 2026-10-18): plain httpx with no retries and a 90 s timeout; usage mapped including cache tokens (caching is off and no saving is assumed); explicit prices for the three tier models; a reply that was billed and then rejected (cut off at max_tokens, empty, refused) is booked at its real tokens, so the cap cannot be under-counted.
 - To do in the live run script (`eval/golden/run.py --live`, not yet built): print the ledger path and the month-to-date total, call `ensure_budget`, take the ledger from settings (never a temporary folder), print this projection, refuse without `LLM_MONTHLY_CAP_USD`, and require a typed confirmation.
 
 ## Size of the real prompts (characters, rounded)
 
-- Plan request (virtual experiment): about 24570 characters, of which 19603 are the stable cached prefix.
+- Plan request (virtual experiment): about 24570 characters, of which 19603 are the stable prefix (sent in full every time: caching is off).
 - The router-fallback request is built by the real builder, with the full topic list.
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
@@ -41,7 +41,7 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 3. Output sizes: plan = the golden plan's JSON length times 0.8 (low) or 1.6 (high); explain 150 to 450 tokens; route fallback 40 to 100; fill 60 to 220. The hard bound assumes every reply runs to its max_tokens.
 4. The router fallback is called for 90 percent of questions (the pattern and complexity heads clear their gates for about a third of questions, and a local `none` topic always goes to the fallback).
 5. Plan retry rate 0 to 40 percent in the high case and 100 percent in the pessimistic one (Arcana v2 was accepted on 2 of 8 first attempts). Nothing here can measure it: fakes always return a valid plan.
-6. Prompt caching pays 10 percent of the input price for the stable prefix in the low case only. Whether the provider's cache applies to this request shape is unverified (A-4), and the ledger cannot price cache tokens yet, so treat the low case as optimistic.
+6. Prompt caching is off, so every input token is priced at the full rate in every case. Turning it on needs the ledger to price cache writes and reads, and a measured saving first.
 7. The L4 model check, the repair prompt beyond one retry and the Free lane are not built and not included.
 8. Verification costs no model call.
 
@@ -49,27 +49,27 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0107 | 0.0448 | 0.0611 |
-| g02 | 0.0108 | 0.0451 | 0.0616 |
-| g03 | 0.0110 | 0.0454 | 0.0620 |
-| g04 | 0.0110 | 0.0454 | 0.0621 |
-| g05 | 0.0107 | 0.0448 | 0.0612 |
-| g06 | 0.0106 | 0.0447 | 0.0611 |
-| g07 | 0.0107 | 0.0448 | 0.0612 |
-| g08 | 0.0110 | 0.0454 | 0.0621 |
-| g09 | 0.0089 | 0.0398 | 0.0540 |
-| g10 | 0.0089 | 0.0397 | 0.0540 |
-| g11 | 0.0092 | 0.0403 | 0.0548 |
-| g12 | 0.0091 | 0.0403 | 0.0547 |
-| g13 | 0.0092 | 0.0404 | 0.0549 |
-| g14 | 0.0088 | 0.0397 | 0.0539 |
-| g15 | 0.0092 | 0.0403 | 0.0548 |
-| g16 | 0.0089 | 0.0398 | 0.0540 |
-| g17 | 0.0085 | 0.0384 | 0.0520 |
-| g18 | 0.0082 | 0.0378 | 0.0512 |
-| g19 | 0.0085 | 0.0383 | 0.0520 |
-| g20 | 0.0085 | 0.0384 | 0.0521 |
-| g21 | 0.0084 | 0.0383 | 0.0519 |
-| g22 | 0.0085 | 0.0384 | 0.0520 |
-| g23 | 0.0085 | 0.0384 | 0.0520 |
-| g24 | 0.0082 | 0.0378 | 0.0512 |
+| g01 | 0.0216 | 0.0468 | 0.0640 |
+| g02 | 0.0218 | 0.0471 | 0.0644 |
+| g03 | 0.0219 | 0.0474 | 0.0649 |
+| g04 | 0.0220 | 0.0475 | 0.0650 |
+| g05 | 0.0216 | 0.0468 | 0.0640 |
+| g06 | 0.0216 | 0.0468 | 0.0640 |
+| g07 | 0.0217 | 0.0469 | 0.0641 |
+| g08 | 0.0220 | 0.0475 | 0.0650 |
+| g09 | 0.0195 | 0.0412 | 0.0560 |
+| g10 | 0.0195 | 0.0411 | 0.0559 |
+| g11 | 0.0198 | 0.0417 | 0.0568 |
+| g12 | 0.0198 | 0.0417 | 0.0567 |
+| g13 | 0.0198 | 0.0418 | 0.0569 |
+| g14 | 0.0196 | 0.0414 | 0.0563 |
+| g15 | 0.0198 | 0.0417 | 0.0568 |
+| g16 | 0.0195 | 0.0412 | 0.0560 |
+| g17 | 0.0190 | 0.0395 | 0.0536 |
+| g18 | 0.0187 | 0.0389 | 0.0528 |
+| g19 | 0.0190 | 0.0395 | 0.0536 |
+| g20 | 0.0190 | 0.0396 | 0.0537 |
+| g21 | 0.0189 | 0.0394 | 0.0535 |
+| g22 | 0.0190 | 0.0395 | 0.0536 |
+| g23 | 0.0190 | 0.0395 | 0.0536 |
+| g24 | 0.0187 | 0.0389 | 0.0528 |

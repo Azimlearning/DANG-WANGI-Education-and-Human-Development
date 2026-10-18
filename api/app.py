@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from api import postprocess
 from api.core.errors import HTTP_STATUS, BadRequest, NotFound, RateLimited, SynapseError, envelope_from_exception
-from api.core.settings import Settings, load_settings
+from api.core.settings import ConfigError, Settings, load_settings
 from api.export import ExportRefused, standalone_page
 from api.kit import built_versions
 from api.limits import ConcurrencyGate, RateLimiter
@@ -80,8 +80,23 @@ def citations_for(settings: Settings):  # noqa: ANN201
     return None if settings.corpus_dir is None else _book_at(settings.corpus_dir)
 
 
+def _load_corpus_or_fail(settings: Settings) -> None:
+    """A configured corpus that cannot be read stops the API at start with the setting's name, not on the first question with an opaque error. It also
+    reads the corpus now, so the first question is not the one that pays for it."""
+    if settings.corpus_dir is None:
+        return
+    from api.evidence.corpus import CorpusError
+    from api.evidence.registry import RegistryError
+
+    try:
+        citations_for(settings)
+    except (CorpusError, RegistryError) as exc:
+        raise ConfigError([("CORPUS_DIR", f"{settings.corpus_dir}: {exc}")]) from exc
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or load_settings()
+    _load_corpus_or_fail(settings)
     app = FastAPI(title="Synapse v4 API", version="0.1.0")
     app.state.settings = settings
     app.state.store = open_store(settings)

@@ -13,6 +13,7 @@ from api.core.settings import ConfigError, load_settings
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.ledger import SpendLedger, engine_for
 from api.llm.models import ANTHROPIC_MODELS
+from api.llm.pricing import cost_usd, estimate_call_cost, estimate_input_tokens
 from api.llm.providers.anthropic import AnthropicProvider
 from api.llm.providers.base import ProviderFailure
 from api.llm.providers.fake import FakeProvider
@@ -182,17 +183,20 @@ async def test_failed_attempt_is_recorded_as_failed_and_costs_nothing(tmp_path: 
     assert row["cost_usd"] == 0.0
 
 
-async def test_a_timeout_is_booked_at_its_input_cost_not_nothing(tmp_path: Path) -> None:
+async def test_a_timeout_is_booked_at_the_worst_case_because_the_provider_may_have_generated_the_whole_reply(tmp_path: Path) -> None:
     ledger = _ledger(tmp_path, cap=10.0)
     service = LLMService(
         FakeProvider(name="anthropic", models=ANTHROPIC_MODELS, fail_with="timed out", fail_kind="timeout"),
         None,
         ledger,
     )
+    request = LLMRequest(prompt="x" * 3000, purpose="plan")
     with pytest.raises(ProviderUnavailable):
-        await service.complete(LLMRequest(prompt="x" * 3000, purpose="plan"))
+        await service.complete(request)
     (row,) = ledger.rows()
-    assert row["status"] == "failed" and row["cost_usd"] > 0
+    assert row["status"] == "failed"
+    assert row["cost_usd"] == pytest.approx(estimate_call_cost("anthropic", ANTHROPIC_MODELS[request.tier], request))
+    assert row["cost_usd"] > cost_usd("anthropic", ANTHROPIC_MODELS[request.tier], estimate_input_tokens(request), 0)  # more than the input alone
 
 
 @pytest.mark.parametrize("kind", ["credit_exhausted", "auth", "bad_request"])
