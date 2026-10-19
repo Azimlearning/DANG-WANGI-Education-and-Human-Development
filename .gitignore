@@ -65,3 +65,7 @@ test-results/
 *.zip
 *.pdf
 corpus/
+
+# Brag / demo video output (local only, large media)
+brag-output/
+brag-output-*/

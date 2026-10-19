@@ -28,6 +28,11 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-19: Brag output ignored, repository mirrored for the hackathon submission
+- **Changed:** `.gitignore` now ignores `brag-output/` and `brag-output-*/` (local demo video renders, large media). `main` was pushed to a second remote, `hackathon` (`Azimlearning/DANG-WANGI-Education-and-Human-Development`), which the event's naming format requires; `origin` stays the working repository.
+- **Verified:** `git status` clean after the commit; both pushes reported success.
+- **Known issues / next steps:** the hackathon's own submission documents are not written yet. Push future commits to both remotes, or pick one as canonical.
+
 ### 2026-10-19: The audit hardened for the three open leads (D-37), the smoke made hermetic, `.env` completed by the owner
 - **Reported:** "continue from where you left off": the free hardening offered at the end of the last turn. The owner had in the meantime completed `.env`: `CORPUS_DIR` is the real corpus, the monthly cap is 2.0 and the all-time budget `LLM_TOTAL_CAP_USD` is 2.0 (checked by printing booleans and the caps only).
 - **Changed:** `packages/kit/src/audit.ts` (D-37: counters, `::marker`, quoted markers, `display: list-item`, inline styles, and non-visual elements made visible are all refused), `kit-lock.json` (0.1.0 relocked, bf41463c9944), four new Kit tests, `eval/smoke/web_smoke.py` (the API now starts from a scratch directory with absolute paths so it cannot read the developer's `.env`), D-37, `guardian_pass.md`, the round-3 evidence note.
