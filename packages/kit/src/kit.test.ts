@@ -487,6 +487,81 @@ describe("what the audit refuses to leave unseen", () => {
     expect(forbiddenWhat().join("|")).toContain("<link> element");
   });
 
+  it("refuses CSS that can put a list marker's number on screen without a text node, in a stylesheet or inline", () => {
+    spring();
+    expect(forbiddenWhat()).toEqual([]);
+    for (const css of [
+      "li { counter-set: list-item 41 }",
+      "p { counter-reset: list-item 41 }",
+      "div { counter-increment: list-item 5 }",
+      "div { display: list-item; list-style-type: decimal }",
+      'li { list-style-type: "42" }',
+      "li::marker { color: red }",
+      "p::before { content: counter(x) }",
+    ]) {
+      const sheet = document.createElement("style");
+      sheet.textContent = css;
+      document.body.appendChild(sheet);
+      expect(forbiddenWhat().join("|"), css).toContain("stylesheet with an image");
+      sheet.remove();
+    }
+    expect(forbiddenWhat()).toEqual([]);
+    for (const inline of ["counter-set: list-item 41", "display:list-item", 'list-style-type:"7"', "list-style: '7'"]) {
+      const div = document.createElement("div");
+      div.setAttribute("style", inline);
+      document.body.appendChild(div);
+      expect(forbiddenWhat().join("|"), inline).toContain("inline style that can draw a number");
+      div.remove();
+    }
+    expect(forbiddenWhat()).toEqual([]);
+  });
+
+  it("refuses an inline style on the body or on a head element that could draw a number", () => {
+    spring();
+    document.body.setAttribute("style", "counter-set: list-item 41");
+    expect(forbiddenWhat().join("|")).toContain("inline style that can draw a number");
+    document.body.removeAttribute("style");
+    const meta = document.createElement("meta");
+    meta.setAttribute("style", 'list-style-type:"9"');
+    document.head.appendChild(meta);
+    expect(forbiddenWhat().join("|")).toContain("inline style that can draw a number");
+    meta.remove();
+    expect(forbiddenWhat()).toEqual([]);
+  });
+
+  it("refuses a non-visual element (script, style, title, a head element) that CSS has made visible", () => {
+    spring();
+    expect(forbiddenWhat()).toEqual([]);
+    const script = document.createElement("script");
+    script.setAttribute("type", "text/plain");
+    script.setAttribute("style", "display:block");
+    script.textContent = "the answer is 42";
+    document.body.appendChild(script);
+    expect(forbiddenWhat().join("|")).toContain("<script> made visible");
+    script.remove();
+    const title = document.createElement("title");
+    title.textContent = "42";
+    title.setAttribute("style", "display:block");
+    document.head.appendChild(title);
+    expect(forbiddenWhat().join("|")).toContain("<title> made visible");
+    title.remove();
+    expect(forbiddenWhat()).toEqual([]);
+  });
+
+  it("leaves ordinary hidden non-visual elements and ordinary inline styles alone", () => {
+    const { env } = spring();
+    const script = document.createElement("script");
+    script.textContent = "var x = 1;";
+    document.body.appendChild(script);
+    const hidden = document.createElement("title");
+    hidden.textContent = "A title";
+    document.head.appendChild(hidden);
+    const p = document.createElement("p");
+    p.setAttribute("style", "color: red; margin: 0");
+    env.stage.appendChild(p);
+    expect(forbiddenWhat()).toEqual([]);
+  });
+
   it("counts non-ASCII digits as digits in text and in attributes", () => {
     const { env } = spring();
     const p = document.createElement("p");

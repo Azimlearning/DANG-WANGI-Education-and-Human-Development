@@ -35,7 +35,7 @@ Effort: S under an hour of work, M a few hours, L a day or more. "You" means it 
 
 | # | Task | Why it matters | Cost | Effort |
 |---|---|---|---|---|
-| A1 | Finish `.env`: `CORPUS_DIR`, `LLM_TOTAL_CAP_USD=2.00`, monthly cap down to 2.00 | Labels stay `model-checked` in live runs until `CORPUS_DIR` is real; the $2 limit is not enforced until the total cap is set | Free | S |
+| A1 | ~~Finish `.env`~~ Done by the owner 2026-10-19 (`CORPUS_DIR` real, caps 2.00 and 2.00) | | Free | Done |
 | A2 | Paste the nine settings into `.env.example` (STATUS lists them) | Every other setting is documented there; the file is blocked to my tools | Free | S |
 | A3 | Supervised verifier attack pass, `guardian_pass.md` | The only unmet Step 4 item; protects the core promise | Free | M |
 | A4 | Say whether short textbook quotations may be shown publicly (A-8), or only cited page references | The provenance panel and the offline file show a short quotation | Free | S |
@@ -56,7 +56,7 @@ Effort: S under an hour of work, M a few hours, L a day or more. "You" means it 
 | B4 | Show a book title and printed page instead of the file id and PDF page in the citation | A student currently sees `textbook-physics-physics-f5-removed`, page 36; needs a wire-type change | M |
 | B5 | A small table of well-known constants (g = 9.81 and so on) checked by the plan checks | The live planner chose g = 10 where the book uses 9.81 | S |
 | B6 | Teach the ledger cache prices and turn prompt caching on | About 5,000 of the 9,000 input tokens of every plan call are the same each time; could cut the plan cost by roughly a third to a half. Needs a measurement | M |
-| B7 | Harden `audit.ts` for the three open leads without building attack pages (fallback 2 in `guardian_pass.md`) | Closes the gap even if the supervised pass never happens | M |
+| B7 | ~~Harden `audit.ts` for the three open leads~~ Done 2026-10-19 (D-37); the supervised pass is still needed for the other three scopes | | Done |
 | B8 | More science models and Environments by measured gap (half-life, parallel resistance, refraction, logistic growth, molarity, percentage yield) | 16 of 53 topics today; each needs a textbook citation, a hand-written reference and planted-bug tests | L each batch |
 | B9 | Continuous integration (tests on every push, and the smoke on Linux) | The Linux path of the smoke has never run since it was adapted; there is no CI | M |
 | B10 | Router retrain on more data and an embedding comparison | Only if data beyond the v3 set exists; the measured spot check suggests the topic gate is permissive | M, skip unless data appears |

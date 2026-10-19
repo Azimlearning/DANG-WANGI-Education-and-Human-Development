@@ -18,6 +18,8 @@ Everything is local: attack pages are inputs to this repo's own verifier, nothin
 
 From `refdocs/evidence/2026-10-18-p1-guardian-round3.md`. Two leads were real and are fixed (D-35). Three are open:
 
+> **Update 2026-10-19:** the three leads below were closed by hardening the audit (D-37) without any attack page, so the supervised pass can spend its time on scopes 2 to 4 and on trying to find routes the new refusal list does not name.
+
 | Lead | What to try |
 |---|---|
 | List markers on elements other than `ol`/`ul`/`li` | Whether a number can be shown through a list marker the audit (`packages/kit/src/audit.ts`) does not read |

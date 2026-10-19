@@ -37,6 +37,11 @@ const FORBIDDEN_TAGS = ["canvas", "meter", "progress", "video", "audio", "img", 
 const INTERACTIVE = "input, select, textarea, button, output, details, summary, [contenteditable], a[href], [role=slider], [role=button], [role=spinbutton]";
 const CSS_IMAGE_PROPS = ["background-image", "list-style-image", "border-image-source", "mask-image", "-webkit-mask-image", "shape-outside"];
 const STYLE_FORBIDDEN = /@font-face|@import|url\s*\(|image-set\s*\(|\bcontent\s*:/i;
+// The ways a list marker can show a number with no text node: a counter set or stepped by CSS, the ::marker pseudo-element, a quoted marker string,
+// and any element made a list item. Looked for in stylesheet text AND in inline style attributes (refused whole: nothing the Kit makes needs them).
+const MARKER_FORBIDDEN = /\bcounter-(?:reset|set|increment)\b|\bcounters?\s*\(|::?marker\b|\blist-style(?:-type)?\s*:[^;}]*["']|\bdisplay\s*:\s*(?:list-item|inline list-item|block list-item)/i;
+// Elements that are never drawn. If CSS makes one visible, its text (a title, a script's source) is shown to the student with no component owning it.
+const NON_VISUAL = ["script", "style", "noscript", "template", "title", "meta", "link", "base", "head"];
 
 export interface AuditRecord {
   kitVersion: string;
@@ -108,9 +113,19 @@ export function audit(version: string): AuditRecord {
     if (FORBIDDEN_TAGS.includes(tag)) forbidden.push({ what: `<${tag}> element`, element: label(el) });
     if (tag === "ol" && hasAttribute(el, "start")) forbidden.push({ what: "list counter start", element: label(el) });
     if (tag === "li" && hasAttribute(el, "value")) forbidden.push({ what: "list item value", element: label(el) });
-    if (tag === "ol" || tag === "ul" || tag === "li") {
-      const marker = style(el, "content", "::marker");
-      if (marker && marker !== "normal" && marker !== "none") forbidden.push({ what: "list marker content", element: label(el) });
+    // A marker can be given content or a counter on ANY element made a list item, not only ol, ul and li.
+    const marker = style(el, "content", "::marker");
+    if (marker && marker !== "normal" && marker !== "none") forbidden.push({ what: "list marker content", element: label(el) });
+    const markerString = style(el, "list-style-type");
+    if (markerString && /^["']/.test(markerString)) forbidden.push({ what: "list marker string", element: label(el) });
+    if (tag !== "li" && style(el, "display") === "list-item") forbidden.push({ what: "list item display on a non-list element", element: label(el) });
+    const inline = attr(el, "style");
+    if (inline && (MARKER_FORBIDDEN.test(inline) || STYLE_FORBIDDEN.test(inline))) {
+      forbidden.push({ what: "inline style that can draw a number", element: label(el) });
+    }
+    if (NON_VISUAL.includes(tag)) {
+      const shown = style(el, "display");
+      if (shown && shown !== "none") forbidden.push({ what: `<${tag}> made visible`, element: label(el) });
     }
     for (const prop of CSS_IMAGE_PROPS) {
       const v = style(el, prop);
@@ -127,10 +142,32 @@ export function audit(version: string): AuditRecord {
   for (const s of all(headEl(), "style, link")) {
     const tag = tagOf(s);
     if (tag === "link") forbidden.push({ what: "<link> element", element: label(s) });
-    else if (idOf(s) !== "syn-style" && STYLE_FORBIDDEN.test(textOf(s))) forbidden.push({ what: "stylesheet with an image, font, import or generated content", element: label(s) });
+    else if (idOf(s) !== "syn-style" && (STYLE_FORBIDDEN.test(textOf(s)) || MARKER_FORBIDDEN.test(textOf(s)))) {
+      forbidden.push({ what: "stylesheet with an image, font, import or generated content", element: label(s) });
+    }
   }
   for (const s of all(body, "style")) {
-    if (STYLE_FORBIDDEN.test(textOf(s))) forbidden.push({ what: "stylesheet with an image, font, import or generated content", element: label(s) });
+    if (STYLE_FORBIDDEN.test(textOf(s)) || MARKER_FORBIDDEN.test(textOf(s))) {
+      forbidden.push({ what: "stylesheet with an image, font, import or generated content", element: label(s) });
+    }
+  }
+  // The head's own non-visual elements are not in the body walk above: check that none was made visible, and that none carries a style that draws.
+  for (const el of all(headEl(), "*")) {
+    const tag = tagOf(el);
+    if (NON_VISUAL.includes(tag)) {
+      const shown = style(el, "display");
+      if (shown && shown !== "none") forbidden.push({ what: `<${tag}> made visible`, element: label(el) });
+    }
+    const inline = attr(el, "style");
+    if (inline && (MARKER_FORBIDDEN.test(inline) || STYLE_FORBIDDEN.test(inline))) {
+      forbidden.push({ what: "inline style that can draw a number", element: label(el) });
+    }
+  }
+  // The body itself is in neither walk (the first covers its descendants, the second the head).
+  if (style(body, "display") === "list-item") forbidden.push({ what: "list item display on a non-list element", element: "body" });
+  const bodyInline = attr(body, "style");
+  if (bodyInline && (MARKER_FORBIDDEN.test(bodyInline) || STYLE_FORBIDDEN.test(bodyInline))) {
+    forbidden.push({ what: "inline style that can draw a number", element: "body" });
   }
   if (fontCount() > 0) forbidden.push({ what: "a font loaded by script", element: "document" });
 

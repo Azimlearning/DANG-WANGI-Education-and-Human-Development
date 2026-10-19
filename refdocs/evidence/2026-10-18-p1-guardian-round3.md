@@ -25,4 +25,6 @@ The `kit-guardian` agent was launched with a scoped, local-only brief. A safety 
 | 3 | The audit walks `body` and only `style` and `link` in `head`; text in `<head>` (a `<title>`) made visible by CSS might escape it | UNPROVEN |
 | 4 | Text inside `script` and `style` is skipped by design; given a visible `display` it might show a number | UNPROVEN |
 
-Leads 2 to 4 are for a run with a person watching, starting with the three above, then the three scopes not reached.
+**Update 2026-10-19:** leads 2 to 4 were closed by hardening the audit (D-37) without building any attack page: marker routes in stylesheets, inline styles and on any element, and non-visual elements made visible, are now all refused. They were never shown to be exploitable, so they are "hardened", not "fixed". The supervised pass is still owed for the three unreached scopes and for anything the new list does not name.
+
+Leads 2 to 4 were for a run with a person watching, starting with the three above, then the three scopes not reached.

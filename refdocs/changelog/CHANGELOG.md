@@ -28,6 +28,13 @@ Rules that make this file worth keeping:
 
 ## [Unreleased]
 
+### 2026-10-19: The audit hardened for the three open leads (D-37), the smoke made hermetic, `.env` completed by the owner
+- **Reported:** "continue from where you left off": the free hardening offered at the end of the last turn. The owner had in the meantime completed `.env`: `CORPUS_DIR` is the real corpus, the monthly cap is 2.0 and the all-time budget `LLM_TOTAL_CAP_USD` is 2.0 (checked by printing booleans and the caps only).
+- **Changed:** `packages/kit/src/audit.ts` (D-37: counters, `::marker`, quoted markers, `display: list-item`, inline styles, and non-visual elements made visible are all refused), `kit-lock.json` (0.1.0 relocked, bf41463c9944), four new Kit tests, `eval/smoke/web_smoke.py` (the API now starts from a scratch directory with absolute paths so it cannot read the developer's `.env`), D-37, `guardian_pass.md`, the round-3 evidence note.
+- **Diagnosed:** the smoke failed 1 of 21 ("provenance shows label, lane, source and limits") the moment the owner pointed `CORPUS_DIR` at the real corpus: the smoke starts the real API, which reads `.env`, so the Hooke Environment became `kit-verified` and the check for the corpus-free wording failed. The same class of defect as the test suite's `.env` leak found on 2026-10-18, fixed the same way (hermetic by construction).
+- **Verified:** Kit 328 passed (324 + 4 new); `eval/environments/build.py --corpus ...`: 16 verified, 16 `kit-verified`, report byte-identical (no false refusals); `eval/l6/run.py`: 56 of 61 refused, 0 of 12 false positives (the known timing flip of one row aside, report left as committed); `eval/hostile/run.py`: 20 of 20; `eval/smoke/web_smoke.py`: 21 of 21; full suite below.
+- **Not claimed:** none of the three leads was shown exploitable. This is defence in depth. The supervised attack pass over navigation, the gate and the plan path is still owed.
+
 ### 2026-10-19: An all-time spend budget, the remaining-work map, the supervised-review procedure, the zip deleted
 - **Reported:** the owner cannot spend more than $2 on the whole project, asked what is needed to finish `.env`, how to proceed with the safety review, how complete the project is and what is pending, and asked to delete the textbook zip.
 - **Diagnosed:** the cap wired so far is MONTHLY: the ledger resets on the 1st, so it cannot enforce a $2 limit for the whole project. October's spend would look like a fresh start in November.

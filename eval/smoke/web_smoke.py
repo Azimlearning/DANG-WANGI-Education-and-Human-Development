@@ -45,9 +45,9 @@ def check(name: str, ok: bool, detail: str = "") -> None:
     print(f"{'PASS' if ok else 'FAIL'}  {name}" + (f"  ({detail})" if detail else ""), flush=True)
 
 
-def spawn(cmd: list[str], env: dict[str, str]) -> subprocess.Popen:
+def spawn(cmd: list[str], env: dict[str, str], cwd: Path = REPO) -> subprocess.Popen:
     """Start a server in its own process group so `terminate` can take down the whole tree (`pnpm start` spawns node)."""
-    options: dict = {"cwd": REPO, "env": env, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
+    options: dict = {"cwd": cwd, "env": env, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
     if sys.platform == "win32":
         options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
     else:
@@ -164,12 +164,18 @@ def main() -> int:
             "DATA_DIR": str(tmp),
             "PUBLIC_ORIGIN": WEB,
             "VERIFY_INTERACTION_SECONDS": "3",
+            "KIT_DIST_DIR": str(REPO / "packages" / "kit" / "dist"),
         }
         env.pop("ANTHROPIC_API_KEY", None)
+        env.pop("CORPUS_DIR", None)
 
         if build:
             subprocess.run([pnpm, "--filter", "web", "build"], cwd=REPO, check=True, capture_output=True)
-        procs.append(spawn([sys.executable, "-m", "uvicorn", "api.main:app", "--port", "8000"], env))
+        # The API runs from a scratch directory so it cannot find the developer's .env: the smoke checks the corpus-free product (labels, wording),
+        # whatever CORPUS_DIR, keys or caps the machine has configured. The app directory and the Kit path are absolute for the same reason.
+        procs.append(
+            spawn([sys.executable, "-m", "uvicorn", "api.main:app", "--app-dir", str(REPO), "--port", "8000"], env, cwd=tmp)
+        )
         procs.append(spawn([pnpm, "--filter", "web", "start"], env))
         wait_http(f"{API}/health")
         wait_http(WEB)
