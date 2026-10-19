@@ -30,7 +30,7 @@ Rules that make this file worth keeping:
 
 ### 2026-10-19: Brag output ignored, repository mirrored for the hackathon submission
 - **Changed:** `.gitignore` now ignores `brag-output/` and `brag-output-*/` (local demo video renders, large media). `main` was pushed to a second remote, `hackathon` (`Azimlearning/DANG-WANGI-Education-and-Human-Development`), which the event's naming format requires; `origin` stays the working repository.
-- **Verified:** `git status` clean after the commit; both pushes reported success.
+- **Verified:** `git push origin main` succeeded (2fb6a14..8755cf7). The push to the `hackathon` remote was blocked by Claude Code's permission classifier and is run by the owner.
 - **Known issues / next steps:** the hackathon's own submission documents are not written yet. Push future commits to both remotes, or pick one as canonical.
 
 ### 2026-10-19: The audit hardened for the three open leads (D-37), the smoke made hermetic, `.env` completed by the owner
