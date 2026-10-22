@@ -2,9 +2,11 @@
 
 > Done 2026-10-16 for the owner's request to research "OpenAI ChatGPT intelligent UI" and use it to improve the Mark 3 pipeline. **Evidence quality: search summaries only.** The container could not fetch web pages directly (DNS failure through the proxy), so OpenAI's own documentation was seen only as search snippets and summaries, and many details come from third-party guides. Each finding below says which kind of source supports it. Nothing here was read from a primary page in full. Re-read the primary pages locally before relying on an exact field name or rule (listed at the end).
 
-## 1. What ChatGPT does
+> **Scope correction (2026-10-21).** This note describes the **Apps SDK** only (third-party apps). It does not cover **Intelligent UI**, the first-party, model-composed interface that shipped with GPT-6 on 2026-10-07, nine days before this note was written. Where this note says the model does not write the UI, that holds for Apps SDK widgets and not for ChatGPT in general. See [2026-10-21-chatgpt-intelligent-ui-rea.md](2026-10-21-chatgpt-intelligent-ui-rea.md).
 
-**It does not let the model write the UI.** ChatGPT's apps layer (the "Apps SDK", built on the Model Context Protocol) separates two things the model never mixes:
+## 1. What ChatGPT does (the Apps SDK, i.e. third-party apps)
+
+**In the Apps SDK, the model does not write the UI.** ChatGPT's apps layer (the "Apps SDK", built on the Model Context Protocol) separates two things the model never mixes:
 
 | Role | Who writes it | What it is |
 |---|---|---|
