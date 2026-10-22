@@ -1,6 +1,8 @@
 # Where the project stands and everything that is left (2026-10-19)
 
 > Written for the owner, who asked "how complete is this at hackathon level, and what is still pending". The percentages are the author's judgement with the arithmetic shown, not measurements. Update this file when a row changes, and keep `STATUS.md` (the phase table and known gaps) as the authority on facts.
+>
+> **Updated 2026-10-22.** The owner widened the target (D-39): the PRD end state plus every feature the demo video shows, with time not a variable (D-40 covers money). The percentages below were measured against the older, smaller "hackathon-level" definition and have not been re-estimated; do not read them as progress against the new target. The ordered plan is `refdocs/plans/2026-10-22-completion-roadmap.md` (workstreams W0 to W11); the last section of this file maps every item here to a workstream. The old "cheapest route to a demo" section was retired because it was built around a deadline.
 
 ## Why there is still work after "cloud is done"
 
@@ -43,7 +45,7 @@ Effort: S under an hour of work, M a few hours, L a day or more. "You" means it 
 | A6 | A teacher or KSSM student checks the 16 Environments, the router labels (200 blind) and the five misconceptions | Nothing above `kit-verified` is possible without a person (hard constraint 3) | Free | M |
 | A7 | Open a shared link on a real phone; one screen-reader pass; one keyboard-only pass | Accessibility is only checked statically and in a harness so far | Free | M |
 | A8 | Decide whether a model-written Plan may earn `kit-verified` through retrieved citations | Today it cannot: the planner is not told the citation ids. A citation proves the topic is in the book, not that the model's wording is right | Free | S |
-| A9 | Decide the Free lane and the L4 wording check: build them, or cut them from the claim | The PRD describes three lanes; two are built | Free | S |
+| A9 | ~~Decide the Free lane and the L4 wording check~~ Decided 2026-10-22: build both together (W1) | The PRD describes three lanes; two are built | Free | Done |
 | A10 | Approve the learner study design and any participants (P8) | The "normalised gain" result is a PRD end-state target | Free | L |
 
 ### B. Free engineering I can do now
@@ -79,7 +81,7 @@ Effort: S under an hour of work, M a few hours, L a day or more. "You" means it 
 | D1 | The golden set without the exemplar, as many questions as the budget allows | About $0.027 per question when plans pass at the first attempt: 12 questions about $0.35, all 24 about $0.70, up to about $1.30 if every plan needs a retry | A real pass rate for the planner, which is the headline number for P3 |
 | D2 | The cost of a prompt-caching change (after B6) | About $0.10 | Whether the saving is real |
 
-Spent so far: **$0.26**. With a $2.00 all-time budget, **$1.74** remains.
+Spent so far: **$0.26** (as of 2026-10-19; read `GET /spend` or the ledger for the current figure). The all-time cap in `.env` was $2.00 at that date. Caps are hard stops that the owner raises one run at a time (D-40); this is a status line, not a plan constraint.
 
 ### E. Evidence and study (P8)
 
@@ -87,15 +89,35 @@ Spent so far: **$0.26**. With a $2.00 all-time budget, **$1.74** remains.
 |---|---|---|
 | E1 | Learner study design and the paper-ready evaluations (normalised gain, whatever it shows); model-judged scores are never the primary metric | L |
 
-## The cheapest route to a credible hackathon demo
+## Added 2026-10-22: found by reading the code and the demo video
 
-Given a $2 limit, no hosting budget and a deadline, the route that gets the most for the least:
+| # | Item | Why it is pending | Workstream |
+|---|---|---|---|
+| F1 | The library lookup runs after route and explain, and matches only the exact question | The PRD's P5 exit criterion ("a covered topic opens in under one second with no model call") is not met; no live Instantiate path | W2 |
+| F2 | The web UI is not built on Synapse V3's design (tokens, fonts, rail, Quick starts, bench pane, badges, Axi, theme toggle) | The owner's decision (D-38); four V3 behaviours are deliberately not ported | W3 |
+| F3 | V3's four benches (drag masses, titration with stopcock and eye level, yeast tubes with a dial, orbit) have no V4 equivalent | The demo video shows them; they must be rebuilt as Kit components with cited models and a verifier that drives drags | W4 |
+| F4 | No path carries the results table's recorded rows to the host; `resultsTable` and `record` do not exist | The Amali lab report (C2) needs both | W5 |
+| F5 | No string tables anywhere (Kit and web strings are hard-coded English) | Bahasa Melayu (C4) needs a mechanism and a reviewer before any translated string ships | W6 |
+| F6 | Present mode (the video's "Presenting to the class" chip) has no design | D-39: a presentation of Stage, no class state; behaviour is `ASSUMED` until the owner confirms | W6 |
+| F7 | STATUS and the PRD decision log lagged the code (Kit lock, test counts, P5, D-34 to D-37) | Fixed 2026-10-22 | W0 (done) |
 
-1. **A1, A2, A4 to A5 now** (all free, small).
-2. **A static gallery**: the 16 `kit-verified` Environments exported as offline files (the export already exists) on a free static host. No server, no model call, no abuse risk, no bill, and every page carries its provenance. This is a cut-down C5.
-3. **A recorded or on-your-laptop live demo** for the "type a question" moment, using the local API with the all-time budget set. Never expose the API (it has no authentication).
-4. **D1 at 12 questions (about $0.35)** for one honest number: "X of 12 questions became verified Environments at $0.0Y each".
-5. **A3 or B7** so the claim "nothing unverified reaches a student" has been attacked by a person, not only by tests.
-6. **A6 on a handful of Environments** so at least a few are reviewed by a person.
+## Where each pending item is scheduled
 
-Everything else in B and C is real work but is not needed for a demo that is honest about what it is.
+The order is by dependency (see the plan for the reasons). W0 is done.
+
+| Workstream | Items from this file |
+|---|---|
+| W0 Ground truth and decisions | F7, A9 (decided) |
+| W1 L4 wording check and the Free lane | A9; the L4 gap in the verifier |
+| W2 Instant, free library hits | F1 |
+| W3 V3 UI port | F2; A2 can be done any time |
+| W4 Interaction Kit and benches | F3; B8 (new models for the benches) |
+| W5 Pedagogy | C1, C2 (with F4), C3 |
+| W6 Reach | C4 (with F5), C5, F6, B4 |
+| W7 Content and evidence | B1, B2, B3, B5, B8 |
+| W8 Paid measurements | D1, D2, B6, and the L4 and Free canaries |
+| W9 Trust, accessibility, CI | A3, A7, B9 |
+| W10 Deploy gate | A4, A5, C6 |
+| W11 People and the study | A6, A8 (decision), A10, E1 |
+
+A8 (may a model-written Plan earn `kit-verified` through retrieved citations) is the owner's call and stays open until W11 or earlier; it does not block any workstream above.

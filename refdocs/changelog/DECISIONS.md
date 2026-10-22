@@ -310,6 +310,30 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** A page that legitimately uses CSS counters, a custom marker or a visible `<title>` is now refused; the 16 Environments and the Kit's own styles use none (all 16 still verify, L6 is unchanged at 56 of 61 with 0 of 12 false positives, hostile 20 of 20). Computed-style checks need a real browser: in the jsdom unit tests only the constructs jsdom computes are exercised, and the real guarantee is the Chromium harness. A page can still be rejected for an innocent inline `counter-*` it never uses visibly; that is the price of failing closed. **What this does NOT do:** it does not replace the supervised attack pass (`refdocs/guides/guardian_pass.md`), which also covers navigation, the gate and the plan path, and may find routes this list does not name.
 
+## D-38: The web UI takes Synapse V3's design language, and not four of its behaviours (2026-10-22)
+
+**Decision.** The V4 web shell is restyled on Synapse V3's design: its tokens (`Synapse-V3/frontend/app/globals.css`, `tailwind.config.ts`), fonts (Fredoka, Nunito, JetBrains Mono through `next/font`), the chunky pressed buttons, the top bar with the Axi mascot and a theme toggle, the "Today's flow" rail with Quick starts, the lab-bench pane, badges and the staged progress card. The sources of intent are `Synapse-V3/design/BRAND.md` and `design/FLOW.md`. Every ported file starts with a provenance comment (rule 5) and is re-expressed for Next 16, React 19 and Tailwind 4, not pasted. Four V3 behaviours are **not** ported: (1) "Watch the code being written", which streams unverified HTML to the student (hard constraint 1); the staged card is driven by V4's stage events and the Plan instead. (2) The "Not fully checked" draft view of an unverified page (constraint 1: V4 refuses, it does not show a draft). (3) `fitArtifactToFrame`, which edits the HTML after it was hashed; fitting moves into the Kit. (4) Saved labs as raw HTML in `localStorage`; a saved item is reopened through the delivery gate. V3's "Science checked" badge becomes a badge keyed to the Environment's real label (`kit-verified` or `model-checked`), and XP, streak and gem counters are not ported (invented numbers).
+
+**Why.** The owner said the UI builds on the V3 design and style (2026-10-22). V3's look is documented and was designed phone-first. The four exclusions each break a hard constraint, so they are decided here once and not re-argued per component.
+
+**Trade-offs / rejected.** The iframe has an opaque origin and cannot read the host's theme, so a theme toggle needs a Kit host-to-frame listener (a Kit behaviour change: relock under D-29, `kit-guardian` review). V3's 32 px toggle and the 44 px rule (constraint 10) conflict, so the toggle grows. Rejected: copying V3 files verbatim (different framework versions, and the constraint exclusions above); keeping V4's current plain styling (the owner asked for V3's look).
+
+## D-39: Scope is the PRD end state plus every feature the demo video shows; Present mode is a presentation, not a teacher dashboard (2026-10-22)
+
+**Decision.** "Complete" means the PRD end state (P3 to P8 and the deploy gate) and also the features the demo video shows that V4 does not yet have: the Amali lab report export (C2), the exam mirror (C3), Bahasa Melayu (C4), chapter packs (C5), a Present mode, and V3-style drag-and-drop benches rebuilt as Kit components. All content for them comes from V4's own Plans and cited models, never from wording invented for the video. **Present mode** is a full-screen Stage with a "Presenting" chip, for projecting one Environment to a class. It has no accounts, no class state, no student data and no teacher view, so it does not reopen the PRD non-goal on teacher dashboards. `ASSUMED:` the exact behaviour of Present mode (the chip was the video author's invention); confirm with the owner in the W6 plan before building.
+
+**Why.** The owner chose "PRD end state + video" so the shown product becomes true. The audit found 18 shown items that were not built, partly built or built differently.
+
+**Trade-offs / rejected.** More surface to verify and review: each new bench needs a Kit registration suite and a verifier that can drive drag gestures, and Bahasa Melayu ships only reviewed strings, so it depends on a human reviewer. Rejected: re-cutting the video to match the product (the owner wants the product to match the video); building teacher dashboards (still a non-goal).
+
+## D-40: Paid runs are raised one at a time; the caps stay hard stops (2026-10-22)
+
+**Decision.** `LLM_MONTHLY_CAP_USD` and `LLM_TOTAL_CAP_USD` stay enforced at the LLM seam and refuse a call before it is sent. The owner raises a cap by editing `.env` when a run needs more room; the assistant never edits `.env`. Every paid run still states a projection and a hard bound, runs the cost-auditor, and waits for the owner's typed amount (rule 7). The remaining-budget planning in `remaining_work.md` ("with a $2.00 all-time budget, $1.74 remains") is a status line, not a plan constraint.
+
+**Why.** The owner chose "raise it later, per run" over a fixed $2 plan, because L4 adds a model call per Environment and the Free lane and the 24-question run need measuring.
+
+**Trade-offs / rejected.** Without a fixed budget, no workstream can be sized in advance by cost, so each paid workstream (W8) has its own projection at the time. Rejected: planning around $2.00 (it would cut the L4 and Free measurements); removing the all-time cap (it is the only bound on a single operator with no auth, D-11).
+
 ---
 
 ## Working assumptions (`ASSUMED:`)

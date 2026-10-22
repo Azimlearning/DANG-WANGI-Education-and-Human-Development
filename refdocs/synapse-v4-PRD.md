@@ -195,7 +195,7 @@ Library lookup; template instantiate; edit-not-regenerate (diff against a stored
 
 Explicitly out of scope. Revisit only by adding an ADR that says why.
 
-- Accounts, authentication, payments, teacher dashboards (dormant, not forbidden; the owner chose single-operator, no auth, ASSUMED permanent for v1)
+- Accounts, authentication, payments, teacher dashboards (dormant, not forbidden; the owner chose single-operator, no auth, ASSUMED permanent for v1). A "Present" mode that projects one Environment to a class is a presentation of Stage, not a dashboard, and is in scope (D-39)
 - Graph retrieval or GraphRAG (D-12)
 - A workspace over user-uploaded documents, writing or study-tool suites (Arcana's job)
 - World-model or video-style generated environments (unverifiable)
@@ -280,6 +280,13 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-31 | Stored Environments are HMAC-signed with a key outside the data directory; the gate refuses unsigned or altered rows when a key is set | A-19, hard constraint 1 |
 | D-32 | The offline single-file export carries the Kit and both hashes, re-checks them before running, and keeps `sandbox="allow-scripts"` only | P7 reach |
 | D-33 | Progress is device-local: the first concept-check answer per Environment, shown in words, with an export code and no account | P6 |
+| D-34 | Live mode builds the Anthropic provider; a billed reply we reject is booked at its real usage; tests may only touch this machine | Found when wiring the provider (ledger under-count; a test reached the network) |
+| D-35 | A unit conversion must start from the unit its source is in; sentence numbers include `.99` and `5e1` | kit-guardian P1 round 3 |
+| D-36 | Citations are pointers in the repo and quotations beside the local corpus; the Plan's citations decide the label | Hard constraint 4 and rule 13 |
+| D-37 | The audit refuses every CSS route to a number with no text node, shown exploitable or not | kit-guardian round 3 leads, closed by hardening |
+| D-38 | The web UI takes Synapse V3's design language; four V3 behaviours are not ported (code streaming, draft view, post-hash fitting, raw saved HTML) | Owner: UI builds on V3; hard constraints 1 and 3 |
+| D-39 | Scope is the PRD end state plus every feature the demo video shows; Present mode is a presentation of Stage, not a teacher dashboard | Owner, 2026-10-22 |
+| D-40 | Paid runs are raised one at a time; the caps stay hard stops and the owner edits `.env` | Owner, 2026-10-22 |
 
 ---
 

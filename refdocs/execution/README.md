@@ -34,3 +34,5 @@ If reality diverges from the doc mid-build, **edit the doc** and note it in the 
 | [2026-10-16-p3-mark3-pipeline.md](2026-10-16-p3-mark3-pipeline.md) | [../plans/2026-10-16-p3-mark3-pipeline.md](../plans/2026-10-16-p3-mark3-pipeline.md) | Done on fakes (cloud scope); the first paid run is waiting on the owner |
 | [2026-10-16-p2-p5-p6-evidence-library-pedagogy.md](2026-10-16-p2-p5-p6-evidence-library-pedagogy.md) | [../plans/2026-10-16-p2-p5-p6-evidence-library-pedagogy.md](../plans/2026-10-16-p2-p5-p6-evidence-library-pedagogy.md) | Done (cloud scope) |
 | [2026-10-16-p4-kit-expansion.md](2026-10-16-p4-kit-expansion.md) | [../plans/2026-10-16-p4-kit-expansion.md](../plans/2026-10-16-p4-kit-expansion.md) | Done (cloud scope) |
+| [2026-10-18-p2-real-corpus-and-citations.md](2026-10-18-p2-real-corpus-and-citations.md) | [../plans/2026-10-18-p2-real-corpus-and-citations.md](../plans/2026-10-18-p2-real-corpus-and-citations.md) | In progress (tasks 4, 9, 10 not started) |
+| [2026-10-22-completion-roadmap.md](2026-10-22-completion-roadmap.md) | [../plans/2026-10-22-completion-roadmap.md](../plans/2026-10-22-completion-roadmap.md) | In progress (W0 done) |
