@@ -202,8 +202,11 @@ def guard_label(lane: str, label: str, citations: tuple[Citation, ...], evidence
         )
 
 
-def _layers(lane: str, report) -> tuple[str, ...]:  # noqa: ANN001
-    """Only the layers that actually examined something are claimed: a page with no model has nothing for the reference layer to compare."""
+def _layers(lane: str, report, wording_checked: bool = False) -> tuple[str, ...]:  # noqa: ANN001
+    """Only the layers that actually examined something are claimed: a page with no model has nothing for the reference layer to compare.
+
+    `wording` (L4, D-41) is a model reading the words. This function cannot see that happen: the pipeline, which made the call, says so through
+    `wording_checked`, and sets it only after a real judge answered ok. The mint stays free of model calls."""
     layers = ["postprocess", "scan", "render"]
     if lane != "free":
         if report.audit0 is not None and (report.audit0.get("readouts") or report.audit0.get("series")):
@@ -212,6 +215,8 @@ def _layers(lane: str, report) -> tuple[str, ...]:  # noqa: ANN001
             layers.append("grid")
         if report.reference_cases > 0:
             layers.append("reference")
+    if wording_checked:
+        layers.append("wording")
     return tuple(layers)
 
 
@@ -230,8 +235,12 @@ def verify_environment(
     interaction_seconds: float = INTERACTION_SECONDS,
     plan_models: list[dict] | None = None,
     evidence: Evidence | None = None,
+    wording_checked: bool = False,
 ) -> VerifiedEnvironment:
-    """Check `raw_html` end to end and return the minted `VerifiedEnvironment`, or raise `VerificationFailed`."""
+    """Check `raw_html` end to end and return the minted `VerifiedEnvironment`, or raise `VerificationFailed`.
+
+    `wording_checked` is the caller's statement that a judge model read the words and passed them (L4). It adds the layer name `wording` to what is
+    shown to the student and nothing else: it can never make a refused page pass, and it is not evidence the verifier itself produced."""
     cited = tuple(citations)
     guard_label(lane, label, cited, evidence)
 
@@ -281,7 +290,7 @@ def verify_environment(
         citations=cited,
         plan_summary=plan_summary,
         checked=Checked(
-            layers=_layers(lane, report),
+            layers=_layers(lane, report, wording_checked),
             controls_exercised=len(report.controls),
             readouts=report.readouts,
             grid_points=report.grid_points,

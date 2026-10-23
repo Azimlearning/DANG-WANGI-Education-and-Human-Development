@@ -11,7 +11,8 @@ from api.pipeline import failchecks as fc
 
 API = Path(__file__).resolve().parents[1]
 _ARG_INDEX = {"Problem": 0, "ScanReject": 0, "PostprocessReject": 1, "VerificationFailed": 1}
-PIPELINE_LEVEL = {"GAP", "BUDGET", "INTAKE"}
+PIPELINE_LEVEL = {"GAP", "BUDGET", "INTAKE", "WORDING", "FREE_REPLY", "FREE_UNCHECKED"}
+"""Rules the orchestrator raises itself (not the verifier or the plan checks). `test_run.py` proves each is actually emitted into the trace."""
 
 
 def _consts(node: ast.AST) -> list[str]:
@@ -144,3 +145,15 @@ def test_a_rule_passed_as_a_variable_is_seen_as_dynamic_and_new_ones_must_be_rev
     assert consts == set() and len(dynamic) == 1
     seen = {site.split(":", 1)[0] + " " + site.split(" ", 1)[1] for site in dynamic_sites()}
     assert seen <= REVIEWED_DYNAMIC, f"new dynamic rule sites need review: {sorted(seen - REVIEWED_DYNAMIC)}"
+
+
+def test_every_rule_the_orchestrator_raises_itself_is_registered_and_each_registered_pipeline_rule_is_raised_there() -> None:
+    """`PIPELINE_LEVEL` rules are not emitted by the verifier or the checks, so they were exempt from the coverage test. This closes that: they are read out
+    of `run.py` (`failchecks.get("X")`, `degrade("X")`), so a rule that stops being raised, or one raised but never registered, fails here."""
+    source = (API / "pipeline" / "run.py").read_text(encoding="utf-8")
+    raised = set(re.findall(r'(?:failchecks\.get|degrade)\(\s*"([A-Z_]+)"', source))
+    assert raised, "the scan found nothing in run.py; it has probably stopped seeing the code"
+    assert raised <= set(fc.REGISTRY), f"raised but not registered: {sorted(raised - set(fc.REGISTRY))}"
+    # `GAP` is the registry's entry for an assembly gap, which the orchestrator handles by branch (and logs by part), not by naming the rule.
+    named = PIPELINE_LEVEL - {"GAP"}
+    assert named <= raised, f"registered as raised by the orchestrator but never raised there: {sorted(named - raised)}"

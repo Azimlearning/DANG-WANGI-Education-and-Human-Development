@@ -1,0 +1,371 @@
+[
+  {
+    "id": "biology-f4-cell_size:true",
+    "plan": "biology-f4-cell_size.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "biology-f4-cell_size:note",
+    "plan": "biology-f4-cell_size.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "Substances enter a cell through its surface, but they are used by its whole volume. A cube with a bigger side has a smaller surface area to volume ratio. The textbook states this for whole organisms; the cube is a model of the same idea.",
+    "mutated": "Substances enter a cell through its surface, but they are used by its whole volume. A cube with a bigger side has a greater surface area to volume ratio. The textbook states this for whole organisms; the cube is a model of the same idea."
+  },
+  {
+    "id": "biology-f4-cell_size:experiment.hypothesis",
+    "plan": "biology-f4-cell_size.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "experiment.hypothesis",
+    "original": "The bigger the cube, the smaller the surface area to volume ratio",
+    "mutated": "The bigger the cube, the greater the surface area to volume ratio"
+  },
+  {
+    "id": "biology-f4-magnification:true",
+    "plan": "biology-f4-magnification.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "biology-f4-magnification:sentences.0",
+    "plan": "biology-f4-magnification.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "sentences.0",
+    "original": "Keep the actual size the same and make the image size larger, then smaller.",
+    "mutated": "Keep the actual size the same and make the image size larger, then greater."
+  },
+  {
+    "id": "biology-f4-osmosis_mass:true",
+    "plan": "biology-f4-osmosis_mass.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "biology-f4-osmosis_mass:note",
+    "plan": "biology-f4-osmosis_mass.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "A potato strip gains mass in a solution that is more dilute than its cell sap because water enters by osmosis, and loses mass in a more concentrated solution. The percentage change in mass is the change divided by the starting mass, shown as a percentage. This strip started at 10 g.",
+    "mutated": "A potato strip gains mass in a solution that is less dilute than its cell sap because water enters by osmosis, and loses mass in a more concentrated solution. The percentage change in mass is the change divided by the starting mass, shown as a percentage. This strip started at 10 g."
+  },
+  {
+    "id": "biology-f4-osmosis_mass:controls.0.unit",
+    "plan": "biology-f4-osmosis_mass.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "g",
+    "mutated": "mol"
+  },
+  {
+    "id": "biology-f5-compensation:true",
+    "plan": "biology-f5-compensation.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "biology-f5-compensation:experiment.hypothesis",
+    "plan": "biology-f5-compensation.json",
+    "expect": "refuse",
+    "kind": "direction flipped",
+    "field": "experiment.hypothesis",
+    "original": "Net uptake is negative in the dark and rises with light intensity",
+    "mutated": "Net uptake is negative in the dark and falls with light intensity"
+  },
+  {
+    "id": "chemistry-f4-dilution:true",
+    "plan": "chemistry-f4-dilution.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-dilution:controls.0.unit",
+    "plan": "chemistry-f4-dilution.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "cm3",
+    "mutated": "g"
+  },
+  {
+    "id": "chemistry-f4-gas_volume:true",
+    "plan": "chemistry-f4-gas_volume.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-gas_volume:controls.0.unit",
+    "plan": "chemistry-f4-gas_volume.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "mol",
+    "mutated": "g"
+  },
+  {
+    "id": "chemistry-f4-mole:true",
+    "plan": "chemistry-f4-mole.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-mole:controls.0.unit",
+    "plan": "chemistry-f4-mole.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "g",
+    "mutated": "mol"
+  },
+  {
+    "id": "chemistry-f4-ph_scale:true",
+    "plan": "chemistry-f4-ph_scale.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-ph_scale:note",
+    "plan": "chemistry-f4-ph_scale.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "The pH of a solution is a measure of its hydrogen ion concentration: pH = -log10 of the concentration in mol/dm3. A higher concentration of hydrogen ions gives a lower pH.",
+    "mutated": "The pH of a solution is a measure of its hydrogen ion concentration: pH = -log10 of the concentration in mol/dm3. A lower concentration of hydrogen ions gives a lower pH."
+  },
+  {
+    "id": "chemistry-f4-ph_scale:concept_check.explanation",
+    "plan": "chemistry-f4-ph_scale.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "concept_check.explanation",
+    "original": "A lower pH means a higher hydrogen ion concentration, so the solution with the lower pH is more acidic.",
+    "mutated": "A lower pH means a lower hydrogen ion concentration, so the solution with the lower pH is more acidic."
+  },
+  {
+    "id": "chemistry-f4-rate:true",
+    "plan": "chemistry-f4-rate.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-rate:controls.0.unit",
+    "plan": "chemistry-f4-rate.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "cm3",
+    "mutated": "g"
+  },
+  {
+    "id": "chemistry-f4-titration:true",
+    "plan": "chemistry-f4-titration.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-titration:experiment.hypothesis",
+    "plan": "chemistry-f4-titration.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "experiment.hypothesis",
+    "original": "The more alkali needed to neutralise the acid, the lower its concentration",
+    "mutated": "The more alkali needed to neutralise the acid, the higher its concentration"
+  },
+  {
+    "id": "chemistry-f4-titration:controls.0.unit",
+    "plan": "chemistry-f4-titration.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "cm3",
+    "mutated": "g"
+  },
+  {
+    "id": "chemistry-f5-thermochemistry:true",
+    "plan": "chemistry-f5-thermochemistry.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f5-thermochemistry:experiment.hypothesis",
+    "plan": "chemistry-f5-thermochemistry.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "experiment.hypothesis",
+    "original": "The bigger the temperature rise, the more heat is released",
+    "mutated": "The bigger the temperature rise, the less heat is released"
+  },
+  {
+    "id": "physics-f4-newton_second:true",
+    "plan": "physics-f4-newton_second.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f4-newton_second:note",
+    "plan": "physics-f4-newton_second.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "The acceleration of an object is the resultant force divided by its mass: a = F / m. A bigger force gives a bigger acceleration, and a bigger mass gives a smaller acceleration.",
+    "mutated": "The acceleration of an object is the resultant force divided by its mass: a = F / m. A bigger force gives a bigger acceleration, and a bigger mass gives a greater acceleration."
+  },
+  {
+    "id": "physics-f4-newton_second:controls.0.unit",
+    "plan": "physics-f4-newton_second.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "N",
+    "mutated": "kg"
+  },
+  {
+    "id": "physics-f4-wave_speed:true",
+    "plan": "physics-f4-wave_speed.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-hookes_amali:true",
+    "plan": "physics-f5-hookes_amali.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-hookes_amali:note",
+    "plan": "physics-f5-hookes_amali.json",
+    "expect": "refuse",
+    "kind": "relation flipped",
+    "field": "note",
+    "original": "Hang a load on a spring and it stretches. Within the elastic limit the extension is proportional to the load: extension = load / k.",
+    "mutated": "Hang a load on a spring and it stretches. Within the elastic limit the extension is inversely proportional to the load: extension = load / k."
+  },
+  {
+    "id": "physics-f5-hookes_amali:concept_check.explanation",
+    "plan": "physics-f5-hookes_amali.json",
+    "expect": "refuse",
+    "kind": "relation flipped",
+    "field": "concept_check.explanation",
+    "original": "Within the elastic limit the extension is proportional to the load, so doubling the load doubles the extension.",
+    "mutated": "Within the elastic limit the extension is inversely proportional to the load, so doubling the load doubles the extension."
+  },
+  {
+    "id": "physics-f5-hookes_amali:controls.0.unit",
+    "plan": "physics-f5-hookes_amali.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "N",
+    "mutated": "kg"
+  },
+  {
+    "id": "physics-f5-ohm_explorer:true",
+    "plan": "physics-f5-ohm_explorer.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-ohm_explorer:note",
+    "plan": "physics-f5-ohm_explorer.json",
+    "expect": "refuse",
+    "kind": "relation flipped",
+    "field": "note",
+    "original": "In an ohmic conductor the current is proportional to the voltage and inversely proportional to the resistance.",
+    "mutated": "In an ohmic conductor the current is proportional to the voltage and directly proportional to the resistance."
+  },
+  {
+    "id": "physics-f5-ohm_explorer:concept_check.explanation",
+    "plan": "physics-f5-ohm_explorer.json",
+    "expect": "refuse",
+    "kind": "relation flipped",
+    "field": "concept_check.explanation",
+    "original": "The current is inversely proportional to the resistance, so doubling the resistance halves the current.",
+    "mutated": "The current is directly proportional to the resistance, so doubling the resistance halves the current."
+  },
+  {
+    "id": "physics-f5-ohm_explorer:controls.0.unit",
+    "plan": "physics-f5-ohm_explorer.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "V",
+    "mutated": "A"
+  },
+  {
+    "id": "physics-f5-pressure_depth:true",
+    "plan": "physics-f5-pressure_depth.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-pressure_depth:note",
+    "plan": "physics-f5-pressure_depth.json",
+    "expect": "refuse",
+    "kind": "direction flipped",
+    "field": "note",
+    "original": "Pressure in a liquid increases with depth. Here water has a density of 1000 kg/m3 and g is taken as 9.81 m/s2, as in the textbook's worked problems.",
+    "mutated": "Pressure in a liquid decreases with depth. Here water has a density of 1000 kg/m3 and g is taken as 9.81 m/s2, as in the textbook's worked problems."
+  },
+  {
+    "id": "physics-f5-pressure_depth:controls.0.unit",
+    "plan": "physics-f5-pressure_depth.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "m",
+    "mutated": "s"
+  }
+]

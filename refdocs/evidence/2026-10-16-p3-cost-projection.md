@@ -8,15 +8,17 @@
 | Case | USD per Environment | What it assumes |
 |---|---|---|
 | Low | **0.0204** | no plan retry, no slot fill, 4 characters per token, short outputs (no caching in any case) |
-| High | **0.0431** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0587** | the high case with every plan retried once (retry rate 100 percent) |
-| Hard bound | **0.0852** | what the ledger itself would reserve for the worst allowed path of 6 calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
+| High | **0.0432** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0590** | the high case with every plan retried once (retry rate 100 percent) |
+| Hard bound | **0.0857** | what the ledger itself would reserve for the worst allowed Compose path of 8 calls (route, explain, plan, wording check, plan retry, wording check, fill, fill retry), every reply running to its max_tokens |
+| Free lane, extra when it fires | **0.0276** to **0.0646** | the Free page and its reading (2500 to 6000 output tokens for the page), on top of the failed Compose attempts. Off by default; unmeasured |
+| Hard bound with the Free lane on | **0.1522** | route, explain, two plans each read by the judge, then one Free page and its reading (8 calls), every reply running to its max_tokens |
 
-Mean over the 24 golden questions (the hard bound is the largest), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
+Mean over the 24 golden questions (each hard bound is the largest over them; the wording check is counted because live mode turns it on), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amounts to confirm)
 
-1. **A canary of 1 question** first: up to **$0.0852** (hard bound), expected about $0.020 to $0.043. It checks model ids, token counts and error handling for almost nothing.
+1. **A canary of 1 question** first: up to **$0.0857** (hard bound), expected about $0.020 to $0.043. It checks model ids, token counts and error handling for almost nothing.
 2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.18 to $0.53**, hard bound **$0.77**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the real characters per token and any hidden thinking tokens, and whether the fail-check registry's hints fix a bad plan.
@@ -42,34 +44,35 @@ Mean over the 24 golden questions (the hard bound is the largest), from the real
 4. The router fallback is called for 90 percent of questions (the pattern and complexity heads clear their gates for about a third of questions, and a local `none` topic always goes to the fallback).
 5. Plan retry rate 0 to 40 percent in the high case and 100 percent in the pessimistic one (Arcana v2 was accepted on 2 of 8 first attempts). Nothing here can measure it: fakes always return a valid plan.
 6. Prompt caching is off, so every input token is priced at the full rate in every case. Turning it on needs the ledger to price cache writes and reads, and a measured saving first.
-7. The L4 model check, the repair prompt beyond one retry and the Free lane are not built and not included.
+7. The repair prompt beyond one retry is not built. The wording check is included in every case (live mode turns it on) at the light tier. The Free lane is NOT in Low, High or Pessimistic: it fires only when the Kit cannot take a question, how often is unknown, and its page length (2500 to 6000 tokens) is a guess. Its cost is shown on its own rows.
 8. Verification costs no model call.
+9. The Free sample page used for input sizes is a short hand-written fixture; a model's page is longer, so the Free input estimate (the reading of the page) is low. The output bound is exact: the request's max_tokens.
 
 ## Per-question range
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0218 | 0.0471 | 0.0645 |
-| g02 | 0.0220 | 0.0475 | 0.0650 |
-| g03 | 0.0222 | 0.0479 | 0.0656 |
-| g04 | 0.0222 | 0.0480 | 0.0657 |
-| g05 | 0.0218 | 0.0471 | 0.0645 |
-| g06 | 0.0218 | 0.0471 | 0.0645 |
-| g07 | 0.0218 | 0.0472 | 0.0646 |
-| g08 | 0.0223 | 0.0480 | 0.0657 |
-| g09 | 0.0197 | 0.0415 | 0.0565 |
-| g10 | 0.0197 | 0.0415 | 0.0564 |
-| g11 | 0.0201 | 0.0422 | 0.0575 |
-| g12 | 0.0201 | 0.0422 | 0.0574 |
-| g13 | 0.0201 | 0.0423 | 0.0576 |
-| g14 | 0.0199 | 0.0418 | 0.0570 |
-| g15 | 0.0201 | 0.0422 | 0.0575 |
-| g16 | 0.0197 | 0.0415 | 0.0565 |
-| g17 | 0.0192 | 0.0400 | 0.0543 |
-| g18 | 0.0189 | 0.0393 | 0.0533 |
-| g19 | 0.0193 | 0.0400 | 0.0543 |
-| g20 | 0.0193 | 0.0401 | 0.0544 |
-| g21 | 0.0192 | 0.0399 | 0.0543 |
-| g22 | 0.0193 | 0.0400 | 0.0543 |
-| g23 | 0.0193 | 0.0400 | 0.0544 |
-| g24 | 0.0189 | 0.0393 | 0.0533 |
+| g01 | 0.0219 | 0.0473 | 0.0648 |
+| g02 | 0.0221 | 0.0477 | 0.0653 |
+| g03 | 0.0223 | 0.0481 | 0.0659 |
+| g04 | 0.0223 | 0.0482 | 0.0660 |
+| g05 | 0.0219 | 0.0473 | 0.0648 |
+| g06 | 0.0219 | 0.0473 | 0.0648 |
+| g07 | 0.0219 | 0.0474 | 0.0649 |
+| g08 | 0.0223 | 0.0482 | 0.0660 |
+| g09 | 0.0198 | 0.0417 | 0.0567 |
+| g10 | 0.0197 | 0.0416 | 0.0567 |
+| g11 | 0.0201 | 0.0424 | 0.0577 |
+| g12 | 0.0201 | 0.0423 | 0.0577 |
+| g13 | 0.0202 | 0.0425 | 0.0578 |
+| g14 | 0.0199 | 0.0420 | 0.0572 |
+| g15 | 0.0201 | 0.0424 | 0.0577 |
+| g16 | 0.0198 | 0.0417 | 0.0567 |
+| g17 | 0.0193 | 0.0402 | 0.0546 |
+| g18 | 0.0189 | 0.0394 | 0.0535 |
+| g19 | 0.0193 | 0.0402 | 0.0546 |
+| g20 | 0.0193 | 0.0402 | 0.0547 |
+| g21 | 0.0193 | 0.0401 | 0.0545 |
+| g22 | 0.0193 | 0.0402 | 0.0546 |
+| g23 | 0.0193 | 0.0402 | 0.0546 |
+| g24 | 0.0189 | 0.0394 | 0.0535 |

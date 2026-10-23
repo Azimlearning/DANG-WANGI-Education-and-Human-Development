@@ -3,9 +3,12 @@
     intake -> route -> look up -> explain (text first) -> plan -> plan checks -> assemble -> fill -> verify -> mint, store, gate -> deliver
 
 Every layer writes a trace record. A layer either passes on, repairs deterministically, asks the model once more with named issues, or degrades.
-The degrade ladder never leaves a blank screen: Instantiate (a plan assembled with no model-written code), Compose (with checked slot fills), then
-the written answer with a plain note. (The labelled Free lane, a whole model-written page, is not built in P3: it needs the paid measurements.)
+The degrade ladder never leaves a blank screen: Instantiate (a plan assembled with no model-written code), Compose (with checked slot fills), the labelled
+Free lane (a whole model-written page, only when `Deps.free_lane` is on; D-41), then the written answer with a plain note.
 The text answer streams first, so a failed Environment still leaves a useful answer.
+
+L4 (D-41): when `Deps.wording_check` is on, a second model reads the Plan's words inside the plan retry loop; the layer `wording` is claimed only for a judge
+that answered ok. Every question the Kit cannot take is appended to the Kit gap log, whether or not the Free lane is on.
 
 Budgets: at most MAX_LLM_CALLS model calls per request; a request that would exceed it degrades instead of starting another call.
 """
@@ -25,17 +28,18 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from api import kitmanifest
-from api.core.errors import SynapseError, envelope_from_exception
+from api import kitmanifest, postprocess
+from api.core.errors import ProviderUnavailable, SpendCapExceeded, SynapseError, envelope_from_exception
 from api.evidence.registry import CitationBook
 from api.kit import latest_version
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
 from api.models.misconceptions import default_matcher
-from api.pipeline import failchecks, fill, prompts
+from api.pipeline import failchecks, fill, gaplog, prompts, wording
+from api.pipeline import free as free_module
 from api.pipeline import plan as plan_module
 from api.pipeline.assemble import Assembled, AssemblyGap, assemble, scope_names
-from api.pipeline.grounding import grounding
+from api.pipeline.grounding import UNCHECKED_CITATION, grounding
 from api.pipeline.plan import Plan
 from api.pipeline.plan_checks import PlanIssue, check, issue_from_validation, repair
 from api.routing.router import Route, route
@@ -60,7 +64,9 @@ from api.verify.store import SqliteEnvironmentStore
 
 log = logging.getLogger(__name__)
 
-MAX_LLM_CALLS = 6
+MAX_LLM_CALLS = 8
+"""Raised from 6 for L4 and the Free lane (D-41): explain, a possible route fallback, two plans each followed by a wording check, then one Free page and its
+wording check is 8. Slot fills draw on the same budget and are dropped, not retried, when it is spent."""
 MAX_PLAN_ATTEMPTS = 2
 MAX_FILL_ATTEMPTS = 2
 INJECTION = re.compile(
@@ -114,6 +120,13 @@ class Deps:
     """Resolves a Plan's citation ids to corpus-proved citations. Used only together with `evidence` (the same corpus), or nothing is grounded."""
     verify_fn: Callable[..., VerifiedEnvironment] | None = None
     """Test seam: replaces verify_environment (it must have the same keyword arguments)."""
+    wording_check: bool = False
+    """L4 (D-41): a second model reads the Plan's words before the page is built. Off by default and off in fake mode: a fake judge examined nothing, and
+    the layer `wording` is claimed only for a judge that answered. The API turns it on in live mode."""
+    free_lane: bool = False
+    """The labelled Free lane (D-07, D-41): a question the Kit cannot express may get a whole model-written page, `model-checked` at most. Off by default."""
+    gap_log_path: Path | None = None
+    """Where Kit gap records are appended (hash of the question, topic, reason; never the question). None: not logged."""
 
 
 def _issue_notes(issues: list[PlanIssue]) -> list[str]:
@@ -155,6 +168,24 @@ class _Run:
 
     async def call(self, request: LLMRequest, layer: str) -> str:  # noqa: ARG002
         return (await self.complete(request)).text
+
+    async def judge(self, build: Callable[[], LLMRequest]) -> wording.WordingVerdict | None:
+        """One L4 call. None means there is NO usable verdict (over the call budget or the cap, the provider unreachable, a request too large to send, or an
+        unreadable reply), and the caller must not claim the layer. A usable verdict, pass or refusal, is returned as read. A provider that REJECTS the
+        request (balance, key) is not swallowed: that is the operator's problem and stops the request, as it does for every other call."""
+        started = time.monotonic()
+        try:
+            result = await self.complete(build())
+        except (BudgetExceeded, SpendCapExceeded, ProviderUnavailable, prompts.RequestTooLarge) as exc:
+            self.trace.add("wording", "unavailable", started, why=type(exc).__name__)
+            return None
+        try:
+            verdict = wording.parse_verdict(result.text)
+        except wording.UnusableVerdict as exc:
+            self.trace.add("wording", "unreadable", started, why=str(exc)[:120])
+            return None
+        self.trace.add("wording", "ok" if verdict.ok else "refused", started, issues=[i[:200] for i in verdict.issues])
+        return verdict
 
 
 def canonical_question(question: str) -> str:
@@ -306,6 +337,7 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     # 4 plan and 5 plan checks (one targeted retry)
     plan: Plan | None = None
     issues: list[PlanIssue] = []
+    wording_ok = False  # True only when a judge answered ok for the Plan that was accepted
     for attempt in range(MAX_PLAN_ATTEMPTS):
         started = time.monotonic()
         yield _stage("plan", "start")
@@ -357,16 +389,39 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
                 models=[m.model for m in candidate.models],
             )
             continue
+        if r.deps.wording_check:
+            # L4 (D-41): a second model reads the Plan's words. A refusal goes back to the planner like a plan check; no verdict (the judge was unavailable
+            # or unreadable) lets the Plan through WITHOUT the layer being claimed.
+            passage = prompts.passage_for(r.deps.citations, ids=candidate.citation_ids, topic=candidate.topic)
+            verdict = await r.judge(lambda c=candidate, p=passage: prompts.wording_request(c, p))
+            if verdict is not None and not verdict.ok:
+                entry = failchecks.get("WORDING")
+                issues = [PlanIssue(entry.code, "wording", text, entry.model_hint) for text in verdict.issues]
+                t.add("plan_checks", "refused", started, attempt=attempt, codes=[entry.code], issues=_issue_notes(issues))
+                continue
+            wording_ok = verdict is not None
+        t.add("plan_checks", "ok", started, attempt=attempt, wording="checked" if wording_ok else "not checked")
         plan = candidate
-        t.add("plan_checks", "ok", started, attempt=attempt)
         break
     if plan is None:
-        t.outcome = "text_only"
-        yield _stage(
-            "plan",
-            "degraded",
-            "The interactive page could not be planned safely, so you are getting the written answer.",
-        )
+        if issues and all(i.code == failchecks.get("WORDING").code for i in issues):
+            # The Kit CAN express this question; the second reader refused the model's prose twice. A whole Free page would be a step down to a less-checked
+            # lane for a question the Kit could take, and the refusal is not a Kit gap, so it goes to the written answer and is logged as what it is.
+            _log_gap(r, decision, "wording_refused", "text_only")
+            t.outcome = "text_only"
+            yield _stage("plan", "degraded", failchecks.get("WORDING").student_message)
+            return
+        reason = "plan_failed:" + ",".join(sorted({i.code for i in issues})[:6]) if issues else "plan_failed"
+        async for event in _no_kit_page(
+            r,
+            canon=canon,
+            route_text=route_text,
+            decision=decision,
+            reason=reason,
+            layer="plan",
+            note="The interactive page could not be planned safely, so you are getting the written answer.",
+        ):
+            yield event
         return
     yield PlanEvent(type="plan", draft=draft_of(plan))
     yield _stage("plan", "done")
@@ -391,12 +446,16 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
         page: Assembled = assemble(plan, r.manifest, fills)
     except AssemblyGap as gap:
         t.add("assemble", "gap", started, part=gap.part)
-        t.outcome = "text_only"
-        yield _stage(
-            "assemble",
-            "degraded",
-            "This interactive page needs a part that is not built yet, so you are getting the written answer.",
-        )
+        async for event in _no_kit_page(
+            r,
+            canon=canon,
+            route_text=route_text,
+            decision=decision,
+            reason=f"assembly_gap:{gap.part}",
+            layer="assemble",
+            note="This interactive page needs a part that is not built yet, so you are getting the written answer.",
+        ):
+            yield event
         return
     t.add("assemble", "ok", started, slots=list(page.slots_used), lane=lane)
     yield _stage("assemble", "done")
@@ -425,6 +484,9 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
             interaction_seconds=r.deps.interaction_seconds,
             plan_models=the_plan.model_summaries(),
             evidence=r.deps.evidence,
+            # The judge read the Plan's words. A slot fill is code the model wrote AFTER that reading and it can print text (`Synapse.text`), so a page that
+            # has any fill was not read whole and does not claim the layer.
+            wording_checked=wording_ok and not the_plan.custom,
         )
 
     try:
@@ -451,7 +513,13 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     t.add("verify", "ok", started, models=[m[0] for m in env.checked.models], layers=list(env.checked.layers))
     yield _stage("verify", "done")
 
-    # 10 deliver (the gate re-derives the block from the stored record)
+    async for event in _store_and_deliver(r, env, canon, lane):
+        yield event
+
+
+async def _store_and_deliver(r: _Run, env: VerifiedEnvironment, canon: str, lane: Lane) -> AsyncIterator[StreamEvent]:
+    """10 deliver: store the minted Environment, then let the gate re-derive the block from the stored record. Shared by Compose and the Free lane."""
+    t = r.trace
     started = time.monotonic()
     r.deps.store.put_verified(env)
     try:
@@ -471,6 +539,141 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     r.deps.store.remember_question(canon, env.env_id)
     t.outcome = lane
     yield EnvironmentEvent(type="environment", block=block)
+
+
+def _log_gap(r: _Run, decision: Route, reason: str, outcome: str, env_id: str | None = None) -> None:
+    gaplog.record(
+        r.deps.gap_log_path,
+        question_sha256=r.trace.question_sha256,
+        topic=str(decision.topic.value),
+        domain=str(decision.domain.value),
+        pattern=str(decision.pattern.value),
+        reason=reason,
+        outcome=outcome,
+        env_id=env_id,
+    )
+
+
+async def _no_kit_page(
+    r: _Run, *, canon: str, route_text: str, decision: Route, reason: str, layer: str, note: str
+) -> AsyncIterator[StreamEvent]:
+    """The Kit cannot take this question (an assembly gap, or a Plan that could not be made to pass). The reason is logged as a Kit gap either way. With the
+    Free lane on, try one whole page; otherwise, or if that fails, the written answer (the text has already streamed)."""
+    t = r.trace
+    if not r.deps.free_lane:
+        _log_gap(r, decision, reason, "text_only")
+        t.outcome = "text_only"
+        yield _stage(layer, "degraded", note)
+        return
+    produced = False
+    try:
+        async for event in _free_page(r, canon=canon, route_text=route_text, decision=decision, reason=reason):
+            produced = produced or event.type == "environment"
+            yield event
+    except BaseException:
+        _log_gap(r, decision, reason, "error")  # a provider rejection or a bug ends the request, but the gap and any money spent are still on record
+        raise
+    if not produced:
+        _log_gap(r, decision, reason, "text_only")
+
+
+async def _free_page(
+    r: _Run, *, canon: str, route_text: str, decision: Route, reason: str
+) -> AsyncIterator[StreamEvent]:
+    """The Free lane (D-07, D-41). One whole page written by a model, then the checks it can face: the L0 scan and post-process rules (cheap, before any more
+    money is spent), a second model reading its words AND formulas (required: it is the only content check a Free page gets), and the real-browser run. The
+    label is `model-checked` with an unchecked citation and the lane is `free`; it never reaches `kit-verified` or `canonical`. Any failure is the written answer."""
+    t = r.trace
+    started = time.monotonic()
+    yield _stage("assemble", "start", "Writing a whole page for this question. A page written this way is checked less than the others.")
+
+    def degrade(rule: str, layer: str = "assemble", **detail: object) -> StreamEvent:
+        entry = failchecks.get(rule)
+        t.add("free", "refused", started, rule=rule, code=entry.code, **detail)
+        t.outcome = "text_only"
+        return _stage(layer, "degraded", entry.student_message)
+
+    if not r.deps.wording_check:
+        # A Free page is shown only after a second reader has read it, and no reader is configured (fake mode never sets one). Nothing has been spent yet.
+        yield degrade("FREE_UNCHECKED", why="the wording check is not turned on")
+        return
+    topic = str(decision.topic.value)
+    passage = prompts.passage_for(r.deps.citations, topic=topic)
+    # A page is worth nothing unless it can also be read, so BOTH calls must fit before the first is paid for: two calls left in the request's budget, and
+    # room under the caps for the page and for a reading of a typical-sized page (cost-auditor 2026-10-22).
+    stand_in = "<p>" + "x" * 6000 + "</p><script>" + "y" * 3000 + "</script>"
+    try:
+        free_req = prompts.free_request(r.q, route_text)
+        reading_req = prompts.free_wording_request(topic, stand_in, passage)
+    except prompts.RequestTooLarge as exc:
+        yield degrade("FREE_REPLY", note=str(exc)[:200])
+        return
+    if r.trace.llm_calls + 2 > MAX_LLM_CALLS or not r.deps.llm.would_fit([free_req, reading_req]):
+        yield degrade("BUDGET", why="the page and its reading would not both fit")
+        return
+    try:
+        result = await r.complete(free_req)
+    except (BudgetExceeded, SpendCapExceeded, ProviderUnavailable):
+        yield degrade("BUDGET")
+        return
+    page = free_module.parse_reply(result.text)
+    if page is None:
+        yield degrade("FREE_REPLY", why="no complete document in the reply")
+        return
+
+    early = postprocess.run(page.html, public_origin=r.deps.public_origin)  # no kit_version: the Free lane's own, narrower rules apply
+    if isinstance(early, postprocess.PostprocessReject):
+        yield degrade(early.rule, layer="verify", stage=early.stage)
+        return
+    too_big = wording.unread(page.html)
+    if too_big is not None:
+        # The reader would see only part of it, and a page not read whole must not earn the claim that its words and formulas were read.
+        yield degrade("FREE_REPLY", layer="verify", why=too_big)
+        return
+
+    verdict = await r.judge(lambda: prompts.free_wording_request(topic, page.html, passage))
+    if verdict is None:
+        yield degrade("FREE_UNCHECKED", layer="verify")
+        return
+    if not verdict.ok:
+        yield degrade("WORDING", layer="verify", issues=[i[:200] for i in verdict.issues])
+        return
+
+    yield _stage("verify", "start")
+    verify = r.deps.verify_fn or verify_environment
+    try:
+        env = await asyncio.to_thread(
+            verify,
+            slug=free_module.slug_for(canon),
+            title=page.title,
+            raw_html=page.html,
+            lane="free",
+            label="model-checked",
+            kit_version=r.version,
+            citations=[UNCHECKED_CITATION],
+            plan_summary=f"A page written whole by a model for a question the Kit could not express (topic {decision.topic.value}).",
+            public_origin=r.deps.public_origin,
+            kit_dist=r.deps.kit_dist,
+            interaction_seconds=r.deps.interaction_seconds,
+            plan_models=None,
+            evidence=r.deps.evidence,
+            wording_checked=True,
+        )
+    except VerificationFailed as failure:
+        entry = failchecks.get(failure.rule)
+        t.add("verify", "refused", started, stage=failure.stage, rule=failure.rule, code=entry.code, lane="free")
+        t.outcome = "text_only"
+        yield _stage("verify", "degraded", entry.student_message)
+        return
+    t.add("verify", "ok", started, lane="free", layers=list(env.checked.layers))
+    yield _stage("verify", "done")
+    delivered = False
+    async for event in _store_and_deliver(r, env, canon, "free"):
+        delivered = delivered or event.type == "environment"
+        yield event
+    if delivered:
+        t.add("free", "ok", started, env_id=env.env_id[:12])
+        _log_gap(r, decision, reason, "free", env.env_id)
 
 
 async def _fill_slot(r: _Run, name: str, purpose: str, scope: tuple[str, ...]) -> str | None:

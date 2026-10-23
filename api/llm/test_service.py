@@ -144,6 +144,17 @@ async def test_request_over_the_cap_is_refused_before_the_provider(tmp_path: Pat
     assert spy.calls == []
 
 
+def test_would_fit_is_true_only_when_the_cap_covers_the_worst_case_of_every_request_together(tmp_path: Path) -> None:
+    page = LLMRequest(prompt="x" * 30, purpose="free", tier="standard", max_tokens=6_000)  # about $0.06 reserved
+    reading = LLMRequest(prompt="x" * 30, purpose="wording_free", tier="standard", max_tokens=400)  # about $0.004
+    spy = FakeProvider(name="anthropic", models=ANTHROPIC_MODELS)
+    assert LLMService(spy, None, _ledger(tmp_path / "a", cap=None)).would_fit([page, reading])  # no cap: always
+    assert LLMService(spy, None, _ledger(tmp_path / "b", cap=0.10)).would_fit([page, reading])
+    assert not LLMService(spy, None, _ledger(tmp_path / "c", cap=0.062)).would_fit([page, reading])  # the page fits, the pair does not
+    assert LLMService(spy, None, _ledger(tmp_path / "c2", cap=0.062)).would_fit([page])
+    assert spy.calls == []  # asking never sends anything
+
+
 async def test_spend_accumulates_toward_the_cap(tmp_path: Path) -> None:
     # Each reply is 5000 characters (1250 output tokens), so each settled call really books about $0.0125.
     spy = FakeProvider(lambda _request: "y" * 5000, name="anthropic", models=ANTHROPIC_MODELS)

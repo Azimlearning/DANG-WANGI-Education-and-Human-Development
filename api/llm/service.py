@@ -37,6 +37,17 @@ class LLMService:
                 f"The run is projected to cost up to ${projected_usd:.2f} but only ${remaining:.2f} of this month's cap remains. Nothing was sent."
             )
 
+    def would_fit(self, requests: list[LLMRequest]) -> bool:
+        """True when the cap leaves room for the worst case of all of `requests` together (each at its estimated input plus a full max_tokens, as the ledger
+        will reserve it), priced for the primary provider. For a job that is worthless unless every call can be made: a page that is generated and then cannot
+        be read is money spent on nothing."""
+        remaining = self.remaining_usd()
+        if remaining is None:
+            return True
+        provider = self._providers[0]
+        total = sum(estimate_call_cost(provider.name, provider.model_for(r.tier), r) for r in requests)
+        return remaining >= total
+
     async def complete(self, request: LLMRequest) -> LLMResult:
         if not 1 <= request.max_tokens <= MAX_OUTPUT_TOKENS:
             raise BadRequest(f"max_tokens must be between 1 and {MAX_OUTPUT_TOKENS}.")

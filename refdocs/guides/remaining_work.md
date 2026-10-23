@@ -108,7 +108,7 @@ The order is by dependency (see the plan for the reasons). W0 is done.
 | Workstream | Items from this file |
 |---|---|
 | W0 Ground truth and decisions | F7, A9 (decided) |
-| W1 L4 wording check and the Free lane | A9; the L4 gap in the verifier |
+| W1 L4 wording check and the Free lane | A9; the L4 gap in the verifier. **Built on fakes 2026-10-23 (D-41); its measurement is W8** |
 | W2 Instant, free library hits | F1 |
 | W3 V3 UI port | F2; A2 can be done any time |
 | W4 Interaction Kit and benches | F3; B8 (new models for the benches) |

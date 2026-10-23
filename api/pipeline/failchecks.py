@@ -65,6 +65,14 @@ _ENTRIES = [
         "retry_fill",
         "Do not draw numbers with canvas, images, CSS content, fonts or shadow DOM.",
     ),
+    _e(
+        "free_lane_scan",
+        "L0-006",
+        "L0 scan",
+        "block",
+        "text_only",
+        "A Free page may not hide words or numbers from the reader: no CSS generated content, images, fonts or counters, and no code that detects the test.",
+    ),
     _e("comment", "PP-001", "post-process", "block", "assembler", "Close every comment; none are needed."),
     _e(
         "markup_declaration",
@@ -449,6 +457,35 @@ _ENTRIES = [
         "degrade",
         "free_lane",
         "The skeleton cannot take this plan; the part falls to the Free lane.",
+    ),
+    # L4 (D-41): a second model read the words. A model check, never a proof, so the repair is to ask the planner again with its named issues.
+    _e(
+        "WORDING",
+        "L4-001",
+        "L4 wording",
+        "block",
+        "retry_plan",
+        "A second reader found a false or misleading sentence. Rewrite exactly the sentences it names, in the textbook's own words.",
+        "The wording of this page could not be confirmed, so you are getting the written answer.",
+    ),
+    # The Free lane (D-41): a whole page written by a model for a question the Kit cannot express. Both entries end in the written answer.
+    _e(
+        "FREE_REPLY",
+        "FREE-001",
+        "free",
+        "degrade",
+        "text_only",
+        "Reply with one complete HTML document and nothing else.",
+        "A whole interactive page could not be made for this question, so you are getting the written answer.",
+    ),
+    _e(
+        "FREE_UNCHECKED",
+        "FREE-002",
+        "free",
+        "block",
+        "text_only",
+        "A Free page is shown only after a second reader has checked its words and formulas.",
+        "A page written whole by a model is shown only after a second check, and that check was not available, so you are getting the written answer.",
     ),
     _e(
         "BUDGET",

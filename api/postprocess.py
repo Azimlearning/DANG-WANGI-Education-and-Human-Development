@@ -222,6 +222,10 @@ def run(
         if isinstance(result, PostprocessReject):
             return result
         html = result
+    else:
+        hit = l0.free_lane_scan(html)  # no Kit: the Free lane's own, narrower rules (D-41)
+        if hit is not None:
+            return PostprocessReject("scan", hit.rule, hit.reason)
     html = ensure_charset(ensure_viewport(html))
     html = inject_csp(html, public_origin)
     if not csp_is_first(html, public_origin):

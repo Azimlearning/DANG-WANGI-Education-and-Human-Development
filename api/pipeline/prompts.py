@@ -14,10 +14,11 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from api.evidence.registry import CitationBook
 from api.kitmanifest import Manifest
 from api.llm.types import LLMRequest
 from api.models.misconceptions import _tokens
-from api.pipeline import failchecks
+from api.pipeline import failchecks, wording
 from api.pipeline.fill import SlotContract
 from api.pipeline.plan import Plan, parse
 from api.pipeline.plan_checks import PlanIssue, needed_components
@@ -204,6 +205,68 @@ def explain_request(question: str, route_summary: str, misconception: str = "(no
     system = core.stable + "\n" + stable
     _check(system, variable)
     return LLMRequest(prompt=variable or stable, purpose="explain", tier="standard", system=system, max_tokens=600)
+
+
+FREE_MAX_TOKENS = 6000
+"""Output cap for one whole Free-lane page. The v3 figure of about $0.19 per whole page was measured on a heavier tier; the ledger reserves this cap's cost
+before the call is sent."""
+
+
+def passage_for(book: CitationBook | None, *, ids: tuple[str, ...] | list[str] = (), topic: str | None = None) -> str:
+    """What the judge is told the textbook says: the pointer file's one-line `claim`s, which are OUR words. Never the quotation: that is textbook text, it
+    lives beside the local corpus only, and sending it to a paid API is not covered by A-8 (rule 13). `ids` first; otherwise every pointer for the topic."""
+    if book is None:
+        return "(none)"
+    chosen = [book.pointers[i] for i in ids if i in book.pointers]
+    if not chosen and topic:
+        chosen = [p for p in book.pointers.values() if topic in p.topics]
+    claims = sorted({p.claim for p in chosen})[:6]
+    return "\n".join(f"- {c}" for c in claims) if claims else "(none)"
+
+
+_FENCE_TAG = re.compile(r"<\s*/?\s*(?:words|script|notes)\b[^>]*>?", re.IGNORECASE)
+
+
+def fence_safe(text: str) -> str:
+    """The judge packs fence what they read in <words>, <script> and <notes>. Text that contains one of those tags could close the fence and write
+    instructions outside it, so the tags are removed from anything that goes inside."""
+    return _FENCE_TAG.sub("[tag removed]", text)
+
+
+def wording_request(plan: Plan, passage: str = "(none)") -> LLMRequest:
+    """L4 for a Compose Plan: the judge reads the Plan's prose (the page's Kit-owned sentences are these, verbatim) and the textbook claims. The pack's
+    stable part is the whole system prompt: the core pack's 'you write plans' role does not apply to a judge."""
+    pack = load("verifier_l4")
+    stable, variable = pack.render_parts(
+        plan_summary=fence_safe(wording.plan_summary(plan)),
+        texts=fence_safe(wording.numbered(wording.plan_texts(plan))),
+        passage=fence_safe(passage),
+    )
+    _check(stable, variable)
+    return LLMRequest(prompt=variable, purpose="wording", tier="light", system=stable, max_tokens=300)
+
+
+def free_request(question: str, route_summary: str) -> LLMRequest:
+    """The Free lane's whole-page generator. Standard tier: this page is checked less than any other, so it is not written by the cheapest model."""
+    pack = load("free")
+    stable, variable = pack.render_parts(question=question, route=route_summary)
+    _check(stable, variable)
+    return LLMRequest(prompt=variable, purpose="free", tier="standard", system=stable, max_tokens=FREE_MAX_TOKENS)
+
+
+def free_wording_request(topic: str, html: str, passage: str = "(none)") -> LLMRequest:
+    """L4 for a Free page: its words and its script (comments removed). For a page no code has checked, this read is the only content check there is.
+    The judge is told the ROUTED TOPIC, not the student's question: free text from the student is one more thing that could address the judge. The caller
+    refuses a page `wording.unread` says is too big, so what is read here is the whole page."""
+    pack = load("verifier_l4_free")
+    stable, variable = pack.render_parts(
+        topic=fence_safe(topic),
+        texts=fence_safe(wording.numbered(wording.page_texts(html))) or "(no text)",
+        script=fence_safe(wording.page_script(html)) or "(no script)",
+        passage=fence_safe(passage),
+    )
+    _check(stable, variable)
+    return LLMRequest(prompt=variable, purpose="wording_free", tier="standard", system=stable, max_tokens=400)
 
 
 def describe(request: LLMRequest) -> dict:

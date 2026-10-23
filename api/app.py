@@ -186,6 +186,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             interaction_seconds=settings.verify_interaction_seconds,
             evidence=evidence_for(settings),
             citations=citations_for(settings),
+            wording_check=settings.synapse_llm_mode == "live",  # a fake judge examines nothing and must never be claimed (D-41)
+            free_lane=settings.free_lane_enabled,
+            gap_log_path=settings.data_dir / "kit_gaps.jsonl",
         )
         async for event in run_pipeline(question, deps):
             yield event

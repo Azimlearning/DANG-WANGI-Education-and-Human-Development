@@ -49,9 +49,29 @@ def fill_responder(_request: LLMRequest) -> str:
     return 'Synapse.text(env, "Try moving each slider and watch what changes.");'
 
 
+FALSE_MARKER = "[[FALSE]]"
+"""A test hook, not a judgement: the fake wording judge refuses any text that carries this marker and passes everything else. It proves the plumbing
+(retry, refusal, the claimed layer). It says nothing about how well a real model reads science, and a run on fakes never claims the layer (D-41)."""
+FREE_PAGE = Path(__file__).resolve().parents[2] / "data" / "fixtures" / "envs" / "free-pressure.html"
+
+
+def wording_responder(request: LLMRequest) -> str:
+    if FALSE_MARKER in request.prompt:
+        return json.dumps({"ok": False, "issues": ["a planted false statement was marked in the text"]})
+    return json.dumps({"ok": True, "issues": []})
+
+
+def free_responder(_request: LLMRequest) -> str:
+    """A hand-written Free page that meets the harness contract (one slider, one readout, named and 44 px), whatever the question."""
+    return FREE_PAGE.read_text(encoding="utf-8") if FREE_PAGE.is_file() else ""
+
+
 def fake_responder(request: LLMRequest) -> str:
     return {
         "route": route_responder,
         "plan": plan_responder,
         "fill": fill_responder,
+        "wording": wording_responder,
+        "wording_free": wording_responder,
+        "free": free_responder,
     }.get(request.purpose, hashed_reply)(request)

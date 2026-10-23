@@ -29,7 +29,18 @@ LIMITS: dict[str, str] = {
 }
 
 
-def checked_summary(checked: dict, label: str) -> dict:
+def free_limits(read_by_a_model: bool) -> str:
+    """The `limits` line of a Free-lane Environment (D-41). It replaces the label's line, which describes checks a Free page never had. The sentence about
+    a second reader appears only when the stored record says one read the page."""
+    reader = " and a second model read its words and formulas" if read_by_a_model else ""
+    return (
+        "Written whole by a model and not built on the Kit, so none of its numbers or formulas were compared with an audited science model. "
+        f"Code checked that it runs and that its controls work{reader}, but only for a short, scripted stretch of time. No textbook source was checked "
+        "and a person has not reviewed it. Check it against your textbook."
+    )
+
+
+def checked_summary(checked: dict, label: str, lane: str = "compose") -> dict:
     """The wire `CheckedSummary` from the stored record. Raises KeyError or ValueError on an unusable record."""
     return {
         "layers": [str(x) for x in checked["layers"]],
@@ -41,7 +52,7 @@ def checked_summary(checked: dict, label: str) -> dict:
             {"id": str(m["id"]), "params": {str(k): float(v) for k, v in m["params"].items()}}
             for m in checked["models"]
         ],
-        "limits": LIMITS[label],
+        "limits": free_limits("wording" in checked["layers"]) if lane == "free" else LIMITS[label],
     }
 
 
@@ -91,7 +102,7 @@ def deliver(
         raise VerificationFailed("gate", failure.rule, failure.reason) from failure
 
     try:
-        checked = checked_summary(record.checked, record.label)
+        checked = checked_summary(record.checked, record.label, record.lane)
     except (KeyError, TypeError, ValueError) as exc:
         raise VerificationFailed("gate", "bad_record", f"the stored 'checked' record is unusable: {exc}") from exc
 

@@ -22,6 +22,7 @@ const LAYER_TEXT: Record<string, string> = {
   provenance: "the values it computes come from a science model, and the numbers in its sentences match its settings",
   grid: "controls were moved across their range, including the extremes",
   reference: "values were compared with an independent calculation",
+  wording: "its words were read by a second model for false or misleading statements (a model's reading, not a proof)",
 };
 
 export function checkedLines(checked: CheckedSummary): string[] {

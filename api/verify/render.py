@@ -7,7 +7,8 @@
 
 It also drives every control through its declared grid, both extremes and every min/mid/max combination (L2), reads the Kit's audit at
 each position, and hands the audits to api/verify/provenance.py: L1 (grounded, unaltered numbers) and L3 (each readout against an
-independent reference). It asserts: `synapse_ready` within 5 s; every declared control (`[data-synapse-control]`) changes at least one declared readout
+independent reference). It asserts: `synapse_ready` within 5 s (a Free page has no Kit and cannot send it, so for `kit_lane=False` the harness itself
+decides the page is ready once its document has loaded and painted twice); every declared control (`[data-synapse-control]`) changes at least one declared readout
 (`[data-synapse-readout]`) within 1 s; no uncaught exception, console error or blocked request during a scripted interaction;
 no horizontal overflow at 360 px; touch targets of at least 44 px. Anything else is a refusal that names the rule, and the control.
 
@@ -86,10 +87,14 @@ class RenderReport:
     grid_truncated: bool = False
     reference_cases: int = 0
     models: list[tuple[str, tuple[tuple[str, float], ...]]] = field(default_factory=list)
+    kit_lane: bool = True
+    """False for a Free page: it has no Kit, so the harness decides readiness and the refusal message says so."""
 
     def refusal(self, require_controls: bool = True) -> tuple[str, str] | None:
         """The first failed rule as (rule, reason), or None when the Environment passed."""
         if not self.ready:
+            if not self.kit_lane:
+                return ("ready", f"the page did not finish loading its own document within {READY_TIMEOUT_MS} ms")
             return ("ready", f"synapse_ready was not received within {READY_TIMEOUT_MS} ms")
         if self.navigations:
             return ("navigation", "the frame navigated away: " + self.navigations[0][:200])
@@ -166,7 +171,7 @@ def render_check(
     verify_mode: bool = True,
 ) -> RenderReport:
     """Run `html` in headless Chromium. `html` is the post-processed document (it carries our CSP)."""
-    report = RenderReport()
+    report = RenderReport(kit_lane=kit_lane)
     origin = public_origin.rstrip("/")
     harness_url = f"{origin}/__harness__"
 
@@ -196,7 +201,8 @@ def render_check(
             context = browser.new_context(viewport={"width": 480, "height": 800}, reduced_motion="reduce")
             context.route("**/*", handle)
             # Read once by the Kit at load: keep the page standing after a violation so every problem can be named.
-            if verify_mode:
+            if verify_mode and kit_lane:
+                # Only the Kit reads this flag. A Free page must not be able to tell it is being verified (D-41), so it never gets the flag.
                 context.add_init_script("window.__SYNAPSE_VERIFY__ = true;")
             page = context.new_page()
             page.on("pageerror", lambda e: report.page_errors.append(str(e)))
@@ -212,11 +218,16 @@ def render_check(
             page.on("console", lambda m: report.console_errors.append(m.text) if m.type == "error" else None)
             page.goto(harness_url)
 
-            try:
-                page.wait_for_function("window.__synapse.ready === true", timeout=READY_TIMEOUT_MS)
-                report.ready = True
-            except Exception:
-                report.ready = False
+            if kit_lane:
+                try:
+                    page.wait_for_function("window.__synapse.ready === true", timeout=READY_TIMEOUT_MS)
+                    report.ready = True
+                except Exception:
+                    report.ready = False
+            else:
+                # A Free page has no Kit, and the L0 scan forbids `postMessage`, so it cannot send `synapse_ready`. The student's browser does not wait
+                # for that message either. The harness itself decides: ready is the page's own document loaded and painted twice. The page cannot forge it.
+                report.ready = _wait_until_loaded(page)
 
             if report.ready:
                 try:
@@ -231,6 +242,25 @@ def render_check(
         finally:
             browser.close()
     return report
+
+
+def _wait_until_loaded(page) -> bool:  # noqa: ANN001
+    """True when the artifact frame holds its own `srcdoc` document, finished loading, and has painted twice (the Kit's own ready timing). False on timeout,
+    or when the frame left its srcdoc (a navigation), which `refusal()` then reports as not ready."""
+    deadline = time.monotonic() + READY_TIMEOUT_MS / 1000
+    while time.monotonic() < deadline:
+        handle = page.query_selector("#artifact")
+        frame = handle.content_frame() if handle else None
+        if frame is not None and frame.url == "about:srcdoc":
+            remaining_ms = max(1, int((deadline - time.monotonic()) * 1000))
+            try:
+                frame.wait_for_load_state("load", timeout=remaining_ms)
+                frame.evaluate("() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done(true))))")
+            except PlaywrightError:
+                return False
+            return frame.url == "about:srcdoc"
+        page.wait_for_timeout(50)
+    return False
 
 
 def _frame(page) -> Frame:
@@ -332,9 +362,12 @@ def _exercise(
         if at_load is not None:
             _add(report.problems_l23, prov.l3_problems(at_load)[0])
 
+    # A Kit action button (`data-synapse-action`) is exempt only in the Kit lane, where the audit proves the Kit made it. A Free page has no such proof, so
+    # that marker there is just an unchecked button.
+    exempt = " || e.hasAttribute('data-synapse-action')" if kit_lane else ""
     undeclared = frame.eval_on_selector_all(
         _INTERACTIVE,
-        """els => els.filter(e => !e.hasAttribute('data-synapse-control') && !e.hasAttribute('data-synapse-action')).map(e =>
+        f"""els => els.filter(e => !(e.hasAttribute('data-synapse-control'){exempt})).map(e =>
             '<' + e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '>')""",
     )
     report.undeclared_controls = list(undeclared)

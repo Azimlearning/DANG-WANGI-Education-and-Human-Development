@@ -55,11 +55,13 @@ def project(questions: list[dict]) -> Projection:
     from eval.cost import project as cost
 
     manifest = kitmanifest.load(cost.KIT, latest_version(cost.KIT))
-    plan_chars = {json.loads(p.read_text(encoding="utf-8"))["topic"]: len(p.read_text(encoding="utf-8")) for p in sorted(cost.PLANS.glob("*.json"))}
+    plan_text = {json.loads(p.read_text(encoding="utf-8"))["topic"]: p.read_text(encoding="utf-8") for p in sorted(cost.PLANS.glob("*.json"))}
+    plan_chars = {topic: len(text) for topic, text in plan_text.items()}
     typical = int(sum(plan_chars.values()) / max(1, len(plan_chars)))
+    fallback_text = next(iter(plan_text.values()))  # a topic with no golden Plan is sized by the first one; only its length and words are used
     per_question: dict[str, dict[str, float]] = {}
     for q in questions:
-        per = cost.per_question(manifest, q, plan_chars.get(q["expect_topic"], typical))
+        per = cost.per_question(manifest, q, plan_chars.get(q["expect_topic"], typical), plan_text.get(q["expect_topic"], fallback_text))
         per_question[q["id"]] = {
             "low": cost.scenario(per, "low"),
             "high": cost.scenario(per, "high"),

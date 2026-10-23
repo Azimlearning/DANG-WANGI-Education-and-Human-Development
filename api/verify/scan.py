@@ -141,6 +141,31 @@ KIT_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bcustomElements\b"), "custom elements"),
 ]
 
+# ── rules that apply to the Free lane only (D-41) ─────────────────────────────────────────────────────────────────────────
+# A Free page has no Kit, so nothing else stops it showing words or numbers that the second reader (L4) cannot see, or behaving one way under test and another
+# for the student. Words and numbers drawn by CSS or an image are neither text nodes nor script, so the reader never sees them. The harness's own names (which
+# the Kit reads) and the usual ways a page can tell a test browser are closed too. This narrows what a Free page can be; it does not make one safe: the browser
+# run covers only a time window, and a page could still wait it out (the Free limits line says so).
+FREE_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bcontent\s*:\s*[\"'`]", re.IGNORECASE), "CSS generated content"),
+    (re.compile(r"::?(?:before|after|marker)\b", re.IGNORECASE), "CSS pseudo-element"),
+    (re.compile(r"\bcounter-(?:reset|increment|set)\b|\bcounters?\s*\(", re.IGNORECASE), "CSS counters"),
+    (re.compile(r"<\s*img\b|<\s*(?:video|audio|source|track)\b|data\s*:\s*image|\burl\s*\(|\bimage-set\s*\(", re.IGNORECASE), "image or media"),
+    (re.compile(r"\bFontFace\b|@font-face", re.IGNORECASE), "custom font"),
+    (re.compile(r"__synapse", re.IGNORECASE), "the harness's own names"),
+    (re.compile(r"\bwebdriver\b|\buserAgent\b|\bHeadlessChrome\b|\bplaywright\b", re.IGNORECASE), "test-browser detection"),
+    (re.compile(r"data-synapse-action", re.IGNORECASE), "a Kit action marker"),
+]
+
+
+def free_lane_scan(html: str) -> ScanReject | None:
+    scannable = strip_csp_meta(html)
+    hits = [label for pattern, label in FREE_LANE_PATTERNS if pattern.search(scannable)]
+    if hits:
+        return ScanReject("free_lane_scan", "not allowed in a Free-lane page: " + ", ".join(hits))
+    return None
+
+
 _SCRIPT_TAG = re.compile(r"<script\b[^>]*>", re.IGNORECASE)
 _SRC = re.compile(r"\bsrc\s*=\s*[\"']([^\"']*)[\"']", re.IGNORECASE)
 

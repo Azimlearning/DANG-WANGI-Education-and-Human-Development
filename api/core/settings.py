@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     """Questions one client address may ask per minute (0 turns the limit off). Behind a proxy every client shares the proxy's address: set it at the proxy too."""
     max_concurrent_asks: int = 3
     """How many questions are worked on at once. Each can launch a browser to verify an Environment, so this bounds memory and CPU (0 turns it off)."""
+    free_lane_enabled: bool = False
+    """Let a question the Kit cannot express get a whole model-written page (the labelled Free lane, D-07, D-41). Off by default. It also needs the wording
+    check, which the API turns on only in live mode, so it does nothing in fake mode. Each Free page costs a paid generation and a paid second reading."""
     store_attestation_key: SecretStr | None = None
     """HMAC key that signs stored Environments (A-19). Keep it OUTSIDE the data directory. Unset: rows are unsigned and the gate trusts the store."""
     anthropic_api_key: SecretStr | None = None

@@ -23,6 +23,7 @@ from api.llm.models import ANTHROPIC_MODELS  # noqa: E402
 from api.llm.pricing import cost_usd, estimate_call_cost  # noqa: E402
 from api.pipeline import prompts  # noqa: E402
 from api.pipeline.fill import contract_for  # noqa: E402
+from api.pipeline.plan import parse as parse_plan  # noqa: E402
 from api.pipeline.run import MAX_LLM_CALLS  # noqa: E402
 from api.routing import fallback as route_fallback  # noqa: E402
 from api.routing.router import topic_names  # noqa: E402
@@ -31,6 +32,7 @@ from eval.golden.run import load as load_golden  # noqa: E402
 REPORT = REPO / "refdocs" / "evidence" / "2026-10-16-p3-cost-projection.md"
 KIT = REPO / "packages" / "kit" / "dist"
 PLANS = REPO / "data" / "plans"
+FREE_SAMPLE = REPO / "data" / "fixtures" / "envs" / "free-pressure.html"
 
 # ── assumptions (each is printed in the report) ──────────────────────────────────────────────────────────────────────────
 TOKEN_RATIO_LOW, TOKEN_RATIO_HIGH = 4, 3  # characters per token: the usual figure, and the ledger's conservative one
@@ -38,6 +40,9 @@ OUT_PLAN_SCALE = (0.8, 1.6)  # model plan output vs the golden plan's JSON lengt
 OUT_EXPLAIN = (150, 450)
 OUT_ROUTE = (40, 100)
 OUT_FILL = (60, 220)
+OUT_WORDING = (30, 120)  # the judge's JSON verdict: {"ok": true, "issues": []} up to a few short issues
+OUT_FREE = (2500, 6000)  # a whole Free page; 6,000 is the request's max_tokens (prompts.FREE_MAX_TOKENS), 2,500 a plausible short page
+OUT_FREE_WORDING = (30, 150)
 P_ROUTE_FALLBACK = (
     0.9  # measured: the pattern and complexity heads clear their gates for only about a third of questions
 )
@@ -58,7 +63,7 @@ def cost(tier: str, tin: int, tout: int) -> float:
     return cost_usd("anthropic", model, tin, tout)
 
 
-def per_question(manifest: kitmanifest.Manifest, question: dict, plan_json_chars: int) -> dict:
+def per_question(manifest: kitmanifest.Manifest, question: dict, plan_json_chars: int, golden_plan_text: str) -> dict:
     q = question["question"]
     route_summary = f"topic={question['expect_topic']}; domain=physics; pattern=simulation; complexity=2"
     plan_req = prompts.plan_request(q, route_summary, "virtual_experiment", manifest, topic=question["expect_topic"])  # the real pipeline passes the topic
@@ -75,8 +80,13 @@ def per_question(manifest: kitmanifest.Manifest, question: dict, plan_json_chars
         },
         names,
     )
-    tiers = {"plan": "standard", "explain": "standard", "fill": "light", "route": "light"}
-    reqs = {"plan": plan_req, "explain": explain_req, "fill": fill_req, "route": route_req}
+    # The new calls (D-41). The judge reads the golden Plan's words; the Free calls use the hand-written sample page as a stand-in for a model's page (a real
+    # one is longer, which is why its output is an assumption and not read from here).
+    wording_req = prompts.wording_request(parse_plan(golden_plan_text))
+    free_req = prompts.free_request(q, route_summary)
+    free_wording_req = prompts.free_wording_request(q, FREE_SAMPLE.read_text(encoding="utf-8"))
+    tiers = {"plan": "standard", "explain": "standard", "fill": "light", "route": "light", "wording": "light", "free": "standard", "free_wording": "standard"}
+    reqs = {"plan": plan_req, "explain": explain_req, "fill": fill_req, "route": route_req, "wording": wording_req, "free": free_req, "free_wording": free_wording_req}
     out: dict = {}
     for name, req in reqs.items():
         sys_chars = len(req.system or "")
@@ -91,9 +101,26 @@ def per_question(manifest: kitmanifest.Manifest, question: dict, plan_json_chars
 
 
 def worst_case_reserve(per: dict) -> float:
-    """The ledger's own worst case for one request: the 6-call path route, explain, plan, plan retry, fill, fill retry."""
-    r = {k: per[k]["reserve"] for k in ("route", "explain", "plan", "fill")}
-    return r["route"] + r["explain"] + 2 * r["plan"] + 2 * r["fill"]
+    """The ledger's own worst case for one Compose request with the wording check on: the 8-call path route, explain, plan, wording, plan retry, wording,
+    fill, fill retry."""
+    r = {k: per[k]["reserve"] for k in ("route", "explain", "plan", "fill", "wording")}
+    return r["route"] + r["explain"] + 2 * r["plan"] + 2 * r["wording"] + 2 * r["fill"]
+
+
+def worst_case_free_reserve(per: dict) -> float:
+    """The worst case with the Free lane on: route, explain, two plans each read by the judge, then one Free page and its reading (also 8 calls)."""
+    r = {k: per[k]["reserve"] for k in ("route", "explain", "plan", "wording", "free", "free_wording")}
+    return r["route"] + r["explain"] + 2 * r["plan"] + 2 * r["wording"] + r["free"] + r["free_wording"]
+
+
+def free_extra(per: dict, which: str) -> float:
+    """What a Free page adds when it fires, on top of the failed Compose attempts: the page and its reading."""
+    low = which == "low"
+    ratio = TOKEN_RATIO_LOW if low else TOKEN_RATIO_HIGH
+    i = 0 if low else 1
+    return cost("standard", tokens(per["free"]["chars_in"], ratio), OUT_FREE[i]) + cost(
+        "standard", tokens(per["free_wording"]["chars_in"], ratio), OUT_FREE_WORDING[i]
+    )
 
 
 def scenario(per: dict, which: str) -> float:
@@ -109,6 +136,7 @@ def scenario(per: dict, which: str) -> float:
     total += part("plan", "standard", plan_out, 1 + P_PLAN_RETRY[0 if low else 1])
     total += part("route", "light", OUT_ROUTE[0 if low else 1], P_ROUTE_FALLBACK)
     total += part("fill", "light", OUT_FILL[0 if low else 1], P_FILL[0 if low else 1])
+    total += part("wording", "light", OUT_WORDING[0 if low else 1], 1 + P_PLAN_RETRY[0 if low else 1])  # the judge reads every plan that passes the checks
     return total
 
 
@@ -127,13 +155,20 @@ def build() -> str:
     manifest = kitmanifest.load(KIT, version)
     golden = load_golden()
     plan_chars = {json.loads(p.read_text())["topic"]: len(p.read_text()) for p in sorted(PLANS.glob("*.json"))}
+    plan_text = {json.loads(p.read_text())["topic"]: p.read_text() for p in sorted(PLANS.glob("*.json"))}
     rows = []
-    worst = 0.0
+    worst = worst_free = 0.0
+    free_lows: list[float] = []
+    free_highs: list[float] = []
     for q in golden:
-        per = per_question(manifest, q, plan_chars[q["expect_topic"]])
+        per = per_question(manifest, q, plan_chars[q["expect_topic"]], plan_text[q["expect_topic"]])
+        free_lows.append(free_extra(per, "low"))
+        free_highs.append(free_extra(per, "high"))
+        worst_free = max(worst_free, worst_case_free_reserve(per))
         rows.append((q["id"], scenario(per, "low"), scenario(per, "high"), pessimistic(per)))
         worst = max(worst, worst_case_reserve(per))
     n = len(rows)
+    free_low, free_high = sum(free_lows) / n, sum(free_highs) / n
     mean_low, mean_high, mean_pess = (sum(r[k] for r in rows) / n for k in (1, 2, 3))
     smoke_low = mean_low * SMOKE_QUESTIONS
     smoke_pess = mean_pess * SMOKE_QUESTIONS
@@ -152,9 +187,11 @@ def build() -> str:
 | Low | **{mean_low:.4f}** | no plan retry, no slot fill, 4 characters per token, short outputs (no caching in any case) |
 | High | **{mean_high:.4f}** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
 | Pessimistic | **{mean_pess:.4f}** | the high case with every plan retried once (retry rate {int(P_PLAN_RETRY_PESSIMISTIC * 100)} percent) |
-| Hard bound | **{worst:.4f}** | what the ledger itself would reserve for the worst allowed path of {MAX_LLM_CALLS} calls (route, explain, plan, plan retry, fill, fill retry), every reply running to its max_tokens |
+| Hard bound | **{worst:.4f}** | what the ledger itself would reserve for the worst allowed Compose path of {MAX_LLM_CALLS} calls (route, explain, plan, wording check, plan retry, wording check, fill, fill retry), every reply running to its max_tokens |
+| Free lane, extra when it fires | **{free_low:.4f}** to **{free_high:.4f}** | the Free page and its reading ({OUT_FREE[0]} to {OUT_FREE[1]} output tokens for the page), on top of the failed Compose attempts. Off by default; unmeasured |
+| Hard bound with the Free lane on | **{worst_free:.4f}** | route, explain, two plans each read by the judge, then one Free page and its reading ({MAX_LLM_CALLS} calls), every reply running to its max_tokens |
 
-Mean over the {n} golden questions (the hard bound is the largest), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
+Mean over the {n} golden questions (each hard bound is the largest over them; the wording check is counted because live mode turns it on), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amounts to confirm)
 
@@ -184,8 +221,9 @@ Mean over the {n} golden questions (the hard bound is the largest), from the rea
 4. The router fallback is called for {int(P_ROUTE_FALLBACK * 100)} percent of questions (the pattern and complexity heads clear their gates for about a third of questions, and a local `none` topic always goes to the fallback).
 5. Plan retry rate {int(P_PLAN_RETRY[0] * 100)} to {int(P_PLAN_RETRY[1] * 100)} percent in the high case and {int(P_PLAN_RETRY_PESSIMISTIC * 100)} percent in the pessimistic one (Arcana v2 was accepted on 2 of 8 first attempts). Nothing here can measure it: fakes always return a valid plan.
 6. Prompt caching is off, so every input token is priced at the full rate in every case. Turning it on needs the ledger to price cache writes and reads, and a measured saving first.
-7. The L4 model check, the repair prompt beyond one retry and the Free lane are not built and not included.
+7. The repair prompt beyond one retry is not built. The wording check is included in every case (live mode turns it on) at the light tier. The Free lane is NOT in Low, High or Pessimistic: it fires only when the Kit cannot take a question, how often is unknown, and its page length ({OUT_FREE[0]} to {OUT_FREE[1]} tokens) is a guess. Its cost is shown on its own rows.
 8. Verification costs no model call.
+9. The Free sample page used for input sizes is a short hand-written fixture; a model's page is longer, so the Free input estimate (the reading of the page) is low. The output bound is exact: the request's max_tokens.
 
 ## Per-question range
 

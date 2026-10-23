@@ -287,6 +287,7 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-38 | The web UI takes Synapse V3's design language; four V3 behaviours are not ported (code streaming, draft view, post-hash fitting, raw saved HTML) | Owner: UI builds on V3; hard constraints 1 and 3 |
 | D-39 | Scope is the PRD end state plus every feature the demo video shows; Present mode is a presentation of Stage, not a teacher dashboard | Owner, 2026-10-22 |
 | D-40 | Paid runs are raised one at a time; the caps stay hard stops and the owner edits `.env` | Owner, 2026-10-22 |
+| D-41 | L4 reads the Plan's words in the pipeline and is claimed only when a real judge passed them; the Free lane is a labelled last resort that needs that judge; a Kit gap log; L4 has its own pinned case set apart from L6 | Owner asked for both together; `page-false-prose`; hard constraints 1, 3 and 9 |
 
 ---
 
