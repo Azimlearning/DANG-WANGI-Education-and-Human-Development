@@ -35,5 +35,6 @@ If reality diverges from the doc mid-build, **edit the doc** and note it in the 
 | [2026-10-16-p2-p5-p6-evidence-library-pedagogy.md](2026-10-16-p2-p5-p6-evidence-library-pedagogy.md) | [../plans/2026-10-16-p2-p5-p6-evidence-library-pedagogy.md](../plans/2026-10-16-p2-p5-p6-evidence-library-pedagogy.md) | Done (cloud scope) |
 | [2026-10-16-p4-kit-expansion.md](2026-10-16-p4-kit-expansion.md) | [../plans/2026-10-16-p4-kit-expansion.md](../plans/2026-10-16-p4-kit-expansion.md) | Done (cloud scope) |
 | [2026-10-18-p2-real-corpus-and-citations.md](2026-10-18-p2-real-corpus-and-citations.md) | [../plans/2026-10-18-p2-real-corpus-and-citations.md](../plans/2026-10-18-p2-real-corpus-and-citations.md) | In progress (tasks 4, 9, 10 not started) |
+| [2026-10-23-w2-instant-library.md](2026-10-23-w2-instant-library.md) | [../plans/2026-10-23-w2-instant-library.md](../plans/2026-10-23-w2-instant-library.md) | Done (2026-10-23) |
 | [2026-10-22-w1-l4-and-free-lane.md](2026-10-22-w1-l4-and-free-lane.md) | [../plans/2026-10-22-w1-l4-and-free-lane.md](../plans/2026-10-22-w1-l4-and-free-lane.md) | Done on fakes (2026-10-23) |
 | [2026-10-22-completion-roadmap.md](2026-10-22-completion-roadmap.md) | [../plans/2026-10-22-completion-roadmap.md](../plans/2026-10-22-completion-roadmap.md) | In progress (W0 done) |

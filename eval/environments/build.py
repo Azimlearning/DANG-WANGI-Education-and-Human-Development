@@ -26,12 +26,9 @@ from api.core.settings import Settings  # noqa: E402
 from api.evidence.corpus import Corpus  # noqa: E402
 from api.evidence.registry import CitationBook  # noqa: E402
 from api.kit import latest_version  # noqa: E402
+from api.pipeline import library  # noqa: E402
 from api.pipeline import plan as plan_module  # noqa: E402
-from api.pipeline.assemble import assemble  # noqa: E402
-from api.pipeline.grounding import grounding  # noqa: E402
-from api.pipeline.plan_checks import check  # noqa: E402
 from api.verify.gate import deliver  # noqa: E402
-from api.verify.mint import verify_environment  # noqa: E402
 from api.verify.store import SqliteEnvironmentStore  # noqa: E402
 
 PLANS = REPO / "data" / "plans"
@@ -58,28 +55,21 @@ def build(corpus_path: Path | None = None) -> list[dict]:
         store = SqliteEnvironmentStore(Path(tmp) / "envs.db")
         for path in sorted(PLANS.glob("*.json")):
             plan = plan_module.parse(path.read_text(encoding="utf-8"))
-            issues = check(plan, manifest)
-            if issues:
-                raise SystemExit(f"{path.name}: plan checks refused it: {[i.code for i in issues]}")
-            page = assemble(plan, manifest)
-            citations, label, why = grounding(book, evidence, plan)
+            try:
+                env, why = library.build_environment(
+                    plan,
+                    manifest,
+                    version=version,
+                    book=book,
+                    evidence=evidence,
+                    public_origin=ORIGIN,
+                    kit_dist=KIT,
+                    interaction_seconds=1.0,
+                )
+            except library.LibraryBuildError as exc:
+                raise SystemExit(str(exc)) from exc
             if plan.citation_ids and book is not None and not why["grounded"]:
                 print(f"  {plan.id}: NOT grounded, downgraded: {why.get('problems') or why['why']}")
-            env = verify_environment(
-                slug=plan.id,
-                title=plan.title,
-                raw_html=page.html,
-                lane="instantiate",
-                label=label,  # type: ignore[arg-type]  # "kit-verified" or "model-checked", from `grounding`
-                kit_version=version,
-                citations=citations,
-                plan_summary=plan.goal,
-                public_origin=ORIGIN,
-                kit_dist=KIT,
-                interaction_seconds=1.0,
-                plan_models=plan.model_summaries(),
-                evidence=evidence,
-            )
             store.put_verified(env)
             block = deliver(store, env.env_id, public_origin=ORIGIN, kit_dist=KIT, evidence=evidence)
             subject, form = plan.topic.split("_")[0], plan.topic.split("_")[1].removeprefix("form")

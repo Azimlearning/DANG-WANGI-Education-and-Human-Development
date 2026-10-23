@@ -35,7 +35,7 @@ from api.kit import latest_version
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
 from api.models.misconceptions import default_matcher
-from api.pipeline import failchecks, fill, gaplog, prompts, wording
+from api.pipeline import failchecks, fill, gaplog, library, prompts, wording
 from api.pipeline import free as free_module
 from api.pipeline import plan as plan_module
 from api.pipeline.assemble import Assembled, AssemblyGap, assemble, scope_names
@@ -60,7 +60,7 @@ from api.schema.generated import (
 from api.sse import split_text
 from api.verify.gate import deliver
 from api.verify.mint import Evidence, VerificationFailed, VerifiedEnvironment, verify_environment
-from api.verify.store import SqliteEnvironmentStore
+from api.verify.store import ConflictingRecord, SqliteEnvironmentStore
 
 log = logging.getLogger(__name__)
 
@@ -145,6 +145,8 @@ class _Run:
         self.deps = deps
         self.request_id = uuid.uuid4().hex
         self.trace = Trace(self.request_id, hashlib.sha256(self.q.encode()).hexdigest()[:16])
+        self.answer = ""
+        """The written answer that streamed for this request; kept with the question so a repeat needs no model call for the words either."""
         self.version = latest_version(deps.kit_dist)
         self.manifest = kitmanifest.load(deps.kit_dist, self.version)
 
@@ -276,6 +278,17 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
     t.add("intake", "ok", started)
     yield _stage("intake", "done")
 
+    # 0b the library, before anything is paid (D-42). A question asked before, or one the LOCAL router recognises with enough confidence, is answered with a
+    # stored Environment and the words stored with it: no routing call, no explanation call, no planning, no verification run. Every hit goes through the
+    # gate again; a refusal falls through to generating a new one.
+    canon = canonical_question(r.q)
+    served = False
+    async for event in _from_library(r, canon):
+        served = served or event.type == "environment"
+        yield event
+    if served:
+        return
+
     # 1 route
     started = time.monotonic()
     yield _stage("route", "start")
@@ -299,34 +312,14 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
         answer = await r.call(prompts.explain_request(r.q, route_text, misconception), "explain")
     except BudgetExceeded:
         answer = failchecks.get("BUDGET").student_message
+        explained = False
+    else:
+        explained = True
     for chunk in split_text(answer):
         yield TextDeltaEvent(type="text_delta", text=chunk)
+    r.answer = answer if explained else ""  # a placeholder about the budget is not an answer, and is not kept with the question
     t.add("explain", "ok", started)
     yield _stage("explain", "done")
-
-    # 2b library hit: the same canonical question gets the same verified Environment back with no planning, no verification run and no further model
-    # call. The gate re-checks it exactly as for a fresh one (a stale, tampered or withdrawn Environment is not served), and a refusal falls through to
-    # generating a new one.
-    canon = canonical_question(r.q)
-    cached_id = r.deps.store.lookup_question(canon)
-    if cached_id is not None:
-        started = time.monotonic()
-        try:
-            block = deliver(
-                r.deps.store,
-                cached_id,
-                public_origin=r.deps.public_origin,
-                kit_dist=r.deps.kit_dist,
-                evidence=r.deps.evidence,
-            )
-        except VerificationFailed as failure:
-            t.add("library", "refused", started, rule=failure.rule)
-        else:
-            t.add("library", "hit", started, env_id=cached_id[:12])
-            t.outcome = f"library:{block.lane}"
-            yield _stage("library", "done", "Found in the library.")
-            yield EnvironmentEvent(type="environment", block=block)
-            return
 
     pattern = SUPPORTED_PATTERNS.get(str(decision.pattern.value), "simulation")
     if decision.topic.value == "none":
@@ -521,7 +514,13 @@ async def _store_and_deliver(r: _Run, env: VerifiedEnvironment, canon: str, lane
     """10 deliver: store the minted Environment, then let the gate re-derive the block from the stored record. Shared by Compose and the Free lane."""
     t = r.trace
     started = time.monotonic()
-    r.deps.store.put_verified(env)
+    try:
+        r.deps.store.put_verified(env)
+    except ConflictingRecord:
+        # The page just made is byte for byte one that is already stored under another claim (a library Environment, for example, when a planner reproduces
+        # a hand-written Plan). A stored Environment is never replaced, and the stored claim stands: it is delivered through the gate below, which refuses it
+        # if it was withdrawn, is stale or no longer proves.
+        t.add("deliver", "existing", started, env_id=env.env_id[:12], stored_lane=r.deps.store.get_record(env.env_id).lane)  # type: ignore[union-attr]
     try:
         block = deliver(
             r.deps.store,
@@ -536,8 +535,64 @@ async def _store_and_deliver(r: _Run, env: VerifiedEnvironment, canon: str, lane
         yield _stage("deliver", "degraded", failchecks.get(failure.rule).student_message)
         return
     t.add("deliver", "ok", started, env_id=env.env_id[:12])
-    r.deps.store.remember_question(canon, env.env_id)
-    t.outcome = lane
+    r.deps.store.remember_question(canon, env.env_id, r.answer or None)
+    t.outcome = block.lane
+    yield EnvironmentEvent(type="environment", block=block)
+
+
+def _gate(r: _Run, env_id: str, kind: str, started: float):  # noqa: ANN202
+    """The block for a stored Environment through the delivery gate, or None (with a trace record) when the gate refuses it."""
+    try:
+        return deliver(
+            r.deps.store, env_id, public_origin=r.deps.public_origin, kit_dist=r.deps.kit_dist, evidence=r.deps.evidence
+        )
+    except VerificationFailed as failure:
+        r.trace.add("library", "refused", started, kind=kind, rule=failure.rule)
+        return None
+
+
+async def _from_library(r: _Run, canon: str) -> AsyncIterator[StreamEvent]:
+    """Serve a stored Environment with NO model call, or yield nothing (D-42).
+
+    (a) The same canonical question asked before: its Environment and the written answer kept with it.
+    (b) A topic the LOCAL router recognises with at least `INSTANTIATE_MIN_CONFIDENCE`, when the seeded library has an Environment for it: the nearest one to
+    the question and the hand-written Plan's own note as the words. The router is asked without the model fallback, so a low-confidence or unknown topic
+    simply falls through to the normal pipeline. Either way the gate re-checks the stored row, so a stale, tampered or withdrawn Environment is not served."""
+    t = r.trace
+    started = time.monotonic()
+    entry = r.deps.store.lookup_question_entry(canon)
+    if entry is not None:
+        block = _gate(r, entry[0], "question", started)
+        if block is not None:
+            text = entry[1] or block.planSummary
+            t.add("library", "hit", started, kind="question", env_id=entry[0][:12], words="kept" if entry[1] else "plan summary")
+            async for event in _serve(r, block, text):
+                yield event
+            return
+    if not r.deps.use_router:
+        return
+    decision = await route(r.q, llm=None)
+    topic = decision.topic
+    if topic.source != "local" or topic.value == "none" or topic.confidence < library.INSTANTIATE_MIN_CONFIDENCE:
+        return
+    entries = r.deps.store.topic_entries(str(topic.value))
+    if not entries:
+        return
+    chosen = library.best_entry(r.q, entries)
+    block = _gate(r, chosen["env_id"], "topic", started)
+    if block is None:
+        return
+    t.add("route", "ok", started, topic={"value": topic.value, "source": topic.source}, library="topic")
+    t.add("library", "hit", started, kind="topic", env_id=chosen["env_id"][:12], confidence=topic.confidence)
+    async for event in _serve(r, block, chosen["note"]):
+        yield event
+
+
+async def _serve(r: _Run, block, text: str) -> AsyncIterator[StreamEvent]:  # noqa: ANN001
+    for chunk in split_text(text):
+        yield TextDeltaEvent(type="text_delta", text=chunk)
+    r.trace.outcome = f"library:{block.lane}"
+    yield _stage("library", "done", "Found in the library.")
     yield EnvironmentEvent(type="environment", block=block)
 
 

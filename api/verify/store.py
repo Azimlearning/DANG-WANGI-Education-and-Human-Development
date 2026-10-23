@@ -71,6 +71,11 @@ def attestation_for(key: bytes, record: StoredEnvironment) -> str:
     return hmac.new(key, body.encode("ascii"), hashlib.sha256).hexdigest()
 
 
+class ConflictingRecord(ValueError):
+    """The same HTML is already stored under a different claim (label, lane, citations or Kit). A stored Environment is never replaced; the caller decides what
+    to do (the pipeline delivers the stored one through the gate)."""
+
+
 class SqliteEnvironmentStore:
     def __init__(self, path: Path, attestation_key: bytes | None = None):
         self._path = path
@@ -95,6 +100,14 @@ class SqliteEnvironmentStore:
             )
             db.execute(
                 "CREATE TABLE IF NOT EXISTS questions (canon TEXT PRIMARY KEY, env_id TEXT NOT NULL, created_at TEXT NOT NULL)"
+            )
+            if "answer" not in {r[1] for r in db.execute("PRAGMA table_info(questions)")}:  # older stores: the written answer was not kept
+                db.execute("ALTER TABLE questions ADD COLUMN answer TEXT")
+            # The seeded library (D-42): which verified Environment serves which KSSM topic, and the Plan's own words to show with it. Decisions ABOUT stored
+            # rows, like the tables above; the Environment itself stays in `environments` and is re-checked by the gate on every delivery.
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS library_topics (topic TEXT NOT NULL, env_id TEXT NOT NULL, plan_id TEXT NOT NULL, title TEXT NOT NULL, "
+                "goal TEXT NOT NULL, note TEXT NOT NULL, indexed_at TEXT NOT NULL, PRIMARY KEY (topic, env_id))"
             )
 
     def _connect(self) -> sqlite3.Connection:
@@ -182,7 +195,7 @@ class SqliteEnvironmentStore:
             stored.plan_summary,
         )
         if new != old:
-            raise ValueError(
+            raise ConflictingRecord(
                 "this HTML is already stored with different metadata (label, lane, citations or Kit); it is never replaced"
             )
         return stored
@@ -304,19 +317,46 @@ class SqliteEnvironmentStore:
         with closing(self._connect()) as db:
             return int(db.execute("SELECT COUNT(*) FROM flags WHERE env_id = ?", (env_id,)).fetchone()[0])
 
-    def remember_question(self, canon: str, env_id: str) -> None:
-        """The question cache: the same canonical question gets the same Environment next time, with no model call. Replaces an older entry."""
+    def remember_question(self, canon: str, env_id: str, answer: str | None = None) -> None:
+        """The question cache: the same canonical question gets the same Environment next time, with no model call. `answer` is the written answer that
+        streamed with it, kept so a repeat needs no model call for the words either. Replaces an older entry."""
         with closing(self._connect()) as db, db:
             db.execute(
-                "INSERT INTO questions (canon, env_id, created_at) VALUES (?, ?, ?) "
-                "ON CONFLICT(canon) DO UPDATE SET env_id = excluded.env_id, created_at = excluded.created_at",
-                (canon, env_id, datetime.now(UTC).isoformat()),
+                "INSERT INTO questions (canon, env_id, created_at, answer) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(canon) DO UPDATE SET env_id = excluded.env_id, created_at = excluded.created_at, answer = excluded.answer",
+                (canon, env_id, datetime.now(UTC).isoformat(), answer),
             )
 
     def lookup_question(self, canon: str) -> str | None:
+        entry = self.lookup_question_entry(canon)
+        return None if entry is None else entry[0]
+
+    def lookup_question_entry(self, canon: str) -> tuple[str, str | None] | None:
+        """(env_id, the written answer kept with it or None) for a question asked before."""
         with closing(self._connect()) as db:
-            row = db.execute("SELECT env_id FROM questions WHERE canon = ?", (canon,)).fetchone()
-        return None if row is None else str(row[0])
+            row = db.execute("SELECT env_id, answer FROM questions WHERE canon = ?", (canon,)).fetchone()
+        return None if row is None else (str(row[0]), None if row[1] is None else str(row[1]))
+
+    def index_topic(self, topic: str, env_id: str, *, plan_id: str, title: str, goal: str, note: str) -> None:
+        """Say that the verified Environment `env_id` serves `topic` (the seeded library, D-42). `note` is the hand-written Plan's own explanation, shown
+        with it when it is served with no model call. Raises KeyError for an Environment that is not stored as verified."""
+        if self.get_record(env_id) is None:
+            raise KeyError(f"no verified Environment '{env_id}'")
+        with closing(self._connect()) as db, db:
+            db.execute(
+                "INSERT INTO library_topics (topic, env_id, plan_id, title, goal, note, indexed_at) VALUES (?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(topic, env_id) DO UPDATE SET plan_id = excluded.plan_id, title = excluded.title, goal = excluded.goal, "
+                "note = excluded.note, indexed_at = excluded.indexed_at",
+                (topic, env_id, plan_id, title, goal, note, datetime.now(UTC).isoformat()),
+            )
+
+    def topic_entries(self, topic: str) -> list[dict]:
+        """Every indexed Environment for `topic`, in a stable order. Whether one may be delivered is the gate's decision, not this list's."""
+        with closing(self._connect()) as db:
+            rows = db.execute(
+                "SELECT env_id, plan_id, title, goal, note FROM library_topics WHERE topic = ? ORDER BY plan_id, env_id", (topic,)
+            ).fetchall()
+        return [{"env_id": r[0], "plan_id": r[1], "title": r[2], "goal": r[3], "note": r[4]} for r in rows]
 
     def library(self, current_kit_sha: dict[str, str | None]) -> list[dict]:
         """One card per verified Environment, newest first. `current_kit_sha` maps a Kit version to the sha256 of its CURRENT build (None when not built);
