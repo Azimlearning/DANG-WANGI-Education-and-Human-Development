@@ -137,7 +137,9 @@ def load_cases() -> list[Case]:
 
 
 def file_sha256() -> str:
-    return hashlib.sha256(CASES_PATH.read_bytes()).hexdigest()
+    """Hash of the case file with line endings normalised to LF: git may check the file out with CRLF (core.autocrlf on Windows), and the pinned hash must
+    not depend on that."""
+    return hashlib.sha256(CASES_PATH.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 if __name__ == "__main__":  # regenerate the committed set (a declared amendment: also update the pinned hash and say why in the changelog)
