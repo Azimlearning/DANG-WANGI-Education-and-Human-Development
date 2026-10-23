@@ -4,10 +4,11 @@
 // verified (hard constraint 1). The sandbox attribute comes from the pinned constant and nothing else; the document carries its own
 // CSP (injected server-side). A SECOND load of the frame means it navigated away from its srcdoc, so it is torn down at once.
 import type { EnvironmentBlock } from "@synapse/schema";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { checkBlockHash } from "../lib/hash";
 import { load, record, save } from "../lib/progress";
 import { parseBridgeMessage, SANDBOX } from "../lib/sandbox";
+import { currentTheme, THEME_EVENT, themeMessage } from "../lib/theme";
 
 type Phase = { kind: "checking" } | { kind: "ok" } | { kind: "refused"; reason: string };
 
@@ -24,6 +25,17 @@ export function EnvironmentFrame({
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const loads = useRef(0);
+
+  /** Tell the frame which theme the page is in. A sandboxed opaque-origin frame cannot read the host's attribute, so the host says it; the Kit accepts exactly
+   *  this message from its parent. It carries no data but the word light or dark. */
+  const sendTheme = useCallback(() => {
+    if (loads.current !== 1) return; // only the frame's own first document; one that left it (a navigation) is being torn down and is told nothing
+    iframeRef.current?.contentWindow?.postMessage(themeMessage(currentTheme()), "*");
+  }, []);
+  useEffect(() => {
+    window.addEventListener(THEME_EVENT, sendTheme);
+    return () => window.removeEventListener(THEME_EVENT, sendTheme);
+  }, [sendTheme]);
 
   useEffect(() => {
     let live = true;
@@ -65,14 +77,14 @@ export function EnvironmentFrame({
 
   if (phase.kind === "checking") {
     return (
-      <p role="status" className="p-4 text-sm" style={{ color: "var(--muted)" }}>
+      <p role="status" className="p-4 text-sm text-ink-dim">
         Checking the Environment&apos;s hash…
       </p>
     );
   }
   if (phase.kind === "refused") {
     return (
-      <p role="alert" className="rounded-xl p-4 text-sm" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+      <p role="alert" className="rounded-card border-2 border-l-[5px] border-line border-l-warn bg-warn-soft p-4 text-sm text-warn">
         {phase.reason}
       </p>
     );
@@ -85,7 +97,7 @@ export function EnvironmentFrame({
         sandbox={SANDBOX}
         srcDoc={block.html}
         referrerPolicy="no-referrer"
-        style={{ width: "100%", height, border: 0, borderRadius: 12, background: "var(--card)" }}
+        style={{ width: "100%", height, border: 0, borderRadius: 18, background: "var(--card)" }}
         onLoad={() => {
           loads.current += 1;
           if (loads.current > 1) {
@@ -94,10 +106,11 @@ export function EnvironmentFrame({
             setPhase({ kind: "refused", reason });
             onRefused?.(reason);
           }
+          sendTheme();
         }}
       />
       {runtimeError ? (
-        <p role="alert" className="mt-2 text-sm" style={{ color: "var(--warn-fg)" }}>
+        <p role="alert" className="mt-2 text-sm text-warn">
           This Environment reported an error: {runtimeError}
         </p>
       ) : null}

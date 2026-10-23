@@ -576,6 +576,26 @@ MUTATIONS: list[Mutation] = [
         edit=sub("</body>", '<ol start="42"><li>m is the extension at full load</li></ol>\n</body>'),
     ),
     Mutation(
+        "g-syn-style-counter",
+        "provenance",
+        "a page makes its own stylesheet with the Kit's id to number a list by CSS counter",
+        SPRING,
+        "refuse",
+        edit=lambda html: sub("</body>", '<ol><li>m is the extension at full load</li></ol>\n</body>')(
+            sub("</head>", '<style id="syn-style">ol{counter-reset:list-item 41}</style>\n</head>')(html)
+        ),
+        note="added after the W3 review: the audit used to skip the CSS check for any style with the id syn-style",
+    ),
+    Mutation(
+        "g-counter-style-at-rule",
+        "provenance",
+        "a number drawn by an @counter-style list marker",
+        SPRING,
+        "refuse",
+        edit=lambda html: sub("</body>", '<style>@counter-style fx{system:fixed;symbols:"9.81"} ol{list-style-type:fx}</style><ol><li>m is the extension at full load</li></ol>\n</body>')(html),
+        note="added after the W3 review: no stylesheet check named @counter-style",
+    ),
+    Mutation(
         "g-aria-valuenow",
         "provenance",
         "a number spoken through aria-valuenow",

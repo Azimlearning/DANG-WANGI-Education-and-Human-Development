@@ -137,6 +137,7 @@ KIT_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"<\s*(?:video|audio|source|track|svg\s+[^>]*\bimage)\b", re.IGNORECASE), "media element"),
     (re.compile(r"\bFontFace\b|@font-face", re.IGNORECASE), "custom font"),
     (re.compile(r"\burl\s*\(|\bimage-set\s*\(|@import", re.IGNORECASE), "CSS image or import"),
+    (re.compile(r"@counter-style\b|\bcounter-(?:reset|increment|set)\b|\bcounters?\s*\(", re.IGNORECASE), "CSS counters"),
     (re.compile(r"\battachShadow\b"), "shadow DOM"),
     (re.compile(r"\bcustomElements\b"), "custom elements"),
 ]
@@ -149,7 +150,7 @@ KIT_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 FREE_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bcontent\s*:\s*[\"'`]", re.IGNORECASE), "CSS generated content"),
     (re.compile(r"::?(?:before|after|marker)\b", re.IGNORECASE), "CSS pseudo-element"),
-    (re.compile(r"\bcounter-(?:reset|increment|set)\b|\bcounters?\s*\(", re.IGNORECASE), "CSS counters"),
+    (re.compile(r"@counter-style\b|\bcounter-(?:reset|increment|set)\b|\bcounters?\s*\(", re.IGNORECASE), "CSS counters"),
     (re.compile(r"<\s*img\b|<\s*(?:video|audio|source|track)\b|data\s*:\s*image|\burl\s*\(|\bimage-set\s*\(", re.IGNORECASE), "image or media"),
     (re.compile(r"\bFontFace\b|@font-face", re.IGNORECASE), "custom font"),
     (re.compile(r"__synapse", re.IGNORECASE), "the harness's own names"),

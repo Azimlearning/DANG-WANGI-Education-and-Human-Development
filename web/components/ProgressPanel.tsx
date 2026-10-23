@@ -19,20 +19,20 @@ export function ProgressPanel() {
   }, [refresh]);
 
   const items = list(state);
-  const button = "min-h-11 min-w-11 rounded-xl px-4 text-sm font-semibold";
-  const outline = { border: "1px solid var(--border)" } as const;
+  const button = "btn btn-ghost px-4 text-sm";
+  const field = "rounded-ctl border-2 border-line-2 bg-card p-2 text-ink";
 
   return (
-    <details className="rounded-2xl p-3" style={outline}>
-      <summary className="min-h-11 cursor-pointer py-2 font-semibold">My progress ({items.length})</summary>
+    <details className="study-card p-3">
+      <summary className="min-h-11 cursor-pointer py-2 font-display font-semibold">My progress ({items.length})</summary>
       <div className="grid gap-3 pt-2 text-sm">
-        <p style={{ color: "var(--muted)" }}>Kept in this browser only. Nothing is sent anywhere. It counts your first answer to each check question.</p>
+        <p className="text-ink-dim">Kept in this browser only. Nothing is sent anywhere. It counts your first answer to each check question.</p>
         {items.length === 0 ? (
           <p>Nothing yet. Answer a check question in an Environment and it will appear here.</p>
         ) : (
           <ul className="grid gap-2">
             {items.map((e) => (
-              <li key={e.id} className="rounded-xl p-3" style={outline}>
+              <li key={e.id} className="rounded-ctl border-2 border-line p-3">
                 <strong>{e.title}</strong>
                 <br />
                 {mastery(e)}: {e.correct} right out of {e.tries}
@@ -41,13 +41,12 @@ export function ProgressPanel() {
           </ul>
         )}
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={button} style={outline} onClick={() => { setShown(encode(state)); setMessage("Copy this code to keep your progress or to move it to another device."); }}>
+          <button type="button" className={button} onClick={() => { setShown(encode(state)); setMessage("Copy this code to keep your progress or to move it to another device."); }}>
             Show my code
           </button>
           <button
             type="button"
             className={button}
-            style={outline}
             onClick={() => {
               if (!confirmClear) { setConfirmClear(true); return; }
               save(empty());
@@ -59,15 +58,14 @@ export function ProgressPanel() {
             {confirmClear ? "Press again to clear" : "Clear progress"}
           </button>
         </div>
-        {shown ? <textarea readOnly aria-label="Your progress code" value={shown} rows={3} className="rounded-xl p-2" style={{ ...outline, background: "var(--bg)", color: "var(--fg)" }} onFocus={(e) => e.currentTarget.select()} /> : null}
+        {shown ? <textarea readOnly aria-label="Your progress code" value={shown} rows={3} className={field} onFocus={(e) => e.currentTarget.select()} /> : null}
         <label htmlFor="progress-import" className="font-semibold">
           Load a progress code
         </label>
-        <textarea id="progress-import" value={code} onChange={(e) => setCode(e.target.value)} rows={2} className="rounded-xl p-2" style={{ ...outline, background: "var(--bg)", color: "var(--fg)" }} />
+        <textarea id="progress-import" value={code} onChange={(e) => setCode(e.target.value)} rows={2} className={field} />
         <button
           type="button"
           className={button}
-          style={outline}
           disabled={!code.trim()}
           onClick={() => {
             const got = decode(code);

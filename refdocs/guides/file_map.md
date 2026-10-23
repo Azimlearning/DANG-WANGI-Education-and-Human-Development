@@ -28,6 +28,8 @@
 | `api/pipeline/prompts.py`, `api/prompts/*.md` | Request builders and the versioned prompt packs (stable part above `=== VARIABLE ===`) |
 | `api/pipeline/fakes.py` | The deterministic fake planner, filler, explainer, wording judge and Free page used in fake mode |
 | `api/pipeline/wording.py`, `free.py`, `gaplog.py` | L4: the lines a judge reads and its strict verdict reader; the Free lane's page reader; the Kit gap log (W1, D-41) |
+| `web/app/page.tsx`, `web/components/*`, `web/lib/turns.ts`, `recent.ts`, `theme.ts` | The V3-styled shell: top bar and Axi, study rail, conversation, lab bench column, honest badges, progress by real pipeline layers; the turn reducer, device-local recent pointers and the theme (W3, D-38) |
+| `packages/kit/src/style.ts` | The Kit's one stylesheet, in its own module so the audit can compare it with the page's (D-43) |
 | `api/pipeline/library.py`, `api/library_seed.py` | One builder for hand-written Plans, the topic index and `best_entry`; `python -m api.library_seed` fills the library (W2, D-42) |
 | `eval/l4/`, `data/l4/` | The pinned L4 case set (25 planted wording defects, 16 true controls) and its scorer; a stub judge scores 0 |
 | `api/routing/`, `api/models/` | The trained router (pure-Python inference), its gate, the keyword fallback, the misconception matcher |

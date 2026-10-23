@@ -192,3 +192,12 @@ export function resetForTests(): void {
   constants.length = 0;
   copy.length = 0;
 }
+
+// The stylesheets `environment()` created. Recognised by identity in a private WeakSet, like observables: a page cannot make an element count as the Kit's.
+const kitStyles = new WeakSet<object>();
+export function markKitStyle(el: Element): void {
+  kitStyles.add(el);
+}
+export function isKitStyle(el: Element): boolean {
+  return kitStyles.has(el);
+}

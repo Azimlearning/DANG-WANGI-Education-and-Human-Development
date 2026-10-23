@@ -3,7 +3,8 @@
 // text is registered as Kit-owned with the text it must have, so the L1 audit can tell a Kit-made number from a typed one.
 
 import { installErrorHandlers } from "./bridge";
-import { copy, own, ownAttr } from "./provenance";
+import { copy, isKitStyle, markKitStyle, own, ownAttr } from "./provenance";
+import { STYLE } from "./style";
 
 export interface Environment {
   root: HTMLElement;
@@ -21,35 +22,6 @@ export interface EnvironmentOptions {
   into?: HTMLElement;
 }
 
-const STYLE = `
-:root{--syn-bg:#ffffff;--syn-fg:#14213d;--syn-muted:#4a5568;--syn-accent:#0b5fff;--syn-card:#f3f6fb;--syn-border:#c9d3e3;--syn-radius:12px}
-@media (prefers-color-scheme: dark){:root{--syn-bg:#10151f;--syn-fg:#eef2fa;--syn-muted:#aab6cc;--syn-accent:#7aa7ff;--syn-card:#1a2232;--syn-border:#33415c}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-ui,sans-serif}
-.syn-env{max-width:720px;margin:0 auto;padding:16px;display:grid;gap:16px}
-.syn-env h1{font-size:1.4rem;margin:0}
-.syn-note{background:var(--syn-card);border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:12px 16px;color:var(--syn-muted)}
-.syn-stage{min-height:120px;border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:12px;display:grid;gap:8px}
-.syn-controls,.syn-readouts{display:grid;gap:12px}
-.syn-control{display:grid;gap:4px}
-.syn-control label{font-weight:600}
-.syn-control input[type=range]{width:100%;min-height:44px;accent-color:var(--syn-accent)}
-.syn-readout{display:flex;justify-content:space-between;align-items:center;min-height:44px;background:var(--syn-card);border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:8px 16px}
-.syn-readout output{font-weight:700;font-variant-numeric:tabular-nums}
-.syn-btn{min-height:44px;min-width:44px;padding:0 16px;border-radius:var(--syn-radius);border:1px solid var(--syn-border);background:var(--syn-card);color:var(--syn-fg);font:inherit;font-weight:600}
-.syn-text{margin:0;color:var(--syn-muted)}
-.syn-steps{margin:0;padding-left:1.4rem;display:grid;gap:4px}
-.syn-card{background:var(--syn-card);border:1px solid var(--syn-border);border-radius:var(--syn-radius);padding:8px 16px}
-.syn-card dl{display:grid;gap:2px;margin:0}
-.syn-card dt{font-weight:600}
-.syn-card dd{margin:0 0 6px;color:var(--syn-muted)}
-.syn-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.syn-graph{width:100%;height:auto;max-height:260px}
-.syn-table-wrap{overflow-x:auto;max-width:100%}
-.syn-table{border-collapse:collapse;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}
-.syn-table th,.syn-table td{border:1px solid var(--syn-border);padding:4px 6px;text-align:right;overflow-wrap:anywhere;font-size:.875rem}
-@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
-`;
 
 function div(className: string): HTMLDivElement {
   const el = document.createElement("div");
@@ -57,16 +29,39 @@ function div(className: string): HTMLDivElement {
   return el;
 }
 
+// The host page tells the frame which theme it is in. A sandboxed frame has an opaque origin and cannot read the host's attribute, so the host posts one message
+// and the frame sets `data-theme` on its own root, which the stylesheet reads. Exactly one message shape is accepted: `{type: "synapse_theme", theme}` with
+// theme "light" or "dark". The sender check is hygiene, not a barrier: a page can build a MessageEvent with any `source`, and it can already set any
+// attribute on its own root. What the listener guarantees is the SHAPE: nothing but one of two words is ever written, so the Kit adds no way to put
+// text, a number or markup on the page.
+const setAttribute = Element.prototype.setAttribute;
+let themeListening = false;
+function installThemeListener(): void {
+  if (themeListening || typeof window === "undefined") return;
+  themeListening = true;
+  const parent = window.parent;
+  window.addEventListener("message", (event: MessageEvent) => {
+    if (event.source !== parent) return;
+    const data = event.data as { type?: unknown; theme?: unknown } | null;
+    if (data === null || typeof data !== "object" || data.type !== "synapse_theme") return;
+    if (data.theme !== "light" && data.theme !== "dark") return;
+    Reflect.apply(setAttribute, document.documentElement, ["data-theme", data.theme]);
+  });
+}
+
 export function environment(opts: EnvironmentOptions): Environment {
   installErrorHandlers();
+  installThemeListener();
   // Copy the strings now: a page that keeps the options object must not be able to change what the Kit later treats as expected.
   const options = { title: String(opts.title), note: String(opts.note), stageText: opts.stageText === undefined ? undefined : String(opts.stageText), into: opts.into };
   const host = options.into ?? document.body;
-  if (!document.getElementById("syn-style")) {
+  // A stylesheet a page made (even one with the id `syn-style`) is not the Kit's: the Kit always adds its own, and the audit judges the other one on its text.
+  if (!Array.from(document.head.querySelectorAll("style")).some(isKitStyle)) {
     const style = document.createElement("style");
     style.id = "syn-style";
     style.textContent = STYLE;
     document.head.appendChild(style);
+    markKitStyle(style);
   }
   const root = document.createElement("main");
   root.className = "syn-env";

@@ -244,7 +244,8 @@ def main() -> int:
             overflow = page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
             check("no horizontal scroll at 360 px", overflow <= 0, f"{overflow}px")
             heights = page.evaluate(
-                "[...document.querySelectorAll('button, input')].map(e => Math.round(e.getBoundingClientRect().height))"
+                # Only controls that are on screen can be tapped: the study rail is in the page but `display:none` below the wide breakpoint.
+                "[...document.querySelectorAll('button, input')].filter(e => e.getClientRects().length > 0).map(e => Math.round(e.getBoundingClientRect().height))"
             )
             check("every page-level control is at least 44 px tall", all(h >= 44 for h in heights), str(heights))
 
@@ -321,6 +322,50 @@ def main() -> int:
             page.keyboard.press("Escape")
             page.wait_for_selector("[role=dialog]", state="detached")
             check("Escape returns from Stage to Peek", page.locator("article").count() == 1)
+
+            # ── the theme toggle (W3): 44 px, reaches the Environment's frame, and does not trip the Kit's self-check ────────────────────
+            toggle = page.locator("button[aria-label='Switch to dark mode']")
+            check("the theme toggle is at least 44 px", toggle.evaluate("e => Math.round(e.getBoundingClientRect().height)") >= 44)
+            toggle.click()
+            page.wait_for_function("document.documentElement.dataset.theme === 'dark'", timeout=5000)
+            page.wait_for_timeout(1100)  # the circular reveal takes 820 ms; a screenshot before it ends shows both themes at once
+            frame_theme = None
+            for _ in range(30):
+                frame_theme = next(f for f in page.frames if f != page.main_frame).evaluate("document.documentElement.getAttribute('data-theme')")
+                if frame_theme == "dark":
+                    break
+                page.wait_for_timeout(100)
+            check("the host's dark theme reaches the Environment's frame", frame_theme == "dark", str(frame_theme))
+            slider_dark = page.frame_locator("iframe").first.locator("input[data-synapse-control='load']")
+            slider_dark.focus()
+            page.keyboard.press("Home")
+            page.wait_for_timeout(400)
+            check(
+                "after the theme change the frame is still there and still works (the Kit's self-check did not close it)",
+                page.locator("iframe").count() == 1 and page.frame_locator("iframe").first.locator("[data-synapse-readout]").inner_text().strip() == "0.000 m",
+            )
+            page.screenshot(path=str(SHOTS / "03-peek-360-dark.png"), full_page=True)
+            page.click("button[aria-label='Switch to light mode']")
+            page.wait_for_function("document.documentElement.dataset.theme === 'light'", timeout=5000)
+
+            # ── wide screens: the rail, the conversation and ONE lab bench frame ───────────────────────────────────────────────────────────
+            wide = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
+            wide.goto(WEB)
+            check("a wide screen shows the study rail and its quick starts", wide.locator("aside[aria-label='Study guide'] button").count() >= 3)
+            wide.fill("#q", "Why does a spring stretch when I hang a weight on it?")
+            wide.click("button[type=submit]")
+            wide.wait_for_selector(f'aside[aria-label="Lab bench"] iframe[title="{TITLE}"]', timeout=60_000)
+            check(
+                "on a wide screen exactly one frame is mounted, inside the lab bench",
+                wide.locator("iframe").count() == 1 and wide.locator("aside[aria-label='Lab bench'] iframe").count() == 1,
+            )
+            check("no horizontal scroll at 1280 px", wide.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 0)
+            wide.screenshot(path=str(SHOTS / "04-wide-1280.png"))
+            wide.click("button[aria-label='Switch to dark mode']")
+            wide.wait_for_function("document.documentElement.dataset.theme === 'dark'", timeout=5000)
+            wide.wait_for_timeout(500)
+            wide.screenshot(path=str(SHOTS / "05-wide-1280-dark.png"))
+            wide.context.close()
 
             errors_before_fetch = list(console_errors) + list(page_errors)
             check(

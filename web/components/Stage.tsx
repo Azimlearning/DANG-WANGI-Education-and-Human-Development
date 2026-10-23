@@ -1,8 +1,9 @@
 "use client";
 
-// Stage: the Environment at full viewport, with a back affordance. Escape also closes it. Focus moves to Back on open.
+// Stage: the Environment at full viewport, with a back affordance. Escape also closes it. Focus moves to Back on open. It sits above the top bar (z-40).
 import type { EnvironmentBlock } from "@synapse/schema";
 import { useEffect, useRef } from "react";
+import { LabelBadge, LaneBadge } from "./Badges";
 import { EnvironmentFrame } from "./EnvironmentFrame";
 import { Provenance } from "./Provenance";
 
@@ -19,28 +20,21 @@ export function Stage({ block, onBack }: { block: EnvironmentBlock; onBack: () =
     return () => window.removeEventListener("keydown", onKey);
   }, [onBack]);
   return (
-    <div role="dialog" aria-modal="true" aria-label={block.title} className="fixed inset-0 z-10 grid grid-rows-[auto_1fr] overflow-auto" style={{ background: "var(--bg)" }}>
-      <header className="flex flex-wrap items-center gap-3 p-3">
-        <button
-          ref={back}
-          type="button"
-          onClick={onBack}
-          className="min-h-11 min-w-11 rounded-xl px-4 text-sm font-semibold"
-          style={{ border: "1px solid var(--border)" }}
-        >
+    <div role="dialog" aria-modal="true" aria-label={block.title} className="fixed inset-0 z-40 grid grid-rows-[auto_1fr] overflow-auto bg-canvas">
+      <header className="flex flex-wrap items-center gap-3 border-b-2 border-line bg-canvas p-3">
+        <button ref={back} type="button" onClick={onBack} className="btn btn-ghost px-4 text-sm">
           Back
         </button>
-        <h2 className="text-base font-semibold">{block.title}</h2>
-        <a
-          href={`${API_BASE.replace(/\/$/, "")}/library/${encodeURIComponent(block.id)}/export`}
-          download
-          className="ml-auto inline-flex min-h-11 min-w-11 items-center rounded-xl px-4 text-sm font-semibold"
-          style={{ border: "1px solid var(--border)" }}
-        >
+        <h2 className="font-display text-lg font-semibold">{block.title}</h2>
+        <span className="flex flex-wrap gap-2">
+          <LabelBadge label={block.label} />
+          <LaneBadge lane={block.lane} />
+        </span>
+        <a href={`${API_BASE.replace(/\/$/, "")}/library/${encodeURIComponent(block.id)}/export`} download className="btn btn-ghost ml-auto px-4 text-sm">
           Save a copy to use offline
         </a>
       </header>
-      <div className="grid content-start gap-3 p-3">
+      <div className="mx-auto grid w-full max-w-4xl content-start gap-3 p-3">
         <EnvironmentFrame block={block} height="70vh" />
         <Provenance block={block} />
       </div>

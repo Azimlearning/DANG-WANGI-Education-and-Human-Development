@@ -4,20 +4,8 @@
 // property on `document`. The same facts feed the runtime self-check (watch.ts), which runs in the student's browser.
 
 import { all, attr, attrNames, bodyEl, fontCount, hasAttribute, hasShadow, headEl, idOf, parentOf, style, tagOf, textNodes, textOf, value } from "./dom";
-import {
-  actions,
-  constants,
-  controls,
-  copy,
-  describe,
-  isAction,
-  isOwned,
-  ownedAttr,
-  ownedEntries,
-  readouts,
-  series,
-  type ChainNode,
-} from "./provenance";
+import { actions, constants, controls, copy, describe, isAction, isOwned, ownedAttr, ownedEntries, readouts, series, type ChainNode, isKitStyle } from "./provenance";
+import { STYLE } from "./style";
 
 let sealed: object | null = null;
 /** Called once by the entry module with the frozen public object. */
@@ -39,7 +27,7 @@ const CSS_IMAGE_PROPS = ["background-image", "list-style-image", "border-image-s
 const STYLE_FORBIDDEN = /@font-face|@import|url\s*\(|image-set\s*\(|\bcontent\s*:/i;
 // The ways a list marker can show a number with no text node: a counter set or stepped by CSS, the ::marker pseudo-element, a quoted marker string,
 // and any element made a list item. Looked for in stylesheet text AND in inline style attributes (refused whole: nothing the Kit makes needs them).
-const MARKER_FORBIDDEN = /\bcounter-(?:reset|set|increment)\b|\bcounters?\s*\(|::?marker\b|\blist-style(?:-type)?\s*:[^;}]*["']|\bdisplay\s*:\s*(?:list-item|inline list-item|block list-item)/i;
+const MARKER_FORBIDDEN = /@counter-style\b|\bcounter-(?:reset|set|increment)\b|\bcounters?\s*\(|::?marker\b|\blist-style(?:-type)?\s*:[^;}]*["']|\bdisplay\s*:\s*(?:list-item|inline list-item|block list-item)/i;
 // Elements that are never drawn. If CSS makes one visible, its text (a title, a script's source) is shown to the student with no component owning it.
 const NON_VISUAL = ["script", "style", "noscript", "template", "title", "meta", "link", "base", "head"];
 
@@ -142,7 +130,7 @@ export function audit(version: string): AuditRecord {
   for (const s of all(headEl(), "style, link")) {
     const tag = tagOf(s);
     if (tag === "link") forbidden.push({ what: "<link> element", element: label(s) });
-    else if (idOf(s) !== "syn-style" && (STYLE_FORBIDDEN.test(textOf(s)) || MARKER_FORBIDDEN.test(textOf(s)))) {
+    else if (!(isKitStyle(s) && textOf(s) === STYLE) && (STYLE_FORBIDDEN.test(textOf(s)) || MARKER_FORBIDDEN.test(textOf(s)))) {
       forbidden.push({ what: "stylesheet with an image, font, import or generated content", element: label(s) });
     }
   }

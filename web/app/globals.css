@@ -1,38 +1,372 @@
+/*
+ * Ported from Synapse v3: frontend/app/globals.css and frontend/tailwind.config.ts, in the Genui monorepo at commit 835a2cefda28 (2026-10-05).
+ * Read in full and re-expressed for Tailwind 4 (`@theme inline`) instead of copied (D-38). The palette and the form language implement V3's design/BRAND.md:
+ * teal is the machine working, green is the science confirmed, gold is reward. No glow, no background grid, no gradient wallpaper.
+ *
+ * What is NOT carried over from V3, on purpose (D-38): the XP, streak and gem counters (invented numbers), and any styling for a "draft" artifact view.
+ *
+ * Theming: `:root` is light. Dark is retuned, not inverted. It applies from the system preference unless the top-bar toggle forced a choice, which stamps
+ * `data-theme` on <html> (a script in the layout sets it before first paint, so there is no flash).
+ */
 @import "tailwindcss";
 
 :root {
-  --bg: #ffffff;
-  --fg: #14213d;
-  --muted: #4a5568;
-  --card: #f3f6fb;
-  --border: #c9d3e3;
-  --accent: #0b5fff;
-  --warn-bg: #fff4e5;
-  --warn-fg: #7a4a00;
+  --canvas: #f7f8f4;
+  --band: #eff2eb;
+  --card: #ffffff;
+  --ink: #2f3a34;
+  --ink-dim: #61706a;
+  --ink-faint: #66736d; /* V3 had #9aa49e, about 2.6:1 on the canvas: too faint for text (hard constraint 10) */
+  --line: #e4e8df;
+  --line-2: #d3dace;
+
+  --primary: #12a594;
+  --primary-btn: #0a776b;
+  --primary-edge: #075247;
+  --primary-soft: #e1f3ef;
+  --primary-ink: #0a776b;
+  --primary-line: #cbe7e1;
+
+  --verify: #1fa35b;
+  --verify-edge: #157a42;
+  --verify-soft: #e4f6ea;
+  --verify-ink: #147e43;
+
+  --gold: #e6a200;
+  --gold-soft: #fcf1d3;
+  --gold-ink: #8a5f00;
+
+  --warn: #9a5f06; /* V3 had #b5720c, about 3.6:1 on its tint: darkened to pass 4.5:1 as small text */
+  --warn-soft: #fbf0dc;
+  --danger: #c24a42;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #10151f;
-    --fg: #eef2fa;
-    --muted: #aab6cc;
-    --card: #1a2232;
-    --border: #33415c;
-    --accent: #7aa7ff;
-    --warn-bg: #3a2a10;
-    --warn-fg: #ffd596;
+  :root:not([data-theme="light"]) {
+    --canvas: #0e1512;
+    --band: #131b17;
+    --card: #16201c;
+    --ink: #e9efea;
+    --ink-dim: #a4b2ab;
+    --ink-faint: #81908a;
+    --line: #26302b;
+    --line-2: #34403a;
+
+    --primary: #16b6a3;
+    --primary-btn: #0a776b;
+    --primary-edge: #063f38;
+    --primary-soft: #123a33;
+    --primary-ink: #5ad6c5;
+    --primary-line: #204a42;
+
+    --verify: #22a95d;
+    --verify-edge: #12633a;
+    --verify-soft: #16291e;
+    --verify-ink: #4ad088;
+
+    --gold: #f0b02a;
+    --gold-soft: #2b2410;
+    --gold-ink: #f0b02a;
+
+    --warn: #d89a3a;
+    --warn-soft: #2b2110;
+    --danger: #e06b62;
   }
 }
 
+:root[data-theme="dark"] {
+  --canvas: #0e1512;
+  --band: #131b17;
+  --card: #16201c;
+  --ink: #e9efea;
+  --ink-dim: #a4b2ab;
+  --ink-faint: #81908a;
+  --line: #26302b;
+  --line-2: #34403a;
+
+  --primary: #16b6a3;
+  --primary-btn: #0a776b;
+  --primary-edge: #063f38;
+  --primary-soft: #123a33;
+  --primary-ink: #5ad6c5;
+  --primary-line: #204a42;
+
+  --verify: #22a95d;
+  --verify-edge: #12633a;
+  --verify-soft: #16291e;
+  --verify-ink: #4ad088;
+
+  --gold: #f0b02a;
+  --gold-soft: #2b2410;
+  --gold-ink: #f0b02a;
+
+  --warn: #d89a3a;
+  --warn-soft: #2b2110;
+  --danger: #e06b62;
+}
+
+/* The tokens as Tailwind utilities (bg-canvas, text-ink-dim, border-line-2 ...). `inline` so a utility reads the variable at the element, where the
+ * theme attribute decides its value, and not where the theme variable was declared. The font variables come from next/font under other names
+ * (--face-*) so a theme variable never refers to itself. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-band: var(--band);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-primary: var(--primary);
+  --color-primary-btn: var(--primary-btn);
+  --color-primary-edge: var(--primary-edge);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-line: var(--primary-line);
+  --color-verify: var(--verify);
+  --color-verify-edge: var(--verify-edge);
+  --color-verify-soft: var(--verify-soft);
+  --color-verify-ink: var(--verify-ink);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-ink: var(--gold-ink);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+
+  --font-display: var(--face-display), "Trebuchet MS", system-ui, sans-serif;
+  --font-sans: var(--face-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--face-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-ctl: 12px;
+  --radius-card: 18px;
+  --radius-frame: 24px;
+
+  --shadow-card: 0 8px 26px -10px rgb(20 55 45 / 0.16);
+  --shadow-frame: 0 22px 54px -20px rgb(11 60 50 / 0.26), 0 4px 12px -4px rgb(15 40 35 / 0.08);
+}
+
 body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: system-ui, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+/* ---- The Synapse form language (V3 globals.css, section "study workspace") ---- */
+.study-kicker {
+  color: var(--primary-ink);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.study-card {
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--line-2);
+}
+.study-step {
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary-btn);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 2px 0 var(--primary-edge);
+}
+.study-starter {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 0.7rem 0.9rem;
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  font-weight: 500;
+  box-shadow: 0 3px 0 var(--line-2);
+  transition: border-color 0.15s, color 0.15s, transform 0.1s, box-shadow 0.1s;
+}
+.study-starter:hover {
+  border-color: var(--primary);
+  color: var(--ink);
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 var(--line-2);
+}
+.study-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 2px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--card);
+  padding: 0.3rem 0.7rem;
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.study-badge-verified {
+  border-color: var(--verify);
+  background: var(--verify-soft);
+  color: var(--verify-ink);
+}
+.study-badge-checked {
+  border-color: var(--line-2);
+  color: var(--ink-dim);
+}
+.study-badge-free {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.study-response {
+  border-left: 3px solid var(--primary);
+  padding-left: 1.1rem;
+}
+.lab-empty {
+  border: 2px dashed var(--line-2);
+  border-radius: 18px;
+  background: var(--card);
+}
+
+/* ---- The chunky pressable button (the Synapse signature). 44 px minimum height: hard constraint 10. ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  border: 0;
+  border-radius: 18px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--primary-btn);
+  color: #ffffff;
+  box-shadow: 0 4px 0 var(--primary-edge);
+}
+.btn-primary:not(:disabled):active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--primary-edge);
+}
+.btn-ghost {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 4px 0 var(--line-2), inset 0 0 0 2px var(--line);
+}
+.btn-ghost:not(:disabled):active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line-2), inset 0 0 0 2px var(--line);
+}
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---- Streaming caret; the machine is working, so it is teal. ---- */
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--primary);
+  border-radius: 1px;
+  animation: caret-blink 1s steps(2) infinite;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---- Axi, the mascot: a gentle idle float. ---- */
+@keyframes synapse-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.mascot-bob {
+  animation: synapse-bob 3s ease-in-out infinite;
+}
+
+/* ---- The active pipeline node: a soft pulse, never a glow. ---- */
+@keyframes synapse-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.node-pulse {
+  animation: synapse-pulse 1.4s ease-in-out infinite;
+}
+
+/* ---- Celebrate the checkpoint: the verified badge pops in once. ---- */
+@keyframes synapse-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.pop {
+  animation: synapse-pop 0.28s ease-out both;
+}
+
+/* ---- Theme sweep: the new theme is revealed by a circle expanding from the top centre (animated in the top bar). ---- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2;
 }
 
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition: none !important;
+  }
+  .caret::after {
+    opacity: 1;
   }
 }

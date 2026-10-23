@@ -44,18 +44,18 @@ export function checkedLines(checked: CheckedSummary): string[] {
 
 export function Provenance({ block }: { block: EnvironmentBlock }) {
   return (
-    <section aria-label="Where this Environment comes from" className="grid gap-2 rounded-xl p-4 text-sm" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+    <section aria-label="Where this Environment comes from" className="study-card grid gap-2 p-4 text-sm">
       <p>
         <strong>{LABEL_NAME[block.label]}.</strong> {LANE_TEXT[block.lane]}.
       </p>
       <p>{block.planSummary}</p>
-      <p style={{ color: "var(--muted)" }}>
+      <p className="text-ink-dim">
         <strong>Source:</strong>{" "}
         {block.citations.length === 0
           ? "none stated"
           : block.citations.map((c) => `${c.source}${c.page !== null ? `, page ${c.page}` : ""}${c.verified ? "" : " (not verified)"}`).join("; ")}
       </p>
-      <div style={{ color: "var(--muted)" }}>
+      <div className="text-ink-dim">
         <p>
           <strong>What was checked:</strong>
         </p>
@@ -65,7 +65,7 @@ export function Provenance({ block }: { block: EnvironmentBlock }) {
           ))}
         </ul>
       </div>
-      <p style={{ color: "var(--muted)" }}>
+      <p className="text-ink-dim">
         <strong>Limits:</strong> {block.checked.limits}
       </p>
     </section>

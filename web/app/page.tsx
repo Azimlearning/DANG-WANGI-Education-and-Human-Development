@@ -1,115 +1,93 @@
 "use client";
 
-import type { EnvironmentBlock, ErrorEnvelope, PlanDraft } from "@synapse/schema";
-import { useCallback, useRef, useState } from "react";
-import { Peek } from "../components/Peek";
-import { PeekSkeleton } from "../components/PeekSkeleton";
+// The page. Layout adapted from Synapse v3: frontend/app/page.tsx (Genui monorepo, commit 835a2cefda28): a top bar, a study rail, the conversation, and a lab bench
+// column that appears once a question is asked. Rewritten for V4's events, with one frame mounted at a time, and nothing here ever holds an unverified page.
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { Composer } from "../components/Composer";
+import { LabBench } from "../components/LabBench";
+import { Mascot } from "../components/Mascot";
+import { MessageList } from "../components/MessageList";
 import { ProgressPanel } from "../components/ProgressPanel";
-import { Stage } from "../components/Stage";
+import { QuickStarts, SideRail } from "../components/SideRail";
+import { TopBar } from "../components/TopBar";
+import { addRecent, loadRecent, removeRecent, type RecentItem } from "../lib/recent";
+import { useMediaQuery, WIDE_QUERY } from "../lib/media";
 import { AskError, streamAsk } from "../lib/stream";
+import { turnReducer } from "../lib/turns";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 export default function Home() {
-  const [question, setQuestion] = useState("");
-  const [text, setText] = useState("");
-  const [block, setBlock] = useState<EnvironmentBlock | null>(null);
-  const [error, setError] = useState<ErrorEnvelope | string | null>(null);
-  const [draft, setDraft] = useState<PlanDraft | null>(null);
-  const [note, setNote] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [staged, setStaged] = useState(false);
+  const [turns, dispatch] = useReducer(turnReducer, []);
+  const [stagedId, setStagedId] = useState<string | null>(null);
+  const [recent, setRecent] = useState<RecentItem[]>([]);
   const abort = useRef<AbortController | null>(null);
+  const wide = useMediaQuery(WIDE_QUERY);
 
-  const ask = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      const q = question.trim();
-      if (!q || busy) return;
-      abort.current?.abort();
-      abort.current = new AbortController();
-      setBusy(true);
-      setText("");
-      setBlock(null);
-      setDraft(null);
-      setNote(null);
-      setError(null);
-      setStaged(false);
-      try {
-        for await (const event of streamAsk(q, { baseUrl: API_BASE, signal: abort.current.signal })) {
-          if (event.type === "text_delta") setText((t) => t + event.text);
-          else if (event.type === "plan") setDraft(event.draft);
-          else if (event.type === "stage" && event.status === "degraded") {
-            setNote(event.note);
-            setDraft(null);
-          } else if (event.type === "environment") {
-            setBlock(event.block);
-            setDraft(null);
-          }
-          else if (event.type === "error") {
-            setError(event.error);
-            setDraft(null);
-          }
-        }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") setError(err instanceof AskError ? (err.envelope ?? err.message) : "Could not reach the server.");
-      } finally {
-        setDraft(null);
-        setBusy(false);
+  useEffect(() => setRecent(loadRecent()), []);
+
+  const last = turns[turns.length - 1] ?? null;
+  const busy = last?.open ?? false;
+  const started = turns.length > 0;
+
+  const ask = useCallback(async (question: string) => {
+    abort.current?.abort();
+    abort.current = new AbortController();
+    setStagedId(null);
+    dispatch({ type: "ask", question });
+    try {
+      for await (const event of streamAsk(question, { baseUrl: API_BASE, signal: abort.current.signal })) {
+        dispatch({ type: "event", event });
+        if (event.type === "environment") setRecent(addRecent({ id: event.block.id, title: event.block.title }));
       }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") dispatch({ type: "fail", error: err instanceof AskError ? (err.envelope ?? err.message) : "Could not reach the server." });
+    } finally {
+      dispatch({ type: "close" });
+    }
+  }, []);
+
+  const send = useCallback(
+    (question: string) => {
+      if (busy) return;
+      void ask(question);
     },
-    [question, busy],
+    [ask, busy],
   );
 
   return (
-    <main className="mx-auto grid max-w-2xl gap-4 p-4">
-      <h1 className="text-xl font-semibold">Synapse</h1>
-      <form onSubmit={ask} className="grid gap-2">
-        <label htmlFor="q" className="font-semibold">
-          Ask a science question
-        </label>
-        <input
-          id="q"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          maxLength={500}
-          autoComplete="off"
-          className="min-h-11 rounded-xl px-3"
-          style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg)" }}
-        />
-        <button
-          type="submit"
-          disabled={busy || !question.trim()}
-          className="min-h-11 rounded-xl px-4 font-semibold disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--bg)" }}
-        >
-          {busy ? "Asking…" : "Ask"}
-        </button>
-      </form>
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <TopBar />
+      <main className={`grid min-h-0 flex-1 overflow-x-hidden ${started ? "xl:grid-cols-[272px_minmax(420px,0.9fr)_minmax(460px,1.1fr)]" : "xl:grid-cols-[272px_1fr]"}`}>
+        <div className="hidden min-h-0 overflow-y-auto xl:block">
+          <SideRail onPrompt={send} disabled={busy} recent={recent} onForget={(id) => setRecent(removeRecent(id))} />
+        </div>
 
-      <div aria-live="polite" data-testid="answer">
-        {text ? <p>{text}</p> : null}
-      </div>
+        <section className="flex min-h-0 min-w-0 flex-col px-4 sm:px-6">
+          {started ? (
+            <MessageList turns={turns} wide={wide} stagedId={stagedId} onOpen={setStagedId} onBack={() => setStagedId(null)} onRetry={send} />
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto py-8">
+              <div className="max-w-md text-center">
+                <Mascot mood="happy" size={72} className="mx-auto" />
+                <p className="study-kicker mt-4">Open notebook</p>
+                <h2 className="mt-3 font-display text-3xl font-semibold leading-tight">What are you trying to understand?</h2>
+                <p className="mt-3 leading-relaxed text-ink-dim">Ask one clear science question. You get a short note and, when there is one, an interactive model with its source and what was checked.</p>
+              </div>
+              <div className="w-full max-w-md xl:hidden">
+                <p className="study-kicker mb-2">Quick starts</p>
+                <QuickStarts onPrompt={send} disabled={busy} />
+              </div>
+            </div>
+          )}
+          <div className="grid gap-2 border-t-2 border-line pb-3 pt-2">
+            <Composer onSend={send} disabled={busy} variant={started ? "bar" : "hero"} />
+            <ProgressPanel />
+          </div>
+        </section>
 
-      {note ? (
-        <p role="status" data-testid="degraded-note" className="rounded-xl p-3 text-sm" style={{ background: "var(--card)", color: "var(--muted)" }}>
-          {note}
-        </p>
-      ) : null}
-
-      {draft && !block ? <PeekSkeleton draft={draft} /> : null}
-
-      {error ? (
-        <p role="alert" className="rounded-xl p-4 text-sm" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-          {typeof error === "string" ? error : error.message}
-          {typeof error !== "string" && error.issues.length > 0 ? ` (${error.issues.map((i) => `${i.path}: ${i.message}`).join("; ")})` : ""}
-        </p>
-      ) : null}
-
-      <ProgressPanel />
-
-      {block && !staged ? <Peek block={block} onOpen={() => setStaged(true)} /> : null}
-      {block && staged ? <Stage block={block} onBack={() => setStaged(false)} /> : null}
-    </main>
+        {started && wide ? <LabBench turn={last} stagedId={stagedId} onOpen={setStagedId} onBack={() => setStagedId(null)} /> : null}
+      </main>
+    </div>
   );
 }
