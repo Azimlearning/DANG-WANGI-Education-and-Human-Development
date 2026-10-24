@@ -195,6 +195,14 @@ _ENTRIES = [
         "Every slider must feed a model that a readout shows.",
     ),
     _e(
+        "drag_dead",
+        "L2-006",
+        "L2 behaviour",
+        "block",
+        "retry_plan",
+        "Use massHanger as the Kit defines it; its masses must move the control.",
+    ),
+    _e(
         "unstable_readout",
         "L2-005",
         "L2 behaviour",
@@ -320,6 +328,9 @@ _ENTRIES = [
         "retry_plan",
         "Convert from the unit the value is really in: a conversion's starting unit must be the unit of its source.",
     ),
+    _e("widget_tampered", "L1-022", "L1 provenance", "block", "none", "Do not move, hide, redraw or relabel the mass bench or the scene the Kit drew."),
+    _e("scene_ungrounded", "L1-023", "L1 provenance", "block", "none", "A scene must draw the output of the model it is registered for."),
+    _e("scene_scale", "L1-024", "L1 provenance", "block", "none", "A scene's drawing scale must fit the model: from its output at the controls' maximum to twice that."),
     # L3 reference and plan
     _e(
         "numeric_mismatch",
@@ -431,6 +442,22 @@ _ENTRIES = [
         "block",
         "retry_plan",
         "Use a model that is registered for the question's topic.",
+    ),
+    _e(
+        "PLAN-018",
+        "PLAN-018",
+        "plan",
+        "block",
+        "retry_plan",
+        "A control operated by masses needs 2 to 8 masses (grid) and a starting value on a whole number of masses.",
+    ),
+    _e(
+        "PLAN-019",
+        "PLAN-019",
+        "plan",
+        "block",
+        "retry_plan",
+        "A scene may only draw the output of a model it is registered for (a spring scene: mechanics.hookes), and its source must be a model instance id.",
     ),
     _e(
         "PLAN-017",

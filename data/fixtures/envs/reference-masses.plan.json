@@ -1,0 +1,30 @@
+{
+  "id": "reference-masses",
+  "title": "Hooke's law: how does a spring stretch?",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "The Hooke's law Amali bench: five masses dragged onto a hanger (the Kit's massHanger), the Hooke's law micro-model, an extension readout and a spring picture. Checked by the L0 scan, the render harness (which drags every mass, presses one, and drags one with a finger) and L1 to L3.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "load"
+  ],
+  "readouts": [
+    "Extension"
+  ],
+  "models": [
+    {
+      "id": "mechanics.hookes",
+      "params": {
+        "k": 50
+      }
+    }
+  ]
+}

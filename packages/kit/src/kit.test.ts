@@ -333,7 +333,7 @@ describe("the public surface", () => {
   });
   it("exposes no way to create an observable that the registry would accept except through the Kit", () => {
     expect(Object.keys(Synapse).sort()).toEqual(
-      ["audit", "averageRate", "cardiacOutput", "gasVolume", "newtonSecond", "percentChangeMass", "ph", "waveSpeed", "bridge", "conceptCheck", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hintLadder", "hookes", "magnification", "moles", "netPhotosynthesis", "observable", "ohm", "predictCard", "pressureDepth", "readout", "reset", "slider", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "version", "workedSolution"].sort(),
+      ["audit", "averageRate", "cardiacOutput", "gasVolume", "newtonSecond", "percentChangeMass", "ph", "waveSpeed", "bridge", "conceptCheck", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hintLadder", "hookes", "magnification", "massHanger", "moles", "netPhotosynthesis", "observable", "ohm", "predictCard", "pressureDepth", "readout", "reset", "slider", "springScene", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "version", "workedSolution"].sort(),
     );
   });
 });

@@ -4,7 +4,7 @@
 // property on `document`. The same facts feed the runtime self-check (watch.ts), which runs in the student's browser.
 
 import { all, attr, attrNames, bodyEl, fontCount, hasAttribute, hasShadow, headEl, idOf, parentOf, style, tagOf, textNodes, textOf, value } from "./dom";
-import { actions, constants, controls, copy, describe, isAction, isOwned, ownedAttr, ownedEntries, readouts, series, type ChainNode, isKitStyle } from "./provenance";
+import { actions, constants, controls, copy, describe, isAction, isOwned, ownedAttr, ownedEntries, readouts, series, type ChainNode, isKitStyle, widgets } from "./provenance";
 import { STYLE } from "./style";
 
 let sealed: object | null = null;
@@ -58,6 +58,8 @@ export interface AuditRecord {
   forbidden: { what: string; element: string }[];
   /** Elements with a shadow root: their content cannot be audited, so the verifier refuses them. */
   shadowRoots: number;
+  /** Composite widgets (mass hangers, scenes): what each is, how many masses the Kit made, the chain a scene draws, and any way the page changed it. */
+  widgets: { kind: string; id: string; masses?: number; full?: number; chain?: ChainNode; problems: string[]; layout: string[] }[];
 }
 
 const label = (el: Element): string => `${tagOf(el)}${idOf(el) ? "#" + idOf(el) : ""}`;
@@ -211,6 +213,15 @@ export function audit(version: string): AuditRecord {
     unownedAttributeNumbers: attrs,
     forbidden,
     shadowRoots,
+    widgets: widgets.map((w) => ({
+      kind: w.kind,
+      id: w.id,
+      ...(w.masses !== undefined ? { masses: w.masses } : {}),
+      ...(w.full !== undefined ? { full: w.full } : {}),
+      ...(w.obs ? { chain: describe(w.obs) } : {}),
+      problems: w.check(),
+      layout: w.layout ? w.layout() : [],
+    })),
   };
 }
 
@@ -225,6 +236,7 @@ export function violations(a: AuditRecord): string[] {
   for (const f of a.forbidden) out.push(f.what);
   if (a.shadowRoots) out.push("a shadow root");
   if (a.forgedActions) out.push("a forged action button");
+  for (const w of a.widgets) for (const p of w.problems) out.push(p);
   for (const c of a.controls) if (!(Math.abs(Number(c.inputValue) - c.value) <= c.step / 2 + 1e-9)) out.push(`control "${c.id}" disagrees with its input`);
   return out;
 }

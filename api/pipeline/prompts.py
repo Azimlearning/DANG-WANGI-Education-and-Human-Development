@@ -159,7 +159,8 @@ def plan_request(
     """`use_exemplar=False` gives the planner no worked example (an evaluation switch): for a topic with a hand-written golden Plan the exemplar IS the
     answer, so a planner measured with it shows plumbing and cost, not whether a model can plan an Environment on its own."""
     core, planner = load("core"), load("planner")
-    schema = (DIR / planner_schema()).read_text(encoding="utf-8")
+    # The checked-in schema file is indented for review; the model gets the same JSON compact (the exemplar is compact too), which is about 40% fewer tokens for the same content.
+    schema = json.dumps(schema_json(), separators=(",", ":"), sort_keys=True)
     example = (exemplar or exemplar_for(question, topic, pattern)) if use_exemplar else None
     stable, variable = planner.render_parts(
         schema=schema.strip(),

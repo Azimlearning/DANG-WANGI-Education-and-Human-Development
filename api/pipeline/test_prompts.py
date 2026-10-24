@@ -101,7 +101,7 @@ def test_the_stable_prefix_is_byte_identical_when_only_variables_differ(manifest
 def test_the_request_embeds_the_schema_and_the_generated_failure_modes(manifest: kitmanifest.Manifest) -> None:
     r = pp.plan_request("q", "r", "simulation", manifest)
     schema = pp.schema_json()
-    assert json.dumps(schema, indent=2, sort_keys=True).strip()[:40] in (r.system or "")
+    assert json.dumps(schema, separators=(",", ":"), sort_keys=True)[:40] in (r.system or "")
     assert "PLAN-002" in (r.system or "") and "{{" not in (r.system or "") + r.prompt
 
 

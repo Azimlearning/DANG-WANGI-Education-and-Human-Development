@@ -30,6 +30,7 @@ SKELETON_PARTS: dict[str, frozenset[str]] = {
             "models",
             "readouts",
             "graphs",
+            "scene",
             "steps",
             "table",
             "sentences",
@@ -49,6 +50,7 @@ SKELETON_PARTS: dict[str, frozenset[str]] = {
             "models",
             "readouts",
             "graphs",
+            "scene",
             "table",
             "sentences",
             "custom",
@@ -97,6 +99,7 @@ def present_parts(plan: Plan) -> set[str]:
     for name, present in (
         ("constants", plan.constants),
         ("graphs", plan.graphs),
+        ("scene", plan.scene),
         ("steps", plan.steps),
         ("table", plan.table),
         ("sentences", plan.sentences),
@@ -115,7 +118,7 @@ def present_parts(plan: Plan) -> set[str]:
 def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
     def controls_js() -> str:
         return "\n  ".join(
-            f"var {var('c', c.id)} = Synapse.slider(env, "
+            f"var {var('c', c.id)} = Synapse.{'massHanger' if c.surface == 'masses' else 'slider'}(env, "
             + js(
                 {
                     "id": c.id,
@@ -163,6 +166,12 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
             )
         return "\n  ".join(lines)
 
+    def scene_js() -> str:
+        s = plan.scene
+        if not s:
+            return ""
+        return f"Synapse.springScene(env, {{ extension: {var('m', s.source)}, full: {js(s.full)} }});"
+
     def graphs_js() -> str:
         return "\n  ".join(
             f"Synapse.graph(env, {{ title: {js(g.title)}, x: {var('c', g.x)}, y: {var('m', g.source)}, yLabel: {js(g.label)}, yUnit: {js(g.unit)}, digits: {g.digits} }});"
@@ -204,6 +213,7 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
         "models": models_js(),
         "readouts": readouts_js(),
         "graphs": graphs_js(),
+        "scene": scene_js(),
         "steps": f"Synapse.stepper(env, {{ steps: {js(list(plan.steps))} }});" if plan.steps else "",
         "table": table_js(),
         "sentences": "\n  ".join(f"Synapse.text(env, {js(s)});" for s in plan.sentences),

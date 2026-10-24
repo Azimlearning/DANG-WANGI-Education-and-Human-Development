@@ -76,6 +76,22 @@ export const manifestEntries: ManifestEntry[] = [
     useWhen: "Use for any quantity the student varies continuously: a load, a voltage, a depth, a temperature.",
   },
   {
+    id: "massHanger",
+    kind: "interaction",
+    signature: "massHanger(env, {id, label, unit, min, max, value, grid}): Observable<number>",
+    precondition: "Use it INSTEAD of slider for a quantity a student adds in equal steps, such as hanging slotted masses. grid is the number of masses, an integer from 2 to 8; value must sit on a step (min plus a whole number of steps); id is unique in the page. The returned observable is a control exactly as a slider's is.",
+    doc: "Drag masses from a tray onto a hanger, or press a mass to move it. The control's value is min plus one step per hung mass. A range input with the same id stays on the page for the keyboard and screen readers.",
+    useWhen: "Use for a load, a stack of weights or any quantity added in equal whole steps that a student can hang or place by hand.",
+  },
+  {
+    id: "springScene",
+    kind: "scene",
+    signature: "springScene(env, {extension: Observable<number>, full: number}): SVGSVGElement",
+    precondition: "extension is the output of a science model whose unit is metres (mechanics.hookes). full is the extension, in the same unit, at which the spring is drawn fully stretched; it is a drawing scale and is never shown. Create it after the model.",
+    doc: "A picture of a spring hanging from a bracket that stretches as the extension grows. It draws the quantity and never prints a number; its text equivalent says how stretched it is in words.",
+    useWhen: "Use beside a Hooke's law readout so the student sees the spring stretch as the load changes.",
+  },
+  {
     id: "readout",
     kind: "ui",
     signature: "readout(env, {label, unit, value: Observable<number>, digits?}): HTMLOutputElement",

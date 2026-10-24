@@ -34,6 +34,8 @@ class ControlSpec(_Strict):
     max: float
     value: float
     grid: int = Field(ge=1, le=40)
+    surface: Literal["slider", "masses"] = "slider"
+    """How the student operates the control. `masses` (Kit `massHanger`) is dragging equal masses onto a hanger: `grid` is then the number of masses."""
 
 
 class ConstantSpec(_Strict):
@@ -85,6 +87,16 @@ class TableSpec(_Strict):
     columns: list[TableColumn] = Field(min_length=1, max_length=6)
 
 
+class SceneSpec(_Strict):
+    """A picture bound to a model's output. It draws the quantity and never prints it."""
+
+    kind: Literal["spring"]
+    source: Slug
+    """A model instance id: the quantity drawn (for the spring, an extension in metres)."""
+    full: float = Field(gt=0, allow_inf_nan=False)
+    """The value, in the source's unit, at which the picture is fully stretched. A drawing scale; it is never shown."""
+
+
 class ExperimentCard(_Strict):
     aim: Sentence
     hypothesis: Sentence
@@ -125,6 +137,7 @@ class Plan(_Strict):
     models: list[ModelUse] = Field(min_length=1, max_length=3)
     readouts: list[ReadoutSpec] = Field(min_length=1, max_length=4)
     graphs: list[GraphSpec] = Field(default_factory=list, max_length=2)
+    scene: SceneSpec | None = None
     table: TableSpec | None = None
     experiment: ExperimentCard | None = None
     sentences: list[Sentence] = Field(default_factory=list, max_length=6)

@@ -163,7 +163,24 @@ export interface ActionRecord {
   label: string;
 }
 
+/** A composite widget the Kit built (the mass hanger, a scene). It reports facts about itself that a page could falsify (where its parts are, what they show), as problems; none means intact. */
+export interface WidgetRecord {
+  kind: "masses" | "scene";
+  id: string;
+  /** Masses only: how many masses the Kit made for the control. */
+  masses?: number;
+  /** Scenes only: the observable the scene draws. */
+  obs?: object;
+  /** Scenes only: the drawing scale the page was given, so the verifier can check it against the model's range. */
+  full?: number;
+  /** Structural problems: where the parts are in the document, what they say. Cheap and free of false alarms, so the student's runtime self-check acts on them too. */
+  check: () => string[];
+  /** How the parts are laid out and drawn (size, position, covered, faded). Read from a real layout, so only the verifier acts on it: a student's browser must not blank the page over a layout quirk. */
+  layout?: () => string[];
+}
+
 export const controls: ControlRecord[] = [];
+export const widgets: WidgetRecord[] = [];
 export const series: SeriesRecord[] = [];
 export const actions: ActionRecord[] = [];
 
@@ -189,6 +206,7 @@ export function resetForTests(): void {
   readouts.length = 0;
   series.length = 0;
   actions.length = 0;
+  widgets.length = 0;
   constants.length = 0;
   copy.length = 0;
 }

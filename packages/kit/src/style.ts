@@ -31,5 +31,14 @@ body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-
 .syn-table-wrap{overflow-x:auto;max-width:100%}
 .syn-table{border-collapse:collapse;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}
 .syn-table th,.syn-table td{border:1px solid var(--syn-border);padding:4px 6px;text-align:right;overflow-wrap:anywhere;font-size:.875rem}
+.syn-masses{display:grid;gap:8px}
+.syn-tray,.syn-hanger{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-height:64px;padding:8px;border-radius:var(--syn-radius)}
+.syn-tray{border:2px dashed var(--syn-border)}
+.syn-hanger{border:2px solid var(--syn-border);background:var(--syn-card)}
+.syn-hanger.syn-over{border-color:var(--syn-accent)}
+.syn-cap{flex:0 0 100%;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--syn-muted)}
+.syn-mass{min-width:44px;min-height:44px;padding:0;border-radius:12px;border:2px solid var(--syn-edge);background:var(--syn-accent);color:var(--syn-bg);font:inherit;font-weight:800;cursor:grab;touch-action:none;box-shadow:0 3px 0 var(--syn-edge);user-select:none}
+.syn-mass.syn-dragging{position:relative;z-index:2;cursor:grabbing;opacity:.9}
+.syn-scene{width:100%;max-height:260px;height:auto}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 `;

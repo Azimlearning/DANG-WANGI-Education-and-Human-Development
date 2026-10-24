@@ -169,9 +169,10 @@ def evaluate_chain(chain: dict, controls: dict[str, float], constants: dict[str,
 
 
 def all_chains(audit: dict) -> list[tuple[str, dict]]:
-    """Every value the page shows, as (what it is, its provenance chain): readouts, table columns and graph series."""
+    """Every value the page shows or draws, as (what it is, its provenance chain): readouts, table columns, graph series and scenes."""
     found = [(f"readout '{r['label']}'", r["chain"]) for r in audit.get("readouts", [])]
     found += [(f"{x['kind']} '{x['label']}'", x["chain"]) for x in audit.get("series", [])]
+    found += [(f"{w['kind']} '{w['id']}'", w["chain"]) for w in audit.get("widgets", []) if w.get("chain")]
     return found
 
 
@@ -267,6 +268,7 @@ REQUIRED_KEYS = (
     "unownedAttributeNumbers",
     "forbidden",
     "shadowRoots",
+    "widgets",
 )
 
 
@@ -288,6 +290,45 @@ def _value_problems(what: str, unit: str, chain: dict, audit: dict) -> list[Prob
         out.append(Problem("wrong_unit", f"{what} is labelled {unit!r} but its value is in {shown!r}"))
     for p in input_unit_problems(chain, audit):
         out.append(Problem(p.rule, f"{what}: {p.reason}"))
+    return out
+
+
+# The model each kind of scene may draw. A scene is a picture of a model's number; one bound to anything else is a picture the audit cannot ground.
+SCENE_MODELS = {"spring": "mechanics.hookes"}
+SCENE_FILL_MIN = 0.5
+"""A scene's drawing scale must be no less than the model's output at the controls' maximum and no more than twice it (the picture is then nearly full and never clipped)."""
+
+
+def _scene_scale_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
+    """The drawing scale the page gave a scene, against the model's own output with every control at its maximum (from the independent reference)."""
+    controls_at_max = {c["id"]: float(c["max"]) for c in audit.get("controls", [])}
+    constants = {c["label"]: float(c["value"]) for c in audit.get("constants", [])}
+    try:
+        peak = evaluate_chain(chain, controls_at_max, constants)
+    except (ValueError, KeyError):
+        return []  # an unevaluable chain is refused by the checks above
+    full = w.get("full")
+    if not isinstance(full, (int, float)) or isinstance(full, bool) or not math.isfinite(full) or full <= 0 or not (SCENE_FILL_MIN <= peak / full <= 1 + 1e-9):
+        return [Problem("scene_scale", f"the {w.get('id')} scene is drawn to a scale of {full!r} but its model reaches {peak:g} at the controls' maximum")]
+    return []
+
+
+def widget_problems(audit: dict) -> list[Problem]:
+    """The mass hangers and scenes the Kit built: each must report itself intact, a scene must draw the model it is registered for, and a hanger must have as many masses as the Kit made."""
+    out: list[Problem] = []
+    for w in audit["widgets"]:
+        for text in [*w.get("problems", []), *w.get("layout", [])]:
+            out.append(Problem("widget_tampered", text))
+        if w.get("kind") == "scene":
+            chain = w.get("chain") or {}
+            if chain.get("kind") != "model" or chain.get("id") != SCENE_MODELS.get(w.get("id", "")):
+                out.append(Problem("scene_ungrounded", f"the {w.get('id')} scene does not draw the output of {SCENE_MODELS.get(w.get('id', ''))}"))
+            else:
+                found = chain_problem(chain)
+                if found:
+                    out.append(Problem(found.rule, f"the {w.get('id')} scene: {found.reason}"))
+                out += [Problem(p.rule, f"the {w.get('id')} scene: {p.reason}") for p in input_unit_problems(chain, audit)]
+                out += _scene_scale_problems(w, chain, audit)
     return out
 
 
@@ -352,6 +393,7 @@ def l1_problems(audit: dict | None) -> list[Problem]:
         )
     if audit["shadowRoots"]:
         out.append(Problem("shadow_root", "an element has a shadow root; its content cannot be audited"))
+    out += widget_problems(audit)
     for u in audit["unownedNumbers"]:
         out.append(
             Problem("unowned_number", f"a number appears outside the Kit's elements in <{u['parent']}>: {u['text']!r}")

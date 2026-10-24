@@ -38,6 +38,9 @@ LAYER_OF_RULE = {
     "unknown_model": "L1 provenance",
     "readout_mismatch": "L1 provenance",
     "owned_changed": "L1 provenance",
+    "widget_tampered": "L1 provenance",
+    "scene_ungrounded": "L1 provenance",
+    "scene_scale": "L1 provenance",
     "unowned_number": "L1 provenance",
     "unowned_attribute_number": "L1 provenance",
     "shadow_root": "L1 provenance",
@@ -62,6 +65,7 @@ LAYER_OF_RULE = {
     "non_finite_readout": "L3 reference",
     # L2: behaviour
     "dead_control": "L2 behaviour",
+    "drag_dead": "L2 behaviour",
     "unstable_readout": "L2 behaviour",
     "no_controls": "L2 behaviour",
     "undeclared_control": "L2 behaviour",

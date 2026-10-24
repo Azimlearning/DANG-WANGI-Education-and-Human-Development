@@ -63,6 +63,7 @@ def good_audit() -> dict:
         "unownedAttributeNumbers": [],
         "forbidden": [],
         "shadowRoots": 0,
+        "widgets": [],
     }
 
 

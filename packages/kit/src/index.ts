@@ -13,11 +13,13 @@ import { environment } from "./environment";
 import { experiment } from "./experiment";
 import { graph } from "./graph";
 import { hintLadder } from "./hints";
+import { massHanger } from "./mass_hanger";
 import { KIT_VERSION } from "./manifest";
 import { observable } from "./observable";
 import { predictCard } from "./predict_card";
 import { readout } from "./readout";
 import { reset } from "./reset";
+import { springScene } from "./scene";
 import { hookes } from "./science/hookes";
 import { magnification } from "./science/magnification";
 import { surfaceAreaToVolume } from "./science/sa_to_v";
@@ -49,7 +51,7 @@ const readyAndWatch = (): void => {
 };
 const bridge = Object.freeze({ ready: readyAndWatch, event, error, installErrorHandlers });
 
-export const components = { observable, environment, slider, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, waveSpeed, newtonSecond, cardiacOutput, percentChangeMass, ph, gasVolume, bridge };
+export const components = { observable, environment, slider, massHanger, springScene, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, waveSpeed, newtonSecond, cardiacOutput, percentChangeMass, ph, gasVolume, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);

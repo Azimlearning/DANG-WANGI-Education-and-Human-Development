@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | Physics | 4 | Newton's second law: force, mass and acceleration | simulation | physics.newton_second | 37 | 851 | instantiate | kit-verified | 2 | newton2_law, newton2_fma |
 | Physics | 4 | Wave speed: frequency and wavelength | simulation | physics.wave_speed | 38 | 836 | instantiate | kit-verified | 2 | wave_speed_eq, wave_freq_src |
-| Physics | 5 | Hooke's law: how does a spring stretch? | virtual experiment | mechanics.hookes | 11 | 165 | instantiate | kit-verified | 1 | hooke_law |
+| Physics | 5 | Hooke's law: how does a spring stretch? | virtual experiment | mechanics.hookes | 7 | 70 | instantiate | kit-verified | 1 | hooke_law |
 | Physics | 5 | Ohm's law: current, voltage and resistance | simulation | electricity.ohm | 39 | 585 | instantiate | kit-verified | 2 | ohm_v_prop, ohm_v_ir |
 | Physics | 5 | Pressure in a liquid | simulation | fluids.pressure_depth | 21 | 483 | instantiate | kit-verified | 2 | pressure_liquid, pressure_g |
 | Biology | 4 | Why are cells small? Agar cubes | virtual experiment | biology.sa_to_v_cube | 9 | 108 | instantiate | kit-verified | 1 | tsa_v |

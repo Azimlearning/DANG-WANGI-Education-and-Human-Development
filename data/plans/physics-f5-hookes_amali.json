@@ -14,7 +14,8 @@
       "min": 0,
       "max": 10,
       "value": 2,
-      "grid": 10
+      "grid": 5,
+      "surface": "masses"
     }
   ],
   "constants": [],
@@ -39,6 +40,11 @@
       "convert_to": null
     }
   ],
+  "scene": {
+    "kind": "spring",
+    "source": "spring",
+    "full": 0.25
+  },
   "graphs": [
     {
       "title": "The extension rises in a straight line with the load.",
@@ -84,9 +90,9 @@
     "The spring constant is 50 N/m."
   ],
   "steps": [
-    "Set the load to 2 N and press Record.",
-    "Move the load to 4 N and press Record.",
-    "Move the load to 10 N and press Record.",
+    "Hang masses until the load is 2 N, then press Record.",
+    "Hang more masses until the load is 4 N, then press Record.",
+    "Hang all the masses so the load is 10 N, then press Record.",
     "Compare the extension each time the load doubles."
   ],
   "citation_ids": ["hooke_law"],

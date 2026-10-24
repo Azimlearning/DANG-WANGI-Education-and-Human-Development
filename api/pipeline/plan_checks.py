@@ -14,11 +14,31 @@ from pydantic import ValidationError
 
 from api.kitmanifest import Manifest
 from api.pipeline.plan import Plan
-from api.verify.provenance import copy_number_problems
+from api.verify.provenance import SCENE_FILL_MIN, copy_number_problems
 from api.verify.references import evaluate_model, unit_factor
 
 MAX_GRID_POSITIONS = 40
+MAX_MASSES = 8
+"""The most masses the Kit's `massHanger` takes (its `MAX_MASSES`)."""
+SCENE_MODELS = {"spring": frozenset({"mechanics.hookes"})}
+"""Which science models each scene kind may draw: the scene's picture must be the model's own output."""
 MAX_COPY_CHARS = 1800
+
+
+def _scene_peak(inst, controls: dict, constants: dict) -> float | None:  # noqa: ANN001
+    """The model instance's output with every control at its maximum, from the independent reference; None where it cannot be evaluated (other checks say why)."""
+    values: dict[str, float] = {}
+    for name, bound in inst.inputs.items():
+        if bound in controls:
+            values[name] = controls[bound].max
+        elif bound in constants:
+            values[name] = constants[bound].value
+        else:
+            return None
+    try:
+        return float(evaluate_model(inst.model, dict(inst.params), values))
+    except (KeyError, ValueError):
+        return None
 
 
 @dataclass(frozen=True)
@@ -65,6 +85,10 @@ def needed_components(plan: Plan) -> set[str]:
         need.add("workedSolution")
     if any(r.convert_to for r in plan.readouts):
         need.add("convert")
+    if any(c.surface == "masses" for c in plan.controls):
+        need.add("massHanger")
+    if plan.scene:
+        need.add("springScene")
     return need
 
 
@@ -142,6 +166,57 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                 f"Start {c.id} between {c.min} and {c.max}.",
                 repairable=True,
             )
+
+    for i, c in enumerate(plan.controls):
+        if c.surface != "masses" or not (math.isfinite(c.min) and math.isfinite(c.max) and math.isfinite(c.value) and c.min < c.max):
+            continue
+        path = f"controls[{i}]"
+        if not 2 <= c.grid <= MAX_MASSES:
+            add(
+                "PLAN-018",
+                path,
+                f"Control '{c.id}' uses masses, so grid is the number of masses and must be from 2 to {MAX_MASSES} (it is {c.grid}).",
+                f"Set grid for '{c.id}' to the number of masses, from 2 to {MAX_MASSES}, or use a slider.",
+            )
+            continue
+        steps = (c.value - c.min) / ((c.max - c.min) / c.grid)
+        # A start outside the range is PLAN-014's to report (and to repair); only a start inside it can be off the masses.
+        if c.min <= c.value <= c.max and abs(steps - round(steps)) > 1e-9:
+            add(
+                "PLAN-018",
+                path,
+                f"Control '{c.id}' starts at {c.value:g}, which is not a whole number of masses between {c.min:g} and {c.max:g}.",
+                f"Start '{c.id}' at {c.min:g} plus a whole number of steps of {(c.max - c.min) / c.grid:g}.",
+            )
+
+    if plan.scene is not None:
+        inst = instances.get(plan.scene.source)
+        allowed = SCENE_MODELS.get(plan.scene.kind, frozenset())
+        if inst is None:
+            add(
+                "PLAN-019",
+                "scene.source",
+                f"The scene draws '{plan.scene.source}', which is not a model instance in this Plan.",
+                "Point the scene at the id of a model instance whose output it draws.",
+            )
+        elif inst.model not in allowed:
+            add(
+                "PLAN-019",
+                "scene.source",
+                f"A {plan.scene.kind} scene draws the output of {sorted(allowed)}, not of '{inst.model}'.",
+                f"Draw a {plan.scene.kind} scene only from {sorted(allowed)}, or leave the scene out.",
+            )
+        else:
+            # The drawing scale must fit the model: at the controls' largest values the picture should be nearly full, and never clipped.
+            peak = _scene_peak(inst, controls, constants)
+            if peak is not None and not (SCENE_FILL_MIN <= peak / plan.scene.full <= 1 + 1e-9):
+                add(
+                    "PLAN-019",
+                    "scene.full",
+                    f"The scene's full scale is {plan.scene.full:g}, but '{inst.id}' reaches {peak:g} at the controls' maximum, so the picture would be "
+                    f"{'clipped' if peak > plan.scene.full else 'mostly unused'}.",
+                    f"Set the scene's full to a value from {peak:g} to {peak / SCENE_FILL_MIN:g}.",
+                )
 
     for i, m in enumerate(plan.models):
         path = f"models[{i}]"

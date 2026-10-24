@@ -32,6 +32,9 @@ const styleGet = method<(this: CSSStyleDeclaration, name: string) => string>(
   typeof CSSStyleDeclaration === "undefined" ? undefined : CSSStyleDeclaration.prototype,
   "getPropertyValue",
 );
+const elRect = Element.prototype.getBoundingClientRect;
+const nodeContains = Node.prototype.contains;
+const docAt = typeof Document.prototype.elementFromPoint === "function" ? Document.prototype.elementFromPoint : undefined;
 const doc = document;
 // jsdom (the unit-test DOM) cannot compute pseudo-element styles and logs an error for each try; real browsers can.
 const PSEUDO_STYLES = !/jsdom/i.test(navigator.userAgent);
@@ -64,6 +67,27 @@ export function textNodes(root: Node): Node[] {
   const walker = apply(makeWalker, doc, [root, NodeFilter.SHOW_TEXT]) as TreeWalker;
   const out: Node[] = [];
   for (let n = apply(walkNext, walker, []) as Node | null; n; n = apply(walkNext, walker, []) as Node | null) out.push(n);
+  return out;
+}
+
+export const rectOf = (e: Element): DOMRect => apply(elRect, e, []) as DOMRect;
+export const contains = (a: Node, b: Node): boolean => !!apply(nodeContains, a, [b]);
+/** The element a pointer at (x, y) would hit, or null (off the viewport, covered by nothing, or an environment that cannot lay out). */
+export const hitAt = (x: number, y: number): Element | null => (docAt ? ((apply(docAt, doc, [x, y]) as Element | null) ?? null) : null);
+
+/** Layout can only be read when the document is drawn at all. A frame the host has hidden has no layout, and that is not the page's doing. */
+export function layoutAvailable(): boolean {
+  const r = rectOf(bodyEl());
+  return r.width > 0 && r.height > 0;
+}
+
+/** How visible an element can be: the product of its opacity and every ancestor's. 1 where the environment cannot say. */
+export function effectiveOpacity(el: Element): number {
+  let out = 1;
+  for (let n: Element | null = el; n; n = parentOf(n)) {
+    const v = style(n, "opacity");
+    if (v !== "" && Number.isFinite(Number(v))) out *= Number(v);
+  }
   return out;
 }
 

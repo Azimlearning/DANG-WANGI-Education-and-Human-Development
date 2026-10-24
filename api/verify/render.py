@@ -87,6 +87,7 @@ class RenderReport:
     grid_truncated: bool = False
     reference_cases: int = 0
     models: list[tuple[str, tuple[tuple[str, float], ...]]] = field(default_factory=list)
+    drag_problems: list[str] = field(default_factory=list)
     kit_lane: bool = True
     """False for a Free page: it has no Kit, so the harness decides readiness and the refusal message says so."""
 
@@ -119,6 +120,8 @@ class RenderReport:
                     "dead_control",
                     f"control '{c.id}' changed no declared readout within {CONTROL_WIRE_TIMEOUT_MS} ms",
                 )
+        if self.drag_problems:
+            return ("drag_dead", self.drag_problems[0])
         for c in self.controls:
             if not c.stable:
                 return (
@@ -421,6 +424,7 @@ def _exercise(
 
     if kit_lane:
         _audit_and_sweep(frame, handles, report, plan_models)
+        _drive_drags(page, frame, report)
 
     # Scripted interaction: sweep every declared control and press real input for the time box.
     start = time.monotonic()
@@ -441,6 +445,170 @@ def _exercise(
     report.overflow_px = float(
         frame.evaluate("Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)")
     )
+
+
+def _mouse_drag(page, source, target) -> bool:  # noqa: ANN001
+    """Press the mouse on the middle of `source`, move to the middle of `target` in steps, and release: a real drag, with the pointer events a user makes."""
+    a, b = source.bounding_box(), target.bounding_box()
+    if not a or not b:
+        return False
+    page.mouse.move(a["x"] + a["width"] / 2, a["y"] + a["height"] / 2)
+    page.mouse.down()
+    page.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2, steps=8)
+    page.mouse.up()
+    return True
+
+
+def _touch_drag(page, cdp, source, target) -> bool:  # noqa: ANN001
+    """The same drag with a finger: touch events through the browser's input pipeline, so the page sees `pointerType: touch` and the browser's own touch-action rules apply."""
+    a, b = source.bounding_box(), target.bounding_box()
+    if not a or not b:
+        return False
+    x0, y0 = a["x"] + a["width"] / 2, a["y"] + a["height"] / 2
+    x1, y1 = b["x"] + b["width"] / 2, b["y"] + b["height"] / 2
+    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x0, "y": y0}]})
+    for i in range(1, 9):
+        cdp.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": x0 + (x1 - x0) * i / 8, "y": y0 + (y1 - y0) * i / 8}]})
+    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+    return True
+
+
+def _drive_drags(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
+    """L2 for a control operated by dragging (`massHanger`). What must exist comes from the Kit's own audit (how many masses it made for which control), never from the page, so
+    a page that renames, removes or hides the masses is caught by the count. Then EVERY mass is dragged onto the hanger with the mouse (each must raise the control by exactly one
+    step and move the readouts), every mass is dragged off (each must lower it by one step), one mass is pressed from the keyboard, and one is dragged with a finger. A dead or blocked
+    mass is refused as `drag_dead`. This is on top of the sweep, which sets the range input directly and would not notice."""
+    audit = _audit(frame)
+    if audit is None:
+        return
+    widgets = [w for w in audit.get("widgets", []) if w.get("kind") == "masses"]
+    if not widgets and frame.query_selector("[data-synapse-drag]") is not None:
+        report.drag_problems.append("the page has draggable masses the Kit did not report")
+        return
+    cdp = None
+    for w in widgets:
+        cid, want = str(w["id"]), int(w["masses"])
+        try:
+            control = frame.query_selector(f"[data-synapse-control='{cid}']")
+            zone = frame.query_selector(f"[data-synapse-dropzone='{cid}']")
+            tray = frame.query_selector(f"[data-synapse-tray='{cid}']")
+            record = next((c for c in audit["controls"] if c["id"] == cid), None)
+            if control is None or zone is None or tray is None or record is None:
+                report.drag_problems.append(f"the masses for '{cid}' have no declared control, drop zone or tray")
+                continue
+            tokens = frame.query_selector_all(f"[data-synapse-drag='{cid}']")
+            if len(tokens) != want:
+                report.drag_problems.append(f"the Kit made {want} masses for '{cid}' but the page has {len(tokens)} it can drag")
+                continue
+            step = float(record["step"])
+            tol = max(step * 0.02, 1e-9)
+
+            def value(c=control) -> float:  # noqa: ANN001
+                return float(c.input_value())
+
+            def token(state: str, name=cid):  # noqa: ANN001, ANN202
+                return frame.query_selector(f"[data-synapse-drag='{name}'][data-state='{state}']")
+
+            _set_control(control, "min")
+            _settle(page, 250)
+            zone.scroll_into_view_if_needed()
+            # With the bench in view, audit once more: the layout half of the widget report (size, place, covered, faded) can only be read from a real layout, in view.
+            _settle(page, 150)
+            _add(report.problems_l1, prov.l1_problems(_audit(frame)))
+            start = _readout_texts(frame)
+            failed = False
+            for n in range(want):  # every mass, one after another, onto the hanger
+                mass, before = token("tray"), value()
+                if mass is None or not _mouse_drag(page, mass, zone):
+                    report.drag_problems.append(f"no mass could be dragged onto the hanger for '{cid}' (mass {n + 1} of {want})")
+                    failed = True
+                    break
+                _settle(page, 250)
+                if abs(value() - (before + step)) > tol:
+                    report.drag_problems.append(f"dragging mass {n + 1} of {want} onto the hanger did not raise control '{cid}' by one step")
+                    failed = True
+                    break
+                if n == 0 and _readout_texts(frame) == start:
+                    report.drag_problems.append(f"dragging a mass onto the hanger changed no readout (control '{cid}')")
+                    failed = True
+                    break
+            if failed:
+                continue
+            for n in range(want):  # and every mass off again
+                mass, before = token("hung"), value()
+                if mass is None or not _mouse_drag(page, mass, tray):
+                    report.drag_problems.append(f"no mass could be dragged off the hanger for '{cid}' (mass {n + 1} of {want})")
+                    failed = True
+                    break
+                _settle(page, 250)
+                if abs(value() - (before - step)) > tol:
+                    report.drag_problems.append(f"dragging mass {n + 1} of {want} off the hanger did not lower control '{cid}' by one step")
+                    failed = True
+                    break
+            if failed:
+                continue
+            # The keyboard, for EVERY mass: focus it, press Enter (it hangs), press Enter again (it comes off). A page can swallow keys for all masses but one.
+            for n in range(want):
+                key = token("tray")
+                if key is None:
+                    report.drag_problems.append(f"no mass left to press from the keyboard for '{cid}' (mass {n + 1} of {want})")
+                    failed = True
+                    break
+                key.focus()
+                raised = value()
+                page.keyboard.press("Enter")
+                _settle(page, 200)
+                if abs(value() - (raised + step)) > tol:
+                    report.drag_problems.append(f"pressing mass {n + 1} of {want} with the keyboard did not raise control '{cid}' by one step")
+                    failed = True
+                    break
+            if failed:
+                continue
+            for n in range(want):
+                key = token("hung")
+                if key is None:
+                    break
+                key.focus()
+                raised = value()
+                page.keyboard.press("Space")
+                _settle(page, 200)
+                if abs(value() - (raised - step)) > tol:
+                    report.drag_problems.append(f"pressing hung mass {n + 1} of {want} with the keyboard (Space) did not take it off for '{cid}'")
+                    failed = True
+                    break
+            if failed:
+                continue
+            # A finger, for EVERY mass, onto the hanger and off again.
+            if cdp is None:
+                cdp = page.context.new_cdp_session(page)
+                cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 1})
+            for state, goal, sign, what in (("tray", zone, 1, "onto"), ("hung", tray, -1, "off")):
+                for n in range(want):
+                    mass, before = token(state), value()
+                    if mass is None or not _touch_drag(page, cdp, mass, goal):
+                        report.drag_problems.append(f"no mass could be dragged {what} the hanger with a finger for '{cid}' (mass {n + 1} of {want})")
+                        failed = True
+                        break
+                    _settle(page, 250)
+                    if abs(value() - (before + sign * step)) > tol:
+                        report.drag_problems.append(f"dragging mass {n + 1} of {want} {what} the hanger with a finger did not move control '{cid}' by one step")
+                        failed = True
+                        break
+                if failed:
+                    break
+            if failed:
+                continue
+            _set_control(control, "min")
+            _settle(page, 200)
+        except PlaywrightError as exc:
+            # The harness lost the page or the input path; that is not evidence about the masses, so it is a harness error (fail closed), not drag_dead.
+            report.harness_error = report.harness_error or f"driving the masses for '{cid}': {str(exc).splitlines()[0][:150]}"
+    if cdp is not None:
+        try:
+            cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": False})
+            cdp.detach()
+        except PlaywrightError:
+            pass
 
 
 # ── L1, L2, L3: the Kit's audit at every grid and extreme position ──────────────────────────────────────────────────────
