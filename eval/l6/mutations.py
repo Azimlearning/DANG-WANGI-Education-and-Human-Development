@@ -1507,7 +1507,15 @@ MUTATIONS: list[Mutation] = [
         "the escape speed forgets the factor of two",
         ORBIT,
         "refuse",
-        kit_edit=patch_fn(["radius", "central_mass"], "Math.sqrt(6.674e-11*{central_mass}/({radius}*1000))/1000"),
+        kit_edit=(r"fn:\(\{radius:(\w+),central_mass:(\w+)\}\)=>Math\.sqrt\(2\*(\w+)\*\2/\(\1\*1e3\)\)/1e3", r"fn:({radius:\1,central_mass:\2})=>Math.sqrt(\3*\2/(\1*1e3))/1e3"),
+    ),
+    Mutation(
+        "kit-escape-in-metres-per-second",
+        "physics",
+        "the escape speed is left in metres per second, not kilometres per second",
+        ORBIT,
+        "refuse",
+        kit_edit=(r"fn:\(\{radius:(\w+),central_mass:(\w+)\}\)=>Math\.sqrt\(2\*(\w+)\*\2/\(\1\*1e3\)\)/1e3", r"fn:({radius:\1,central_mass:\2})=>Math.sqrt(2*\3*\2/(\1*1e3))"),
     ),
     Mutation(
         "kit-circular-is-the-escape-speed",
