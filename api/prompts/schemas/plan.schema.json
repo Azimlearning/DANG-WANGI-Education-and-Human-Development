@@ -417,6 +417,19 @@
           "default": null,
           "title": "Endpoint"
         },
+        "escape": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]{0,23}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Escape"
+        },
         "full": {
           "exclusiveMinimum": 0,
           "title": "Full",
@@ -426,7 +439,8 @@
           "enum": [
             "spring",
             "titration",
-            "fermentation"
+            "fermentation",
+            "orbit"
           ],
           "title": "Kind",
           "type": "string"

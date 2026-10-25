@@ -13,6 +13,9 @@ import { spec as molesSpec } from "./science/moles";
 import { spec as titrSpec } from "./science/titration";
 import { spec as titrEndSpec } from "./science/titration_endpoint";
 import { spec as respSpec } from "./science/respiration_energy";
+import { spec as circSpec } from "./science/circular_speed";
+import { spec as escSpec } from "./science/escape_speed";
+import { spec as centSpec } from "./science/centripetal_acceleration";
 import { spec as dilSpec } from "./science/dilution";
 import { spec as heatSpec } from "./science/heat_energy";
 import { spec as rateSpec } from "./science/average_rate";
@@ -108,6 +111,14 @@ export const manifestEntries: ManifestEntry[] = [
     precondition: "fermented is a control in mol (the one a dial makes); energy is the output of the respiration-energy model (Synapse.respirationEnergy) fed by that same control; full is the glucose, in mol, at which the bubbling is drawn fullest: at least the control's maximum and at most twice it. Create it after the model.",
     doc: "The textbook's yeast fermentation apparatus: boiling tubes A (with yeast) and B (the control) under paraffin oil, each with a delivery tube into limewater and a thermometer. Once glucose is fermented, tube A bubbles, its limewater turns cloudy and it warms; tube B stays as it was. It draws and prints no number; its text says in words what the student would observe.",
     useWhen: "Use beside a fermentation readout so the student sees the products and the control, as in the yeast fermentation activity (Cellular Respiration).",
+  },
+  {
+    id: "orbitScene",
+    kind: "scene",
+    signature: "orbitScene(env, {speed: Observable<number>, circular: Observable<number>, escape: Observable<number>, full: number}): HTMLDivElement",
+    precondition: "speed is a control in km/s (a slider); circular is the output of Synapse.circularSpeed and escape of Synapse.escapeSpeed, BOTH fed by the same declared radius constant (Earth's, 6371 km, unit km) and with Earth's mass (5.972e24 kg); full is the launch speed, in km/s, at which the launch arrow is drawn longest: at least the control's maximum and at most twice it. The control's range should include the circular speed and the escape speed. Create it after both models.",
+    doc: "Newton's cannonball: a cannon on a tall mountain fires sideways over Earth. The path follows the launch speed: below the circular speed it curves down and lands, at the circular speed it circles Earth, between that and the escape speed it goes round in an oval, at the escape speed or more it leaves. It draws quantities and never prints a number; its text says in words which of the four it is, and that the picture is a sketch.",
+    useWhen: "Use beside a launch-speed slider and readouts of the circular and escape speeds so the student sees why a satellite stays up and what it takes to leave (Circular Motion and Gravitation).",
   },
   {
     id: "titrationScene",
@@ -358,6 +369,45 @@ export const manifestEntries: ManifestEntry[] = [
     citation: "UNVERIFIED (corpus not loaded until P2)",
     units: { glucose: "mol", energy_per_mole: "kJ/mol", output: "kJ" },
     ...fromSpec(respSpec),
+  },
+  {
+    id: "circularSpeed",
+    kind: "science",
+    signature: "circularSpeed({radius: Observable<number>, central_mass: number}): Observable<number>",
+    precondition: "Domain: radius above 0 km, central_mass above 0 kg. Units: radius km (from the CENTRE of the central body, a declared constant), central_mass kg, speed km/s. For Earth use central_mass 5.972e24 and radius 6371. G is fixed inside the model.",
+    doc: "Orbital speed of a satellite in a circular orbit v = sqrt(G M / r). A read-only observable that follows the radius.",
+    useWhen: "Use for how fast a satellite or a cannonball must go to circle Earth, and how that changes with distance (Circular Motion and Gravitation).",
+    modelId: "physics.circular_speed",
+    topics: ["physics_form4_circular_motion_and_gravitation"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { radius: "km", central_mass: "kg", output: "km/s" },
+    ...fromSpec(circSpec),
+  },
+  {
+    id: "escapeSpeed",
+    kind: "science",
+    signature: "escapeSpeed({radius: Observable<number>, central_mass: number}): Observable<number>",
+    precondition: "Domain: radius above 0 km, central_mass above 0 kg. Units: radius km (from the CENTRE of the central body, a declared constant), central_mass kg, speed km/s. For Earth use central_mass 5.972e24 and radius 6371. G is fixed inside the model.",
+    doc: "Escape speed v = sqrt(2 G M / r): the least launch speed that lets an object leave a central body for good. A read-only observable that follows the radius.",
+    useWhen: "Use for how fast a rocket must go to leave Earth, compared with the speed that only keeps it in orbit (Circular Motion and Gravitation).",
+    modelId: "physics.escape_speed",
+    topics: ["physics_form4_circular_motion_and_gravitation"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { radius: "km", central_mass: "kg", output: "km/s" },
+    ...fromSpec(escSpec),
+  },
+  {
+    id: "centripetalAcceleration",
+    kind: "science",
+    signature: "centripetalAcceleration({speed: Observable<number>, radius: Observable<number>}): Observable<number>",
+    precondition: "Domain: speed 0 km/s or more, radius above 0 km. Units: speed km/s, radius km (from the centre of the circle), acceleration m/s2.",
+    doc: "Centripetal acceleration a = v^2 / r: the acceleration towards the centre that keeps an object on a circle. A read-only observable that follows the speed and the radius.",
+    useWhen: "Use for what it takes to move in a circle, and to compare with the pull of gravity for a satellite (Circular Motion and Gravitation).",
+    modelId: "physics.centripetal_acceleration",
+    topics: ["physics_form4_circular_motion_and_gravitation"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { speed: "km/s", radius: "km", output: "m/s2" },
+    ...fromSpec(centSpec),
   },
   {
     id: "dilution",

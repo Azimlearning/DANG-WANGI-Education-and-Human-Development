@@ -1,0 +1,56 @@
+{
+  "id": "reference-orbit",
+  "title": "Newton's cannonball: falling, orbiting and escaping",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "Newton's cannonball: a launch-speed slider, Earth's circular and escape speeds from the two gravitation models, the centripetal acceleration needed to stay on a circle, and a picture of the cannonball's path. Checked by the L0 scan, the render harness (which sweeps the slider through all four outcomes) and L1 to L3.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "launch"
+  ],
+  "readouts": [
+    "Circular speed",
+    "Escape speed",
+    "Acceleration needed to stay on a circle"
+  ],
+  "models": [
+    {
+      "id": "physics.circular_speed",
+      "params": {
+        "central_mass": 5.972e+24
+      },
+      "readouts": [
+        "Circular speed"
+      ],
+      "scene": true
+    },
+    {
+      "id": "physics.escape_speed",
+      "params": {
+        "central_mass": 5.972e+24
+      },
+      "readouts": [
+        "Escape speed"
+      ],
+      "scene": true
+    },
+    {
+      "id": "physics.centripetal_acceleration",
+      "params": {},
+      "readouts": [
+        "Acceleration needed to stay on a circle"
+      ],
+      "series": [
+        "Acceleration needed for a circle"
+      ]
+    }
+  ]
+}

@@ -171,8 +171,10 @@ export interface WidgetRecord {
   masses?: number;
   /** Scenes only: the observable the scene draws (the model's output). */
   obs?: object;
-  /** Titration scene only: the control the scene is driven by. */
+  /** Titration, fermentation and orbit scenes: the control the scene is driven by. */
   source?: object;
+  /** Orbit scene only: the second model the scene draws (the escape speed). */
+  second?: object;
   /** Titration scene only: the scene has an eye the student places. */
   eye?: boolean;
   /** Scenes only: the drawing scale the page was given, so the verifier can check it against the model's range. */

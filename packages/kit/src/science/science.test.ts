@@ -15,6 +15,9 @@ import { spec as sa } from "./sa_to_v";
 import { spec as titration } from "./titration";
 import { spec as titrationEnd } from "./titration_endpoint";
 import { spec as respiration } from "./respiration_energy";
+import { G, spec as circular } from "./circular_speed";
+import { spec as escape } from "./escape_speed";
+import { spec as centripetal } from "./centripetal_acceleration";
 import { spec as hookes } from "./hookes";
 import { spec as ohm } from "./ohm";
 import { spec as pressure } from "./pressure_depth";
@@ -193,6 +196,53 @@ const BUGS: { spec: ScienceSpec; bugs: Record<string, Impl> }[] = [
       "NaN at 0.0025 mol": planted(respiration, (a) => (n(a, "glucose") === 0.0025 ? Number.NaN : n(a, "glucose") * n(a, "energy_per_mole"))),
       "square of the glucose": planted(respiration, (a) => n(a, "glucose") * n(a, "glucose") * n(a, "energy_per_mole")),
       "no domain check on the energy per mole": planted(respiration, (a) => n(a, "glucose") * n(a, "energy_per_mole"), ["energy_per_mole"]),
+    },
+  },
+  {
+    spec: circular,
+    bugs: {
+      "forgets the square root": planted(circular, (a) => (G * n(a, "central_mass")) / (n(a, "radius") * 1000) / 1000),
+      "multiplies by the radius instead of dividing": planted(circular, (a) => Math.sqrt(G * n(a, "central_mass") * n(a, "radius") * 1000) / 1000),
+      "radius left in kilometres": planted(circular, (a) => Math.sqrt((G * n(a, "central_mass")) / n(a, "radius")) / 1000),
+      "answer left in metres per second": planted(circular, (a) => Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000))),
+      "escape speed used for the circular speed": planted(circular, (a) => Math.sqrt((2 * G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000),
+      "radius squared in the denominator": planted(circular, (a) => Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000) ** 2) / 1000),
+      "forgets the central mass": planted(circular, (a) => Math.sqrt(G / (n(a, "radius") * 1000)) / 1000),
+      "caps at 8 km/s": planted(circular, (a) => Math.min(Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000, 8)),
+      "sign flips beyond 40 000 km": planted(circular, (a) => (n(a, "radius") > 40000 ? -1 : 1) * (Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000)),
+      "NaN at 6771 km": planted(circular, (a) => (n(a, "radius") === 6771 ? Number.NaN : Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000)),
+      "no domain check on the central mass": planted(circular, (a) => Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000, ["central_mass"]),
+    },
+  },
+  {
+    spec: escape,
+    bugs: {
+      "forgets the square root": planted(escape, (a) => (2 * G * n(a, "central_mass")) / (n(a, "radius") * 1000) / 1000),
+      "forgets the factor of two": planted(escape, (a) => Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000),
+      "factor of two outside the root": planted(escape, (a) => (2 * Math.sqrt((G * n(a, "central_mass")) / (n(a, "radius") * 1000))) / 1000),
+      "radius left in kilometres": planted(escape, (a) => Math.sqrt((2 * G * n(a, "central_mass")) / n(a, "radius")) / 1000),
+      "answer left in metres per second": planted(escape, (a) => Math.sqrt((2 * G * n(a, "central_mass")) / (n(a, "radius") * 1000))),
+      "multiplies by the radius instead of dividing": planted(escape, (a) => Math.sqrt(2 * G * n(a, "central_mass") * n(a, "radius") * 1000) / 1000),
+      "forgets the central mass": planted(escape, (a) => Math.sqrt((2 * G) / (n(a, "radius") * 1000)) / 1000),
+      "caps at 11 km/s": planted(escape, (a) => Math.min(Math.sqrt((2 * G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000, 11)),
+      "NaN at 42 164 km": planted(escape, (a) => (n(a, "radius") === 42164 ? Number.NaN : Math.sqrt((2 * G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000)),
+      "no domain check on the radius": planted(escape, (a) => Math.sqrt((2 * G * n(a, "central_mass")) / (n(a, "radius") * 1000)) / 1000, ["radius"]),
+    },
+  },
+  {
+    spec: centripetal,
+    bugs: {
+      "forgets to square the speed": planted(centripetal, (a) => (n(a, "speed") * 1000) / (n(a, "radius") * 1000)),
+      "divides by the radius squared": planted(centripetal, (a) => (n(a, "speed") * 1000) ** 2 / (n(a, "radius") * 1000) ** 2),
+      "multiplies by the radius": planted(centripetal, (a) => (n(a, "speed") * 1000) ** 2 * (n(a, "radius") * 1000)),
+      "speed left in km/s": planted(centripetal, (a) => n(a, "speed") ** 2 / (n(a, "radius") * 1000)),
+      "radius left in km": planted(centripetal, (a) => (n(a, "speed") * 1000) ** 2 / n(a, "radius")),
+      "answer in km/s2": planted(centripetal, (a) => (n(a, "speed") * 1000) ** 2 / (n(a, "radius") * 1000) / 1000),
+      "factor of two": planted(centripetal, (a) => (2 * (n(a, "speed") * 1000) ** 2) / (n(a, "radius") * 1000)),
+      "caps at 30": planted(centripetal, (a) => Math.min((n(a, "speed") * 1000) ** 2 / (n(a, "radius") * 1000), 30)),
+      "sign flips above 10 km/s": planted(centripetal, (a) => (n(a, "speed") > 10 ? -1 : 1) * ((n(a, "speed") * 1000) ** 2 / (n(a, "radius") * 1000))),
+      "NaN at 7.9 km/s": planted(centripetal, (a) => (n(a, "speed") === 7.9 ? Number.NaN : (n(a, "speed") * 1000) ** 2 / (n(a, "radius") * 1000))),
+      "no domain check on the radius": planted(centripetal, (a) => (n(a, "speed") * 1000) ** 2 / (n(a, "radius") * 1000), ["radius"]),
     },
   },
   {
@@ -398,5 +448,30 @@ describe("domain guard", () => {
     expect(() => run({ load: Number.NaN, k: 10 })).toThrow(RangeError);
     expect(() => run({ load: Number.POSITIVE_INFINITY, k: 10 })).toThrow(RangeError);
     expect(run({ load: 10, k: 50 })).toBeCloseTo(0.2, 12);
+  });
+});
+
+
+describe("the circular and escape speeds go together", () => {
+  it("makes the escape speed the square root of 2 times the circular speed at every radius and mass on the grid", () => {
+    for (const radius of circular.grid.radius as number[]) {
+      for (const central_mass of circular.grid.central_mass as number[]) {
+        const c = circular.fn({ radius, central_mass });
+        const e = escape.fn({ radius, central_mass });
+        expect(e / c).toBeCloseTo(Math.SQRT2, 12);
+      }
+    }
+  });
+  it("makes the centripetal acceleration at the circular speed equal the pull of gravity at that radius", () => {
+    const r = 6371;
+    const M = 5.972e24;
+    const v = circular.fn({ radius: r, central_mass: M });
+    const a = centripetal.fn({ speed: v, radius: r });
+    const gravity = (G * M) / (r * 1000) ** 2; // G M / r^2
+    expect(a / gravity).toBeCloseTo(1, 12);
+  });
+  it("gives the textbook's two figures for Earth", () => {
+    expect(circular.fn({ radius: 6371, central_mass: 5.972e24 })).toBeCloseTo(7.91, 2);
+    expect(escape.fn({ radius: 6371, central_mass: 5.972e24 })).toBeCloseTo(11.19, 2);
   });
 });

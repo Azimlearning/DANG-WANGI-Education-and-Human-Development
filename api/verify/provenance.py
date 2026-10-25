@@ -173,6 +173,7 @@ def all_chains(audit: dict) -> list[tuple[str, dict]]:
     found = [(f"readout '{r['label']}'", r["chain"]) for r in audit.get("readouts", [])]
     found += [(f"{x['kind']} '{x['label']}'", x["chain"]) for x in audit.get("series", [])]
     found += [(f"{w['kind']} '{w['id']}'", w["chain"]) for w in audit.get("widgets", []) if w.get("chain")]
+    found += [(f"{w['kind']} '{w['id']}' (second model)", w["secondChain"]) for w in audit.get("widgets", []) if w.get("secondChain")]
     return found
 
 
@@ -295,7 +296,7 @@ def _value_problems(what: str, unit: str, chain: dict, audit: dict) -> list[Prob
 
 
 # The model each kind of scene may draw. A scene is a picture of a model's number; one bound to anything else is a picture the audit cannot ground.
-SCENE_MODELS = {"spring": "mechanics.hookes", "titration": "chemistry.titration_endpoint_volume", "fermentation": "biology.respiration_energy"}
+SCENE_MODELS = {"spring": "mechanics.hookes", "titration": "chemistry.titration_endpoint_volume", "fermentation": "biology.respiration_energy", "orbit": "physics.circular_speed"}
 SCENE_FILL_MIN = 0.5
 """A scene's drawing scale must be no less than the model's output at the controls' maximum and no more than twice it (the picture is then nearly full and never clipped)."""
 
@@ -323,6 +324,65 @@ def _fermentation_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
     if not isinstance(full, (int, float)) or isinstance(full, bool) or not math.isfinite(full) or full < float(control["max"]) or float(control["max"]) / full < SCENE_FILL_MIN:
         return [Problem("scene_scale", f"the bubbling is drawn to a scale of {full!r} mol but the control goes up to {control['max']} mol")]
     return []
+
+
+ORBIT_ESCAPE_MODEL = "physics.escape_speed"
+EARTH_MASSES = (5.97e24, 5.972e24)
+"""Earth's mass as the textbooks give it. The orbit scene's words and picture are about Earth."""
+EARTH_RADIUS_KM = (6371.0, 6378.2)
+CIRCLE_BAND = 0.02
+
+
+def orbit_outcome(speed: float, circular: float, escape: float) -> str:
+    """The one rule for what the cannonball does (the Kit's `outcomeOf`, written again here)."""
+    if speed >= escape:
+        return "escapes"
+    if abs(speed - circular) <= CIRCLE_BAND * circular:
+        return "circle"
+    return "falls" if speed < circular else "oval"
+
+
+def _orbit_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
+    """An orbit scene draws a control in km/s against the circular and escape speeds of Earth, both fed by one declared radius: the control must be able to show all four outcomes."""
+    source = w.get("sourceChain") or {}
+    second = w.get("secondChain") or {}
+    control = next((c for c in audit.get("controls", []) if source.get("kind") == "control" and c["id"] == source.get("id")), None)
+    if control is None or control.get("unit") != "km/s":
+        return [Problem("scene_ungrounded", "the orbit scene is not driven by a control in km/s")]
+    if second.get("kind") != "model" or second.get("id") != ORBIT_ESCAPE_MODEL:
+        return [Problem("scene_ungrounded", f"the orbit scene does not draw the output of {ORBIT_ESCAPE_MODEL} as well")]
+    out: list[Problem] = []
+    found = chain_problem(second)
+    if found:
+        out.append(Problem(found.rule, f"the orbit scene: {found.reason}"))
+    out += [Problem(p.rule, f"the orbit scene: {p.reason}") for p in input_unit_problems(second, audit)]
+    radius = (chain.get("inputs") or {}).get("radius")
+    if not isinstance(radius, dict) or radius != (second.get("inputs") or {}).get("radius") or radius.get("kind") != "constant":
+        return out + [Problem("scene_ungrounded", "the circular and escape speeds the orbit scene draws are not fed by one declared radius")]
+    declared = next((k for k in audit.get("constants", []) if k.get("label") == radius.get("id")), None)
+    if declared is None or declared.get("unit") != "km" or not (EARTH_RADIUS_KM[0] <= float(declared["value"]) <= EARTH_RADIUS_KM[1]):
+        return out + [Problem("scene_ungrounded", "the orbit scene's radius is not Earth's radius in km (6371 to 6378)")]
+    mass = (chain.get("params") or {}).get("central_mass")
+    if mass not in EARTH_MASSES or (second.get("params") or {}).get("central_mass") != mass:
+        return out + [Problem("scene_ungrounded", "the orbit scene draws a central mass other than Earth's (5.97e24 or 5.972e24 kg), or two different ones")]
+    full = w.get("full")
+    top = float(control["max"])
+    if not isinstance(full, (int, float)) or isinstance(full, bool) or not math.isfinite(full) or full < top or top / full < SCENE_FILL_MIN:
+        return out + [Problem("scene_scale", f"the launch arrow is drawn to a scale of {full!r} km/s but the control goes up to {control['max']} km/s")]
+    constants = {k["label"]: float(k["value"]) for k in audit.get("constants", [])}
+    try:
+        circular = evaluate_chain(chain, {}, constants)
+        escape = evaluate_chain(second, {}, constants)
+    except (ValueError, KeyError):
+        return out
+    grid = int(control.get("grid") or 0)
+    lo, hi = float(control["min"]), float(control["max"])
+    positions = [lo + (hi - lo) * i / grid for i in range(grid + 1)] if grid > 0 else [lo, hi]
+    seen = {orbit_outcome(v, circular, escape) for v in positions}
+    missing = sorted({"falls", "circle", "oval", "escapes"} - seen)
+    if missing:
+        out.append(Problem("scene_scale", f"the control ({lo:g} to {hi:g} km/s) can never show: {', '.join(missing)} (circular {circular:.2f}, escape {escape:.2f} km/s)"))
+    return out
 
 
 def _titration_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
@@ -391,6 +451,8 @@ def widget_problems(audit: dict) -> list[Problem]:
                     out += _titration_problems(w, chain, audit)
                 elif w.get("id") == "fermentation":
                     out += _fermentation_problems(w, chain, audit)
+                elif w.get("id") == "orbit":
+                    out += _orbit_problems(w, chain, audit)
                 else:
                     out += _scene_scale_problems(w, chain, audit)
     return out
@@ -577,7 +639,7 @@ def binding_problems(audit: dict, plan_models: list[dict]) -> list[Problem]:
                 out.append(Problem("plan_mismatch", f"'{label}' is not fed by the plan's {m['id']} {m.get('params', {})}"))
         if m.get("scene"):
             drawn = [w for w in audit.get("widgets", []) if w.get("kind") == "scene" and w.get("chain")]
-            if not any(_is_instance(_top_model(w["chain"]), *want) for w in drawn):
+            if not any(_is_instance(_top_model(c), *want) for w in drawn for c in (w["chain"], w.get("secondChain")) if c):
                 out.append(Problem("plan_mismatch", f"the scene is not drawn from the plan's {m['id']} {m.get('params', {})}"))
     return out
 

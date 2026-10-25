@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Newton&#x27;s cannonball: falling, orbiting and escaping</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Newton's cannonball: falling, orbiting and escaping", note: "Imagine a cannon on a very tall mountain firing sideways. Slow, and the ball curves down and lands. Fast enough, and it keeps missing the ground and circles Earth. Faster still, and it goes round in an oval, and past the escape speed it leaves Earth for good." });
+  Synapse.predictCard(env, {"prompt": "As the launch speed rises, what happens first after the cannonball stops landing on Earth?", "choices": ["It goes round Earth", "It leaves Earth at once", "It stops in the air"], "reveal": "Raise the speed slowly and watch the path."});
+  var c_launch = Synapse.slider(env, {"id": "launch", "label": "Launch speed", "unit": "km/s", "min": 1.0, "max": 15.0, "value": 5.0, "grid": 28});
+  var k_radius = Synapse.constant(6371.0, {"label": "Distance from Earth's centre", "unit": "km"});
+  var m_circular = Synapse.circularSpeed({ central_mass: 5.972e+24, radius: k_radius });
+  var m_escape = Synapse.escapeSpeed({ central_mass: 5.972e+24, radius: k_radius });
+  var m_centripetal = Synapse.centripetalAcceleration({ radius: k_radius, speed: c_launch });
+  Synapse.readout(env, { label: "Circular speed", unit: "km/s", value: m_circular, digits: 2 });
+  Synapse.readout(env, { label: "Escape speed", unit: "km/s", value: m_escape, digits: 2 });
+  Synapse.readout(env, { label: "Acceleration needed to stay on a circle", unit: "m/s2", value: m_centripetal, digits: 2 });
+  
+  Synapse.orbitScene(env, { speed: c_launch, circular: m_circular, escape: m_escape, full: 15.0 });
+  Synapse.stepper(env, { steps: ["Set the launch speed low and watch the cannonball curve down and land on Earth.", "Raise the speed until the cannonball goes right round Earth, and compare the circular speed readout with your launch speed.", "Raise it further until the path becomes an oval, then until the cannonball leaves, and note the escape speed readout."] });
+  Synapse.table(env, { caption: "Results", columns: [
+    { label: "Launch speed", unit: "km/s", value: c_launch, digits: 1 },
+    { label: "Acceleration needed for a circle", unit: "m/s2", value: m_centripetal, digits: 2 }
+  ] });
+  Synapse.text(env, "A satellite stays up because it keeps falling towards Earth and keeps missing it.");
+  Synapse.text(env, "At the circular speed, the acceleration needed to move in a circle is exactly the pull of gravity there.");
+  
+  Synapse.conceptCheck(env, {"question": "Which launch speed is needed to leave Earth for good compared with the speed that only keeps the cannonball in a circle?", "options": ["The same speed", "A greater speed", "A smaller speed"], "correct": 1, "explanation": "The escape speed is the square root of 2 times the circular speed, so it is always greater."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

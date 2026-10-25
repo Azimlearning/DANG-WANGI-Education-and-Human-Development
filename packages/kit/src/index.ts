@@ -39,6 +39,10 @@ import { averageRate } from "./science/average_rate";
 import { ohm } from "./science/ohm";
 import { pressureDepth } from "./science/pressure_depth";
 import { respirationEnergy } from "./science/respiration_energy";
+import { circularSpeed } from "./science/circular_speed";
+import { escapeSpeed } from "./science/escape_speed";
+import { centripetalAcceleration } from "./science/centripetal_acceleration";
+import { orbitScene } from "./orbit_scene";
 import { titrationEndpoint } from "./science/titration_endpoint";
 import { dial } from "./dial";
 import { fermentationScene } from "./fermentation_scene";
@@ -57,7 +61,7 @@ const readyAndWatch = (): void => {
 };
 const bridge = Object.freeze({ ready: readyAndWatch, event, error, installErrorHandlers });
 
-export const components = { observable, environment, slider, massHanger, springScene, valve, titrationScene, titrationEndpoint, dial, fermentationScene, respirationEnergy, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, waveSpeed, newtonSecond, cardiacOutput, percentChangeMass, ph, gasVolume, bridge };
+export const components = { observable, environment, slider, massHanger, springScene, valve, titrationScene, titrationEndpoint, dial, fermentationScene, orbitScene, respirationEnergy, circularSpeed, escapeSpeed, centripetalAcceleration, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, waveSpeed, newtonSecond, cardiacOutput, percentChangeMass, ph, gasVolume, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);

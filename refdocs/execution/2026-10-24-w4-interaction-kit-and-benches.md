@@ -62,3 +62,20 @@
 **Verification (run 2026-10-25):** `pnpm --filter @synapse/kit test` (417); `pnpm -r typecheck`; ruff; pyright; `uv run pytest -q` (987 passed, 1 skipped (983 in the full run; the 4 failures were a stale surface test, two over-long pointer claims, and two generated reports, and their files were rerun)); `eval/l6/run.py` (151 of 156 planted defects refused, 0 of 16 false positives, no surprise misses); `eval/hostile/run.py`; `eval/environments/build.py --corpus ...` (17 of 17 `kit-verified`); `eval/smoke/web_smoke.py --no-build`; `eval/cost/project.py`; a screenshot of the bench after turning the dial.
 
 **Notes.** A screenshot of my own first build showed the Kit blanking the page: Playwright injects a stylesheet and the new no-CSS rule was in the runtime self-check. That is D-46's correction; it would have hit any student with a dark-mode or translation extension. My own test mistakes fixed: a step value that was on the grid (0.0035), a snap I computed wrongly, a rule name in an assertion. **Not done:** stage 4; the V3 setup drags and timer (recorded in D-46); a screen-reader pass; a real phone; a paid planner canary (W8).
+
+
+## Stage 4: the orbit bench (2026-10-25)
+
+| # | Task | Files | Verify | Status |
+|---|---|---|---|---|
+| 1 | Two models with registration suites, independent references and pointers | `science/{circular_speed,escape_speed,centripetal_acceleration}.ts`, `science.test.ts`, `api/verify/references.py`, `data/citations/pointers.json` | Kit tests | Done |
+| 2 | `orbitScene`, manifest entries, index | `orbit_scene.ts`, `manifest.ts`, `index.ts`, `orbit.test.ts` | Kit tests | Done |
+| 3 | Plan fields, PLAN-019 for orbits, assembler, constants table | `plan.py`, `plan_checks.py`, `assemble.py`, `constants.py`, `failchecks.py` | `test_plan_orbit.py` | Done |
+| 4 | The verifier holds the scene to the plan | `api/verify/provenance.py` | `test_orbit.py` | Done |
+| 5 | The golden Plan, planner schema and pack | `data/plans/physics-f4-orbit.json`, `api/prompts/schemas/plan.schema.json`, `api/prompts/planner.v6.md` | environments build | Done |
+| 6 | Planted defects and a reference fixture | `eval/l6/mutations.py`, `data/fixtures/envs/reference-orbit.*` | L6 | Done |
+| 7 | Relock the Kit | `packages/kit/kit-lock.json` | build hash | Done |
+
+**Verification (run 2026-10-25, cloud container, shimmed Chromium):** `pnpm --filter @synapse/kit test` 478 passed (the three models' registration suites refuse 32 planted bugs; the scene has its own tests in `orbit.test.ts`); `pnpm -r typecheck`; `uv run ruff check api eval`; `uv run pyright api eval`; `api/pipeline/test_plan_orbit.py` 27 passed (15 ways to break PLAN-019 all refused); `api/verify/test_orbit.py` 26 passed in Chromium (the reference bench is minted; every tamper and mis-binding is refused); `eval/environments/build.py`: 18 Environments verified and delivered; `eval/cost/project.py` regenerated. Kit relocked to `a60c334b3534`. L6, the hostile set and the browser smoke are recorded in the changelog.
+
+**Notes.** The first build was refused by the harness's own rule (a control that moves no readout), which led to the third model. The golden Plan has no citation ids: the pages that state the circular speed, the escape speed and a = v^2/r in the Form 4 textbook have to be found in the local corpus, and pointers `orbit_circular`, `orbit_escape` and `orbit_centripetal` added then (the Environment is `model-checked` until then). **Not done:** a `kit-guardian` review (owed; stages 1 to 3 each needed two rounds and found real bypasses), the textbook citations, a screen-reader pass of the scene, a real phone.

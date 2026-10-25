@@ -124,6 +124,40 @@ def titration_endpoint_volume(va: float, mb: float, ma: float, acid_coeff: float
     return moles_base / mb
 
 
+# The gravitational constant, N m2/kg2, written here independently of the Kit.
+_G = 6.674e-11
+
+
+def circular_speed(radius: float, central_mass: float) -> float:
+    """Speed in km/s of a satellite in a circular orbit `radius` km from the centre of a body of `central_mass` kg: v = sqrt(G M / r)."""
+    _finite(radius=radius, central_mass=central_mass)
+    if radius <= 0:
+        raise ValueError("radius must be above 0 km")
+    if central_mass <= 0:
+        raise ValueError("central_mass must be above 0 kg")
+    return math.sqrt(_G * central_mass / (radius * 1000.0)) / 1000.0
+
+
+def escape_speed(radius: float, central_mass: float) -> float:
+    """Speed in km/s that lets an object leave a body of `central_mass` kg from `radius` km from its centre for good: v = sqrt(2 G M / r)."""
+    _finite(radius=radius, central_mass=central_mass)
+    if radius <= 0:
+        raise ValueError("radius must be above 0 km")
+    if central_mass <= 0:
+        raise ValueError("central_mass must be above 0 kg")
+    return math.sqrt(2.0 * _G * central_mass / (radius * 1000.0)) / 1000.0
+
+
+def centripetal_acceleration(speed: float, radius: float) -> float:
+    """Centripetal acceleration in m/s2 of an object at `speed` (km/s) on a circle of `radius` km: a = v^2 / r."""
+    _finite(speed=speed, radius=radius)
+    if speed < 0:
+        raise ValueError("speed must be 0 km/s or more")
+    if radius <= 0:
+        raise ValueError("radius must be above 0 km")
+    return (speed * 1000.0) ** 2 / (radius * 1000.0)
+
+
 def respiration_energy(glucose: float, energy_per_mole: float) -> float:
     """Energy (kJ) released when `glucose` mol is broken down by a pathway that gives `energy_per_mole` kJ per mole of glucose."""
     _finite(glucose=glucose, energy_per_mole=energy_per_mole)
@@ -236,6 +270,9 @@ REFERENCES: dict[str, Reference] = {
     "chemistry.titration_endpoint_volume": Reference(
         titration_endpoint_volume, ("va", "mb"), ("ma", "acid_coeff", "base_coeff"), "cm3", {"va": "cm3", "mb": "mol/dm3"}
     ),
+    "physics.circular_speed": Reference(circular_speed, ("radius",), ("central_mass",), "km/s", {"radius": "km"}),
+    "physics.centripetal_acceleration": Reference(centripetal_acceleration, ("speed", "radius"), (), "m/s2", {"speed": "km/s", "radius": "km"}),
+    "physics.escape_speed": Reference(escape_speed, ("radius",), ("central_mass",), "km/s", {"radius": "km"}),
     "biology.respiration_energy": Reference(respiration_energy, ("glucose",), ("energy_per_mole",), "kJ", {"glucose": "mol"}),
     "chemistry.dilution": Reference(dilution, ("v2",), ("m1", "v1"), "mol/dm3", {"v2": "cm3"}),
     "chemistry.heat_energy": Reference(heat_energy, ("delta_t",), ("mass", "c"), "J", {"delta_t": "\u00b0C"}),

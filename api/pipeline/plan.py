@@ -90,13 +90,15 @@ class TableSpec(_Strict):
 class SceneSpec(_Strict):
     """A picture bound to a model's output. It draws the quantity and never prints it."""
 
-    kind: Literal["spring", "titration", "fermentation"]
+    kind: Literal["spring", "titration", "fermentation", "orbit"]
     source: Slug
-    """What is drawn. A spring: a model instance id (the extension, in metres). A titration or a fermentation: a control id (the volume run in, in cm3; the glucose fermented, in mol)."""
+    """What is drawn. A spring: a model instance id (the extension, in metres). A titration, a fermentation or an orbit: a control id (the volume run in, in cm3; the glucose fermented, in mol; the launch speed, in km/s)."""
     endpoint: Slug | None = None
     """A titration only: the model instance id of the end-point volume, where the indicator changes colour."""
     model: Slug | None = None
-    """A fermentation only: the model instance id of the energy released, fed by the control the scene draws."""
+    """A fermentation: the model instance id of the energy released, fed by the control the scene draws. An orbit: the model instance id of the circular speed."""
+    escape: Slug | None = None
+    """An orbit only: the model instance id of the escape speed, fed by the same radius constant as the circular speed."""
     full: float = Field(gt=0, allow_inf_nan=False)
     """The value, in the source's unit, at which the picture is full (a spring fully stretched, a burette's capacity). A drawing scale; it is never shown."""
 
@@ -104,8 +106,10 @@ class SceneSpec(_Strict):
     def _endpoint_only_for_a_titration(self) -> SceneSpec:
         if (self.kind == "titration") != (self.endpoint is not None):
             raise ValueError("a titration scene needs an endpoint, and no other scene has one")
-        if (self.kind == "fermentation") != (self.model is not None):
-            raise ValueError("a fermentation scene needs a model, and no other scene has one")
+        if (self.kind in ("fermentation", "orbit")) != (self.model is not None):
+            raise ValueError("a fermentation or an orbit scene needs a model, and no other scene has one")
+        if (self.kind == "orbit") != (self.escape is not None):
+            raise ValueError("an orbit scene needs an escape speed, and no other scene has one")
         return self
 
 
@@ -169,7 +173,7 @@ class Plan(_Strict):
             entry: dict = {"id": m.model, "params": dict(m.params)}
             readouts = [r.label for r in self.readouts if r.source == m.id]
             series = [g.label for g in self.graphs if g.source == m.id] + [c.label for c in (self.table.columns if self.table else []) if c.source == m.id]
-            drawn = self.scene is not None and m.id in {self.scene.source if self.scene.kind == "spring" else None, self.scene.endpoint, self.scene.model}
+            drawn = self.scene is not None and m.id in {self.scene.source if self.scene.kind == "spring" else None, self.scene.endpoint, self.scene.model, self.scene.escape}
             # Which instance feeds which value matters when one model is used twice (two energies, two concentrations): the verifier compares each of these with the page.
             if readouts:
                 entry["readouts"] = readouts

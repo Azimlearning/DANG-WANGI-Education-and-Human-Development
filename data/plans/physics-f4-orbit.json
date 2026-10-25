@@ -1,0 +1,138 @@
+{
+  "experiment_ref": null,
+  "constants": [
+    {
+      "id": "radius",
+      "label": "Distance from Earth's centre",
+      "unit": "km",
+      "value": 6371
+    }
+  ],
+  "graphs": [],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "Launch speed",
+        "unit": "km/s",
+        "source": "launch",
+        "digits": 1
+      },
+      {
+        "label": "Acceleration needed for a circle",
+        "unit": "m/s2",
+        "source": "centripetal",
+        "digits": 2
+      }
+    ]
+  },
+  "sentences": [
+    "A satellite stays up because it keeps falling towards Earth and keeps missing it.",
+    "At the circular speed, the acceleration needed to move in a circle is exactly the pull of gravity there."
+  ],
+  "steps": [
+    "Set the launch speed low and watch the cannonball curve down and land on Earth.",
+    "Raise the speed until the cannonball goes right round Earth, and compare the circular speed readout with your launch speed.",
+    "Raise it further until the path becomes an oval, then until the cannonball leaves, and note the escape speed readout."
+  ],
+  "citation_ids": [],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "simulation",
+  "id": "newton_cannonball",
+  "title": "Newton's cannonball: falling, orbiting and escaping",
+  "goal": "See how the launch speed decides whether a cannonball falls back to Earth, circles it, goes round in an oval or leaves for good.",
+  "topic": "physics_form4_circular_motion_and_gravitation",
+  "note": "Imagine a cannon on a very tall mountain firing sideways. Slow, and the ball curves down and lands. Fast enough, and it keeps missing the ground and circles Earth. Faster still, and it goes round in an oval, and past the escape speed it leaves Earth for good.",
+  "controls": [
+    {
+      "id": "launch",
+      "label": "Launch speed",
+      "unit": "km/s",
+      "min": 1,
+      "max": 15,
+      "value": 5,
+      "grid": 28
+    }
+  ],
+  "models": [
+    {
+      "id": "circular",
+      "model": "physics.circular_speed",
+      "params": {
+        "central_mass": 5.972e+24
+      },
+      "inputs": {
+        "radius": "radius"
+      }
+    },
+    {
+      "id": "escape",
+      "model": "physics.escape_speed",
+      "params": {
+        "central_mass": 5.972e+24
+      },
+      "inputs": {
+        "radius": "radius"
+      }
+    },
+    {
+      "id": "centripetal",
+      "model": "physics.centripetal_acceleration",
+      "params": {},
+      "inputs": {
+        "speed": "launch",
+        "radius": "radius"
+      }
+    }
+  ],
+  "scene": {
+    "kind": "orbit",
+    "source": "launch",
+    "model": "circular",
+    "escape": "escape",
+    "full": 15
+  },
+  "readouts": [
+    {
+      "label": "Circular speed",
+      "unit": "km/s",
+      "digits": 2,
+      "source": "circular",
+      "convert_to": null
+    },
+    {
+      "label": "Escape speed",
+      "unit": "km/s",
+      "digits": 2,
+      "source": "escape",
+      "convert_to": null
+    },
+    {
+      "label": "Acceleration needed to stay on a circle",
+      "unit": "m/s2",
+      "digits": 2,
+      "source": "centripetal",
+      "convert_to": null
+    }
+  ],
+  "predict": {
+    "prompt": "As the launch speed rises, what happens first after the cannonball stops landing on Earth?",
+    "choices": [
+      "It goes round Earth",
+      "It leaves Earth at once",
+      "It stops in the air"
+    ],
+    "reveal": "Raise the speed slowly and watch the path."
+  },
+  "concept_check": {
+    "question": "Which launch speed is needed to leave Earth for good compared with the speed that only keeps the cannonball in a circle?",
+    "options": [
+      "The same speed",
+      "A greater speed",
+      "A smaller speed"
+    ],
+    "correct": 1,
+    "explanation": "The escape speed is the square root of 2 times the circular speed, so it is always greater."
+  }
+}

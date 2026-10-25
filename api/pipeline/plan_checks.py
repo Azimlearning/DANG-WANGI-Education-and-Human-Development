@@ -15,7 +15,14 @@ from pydantic import ValidationError
 from api.kitmanifest import Manifest
 from api.pipeline import constants as known_constants
 from api.pipeline.plan import Plan
-from api.verify.provenance import SCENE_FILL_MIN, copy_number_problems
+from api.verify.provenance import (
+    EARTH_MASSES,
+    EARTH_RADIUS_KM,
+    ORBIT_ESCAPE_MODEL,
+    SCENE_FILL_MIN,
+    copy_number_problems,
+    orbit_outcome,
+)
 from api.verify.references import evaluate_model, unit_factor
 
 MAX_GRID_POSITIONS = 40
@@ -27,6 +34,7 @@ SCENE_MODELS = {
     "spring": frozenset({"mechanics.hookes"}),
     "titration": frozenset({"chemistry.titration_endpoint_volume"}),
     "fermentation": frozenset({"biology.respiration_energy"}),
+    "orbit": frozenset({"physics.circular_speed"}),
 }
 """Which science models each scene kind may draw: the scene's picture must be the model's own output."""
 MAX_COPY_CHARS = 1800
@@ -99,7 +107,7 @@ def needed_components(plan: Plan) -> set[str]:
     if any(c.surface == "dial" for c in plan.controls):
         need.add("dial")
     if plan.scene:
-        need.add({"titration": "titrationScene", "fermentation": "fermentationScene"}.get(plan.scene.kind, "springScene"))
+        need.add({"titration": "titrationScene", "fermentation": "fermentationScene", "orbit": "orbitScene"}.get(plan.scene.kind, "springScene"))
     return need
 
 
@@ -263,6 +271,84 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                                 "scene.endpoint",
                                 f"The indicator changes at {at:g} cm3, which is not one of the stopcock's steps, so the student could never stop exactly at the end point.",
                                 f"Choose the alkali's concentration so the end point sits on a step of '{drawn.id}' (steps of {(drawn.max - drawn.min) / drawn.grid:g} cm3 from {drawn.min:g}).",
+                            )
+        elif scene.kind == "orbit":
+            drawn = controls.get(scene.source)
+            circ = instances.get(scene.model or "")
+            esc = instances.get(scene.escape or "")
+            if drawn is None or drawn.unit != "km/s":
+                add(
+                    "PLAN-019",
+                    "scene.source",
+                    f"An orbit scene draws a control in km/s, and '{scene.source}' is {'not a control' if drawn is None else 'in ' + drawn.unit}.",
+                    "Point the scene at the id of the control that is the launch speed, in km/s.",
+                )
+            elif scene.full < drawn.max or drawn.max / scene.full < SCENE_FILL_MIN:
+                add(
+                    "PLAN-019",
+                    "scene.full",
+                    f"The scene's scale is {scene.full:g} km/s but the control goes up to {drawn.max:g} km/s, so the launch arrow would be "
+                    f"{'overfull' if scene.full < drawn.max else 'mostly unused'}.",
+                    f"Set the scene's full to a value from {drawn.max:g} to {drawn.max / SCENE_FILL_MIN:g}.",
+                )
+            if circ is None or circ.model not in allowed:
+                add(
+                    "PLAN-019",
+                    "scene.model",
+                    f"An orbit scene draws the circular speed from {sorted(allowed)}, and '{scene.model}' is "
+                    f"{'not a model instance in this Plan' if circ is None else 'a ' + circ.model + ' instance'}.",
+                    f"Point the scene's model at an instance of {sorted(allowed)}.",
+                )
+            if esc is None or esc.model != ORBIT_ESCAPE_MODEL:
+                add(
+                    "PLAN-019",
+                    "scene.escape",
+                    f"An orbit scene draws the escape speed from {ORBIT_ESCAPE_MODEL}, and '{scene.escape}' is "
+                    f"{'not a model instance in this Plan' if esc is None else 'a ' + esc.model + ' instance'}.",
+                    f"Point the scene's escape at an instance of {ORBIT_ESCAPE_MODEL}.",
+                )
+            if circ is not None and esc is not None and circ.model in allowed and esc.model == ORBIT_ESCAPE_MODEL:
+                bound = circ.inputs.get("radius")
+                if bound is None or bound != esc.inputs.get("radius") or bound not in constants:
+                    add(
+                        "PLAN-019",
+                        "scene.escape",
+                        "The circular and escape speeds must be fed by the same radius, a declared constant.",
+                        "Bind both models' radius input to one constant (Earth's radius, in km).",
+                    )
+                else:
+                    r = constants[bound]
+                    if r.unit != "km" or not (EARTH_RADIUS_KM[0] <= r.value <= EARTH_RADIUS_KM[1]):
+                        add(
+                            "PLAN-019",
+                            "scene.model",
+                            f"The scene is about a cannon on Earth, so the radius must be Earth's, {EARTH_RADIUS_KM[0]:g} to {EARTH_RADIUS_KM[1]:g} km; '{bound}' is {r.value:g} {r.unit}.",
+                            "Use Earth's radius, 6371 km, as the radius constant.",
+                        )
+                mass = circ.params.get("central_mass")
+                if mass not in EARTH_MASSES or esc.params.get("central_mass") != mass:
+                    add(
+                        "PLAN-019",
+                        "scene.model",
+                        f"The scene is about Earth, so both models need Earth's mass ({' or '.join(f'{m:g}' for m in EARTH_MASSES)} kg); they have {mass} and {esc.params.get('central_mass')}.",
+                        "Set central_mass to 5.972e24 on both models.",
+                    )
+                elif drawn is not None and drawn.unit == "km/s" and bound is not None and bound in constants and constants[bound].unit == "km":
+                    try:
+                        c_speed = float(evaluate_model(circ.model, dict(circ.params), {"radius": constants[bound].value}))
+                        e_speed = float(evaluate_model(esc.model, dict(esc.params), {"radius": constants[bound].value}))
+                    except (KeyError, ValueError):
+                        c_speed = e_speed = math.nan
+                    if math.isfinite(c_speed) and math.isfinite(e_speed) and drawn.grid > 0 and drawn.min < drawn.max:
+                        positions = [drawn.min + (drawn.max - drawn.min) * i / drawn.grid for i in range(drawn.grid + 1)]
+                        seen = {orbit_outcome(v, c_speed, e_speed) for v in positions}
+                        missing = sorted({"falls", "circle", "oval", "escapes"} - seen)
+                        if missing:
+                            add(
+                                "PLAN-019",
+                                "scene.source",
+                                f"The launch control ({drawn.min:g} to {drawn.max:g} km/s in {drawn.grid} steps) can never show: {', '.join(missing)}. The circular speed is {c_speed:.2f} km/s and the escape speed {e_speed:.2f} km/s.",
+                                f"Choose the control's range and steps so some position falls short of {c_speed:.2f} km/s, one is within 2 percent of it, one is between it and {e_speed:.2f} km/s, and one reaches {e_speed:.2f} km/s.",
                             )
         elif scene.kind == "fermentation":
             drawn = controls.get(scene.source)

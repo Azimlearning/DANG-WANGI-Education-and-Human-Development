@@ -48,6 +48,8 @@ body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-
 .syn-dial-mark{position:absolute;left:50%;top:6px;width:6px;height:38px;margin-left:-3px;border-radius:3px;background:var(--syn-accent);transform-origin:50% 39px}
 .syn-ferment{display:grid;gap:6px;max-width:320px}
 .syn-ferment .syn-scene{max-height:none;display:block}
+.syn-orbit{display:grid;gap:6px;max-width:320px}
+.syn-orbit .syn-scene{max-height:none;display:block}
 .syn-titr{display:grid;gap:6px;max-width:300px}
 .syn-titr-frame{position:relative}
 .syn-titr-frame .syn-scene{max-height:none;display:block}

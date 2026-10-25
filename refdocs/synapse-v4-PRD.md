@@ -296,6 +296,7 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-49 | The lab report is a view of what the Kit reported through a bridge message page code cannot send | Roadmap finding 7; hard constraints 1 and 2 |
 | D-50 | The exam mirror marks by key words in the browser and says so | Demo video; hard constraint 9 |
 | D-51 | Present mode keeps provenance on screen; chapter packs check every fingerprint before anything opens | D-39; hard constraints 1, 2 and 11 |
+| D-53 | The orbit bench (Newton's cannonball) as Kit parts with three cited models; the control needs a readout | W4 stage 4; harness `dead_control` |
 | D-52 | Enough flags evict an Environment and write a regression record; the deploy gate gets per-day limits | P5 exit criterion; deploy gate |
 | D-42 | A covered question is answered from the library (an exact repeat, or a topic the local router recognises at 0.55 or more) before anything is paid for; every hit goes through the gate | P5 exit criterion; measured on the golden set |
 | D-41 | L4 reads the Plan's words in the pipeline and is claimed only when a real judge passed them; the Free lane is a labelled last resort that needs that judge; a Kit gap log; L4 has its own pinned case set apart from L6 | Owner asked for both together; `page-false-prose`; hard constraints 1, 3 and 9 |

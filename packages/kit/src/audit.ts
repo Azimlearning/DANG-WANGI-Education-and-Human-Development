@@ -62,7 +62,7 @@ export interface AuditRecord {
   /** Elements with a shadow root: their content cannot be audited, so the verifier refuses them. */
   shadowRoots: number;
   /** Composite widgets (mass hangers, scenes): what each is, how many masses the Kit made, the chain a scene draws, and any way the page changed it. */
-  widgets: { kind: string; id: string; masses?: number; full?: number; eye?: boolean; chain?: ChainNode; sourceChain?: ChainNode; problems: string[]; exact: string[]; layout: string[] }[];
+  widgets: { kind: string; id: string; masses?: number; full?: number; eye?: boolean; chain?: ChainNode; sourceChain?: ChainNode; secondChain?: ChainNode; problems: string[]; exact: string[]; layout: string[] }[];
 }
 
 /** True for an element inside a drawing the Kit made (a nested `svg` the Kit's own picture holds is the Kit's). */
@@ -248,6 +248,7 @@ export function audit(version: string): AuditRecord {
       ...(w.eye ? { eye: true } : {}),
       ...(w.obs ? { chain: describe(w.obs) } : {}),
       ...(w.source ? { sourceChain: describe(w.source) } : {}),
+      ...(w.second ? { secondChain: describe(w.second) } : {}),
       problems: w.check(),
       exact: w.exact ? w.exact() : [],
       layout: w.layout ? w.layout() : [],

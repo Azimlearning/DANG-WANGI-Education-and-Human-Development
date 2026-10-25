@@ -172,6 +172,8 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
             return ""
         if s.kind == "fermentation":
             return f"Synapse.fermentationScene(env, {{ fermented: {var('c', s.source)}, energy: {var('m', s.model or '')}, full: {js(s.full)} }});"
+        if s.kind == "orbit":
+            return f"Synapse.orbitScene(env, {{ speed: {var('c', s.source)}, circular: {var('m', s.model or '')}, escape: {var('m', s.escape or '')}, full: {js(s.full)} }});"
         if s.kind == "titration":
             return f"Synapse.titrationScene(env, {{ added: {var('c', s.source)}, endpoint: {var('m', s.endpoint or '')}, full: {js(s.full)} }});"
         return f"Synapse.springScene(env, {{ extension: {var('m', s.source)}, full: {js(s.full)} }});"
