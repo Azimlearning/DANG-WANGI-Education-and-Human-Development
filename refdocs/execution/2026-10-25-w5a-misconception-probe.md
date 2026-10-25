@@ -19,3 +19,5 @@
 
 - The threshold task ran as a restricted sweep through `probe_for` over the 50-question probe set, not by editing the eval script; the figures are in `refdocs/evidence/2026-10-25-w5a-probe-threshold.md`.
 - Not done: the other two entries' probes, a screen-reader pass of the card, a real phone, a teacher's reading of the three corrections.
+
+- The photosynthesis and current probes were added after the first three were green end to end (CLAUDE.md: never build the second of anything until the first is green). With all five, 20 of 20 positive statements get their own probe at 3.0 and the same 3 of 30 quiet questions fire. `uv run pytest api/models/test_probes.py` 20 passed.

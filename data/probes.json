@@ -1,5 +1,5 @@
 {
-  "note": "Hand-written follow-up questions for three flagship misconceptions (W5a). Written by the assistant on 2026-10-25 from the entries in data/misconceptions.json; no textbook page was read, and no person has reviewed the wording. A probe is a question about an idea, never a diagnosis of the student. The source status shown with a probe is copied from its misconception entry, not typed here.",
+  "note": "Hand-written follow-up questions for the five listed misconceptions (W5a). Written by the assistant on 2026-10-25 from the entries in data/misconceptions.json; no textbook page was read, and no person has reviewed the wording. A probe is a question about an idea, never a diagnosis of the student. The source status shown with a probe is copied from its misconception entry, not typed here.",
   "probes": [
     {
       "id": "osmosis-inverted-gradient",
@@ -33,6 +33,28 @@
       ],
       "correct": 1,
       "explanation": "A metal and a non-metal form an ionic bond by transfer of electrons. Sodium loses one electron to become a positive ion and chlorine gains it to become a negative ion. Covalent bonds, between non-metals, share electrons instead."
+    },
+    {
+      "id": "photosynthesis-food-from-soil",
+      "question": "A bean plant grows in a pot of soil for several weeks and gets much heavier, while the soil weighs almost the same. Where does most of the plant's new mass come from?",
+      "options": [
+        "From the minerals and nutrients that the roots take in from the soil.",
+        "From sunlight, which turns into mass inside the leaves.",
+        "From carbon dioxide in the air and water, which the leaves turn into glucose using light energy."
+      ],
+      "correct": 2,
+      "explanation": "Plants make their own food by photosynthesis: carbon dioxide and water, with light energy, become glucose and oxygen. The soil supplies water and mineral ions, not food, which is why the soil hardly loses mass."
+    },
+    {
+      "id": "current-used-up",
+      "question": "A cell is connected in series to two identical bulbs, one after the other. How does the current just before the first bulb compare with the current just after the second bulb?",
+      "options": [
+        "The current after the second bulb is smaller, because the bulbs use some of it up.",
+        "The current is the same at both points, because the bulbs transfer energy but do not use up current.",
+        "The current after the second bulb is zero, because the bulbs use all of it."
+      ],
+      "correct": 1,
+      "explanation": "Charge is not used up, so the current is the same at every point in a series circuit. What the bulbs take from the circuit is energy, which they give out as light and heat."
     }
   ]
 }

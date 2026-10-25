@@ -17,13 +17,12 @@ The misconception matcher is a topic detector: it fires on 17 of 30 questions th
 ## Scope
 
 **In:**
-1. A hand-written probe for three flagship misconceptions (osmosis, Newton's first law, ionic versus covalent bonding): one question, three or four options, the correct one, and a plain correction. Stored in `data/probes.json`, loaded and checked strictly.
+1. A hand-written probe for each of the five listed misconceptions (osmosis, Newton's first law, ionic versus covalent bonding, food from the soil, current used up; the first three were built first): one question, three or four options, the correct one, and a plain correction. Stored in `data/probes.json`, loaded and checked strictly.
 2. A new wire event `probe`, sent just before `done` when the question matches a flagship entry at or above a measured threshold.
 3. A card under the written answer: the question, the options, a verdict on the first answer, the correction, and the provenance of that correction (what it rests on and that it has not been checked by a person).
 4. The threshold chosen from the existing sweep and recorded with its false-positive rate.
 
 **Out (and why):**
-- Photosynthesis and current: two more entries need two more probes; added once the first three are green (CLAUDE.md "never build the second of anything until the first is green").
 - Any claim that the student holds the misconception. The card is worded as a question about an idea, never as "you think".
 - Adaptive follow-up, spaced practice and difficulty levels: scheduled nowhere (D-39 out of scope).
 - Progress counters for the probe: the existing device-local progress (D-33) stays as it is.

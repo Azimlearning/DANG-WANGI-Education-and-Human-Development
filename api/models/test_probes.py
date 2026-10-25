@@ -21,13 +21,13 @@ def load_with(tmp_path: Path, data: dict) -> dict:
     return probes.load(p)
 
 
-def test_the_shipped_probes_load_and_cover_three_entries() -> None:
-    loaded = probes.load()
-    assert set(loaded) == {"osmosis-inverted-gradient", "newton-force-needed-to-keep-moving", "bonding-sharing-vs-transfer"}
+def test_the_shipped_probes_load_and_cover_every_listed_misconception() -> None:
+    entries = json.loads((REPO / "data" / "misconceptions.json").read_text(encoding="utf-8"))["entries"]
+    assert set(probes.load()) == {e["id"] for e in entries}
 
 
 def test_the_correct_answer_is_not_always_in_the_same_place() -> None:
-    assert len({p.correct for p, _ in probes.load().values()}) == 3
+    assert len({p.correct for p, _ in probes.load().values()}) >= 3
 
 
 def test_an_unknown_entry_is_refused(tmp_path: Path) -> None:
@@ -94,6 +94,8 @@ def test_every_entry_the_probes_use_is_unverified_today() -> None:
         ("Is osmosis when water moves to where there is more water?", "osmosis-inverted-gradient"),
         ("Does a moving object need a force to keep moving?", "newton-force-needed-to-keep-moving"),
         ("Are ionic and covalent bonds basically the same kind of sharing?", "bonding-sharing-vs-transfer"),
+        ("Do plants get their food from the soil?", "photosynthesis-food-from-soil"),
+        ("Is current used up as it goes round a circuit?", "current-used-up"),
     ],
 )
 def test_a_statement_of_the_idea_gets_its_probe(question: str, entry: str) -> None:

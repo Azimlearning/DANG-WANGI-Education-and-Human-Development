@@ -10,8 +10,8 @@ A probe is offered when the best-matching entry that has a probe scores at least
 
 | Measure | Value |
 |---|---|
-| Positive statements of the three flagship misconceptions (osmosis, Newton, bonding) that get their own probe | 12 of 12 |
-| Positive statements of the other two entries that wrongly get a flagship probe | 0 of 8 |
+| Positive statements of the five listed misconceptions that get their own probe | 20 of 20 (measured first on the three flagship ones, 12 of 12, then on all five) |
+| Positive statements that get another entry's probe | 0 of 20 |
 | Neutral or off-topic questions that get a probe | 3 of 30 |
 
 The three that fire are "How is an ionic bond formed between sodium and chlorine?", "What is the difference between ionic and covalent bonds?" and "State Newton's first law of motion." Each is about the probe's own topic, so a quick check there is reasonable rather than a stray card.
