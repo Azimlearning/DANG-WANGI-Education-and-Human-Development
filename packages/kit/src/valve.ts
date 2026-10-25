@@ -151,7 +151,6 @@ export function valve(env: Environment, options: ValveOptions): Observable<numbe
   g.part(button, () => ({ class: running ? "syn-valve syn-open" : "syn-valve" }));
   const check = (): string[] => {
     const out: string[] = [];
-    out.push(...g.problems());
     if (parentOf(button) !== surface || parentOf(surface) === null) out.push(`the stopcock for "${id}" was taken apart`);
     if (tagOf(button) !== "button" || hasAttribute(button, "hidden")) out.push(`the stopcock for "${id}" was moved or hidden`);
     if (style(button, "display") === "none" || style(button, "visibility") === "hidden") out.push(`the stopcock for "${id}" is hidden`);
@@ -168,7 +167,7 @@ export function valve(env: Environment, options: ValveOptions): Observable<numbe
     if (hit && hit !== button && !contains(button, hit)) out.push(`the stopcock for "${id}" is covered by something else`);
     return out;
   };
-  widgets.push({ kind: "valve", id, check, layout });
+  widgets.push({ kind: "valve", id, check, layout, exact: () => g.problems() });
 
   const wrap = record.el.closest(".syn-control");
   if (wrap?.parentElement) wrap.parentElement.insertBefore(surface, wrap);

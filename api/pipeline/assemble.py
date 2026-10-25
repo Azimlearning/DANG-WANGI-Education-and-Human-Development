@@ -118,7 +118,7 @@ def present_parts(plan: Plan) -> set[str]:
 def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
     def controls_js() -> str:
         return "\n  ".join(
-            f"var {var('c', c.id)} = Synapse.{ {'masses': 'massHanger', 'valve': 'valve'}.get(c.surface, 'slider') }(env, "
+            f"var {var('c', c.id)} = Synapse.{ {'masses': 'massHanger', 'valve': 'valve', 'dial': 'dial'}.get(c.surface, 'slider') }(env, "
             + js(
                 {
                     "id": c.id,
@@ -170,6 +170,8 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
         s = plan.scene
         if not s:
             return ""
+        if s.kind == "fermentation":
+            return f"Synapse.fermentationScene(env, {{ fermented: {var('c', s.source)}, energy: {var('m', s.model or '')}, full: {js(s.full)} }});"
         if s.kind == "titration":
             return f"Synapse.titrationScene(env, {{ added: {var('c', s.source)}, endpoint: {var('m', s.endpoint or '')}, full: {js(s.full)} }});"
         return f"Synapse.springScene(env, {{ extension: {var('m', s.source)}, full: {js(s.full)} }});"

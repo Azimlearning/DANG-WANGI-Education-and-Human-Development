@@ -34,8 +34,8 @@ class ControlSpec(_Strict):
     max: float
     value: float
     grid: int = Field(ge=1, le=40)
-    surface: Literal["slider", "masses", "valve"] = "slider"
-    """How the student operates the control. `masses` (Kit `massHanger`) is dragging equal masses onto a hanger: `grid` is then the number of masses. `valve` (Kit `valve`) is a stopcock the student holds or presses: `grid` is then the number of steps."""
+    surface: Literal["slider", "masses", "valve", "dial"] = "slider"
+    """How the student operates the control. `masses` (Kit `massHanger`) is dragging equal masses onto a hanger: `grid` is then the number of masses. `valve` (Kit `valve`) is a stopcock the student holds or presses, and `dial` (Kit `dial`) is a knob the student turns: `grid` is then the number of steps."""
 
 
 class ConstantSpec(_Strict):
@@ -90,11 +90,13 @@ class TableSpec(_Strict):
 class SceneSpec(_Strict):
     """A picture bound to a model's output. It draws the quantity and never prints it."""
 
-    kind: Literal["spring", "titration"]
+    kind: Literal["spring", "titration", "fermentation"]
     source: Slug
-    """What is drawn. A spring: a model instance id (the extension, in metres). A titration: a control id (the volume run in, in cm3)."""
+    """What is drawn. A spring: a model instance id (the extension, in metres). A titration or a fermentation: a control id (the volume run in, in cm3; the glucose fermented, in mol)."""
     endpoint: Slug | None = None
     """A titration only: the model instance id of the end-point volume, where the indicator changes colour."""
+    model: Slug | None = None
+    """A fermentation only: the model instance id of the energy released, fed by the control the scene draws."""
     full: float = Field(gt=0, allow_inf_nan=False)
     """The value, in the source's unit, at which the picture is full (a spring fully stretched, a burette's capacity). A drawing scale; it is never shown."""
 
@@ -102,6 +104,8 @@ class SceneSpec(_Strict):
     def _endpoint_only_for_a_titration(self) -> SceneSpec:
         if (self.kind == "titration") != (self.endpoint is not None):
             raise ValueError("a titration scene needs an endpoint, and no other scene has one")
+        if (self.kind == "fermentation") != (self.model is not None):
+            raise ValueError("a fermentation scene needs a model, and no other scene has one")
         return self
 
 
@@ -160,7 +164,21 @@ class Plan(_Strict):
 
     def model_summaries(self) -> list[dict]:
         """The plan's models in the shape the verifier compares with the page (`plan_models`)."""
-        return [{"id": m.model, "params": dict(m.params)} for m in self.models]
+        out: list[dict] = []
+        for m in self.models:
+            entry: dict = {"id": m.model, "params": dict(m.params)}
+            readouts = [r.label for r in self.readouts if r.source == m.id]
+            series = [g.label for g in self.graphs if g.source == m.id] + [c.label for c in (self.table.columns if self.table else []) if c.source == m.id]
+            drawn = self.scene is not None and m.id in {self.scene.source if self.scene.kind == "spring" else None, self.scene.endpoint, self.scene.model}
+            # Which instance feeds which value matters when one model is used twice (two energies, two concentrations): the verifier compares each of these with the page.
+            if readouts:
+                entry["readouts"] = readouts
+            if series:
+                entry["series"] = series
+            if drawn:
+                entry["scene"] = True
+            out.append(entry)
+        return out
 
 
 def parse(raw: str | bytes) -> Plan:

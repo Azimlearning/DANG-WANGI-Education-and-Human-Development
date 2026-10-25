@@ -124,6 +124,16 @@ def titration_endpoint_volume(va: float, mb: float, ma: float, acid_coeff: float
     return moles_base / mb
 
 
+def respiration_energy(glucose: float, energy_per_mole: float) -> float:
+    """Energy (kJ) released when `glucose` mol is broken down by a pathway that gives `energy_per_mole` kJ per mole of glucose."""
+    _finite(glucose=glucose, energy_per_mole=energy_per_mole)
+    if glucose < 0:
+        raise ValueError("glucose must be 0 mol or more")
+    if energy_per_mole <= 0:
+        raise ValueError("energy_per_mole must be above 0 kJ/mol")
+    return glucose * energy_per_mole
+
+
 def dilution(v2: float, m1: float, v1: float) -> float:
     """Concentration (mol/dm3) after taking `v1` of a solution of concentration `m1` and making it up to `v2` (same volume unit)."""
     _finite(v2=v2, m1=m1, v1=v1)
@@ -226,6 +236,7 @@ REFERENCES: dict[str, Reference] = {
     "chemistry.titration_endpoint_volume": Reference(
         titration_endpoint_volume, ("va", "mb"), ("ma", "acid_coeff", "base_coeff"), "cm3", {"va": "cm3", "mb": "mol/dm3"}
     ),
+    "biology.respiration_energy": Reference(respiration_energy, ("glucose",), ("energy_per_mole",), "kJ", {"glucose": "mol"}),
     "chemistry.dilution": Reference(dilution, ("v2",), ("m1", "v1"), "mol/dm3", {"v2": "cm3"}),
     "chemistry.heat_energy": Reference(heat_energy, ("delta_t",), ("mass", "c"), "J", {"delta_t": "\u00b0C"}),
     "chemistry.average_rate": Reference(average_rate, ("volume", "time"), (), "cm3/s", {"volume": "cm3", "time": "s"}),

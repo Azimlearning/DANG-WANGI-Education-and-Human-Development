@@ -26,7 +26,7 @@ def test_the_set_is_big_enough_and_has_both_sides() -> None:
     cases = c.load_cases()
     planted = [x for x in cases if x.expect == "refuse"]
     controls = [x for x in cases if x.expect == "accept"]
-    assert len(controls) == 16 and len(planted) >= 20
+    assert len(controls) == 17 and len(planted) >= 20
     assert {"relation flipped", "direction flipped", "size flipped", "wrong unit"} <= {x.kind for x in planted}
     assert len({x.id for x in cases}) == len(cases)
 

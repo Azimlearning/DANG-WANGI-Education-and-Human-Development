@@ -165,7 +165,7 @@ export interface ActionRecord {
 
 /** A composite widget the Kit built (the mass hanger, a scene). It reports facts about itself that a page could falsify (where its parts are, what they show), as problems; none means intact. */
 export interface WidgetRecord {
-  kind: "masses" | "scene" | "valve";
+  kind: "masses" | "scene" | "valve" | "dial";
   id: string;
   /** Masses only: how many masses the Kit made for the control. */
   masses?: number;
@@ -181,6 +181,8 @@ export interface WidgetRecord {
   check: () => string[];
   /** How the parts are laid out and drawn (size, position, covered, faded). Read from a real layout, so only the verifier acts on it: a student's browser must not blank the page over a layout quirk. */
   layout?: () => string[];
+  /** Every attribute of every part, and the elements inside the picture, are exactly what the Kit made. Verifier only, like `layout`: a browser extension adds attributes to elements (a dark-mode tool marks them), so the student's self-check must not act on it. */
+  exact?: () => string[];
 }
 
 export const controls: ControlRecord[] = [];
@@ -219,6 +221,14 @@ export function resetForTests(): void {
 const kitStyles = new WeakSet<object>();
 export function markKitStyle(el: Element): void {
   kitStyles.add(el);
+}
+const kitSvgs = new WeakSet<object>();
+/** A drawing the Kit made (a graph, a scene). A page-made `<svg>` is refused by the audit: it can paint over the Kit's picture with presentation attributes alone (overflow, pointer-events). */
+export function markKitSvg(el: Element): void {
+  kitSvgs.add(el);
+}
+export function isKitSvg(el: Element): boolean {
+  return kitSvgs.has(el);
 }
 const ownStyles = new WeakSet<object>();
 /** An element the Kit may give an inline style (the eye's place, a mass while it is dragged). Any other inline style on the page is refused by the audit. */

@@ -5,7 +5,7 @@ import { all, attr, effectiveOpacity, layoutAvailable, parentOf, rectOf, style }
 import { guard } from "./parts";
 import type { Environment } from "./environment";
 import type { Observable } from "./observable";
-import { nodeOf, ownAttr, widgets } from "./provenance";
+import { markKitSvg, nodeOf, ownAttr, widgets } from "./provenance";
 
 const NS = "http://www.w3.org/2000/svg";
 
@@ -45,6 +45,7 @@ export function springScene(env: Environment, options: SpringSceneOptions): SVGS
   if (typeof full !== "number" || !Number.isFinite(full) || !(full > 0)) throw new RangeError("springScene: full must be a positive number (the extension drawn as fully stretched)");
 
   const root = svg("svg", { viewBox: "0 0 160 250", class: "syn-scene", role: "img", preserveAspectRatio: "xMidYMid meet" });
+  markKitSvg(root);
   root.appendChild(svg("line", { x1: "36", y1: String(TOP - 4), x2: "124", y2: String(TOP - 4), stroke: "var(--syn-fg)", "stroke-width": "6", "stroke-linecap": "round" }));
   const coil = svg("polyline", { fill: "none", stroke: COIL_STROKE, "stroke-width": "4", "stroke-linejoin": "round", "stroke-linecap": "round" });
   const pan = svg("rect", { x: "52", width: "56", height: "8", rx: "3", fill: PAN_FILL });
@@ -89,7 +90,6 @@ export function springScene(env: Environment, options: SpringSceneOptions): SVGS
     if (parentOf(root) !== parent || parent === null) out.push("the spring picture was moved off the stage");
     if (style(root, "display") === "none" || style(root, "visibility") === "hidden" || style(root, "opacity") === "0") out.push("the spring picture is hidden");
     if (attr(coil, "stroke") !== COIL_STROKE || attr(coil, "stroke-width") !== "4" || attr(coil, "fill") !== "none" || attr(pan, "fill") !== PAN_FILL) out.push("the spring picture was restyled by the page");
-    out.push(...kept.problems());
     return out;
   };
   // The layout half, read only by the verifier: the picture takes up room, shows, strokes its coil, and the pan sits where the extension puts it (a style rule that squashes,
@@ -106,6 +106,6 @@ export function springScene(env: Environment, options: SpringSceneOptions): SVGS
     if (Math.abs(rectOf(pan).top - expected) > 3 * s + 2) out.push("the spring picture is drawn at a different length than the extension says");
     return out;
   };
-  widgets.push({ kind: "scene", id: "spring", obs: x, full, check, layout });
+  widgets.push({ kind: "scene", id: "spring", obs: x, full, check, layout, exact: () => kept.problems() });
   return root;
 }

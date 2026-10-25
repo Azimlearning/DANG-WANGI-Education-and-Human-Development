@@ -89,7 +89,7 @@ def test_PLAN_019_a_scene_must_draw_a_model_it_is_registered_for(manifest: kitma
     assert "PLAN-019" in codes(wrong, manifest)
 
 
-@pytest.mark.parametrize("bad", [{"surface": "dial"}, {"surface": 1}])
+@pytest.mark.parametrize("bad", [{"surface": "knob"}, {"surface": 1}])
 def test_a_control_surface_must_be_one_of_the_known_ones(bad: dict) -> None:
     with pytest.raises(ValidationError):
         plan_of(with_control(**bad))

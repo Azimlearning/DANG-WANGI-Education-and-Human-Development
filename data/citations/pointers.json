@@ -326,6 +326,45 @@
         "chemistry.titration_endpoint_volume"
       ],
       "checked_by": "assistant 2026-10-25: read the page; NOT yet reviewed by a person"
+    },
+    "ferment_products": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 123,
+      "printed_page": 118,
+      "claim": "Says alcohol fermentation only partly breaks glucose down, giving ethanol, carbon dioxide and a little energy.",
+      "topics": [
+        "biology_form4_respiration"
+      ],
+      "models": [
+        "biology.respiration_energy"
+      ],
+      "checked_by": "assistant 2026-10-25: read the page; NOT yet reviewed by a person"
+    },
+    "ferment_energy": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 126,
+      "printed_page": 121,
+      "claim": "Table 7.1 gives the energy from one molecule of glucose: 2898 kJ aerobic, 210 kJ alcoholic fermentation, 150 kJ lactic acid fermentation (read per mole here: ASSUMED, D-46).",
+      "topics": [
+        "biology_form4_respiration"
+      ],
+      "models": [
+        "biology.respiration_energy"
+      ],
+      "checked_by": "assistant 2026-10-25: read the page; NOT yet reviewed by a person"
+    },
+    "ferment_activity": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 125,
+      "printed_page": 120,
+      "claim": "Activity 7.3: the yeast fermentation apparatus and its variables (manipulated: presence of yeast; responding: temperature, limewater and the smell of ethanol).",
+      "topics": [
+        "biology_form4_respiration"
+      ],
+      "models": [
+        "biology.respiration_energy"
+      ],
+      "checked_by": "assistant 2026-10-25: read the page; NOT yet reviewed by a person"
     }
   }
 }

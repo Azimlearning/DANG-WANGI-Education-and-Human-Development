@@ -12,7 +12,7 @@ Synapse V3's four benches (Hooke's law with draggable masses, titration with a s
 |---|---|---|---|---|
 | 1 | Hooke's law: hang masses on a spring | `massHanger` (control), `springScene` (scene), the audit's `widgets` report, the slider `snap` option | none (`mechanics.hookes` exists) | **Done 2026-10-24** (this plan, section "Stage 1") |
 | 2 | Titration: stopcock, burette, eye level | `valve` (control), `titrationScene` (burette, flask, eye) | a new cited end-point model, `chemistry.titration_endpoint_volume` (`chemistry.titration` exists) | **Done 2026-10-25** (section "Stage 2") |
-| 3 | Yeast fermentation: tubes and a dial | `dial`, tube scene | a cited respiration-rate model (Biology) | Not started |
+| 3 | Yeast fermentation: tubes and a dial | `dial` (control), `fermentationScene` (tubes, limewater, thermometers) | a new cited energy model, `biology.respiration_energy` (not a rate: no textbook page gives one) | **Done 2026-10-25** (section "Stage 3") |
 | 4 | Orbit | `orbitScene` | a cited gravitation/orbit model (Physics F4) | Not started |
 
 Each stage gets: a written precondition and accessibility fence per component, a registration suite that refuses every planted defect, a harness drive of the gesture, citations from the local corpus for any new model, an independent hand-written reference, L6 rows, and a `kit-guardian` review before the relock is committed.
@@ -57,3 +57,18 @@ The titration, yeast and orbit benches; Bahasa Melayu strings for the new compon
 - The eye teaches a reading habit in words. It does not change any number, so a student who reads from the wrong place is told to bring the eye level, not corrected by the readout. It is a button moved by the arrow keys; a screen reader in browse mode may read the arrows as cursor moves (a `role=slider` with word values would fix that; a screen-reader pass is still owed).
 - The indicator is one colour change at one volume (a sharp end point); a gradual change near the end point, and a drop-by-drop final approach, are not modelled.
 - Layout is checked only in the light theme and at the harness's viewport; a pointer-transparent overlay is still an L6 known miss (D-44).
+
+## Stage 3 design: the fermentation bench
+
+- **`dial(env, {id,label,unit,min,max,value,grid})`** is a control turned like a knob, built on `slider` with `snap`. The pointer's angle (clockwise from straight up) sets the value, from the first mark at the lower left to the last at the lower right; the gap at the bottom belongs to the nearer end. The range input stays on the page and is the keyboard and screen-reader path (arrow keys, Home, End); the knob is a pointer surface and is `aria-hidden`, so there is one control for assistive technology, not two.
+- **`fermentationScene(env, {fermented, energy, full})`** draws the textbook's Activity 7.3 apparatus. `fermented` is a control in mol; `energy` must be `biology.respiration_energy` fed by that same control and must be alcohol fermentation's 210 kJ per mole (the picture is false for any other pathway). As soon as glucose is fermented, tube A bubbles (a few, steady, plenty: in words), its limewater clouds and its thermometer reads higher than tube B's, which, as the control, shows none of it. It prints no number.
+- **`biology.respiration_energy`**: E = n x e, with e = 210 kJ/mol (alcohol fermentation), 150 (lactic acid fermentation) or 2898 (aerobic respiration), from Table 7.1 (Form 4 Biology, printed page 121) and the alcohol fermentation equation (printed page 118). The textbook says "per molecule"; the model reads per mole (ASSUMED, D-46). Registration suite with ten planted bugs, a hand-computed reference, an independent Python reference, properties, and the pointers `ferment_products`, `ferment_energy` and `ferment_activity` (the apparatus and the activity's variables, printed page 120).
+- **The Plan** (`data/plans/biology-f4-fermentation.json`, a 17th golden Plan): a dial for the glucose fermented in tube A (0 to 0.004 mol in eight steps), two instances of the energy model (fermentation, aerobic), two readouts, two graphs, a results table, a prediction card, a concept check, the textbook's variables on the experiment card, and a sentence stating 210 and 2898 kJ per mole.
+- **What is not built from V3:** the setup drags and the timer (D-46).
+- **Verification.** `_drive_dials` turns each dial by mouse and finger to the middle, the top and the bottom, starting at the first mark, then presses real arrow keys on its range input and reads the Kit's own value from the audit. The verifier refuses a scene for another pathway, a page-made drawing, text added inside the scene, a page that swaps which energy feeds which readout (`binding_problems`), and one that blocks trusted input events.
+
+### Stage 3 limits (recorded, not hidden)
+
+- The thermometer and the limewater are two-state; the energy model scales a table value, so what the bench teaches is the comparison (about seven percent of the aerobic energy) and the products, not a new relation.
+- The knob has no accessible role of its own (its range input does the work); no screen-reader pass has been done.
+- Layout is checked only in the light theme and at one viewport.

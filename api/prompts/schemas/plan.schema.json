@@ -109,7 +109,8 @@
           "enum": [
             "slider",
             "masses",
-            "valve"
+            "valve",
+            "dial"
           ],
           "title": "Surface",
           "type": "string"
@@ -424,10 +425,24 @@
         "kind": {
           "enum": [
             "spring",
-            "titration"
+            "titration",
+            "fermentation"
           ],
           "title": "Kind",
           "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]{0,23}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
         },
         "source": {
           "pattern": "^[a-z][a-z0-9_]{0,23}$",

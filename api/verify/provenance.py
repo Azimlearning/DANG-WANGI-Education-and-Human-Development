@@ -267,6 +267,7 @@ REQUIRED_KEYS = (
     "unownedNumbers",
     "unownedAttributeNumbers",
     "forbidden",
+    "foreign",
     "shadowRoots",
     "widgets",
 )
@@ -294,7 +295,7 @@ def _value_problems(what: str, unit: str, chain: dict, audit: dict) -> list[Prob
 
 
 # The model each kind of scene may draw. A scene is a picture of a model's number; one bound to anything else is a picture the audit cannot ground.
-SCENE_MODELS = {"spring": "mechanics.hookes", "titration": "chemistry.titration_endpoint_volume"}
+SCENE_MODELS = {"spring": "mechanics.hookes", "titration": "chemistry.titration_endpoint_volume", "fermentation": "biology.respiration_energy"}
 SCENE_FILL_MIN = 0.5
 """A scene's drawing scale must be no less than the model's output at the controls' maximum and no more than twice it (the picture is then nearly full and never clipped)."""
 
@@ -305,6 +306,23 @@ def _walk(chain: dict):  # noqa: ANN202
     for child in (chain.get("inputs") or {}).values():
         if isinstance(child, dict):
             yield from _walk(child)
+
+
+def _fermentation_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
+    """A fermentation scene draws a control in mol and the respiration-energy model fed by that same control, at a scale that holds the control's range."""
+    source = w.get("sourceChain") or {}
+    control = next((c for c in audit.get("controls", []) if source.get("kind") == "control" and c["id"] == source.get("id")), None)
+    if control is None or control.get("unit") != "mol":
+        return [Problem("scene_ungrounded", "the fermentation scene is not driven by a control in mol")]
+    if float((chain.get("params") or {}).get("energy_per_mole", math.nan)) != 210.0:
+        return [Problem("scene_ungrounded", "the fermentation scene draws the energy of a pathway other than alcohol fermentation (210 kJ per mole)")]
+    glucose = (chain.get("inputs") or {}).get("glucose") or {}
+    if glucose.get("kind") != "control" or glucose.get("id") != source.get("id"):
+        return [Problem("scene_ungrounded", "the energy the fermentation scene draws is not fed by the control it draws")]
+    full = w.get("full")
+    if not isinstance(full, (int, float)) or isinstance(full, bool) or not math.isfinite(full) or full < float(control["max"]) or float(control["max"]) / full < SCENE_FILL_MIN:
+        return [Problem("scene_scale", f"the bubbling is drawn to a scale of {full!r} mol but the control goes up to {control['max']} mol")]
+    return []
 
 
 def _titration_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
@@ -358,7 +376,7 @@ def widget_problems(audit: dict) -> list[Problem]:
     """The mass hangers and scenes the Kit built: each must report itself intact, a scene must draw the model it is registered for, and a hanger must have as many masses as the Kit made."""
     out: list[Problem] = []
     for w in audit["widgets"]:
-        for text in [*w.get("problems", []), *w.get("layout", [])]:
+        for text in [*w.get("problems", []), *w.get("exact", []), *w.get("layout", [])]:
             out.append(Problem("widget_tampered", text))
         if w.get("kind") == "scene":
             chain = w.get("chain") or {}
@@ -369,7 +387,12 @@ def widget_problems(audit: dict) -> list[Problem]:
                 if found:
                     out.append(Problem(found.rule, f"the {w.get('id')} scene: {found.reason}"))
                 out += [Problem(p.rule, f"the {w.get('id')} scene: {p.reason}") for p in input_unit_problems(chain, audit)]
-                out += _titration_problems(w, chain, audit) if w.get("id") == "titration" else _scene_scale_problems(w, chain, audit)
+                if w.get("id") == "titration":
+                    out += _titration_problems(w, chain, audit)
+                elif w.get("id") == "fermentation":
+                    out += _fermentation_problems(w, chain, audit)
+                else:
+                    out += _scene_scale_problems(w, chain, audit)
     return out
 
 
@@ -418,6 +441,8 @@ def l1_problems(audit: dict | None) -> list[Problem]:
         out.append(Problem("forged_action", "a button claims to be a Kit action but no Kit component made it"))
     for f in audit["forbidden"]:
         out.append(Problem("forbidden_markup", f"{f['what']} ({f['element']}) can show a number the audit cannot read"))
+    for f in audit["foreign"]:
+        out.append(Problem("forbidden_markup", f"{f['what']} ({f['element']}): a Kit page carries no CSS or popover but the Kit's"))
     for m in audit["ownedMismatches"]:
         out.append(
             Problem(
@@ -528,16 +553,46 @@ def l3_problems(audit: dict) -> tuple[list[Problem], int]:
     return problems, compared
 
 
+def _top_model(chain: dict) -> dict | None:
+    """The first science model in a chain, looking down through conversions."""
+    return next((node for node in _walk(chain) if node.get("kind") == "model"), None)
+
+
+def _is_instance(node: dict | None, model_id: str, params: dict) -> bool:
+    return node is not None and node.get("id") == model_id and {k: float(v) for k, v in (node.get("params") or {}).items()} == {k: float(v) for k, v in params.items()}
+
+
+def binding_problems(audit: dict, plan_models: list[dict]) -> list[Problem]:
+    """Each readout, series and scene the plan feeds from a model instance must be fed by THAT instance (a page that swaps two instances of one model, such as fermentation and aerobic energy, keeps the set of models and lies about which is which)."""
+    out: list[Problem] = []
+    for m in plan_models:
+        want = (m["id"], m.get("params", {}))
+        for label in m.get("readouts", []):
+            r = next((x for x in audit.get("readouts", []) if x["label"] == label), None)
+            if r is None or not _is_instance(_top_model(r["chain"]), *want):
+                out.append(Problem("plan_mismatch", f"readout '{label}' is not fed by the plan's {m['id']} {m.get('params', {})}"))
+        for label in m.get("series", []):
+            s = next((x for x in audit.get("series", []) if x["label"] == label), None)
+            if s is None or not _is_instance(_top_model(s["chain"]), *want):
+                out.append(Problem("plan_mismatch", f"'{label}' is not fed by the plan's {m['id']} {m.get('params', {})}"))
+        if m.get("scene"):
+            drawn = [w for w in audit.get("widgets", []) if w.get("kind") == "scene" and w.get("chain")]
+            if not any(_is_instance(_top_model(w["chain"]), *want) for w in drawn):
+                out.append(Problem("plan_mismatch", f"the scene is not drawn from the plan's {m['id']} {m.get('params', {})}"))
+    return out
+
+
 def plan_problems(audit: dict, plan_models: list[dict] | None) -> list[Problem]:
-    """The models the page really uses must be exactly the ones the plan declares, with the same parameters."""
+    """The models the page really uses must be exactly the ones the plan declares, with the same parameters, feeding the same values."""
     if plan_models is None:
         return []
+    bound = binding_problems(audit, plan_models)
     used = {m for _, chain in all_chains(audit) for m in models_in(chain)}
     planned = {(m["id"], tuple(sorted((k, float(v)) for k, v in m.get("params", {}).items()))) for m in plan_models}
     missing = sorted(planned - used)
     extra = sorted(used - planned)
     if not missing and not extra:
-        return []
+        return bound
 
     def show(models: list) -> str:
         return "; ".join(f"{model_id} {dict(params)}" for model_id, params in models) or "none"
@@ -546,5 +601,6 @@ def plan_problems(audit: dict, plan_models: list[dict] | None) -> list[Problem]:
         Problem(
             "plan_mismatch",
             f"the plan declares [{show(missing)}] that the page does not use, and the page uses [{show(extra)}] that the plan does not declare",
-        )
+        ),
+        *bound,
     ]

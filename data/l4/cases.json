@@ -27,6 +27,24 @@
     "mutated": "The bigger the cube, the greater the surface area to volume ratio"
   },
   {
+    "id": "biology-f4-fermentation:true",
+    "plan": "biology-f4-fermentation.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "biology-f4-fermentation:controls.0.unit",
+    "plan": "biology-f4-fermentation.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "mol",
+    "mutated": "g"
+  },
+  {
     "id": "biology-f4-magnification:true",
     "plan": "biology-f4-magnification.json",
     "expect": "accept",

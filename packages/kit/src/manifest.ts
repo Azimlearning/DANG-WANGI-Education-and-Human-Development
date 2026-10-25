@@ -12,6 +12,7 @@ import { spec as photoSpec } from "./science/photosynthesis";
 import { spec as molesSpec } from "./science/moles";
 import { spec as titrSpec } from "./science/titration";
 import { spec as titrEndSpec } from "./science/titration_endpoint";
+import { spec as respSpec } from "./science/respiration_energy";
 import { spec as dilSpec } from "./science/dilution";
 import { spec as heatSpec } from "./science/heat_energy";
 import { spec as rateSpec } from "./science/average_rate";
@@ -91,6 +92,22 @@ export const manifestEntries: ManifestEntry[] = [
     precondition: "Use it INSTEAD of slider for a quantity a student runs in by turning a stopcock, such as the volume of liquid let out of a burette. grid is the number of steps, an integer from 2 to 40; value must sit on a step (min plus a whole number of steps); id is unique in the page. The returned observable is a control exactly as a slider's is.",
     doc: "A stopcock the student holds to run the liquid in (one step every moment it is held), taps to let out one measure, or presses from the keyboard. Letting go stops the flow. A range input with the same id stays on the page for the keyboard and screen readers.",
     useWhen: "Use for the volume added from a burette in a titration, or any quantity let in by a tap that a student opens and closes by hand.",
+  },
+  {
+    id: "dial",
+    kind: "interaction",
+    signature: "dial(env, {id, label, unit, min, max, value, grid}): Observable<number>",
+    precondition: "Use it INSTEAD of slider for a quantity a student sets by turning a knob. grid is the number of steps, an integer from 2 to 40; value must sit on a step (min plus a whole number of steps); id is unique in the page. The returned observable is a control exactly as a slider's is.",
+    doc: "A knob the student turns by dragging round it, from the first mark at the lower left to the last at the lower right. The control's value follows the pointer's angle and snaps to a step. A range input with the same id stays on the page and is the keyboard and screen-reader path (arrow keys, Home, End); the knob itself is a pointer surface.",
+    useWhen: "Use for an amount or a setting a student winds up or down by hand, such as how far a reaction has gone.",
+  },
+  {
+    id: "fermentationScene",
+    kind: "scene",
+    signature: "fermentationScene(env, {fermented: Observable<number>, energy: Observable<number>, full: number}): HTMLDivElement",
+    precondition: "fermented is a control in mol (the one a dial makes); energy is the output of the respiration-energy model (Synapse.respirationEnergy) fed by that same control; full is the glucose, in mol, at which the bubbling is drawn fullest: at least the control's maximum and at most twice it. Create it after the model.",
+    doc: "The textbook's yeast fermentation apparatus: boiling tubes A (with yeast) and B (the control) under paraffin oil, each with a delivery tube into limewater and a thermometer. Once glucose is fermented, tube A bubbles, its limewater turns cloudy and it warms; tube B stays as it was. It draws and prints no number; its text says in words what the student would observe.",
+    useWhen: "Use beside a fermentation readout so the student sees the products and the control, as in the yeast fermentation activity (Cellular Respiration).",
   },
   {
     id: "titrationScene",
@@ -328,6 +345,19 @@ export const manifestEntries: ManifestEntry[] = [
     citation: "UNVERIFIED (corpus not loaded until P2)",
     units: { va: "cm3", mb: "mol/dm3", ma: "mol/dm3", acid_coeff: "1", base_coeff: "1", output: "cm3" },
     ...fromSpec(titrEndSpec),
+  },
+  {
+    id: "respirationEnergy",
+    kind: "science",
+    signature: "respirationEnergy({glucose: Observable<number>, energy_per_mole: number}): Observable<number>",
+    precondition: "Domain: glucose 0 mol or more, energy_per_mole above 0. Units: glucose mol, energy_per_mole kJ/mol, energy kJ. The figure for energy_per_mole depends on the pathway: 210 for alcohol fermentation, 150 for lactic acid fermentation, 2898 for aerobic respiration.",
+    doc: "Energy released E = n x e when n mol of glucose is broken down by a pathway that gives e kJ per mole. A read-only observable that follows the amount of glucose.",
+    useWhen: "Use to compare the energy from glucose by fermentation and by aerobic respiration (Cellular Respiration).",
+    modelId: "biology.respiration_energy",
+    topics: ["biology_form4_respiration"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { glucose: "mol", energy_per_mole: "kJ/mol", output: "kJ" },
+    ...fromSpec(respSpec),
   },
   {
     id: "dilution",

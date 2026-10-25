@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import itertools
 import json
+import math
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -89,6 +90,7 @@ class RenderReport:
     models: list[tuple[str, tuple[tuple[str, float], ...]]] = field(default_factory=list)
     drag_problems: list[str] = field(default_factory=list)
     valve_problems: list[str] = field(default_factory=list)
+    dial_problems: list[str] = field(default_factory=list)
     eye_problems: list[str] = field(default_factory=list)
     kit_lane: bool = True
     """False for a Free page: it has no Kit, so the harness decides readiness and the refusal message says so."""
@@ -126,6 +128,8 @@ class RenderReport:
             return ("drag_dead", self.drag_problems[0])
         if self.valve_problems:
             return ("valve_dead", self.valve_problems[0])
+        if self.dial_problems:
+            return ("dial_dead", self.dial_problems[0])
         if self.eye_problems:
             return ("eye_dead", self.eye_problems[0])
         for c in self.controls:
@@ -432,6 +436,7 @@ def _exercise(
         _audit_and_sweep(frame, handles, report, plan_models)
         _drive_drags(page, frame, report)
         _drive_valves(page, frame, report)
+        _drive_dials(page, frame, report)
         _drive_eyes(page, frame, report)
 
     # Scripted interaction: sweep every declared control and press real input for the time box.
@@ -740,6 +745,116 @@ def _drive_valves(page, frame: Frame, report: RenderReport) -> None:  # noqa: AN
             _settle(page, 200)
         except PlaywrightError as exc:
             report.harness_error = report.harness_error or f"driving the stopcock for '{cid}': {str(exc).splitlines()[0][:150]}"
+    for w in widgets:
+        one(w)
+    if cdp is not None:
+        try:
+            cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": False})
+            cdp.detach()
+        except PlaywrightError:
+            pass
+
+
+def _drive_dials(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
+    """L2 for a control turned like a knob (`dial`). What must exist comes from the Kit's own audit. For each dial: the mouse turns the knob to the middle, the top and the bottom of its range
+    (the control must land on the matching step each time), a finger turns it to the middle, and the arrow keys on its range input move it one step each way. A dial that does not follow
+    is `dial_dead`; extra knobs the Kit did not report are refused; a Playwright failure is a harness error."""
+    audit = _audit(frame)
+    if audit is None:
+        return
+    widgets = [w for w in audit.get("widgets", []) if w.get("kind") == "dial"]
+    if not widgets:
+        if frame.query_selector("[data-synapse-dial]") is not None:
+            report.dial_problems.append("the page has a dial the Kit did not report")
+        return
+    cdp = None
+
+    def one(w: dict) -> None:
+        nonlocal cdp
+        cid = str(w["id"])
+        try:
+            control = frame.query_selector(f"[data-synapse-control='{cid}']")
+            knobs = frame.query_selector_all(f"[data-synapse-dial='{cid}']")
+            record = next((c for c in audit["controls"] if c["id"] == cid), None)
+            if control is None or record is None or len(knobs) != 1:
+                report.dial_problems.append(f"the dial for '{cid}' is missing, or the page has more than the one the Kit made")
+                return
+            knob: ElementHandle = knobs[0]
+            lo, step, grid = float(record["min"]), float(record["step"]), int(record["grid"])
+            tol = max(step * 0.02, 1e-12)
+
+            def value(c=control) -> float:  # noqa: ANN001
+                return float(c.input_value())
+
+            knob.scroll_into_view_if_needed()
+            _settle(page, 150)
+            _add(report.problems_l1, prov.l1_problems(_audit(frame)))
+            box = knob.bounding_box()
+            if not box or box["width"] < 44 or box["height"] < 44:
+                report.dial_problems.append(f"the dial for '{cid}' has no room for a finger")
+                return
+            cx, cy, r = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, box["width"] / 2
+
+            def point(index: int) -> tuple[float, float]:
+                angle = math.radians(-135 + 270 * index / grid)
+                return cx + 0.8 * r * math.sin(angle), cy - 0.8 * r * math.cos(angle)
+
+            def turn(index: int, touch: bool = False) -> None:
+                nonlocal cdp
+                x1, y1 = point(index)
+                x0, y0 = point(0)  # start at the first mark, so the press alone cannot satisfy a target anywhere else
+                if touch:
+                    if cdp is None:
+                        cdp = page.context.new_cdp_session(page)
+                        cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 1})
+                    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x0, "y": y0}]})
+                    for i in range(1, 9):
+                        cdp.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": x0 + (x1 - x0) * i / 8, "y": y0 + (y1 - y0) * i / 8}]})
+                    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+                else:
+                    page.mouse.move(x0, y0)
+                    page.mouse.down()
+                    page.mouse.move(x1, y1, steps=8)
+                    page.mouse.up()
+                _settle(page, 200)
+
+            _set_control(control, "min")
+            _settle(page, 200)
+            start = _readout_texts(frame)
+            for label, touch, indexes in (("with the mouse", False, (grid // 2, grid, 0)), ("with a finger", True, (grid // 2, grid, 0))):
+                for index in indexes:
+                    turn(index, touch)
+                    want = lo + index * step
+                    if abs(value() - want) > tol:
+                        report.dial_problems.append(f"turning the dial for '{cid}' {label} to step {index} of {grid} left the control at {value():g}, not {want:g}")
+                        return
+                    if index == grid // 2 and not touch and _readout_texts(frame) == start:
+                        report.dial_problems.append(f"turning the dial changed no readout (control '{cid}')")
+                        return
+            # the keyboard: the dial's range input is its accessible control, so a real arrow key must move it one step each way
+            _set_control(control, "min")
+            _settle(page, 150)
+            control.focus()
+            page.keyboard.press("ArrowRight")
+            _settle(page, 150)
+            kit_value = next((c["value"] for c in (_audit(frame) or {}).get("controls", []) if c["id"] == cid), None)  # the Kit's own value, not only the input's
+            if abs(value() - (lo + step)) > tol or kit_value is None or abs(float(kit_value) - (lo + step)) > tol:
+                report.dial_problems.append(f"pressing the right arrow on the range input of the dial for '{cid}' did not move it one step")
+                return
+            page.keyboard.press("ArrowLeft")
+            _settle(page, 150)
+            kit_value = next((c["value"] for c in (_audit(frame) or {}).get("controls", []) if c["id"] == cid), None)
+            if abs(value() - lo) > tol or kit_value is None or abs(float(kit_value) - lo) > tol:
+                report.dial_problems.append(f"pressing the left arrow on the range input of the dial for '{cid}' did not move it back one step")
+                return
+            # with the knob turned, the picture must still be what the numbers say
+            turn(grid // 2)
+            _add(report.problems_l1, prov.l1_problems(_audit(frame)))
+            _set_control(control, "min")
+            _settle(page, 200)
+        except PlaywrightError as exc:
+            report.harness_error = report.harness_error or f"driving the dial for '{cid}': {str(exc).splitlines()[0][:150]}"
+
     for w in widgets:
         one(w)
     if cdp is not None:

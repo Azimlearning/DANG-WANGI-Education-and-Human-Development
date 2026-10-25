@@ -1,0 +1,159 @@
+{
+  "experiment_ref": null,
+  "constants": [],
+  "graphs": [
+    {
+      "title": "More glucose fermented releases more energy.",
+      "x": "glucose",
+      "source": "ferment",
+      "label": "Energy from fermentation",
+      "unit": "kJ",
+      "digits": 3
+    },
+    {
+      "title": "Aerobic respiration releases far more energy from the same glucose.",
+      "x": "glucose",
+      "source": "aerobic",
+      "label": "Energy if aerobic",
+      "unit": "kJ",
+      "digits": 3
+    }
+  ],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "Glucose fermented",
+        "unit": "mol",
+        "source": "glucose",
+        "digits": 4
+      },
+      {
+        "label": "Energy, fermentation",
+        "unit": "kJ",
+        "source": "ferment",
+        "digits": 3
+      },
+      {
+        "label": "Energy, aerobic",
+        "unit": "kJ",
+        "source": "aerobic",
+        "digits": 3
+      }
+    ]
+  },
+  "experiment": {
+    "aim": "To study the process of yeast fermentation",
+    "hypothesis": "Yeast fermentation produces energy, carbon dioxide and ethanol",
+    "independent": "Presence of yeast (tube A has it, tube B does not)",
+    "dependent": "Changes in temperature, limewater and the smell of ethanol",
+    "controlled": [
+      "The volume of boiled glucose solution",
+      "The anaerobic condition, kept by paraffin oil"
+    ],
+    "apparatus": [
+      "Boiling tubes",
+      "Test tubes",
+      "Thermometer",
+      "Delivery tube",
+      "Lime water",
+      "Paraffin oil"
+    ]
+  },
+  "sentences": [
+    "Fermentation releases 210 kJ from each mole of glucose; aerobic respiration releases 2898 kJ."
+  ],
+  "steps": [
+    "Tube A holds boiled glucose solution and yeast; tube B, the control, holds the glucose only. Both are sealed with paraffin oil.",
+    "Turn the dial to set how much glucose tube A has fermented, and watch limewater A, the thermometer and the smell.",
+    "Press Record at 0.002 mol and at 0.004 mol, and compare the energy from fermentation with the energy from aerobic respiration."
+  ],
+  "citation_ids": [
+    "ferment_activity",
+    "ferment_products",
+    "ferment_energy"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "pattern": "virtual_experiment",
+  "id": "yeast_fermentation_lab",
+  "title": "Yeast fermentation: the products and the energy",
+  "goal": "See what yeast fermentation produces, and how little energy it releases compared with aerobic respiration.",
+  "topic": "biology_form4_respiration",
+  "note": "Yeast can break glucose down without oxygen. This is alcohol fermentation: the glucose is only partly broken down, into ethanol and carbon dioxide, and a little energy is released. Tube A has yeast; tube B, the control, has none. Carbon dioxide turns limewater cloudy.",
+  "controls": [
+    {
+      "id": "glucose",
+      "label": "Glucose fermented in tube A",
+      "unit": "mol",
+      "min": 0,
+      "max": 0.004,
+      "value": 0.001,
+      "grid": 8,
+      "surface": "dial"
+    }
+  ],
+  "models": [
+    {
+      "id": "ferment",
+      "model": "biology.respiration_energy",
+      "params": {
+        "energy_per_mole": 210
+      },
+      "inputs": {
+        "glucose": "glucose"
+      }
+    },
+    {
+      "id": "aerobic",
+      "model": "biology.respiration_energy",
+      "params": {
+        "energy_per_mole": 2898
+      },
+      "inputs": {
+        "glucose": "glucose"
+      }
+    }
+  ],
+  "scene": {
+    "kind": "fermentation",
+    "source": "glucose",
+    "model": "ferment",
+    "full": 0.004
+  },
+  "readouts": [
+    {
+      "label": "Energy from fermentation",
+      "unit": "kJ",
+      "digits": 3,
+      "source": "ferment",
+      "convert_to": null
+    },
+    {
+      "label": "Energy if aerobic",
+      "unit": "kJ",
+      "digits": 3,
+      "source": "aerobic",
+      "convert_to": null
+    }
+  ],
+  "predict": {
+    "prompt": "From the same glucose, which releases more energy?",
+    "choices": [
+      "Fermentation",
+      "Aerobic respiration",
+      "They release the same"
+    ],
+    "reveal": "Turn the dial and compare the two energy readouts."
+  },
+  "concept_check": {
+    "question": "Yeast in tube A breaks glucose down without oxygen. Which product turns the limewater cloudy?",
+    "options": [
+      "Oxygen",
+      "Carbon dioxide",
+      "Ethanol"
+    ],
+    "correct": 1,
+    "explanation": "Fermentation of glucose makes ethanol and carbon dioxide, and it is the carbon dioxide that turns limewater cloudy."
+  }
+}

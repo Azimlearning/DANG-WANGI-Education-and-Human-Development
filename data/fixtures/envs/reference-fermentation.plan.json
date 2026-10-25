@@ -1,0 +1,52 @@
+{
+  "id": "reference-fermentation",
+  "title": "Yeast fermentation: the products and the energy",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "The yeast fermentation bench: a dial the student turns to set how much glucose tube A has fermented (the Kit's dial), the textbook's two boiling tubes with limewater and thermometers, the respiration-energy model run for fermentation and for aerobic respiration, and two energy readouts. Checked by the L0 scan, the render harness (which turns the dial by mouse and finger and presses the arrow keys on its range input) and L1 to L3.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "glucose"
+  ],
+  "readouts": [
+    "Energy from fermentation",
+    "Energy if aerobic"
+  ],
+  "models": [
+    {
+      "id": "biology.respiration_energy",
+      "params": {
+        "energy_per_mole": 210
+      },
+      "readouts": [
+        "Energy from fermentation"
+      ],
+      "series": [
+        "Energy from fermentation",
+        "Energy, fermentation"
+      ],
+      "scene": true
+    },
+    {
+      "id": "biology.respiration_energy",
+      "params": {
+        "energy_per_mole": 2898
+      },
+      "readouts": [
+        "Energy if aerobic"
+      ],
+      "series": [
+        "Energy if aerobic",
+        "Energy, aerobic"
+      ]
+    }
+  ]
+}

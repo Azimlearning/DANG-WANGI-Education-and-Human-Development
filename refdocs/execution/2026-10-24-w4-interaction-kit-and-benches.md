@@ -1,4 +1,4 @@
-# Execution: W4 stages 1 and 2, the Hooke mass bench and the titration bench
+# Execution: W4 stages 1 to 3, the Hooke mass bench, the titration bench and the fermentation bench
 
 > Plan: `refdocs/plans/2026-10-24-w4-interaction-kit-and-benches.md`. Written after the build; kept true to what happened (CLAUDE.md rule 4). No paid call is made by anything here.
 
@@ -44,3 +44,21 @@
 **Notes.** The first build was refused by its own reviewer in three ways (12 attacks minted, 3 valid benches refused, V3's parallax wording backwards); the answers are in D-45. My own test mistakes fixed: a pointer drag in jsdom must use the element's own rectangle (the audit's reads go through captured primitives, which a test cannot patch); the valve's status sentence did not follow the control; the eye drag in my screenshot script needed the eye scrolled into view. **Not done:** stages 3 and 4; a screen-reader pass of the eye and the stopcock; a real phone; a gradual indicator change; a paid planner canary (W8).
 
 **Two things I did not diagnose.** One browser-smoke run raised `StopIteration` straight after the Environments build; two reruns passed 27 of 27. Seeding the library over the previous store raised `ConflictingRecord` (the same HTML with different metadata is never replaced), so I set that local store aside, rebuilt it (16 of 16 `kit-verified`) and removed the old file.
+
+
+## Stage 3: the fermentation bench (2026-10-25)
+
+| # | Task | Files | Verify | Status |
+|---|---|---|---|---|
+| 1 | The energy model: spec, registration suite (10 planted bugs), independent reference, manifest, pointers | `science/respiration_energy.ts`, `science.test.ts`, `api/verify/references.py`, `data/citations/pointers.json` | Kit tests; `test_plan_fermentation.py` | Done |
+| 2 | `dial` and `fermentationScene` | `dial.ts`, `fermentation_scene.ts`, `style.ts`, `manifest.ts`, `index.ts` | `dial.test.ts` | Done |
+| 3 | Plan fields (`surface: dial`, scene kind `fermentation` with `model`), PLAN-018 and PLAN-019, assembler, the 17th golden Plan | `plan.py`, `plan_checks.py`, `assemble.py`, `data/plans/biology-f4-fermentation.json` | `test_plan_fermentation.py` | Done |
+| 4 | The verifier and the harness: `dial_dead` (L2-009), `_drive_dials`, `_fermentation_problems`, bindings | `api/verify/{provenance,render}.py`, `failchecks.py` | `test_dial.py` | Done |
+| 5 | Review answers: pathway pinned; page-made drawings and added text refused; `binding_problems`; real keys read from the audit; verifier-only split (`foreign`, `exact`); the textbook's variables | `fermentation_scene.ts`, `parts.ts`, `audit.ts`, `provenance.ts`, `plan.py`, `plan_checks.py` | `test_dial.py`, L6 | Done |
+| 6 | L4 case set regenerated (a declared amendment), planner pack v5 | `data/l4/cases.json`, `cases.sha256`, `eval/l4/test_l4.py`, `planner.v5.md` | `eval/l4` | Done |
+| 7 | Planted defects | `eval/l6/mutations.py`, `data/fixtures/envs/reference-fermentation.*` | L6 | Done |
+| 8 | Relock the Kit | `packages/kit/kit-lock.json` | build hash `fb33e0e7babf` | Done |
+
+**Verification (run 2026-10-25):** `pnpm --filter @synapse/kit test` (417); `pnpm -r typecheck`; ruff; pyright; `uv run pytest -q` (987 passed, 1 skipped (983 in the full run; the 4 failures were a stale surface test, two over-long pointer claims, and two generated reports, and their files were rerun)); `eval/l6/run.py` (151 of 156 planted defects refused, 0 of 16 false positives, no surprise misses); `eval/hostile/run.py`; `eval/environments/build.py --corpus ...` (17 of 17 `kit-verified`); `eval/smoke/web_smoke.py --no-build`; `eval/cost/project.py`; a screenshot of the bench after turning the dial.
+
+**Notes.** A screenshot of my own first build showed the Kit blanking the page: Playwright injects a stylesheet and the new no-CSS rule was in the runtime self-check. That is D-46's correction; it would have hit any student with a dark-mode or translation extension. My own test mistakes fixed: a step value that was on the grid (0.0035), a snap I computed wrongly, a rule name in an assertion. **Not done:** stage 4; the V3 setup drags and timer (recorded in D-46); a screen-reader pass; a real phone; a paid planner canary (W8).

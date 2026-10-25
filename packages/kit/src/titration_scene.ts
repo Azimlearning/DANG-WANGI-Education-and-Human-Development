@@ -10,7 +10,7 @@ import { all, attr, contains, effectiveOpacity, hitAt, layoutAvailable, parentOf
 import { guard } from "./parts";
 import type { Environment } from "./environment";
 import type { Observable } from "./observable";
-import { controls, markOwnStyle, nodeOf, own, ownAttr, registerAction, widgets } from "./provenance";
+import { controls, markKitSvg, markOwnStyle, nodeOf, own, ownAttr, registerAction, widgets } from "./provenance";
 
 const NS = "http://www.w3.org/2000/svg";
 const W = 220;
@@ -75,6 +75,7 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
   frame.className = "syn-titr-frame";
 
   const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "syn-scene syn-titration", role: "img", preserveAspectRatio: "xMidYMid meet" });
+  markKitSvg(root);
   // stand, burette (outline, graduations), liquid, meniscus line, tip, flask and its liquid, the eye's line of sight
   root.appendChild(svg("rect", { x: "8", y: "8", width: "6", height: String(H - 24), rx: "3", fill: "var(--syn-edge)" }));
   root.appendChild(svg("rect", { x: "8", y: String(H - 18), width: "70", height: "6", rx: "3", fill: "var(--syn-edge)" }));
@@ -204,7 +205,7 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
 
   // The structural half (also acted on in the student's browser): what the Kit drew is still there and still says what the numbers say.
   const check = (): string[] => {
-    const out: string[] = [...g.problems()];
+    const out: string[] = [];
     const y = meniscusY();
     if (attr(liquid, "y") !== y.toFixed(2) || attr(liquid, "height") !== Math.max(0, BASE - y).toFixed(2)) out.push("the burette's liquid was redrawn by the page");
     if (attr(meniscus, "y1") !== y.toFixed(2) || attr(meniscus, "y2") !== y.toFixed(2)) out.push("the meniscus line was moved by the page");
@@ -243,6 +244,6 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
     if (hit && hit !== eye && !contains(eye, hit)) out.push("the eye is covered by something else");
     return out;
   };
-  widgets.push({ kind: "scene", id: "titration", obs: endpoint, source: added, full, eye: true, check, layout });
+  widgets.push({ kind: "scene", id: "titration", obs: endpoint, source: added, full, eye: true, check, layout, exact: () => g.problems() });
   return wrap;
 }

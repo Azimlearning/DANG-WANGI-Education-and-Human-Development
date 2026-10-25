@@ -4,7 +4,7 @@
 // property on `document`. The same facts feed the runtime self-check (watch.ts), which runs in the student's browser.
 
 import { adoptedCount, all, attr, attrNames, bodyEl, fontCount, hasAttribute, hasShadow, headEl, idOf, parentOf, sheetText, style, tagOf, textNodes, textOf, value } from "./dom";
-import { actions, constants, controls, copy, describe, isAction, isOwned, ownedAttr, ownedEntries, readouts, series, type ChainNode, isKitStyle, isOwnStyle, kitSheetRules, widgets } from "./provenance";
+import { actions, constants, controls, copy, describe, isAction, isOwned, ownedAttr, ownedEntries, readouts, series, type ChainNode, isKitStyle, isKitSvg, isOwnStyle, kitSheetRules, widgets } from "./provenance";
 import { STYLE } from "./style";
 
 let sealed: object | null = null;
@@ -56,10 +56,19 @@ export interface AuditRecord {
   unownedAttributeNumbers: { attribute: string; value: string; element: string }[];
   /** Elements and styles that can put a number on screen without a text node: canvas, media, list counters, CSS images, fonts, look-alike widgets. */
   forbidden: { what: string; element: string }[];
+  /** CSS or markup a Kit page may not carry at all: a stylesheet or inline style the Kit did not make, a changed Kit stylesheet, a constructed stylesheet, a popover. The verifier refuses
+   * every one; the student's runtime self-check does NOT act on them, because a browser extension (a dark-mode or translation tool, a screenshot tool) adds styles to pages it did not write. */
+  foreign: { what: string; element: string }[];
   /** Elements with a shadow root: their content cannot be audited, so the verifier refuses them. */
   shadowRoots: number;
   /** Composite widgets (mass hangers, scenes): what each is, how many masses the Kit made, the chain a scene draws, and any way the page changed it. */
-  widgets: { kind: string; id: string; masses?: number; full?: number; eye?: boolean; chain?: ChainNode; sourceChain?: ChainNode; problems: string[]; layout: string[] }[];
+  widgets: { kind: string; id: string; masses?: number; full?: number; eye?: boolean; chain?: ChainNode; sourceChain?: ChainNode; problems: string[]; exact: string[]; layout: string[] }[];
+}
+
+/** True for an element inside a drawing the Kit made (a nested `svg` the Kit's own picture holds is the Kit's). */
+function kitInside(el: Element): boolean {
+  for (let n: Element | null = parentOf(el); n; n = parentOf(n)) if (isKitSvg(n)) return true;
+  return false;
 }
 
 const label = (el: Element): string => `${tagOf(el)}${idOf(el) ? "#" + idOf(el) : ""}`;
@@ -85,6 +94,7 @@ export function audit(version: string): AuditRecord {
 
   const attrs: { attribute: string; value: string; element: string }[] = [];
   const forbidden: { what: string; element: string }[] = [];
+  const foreign: { what: string; element: string }[] = [];
   let shadowRoots = 0;
   let forgedActions = 0;
   const elements = all(body, "*");
@@ -114,8 +124,9 @@ export function audit(version: string): AuditRecord {
       forbidden.push({ what: "inline style that can draw a number", element: label(el) });
     }
     // A Kit page has no CSS but the Kit's: the only inline styles are the ones the Kit sets itself, and nothing a page can style is outside the Kit's own rules.
-    if (inline !== "" && !isOwnStyle(el)) forbidden.push({ what: "an inline style the Kit did not set", element: label(el) });
-    if (hasAttribute(el, "popover")) forbidden.push({ what: "a popover (it draws in the top layer)", element: label(el) });
+    if (inline !== "" && !isOwnStyle(el)) foreign.push({ what: "an inline style the Kit did not set", element: label(el) });
+    if (tag === "svg" && !isKitSvg(el) && !kitInside(el)) foreign.push({ what: "a drawing the Kit did not make", element: label(el) });
+    if (hasAttribute(el, "popover")) foreign.push({ what: "a popover (it draws in the top layer)", element: label(el) });
     if (NON_VISUAL.includes(tag)) {
       const shown = style(el, "display");
       if (shown && shown !== "none") forbidden.push({ what: `<${tag}> made visible`, element: label(el) });
@@ -136,13 +147,21 @@ export function audit(version: string): AuditRecord {
     const tag = tagOf(s);
     if (tag === "link") forbidden.push({ what: "<link> element", element: label(s) });
     else if (!(isKitStyle(s) && textOf(s) === STYLE)) {
-      forbidden.push({ what: "a stylesheet the Kit did not make", element: label(s) });
+      foreign.push({ what: "a stylesheet the Kit did not make", element: label(s) });
+      if (STYLE_FORBIDDEN.test(textOf(s)) || MARKER_FORBIDDEN.test(textOf(s))) {
+        forbidden.push({ what: "stylesheet with an image, font, import or generated content", element: label(s) });
+      }
     } else if (sheetText(s) !== (kitSheetRules(s) ?? null)) {
-      forbidden.push({ what: "the Kit's stylesheet was changed", element: label(s) });
+      foreign.push({ what: "the Kit's stylesheet was changed", element: label(s) });
     }
   }
-  for (const s of all(body, "style")) forbidden.push({ what: "a stylesheet the Kit did not make", element: label(s) });
-  if (adoptedCount() > 0) forbidden.push({ what: "a constructed stylesheet", element: "document" });
+  for (const s of all(body, "style")) {
+    foreign.push({ what: "a stylesheet the Kit did not make", element: label(s) });
+    if (STYLE_FORBIDDEN.test(textOf(s)) || MARKER_FORBIDDEN.test(textOf(s))) {
+      forbidden.push({ what: "stylesheet with an image, font, import or generated content", element: label(s) });
+    }
+  }
+  if (adoptedCount() > 0) foreign.push({ what: "a constructed stylesheet", element: "document" });
   // The head's own non-visual elements are not in the body walk above: check that none was made visible, and that none carries a style that draws.
   for (const el of all(headEl(), "*")) {
     const tag = tagOf(el);
@@ -154,7 +173,7 @@ export function audit(version: string): AuditRecord {
     if (inline && (MARKER_FORBIDDEN.test(inline) || STYLE_FORBIDDEN.test(inline))) {
       forbidden.push({ what: "inline style that can draw a number", element: label(el) });
     }
-    if (inline !== "") forbidden.push({ what: "an inline style the Kit did not set", element: label(el) });
+    if (inline !== "") foreign.push({ what: "an inline style the Kit did not set", element: label(el) });
   }
   // The body itself is in neither walk (the first covers its descendants, the second the head).
   if (style(body, "display") === "list-item") forbidden.push({ what: "list item display on a non-list element", element: "body" });
@@ -162,9 +181,9 @@ export function audit(version: string): AuditRecord {
   if (bodyInline && (MARKER_FORBIDDEN.test(bodyInline) || STYLE_FORBIDDEN.test(bodyInline))) {
     forbidden.push({ what: "inline style that can draw a number", element: "body" });
   }
-  if (bodyInline !== "" && !isOwnStyle(body)) forbidden.push({ what: "an inline style the Kit did not set", element: "body" });
+  if (bodyInline !== "" && !isOwnStyle(body)) foreign.push({ what: "an inline style the Kit did not set", element: "body" });
   for (const rootEl of all(document, ":root")) {
-    if (attr(rootEl, "style") !== "" && !isOwnStyle(rootEl)) forbidden.push({ what: "an inline style the Kit did not set", element: "html" });
+    if (attr(rootEl, "style") !== "" && !isOwnStyle(rootEl)) foreign.push({ what: "an inline style the Kit did not set", element: "html" });
   }
   if (fontCount() > 0) forbidden.push({ what: "a font loaded by script", element: "document" });
 
@@ -219,6 +238,7 @@ export function audit(version: string): AuditRecord {
     unownedNumbers: unowned,
     unownedAttributeNumbers: attrs,
     forbidden,
+    foreign,
     shadowRoots,
     widgets: widgets.map((w) => ({
       kind: w.kind,
@@ -229,6 +249,7 @@ export function audit(version: string): AuditRecord {
       ...(w.obs ? { chain: describe(w.obs) } : {}),
       ...(w.source ? { sourceChain: describe(w.source) } : {}),
       problems: w.check(),
+      exact: w.exact ? w.exact() : [],
       layout: w.layout ? w.layout() : [],
     })),
   };

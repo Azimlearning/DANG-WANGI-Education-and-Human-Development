@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yeast fermentation: the products and the energy</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Yeast fermentation: the products and the energy", note: "Yeast can break glucose down without oxygen. This is alcohol fermentation: the glucose is only partly broken down, into ethanol and carbon dioxide, and a little energy is released. Tube A has yeast; tube B, the control, has none. Carbon dioxide turns limewater cloudy." });
+  Synapse.predictCard(env, {"prompt": "From the same glucose, which releases more energy?", "choices": ["Fermentation", "Aerobic respiration", "They release the same"], "reveal": "Turn the dial and compare the two energy readouts."});
+  Synapse.experiment(env, {"aim": "To study the process of yeast fermentation", "hypothesis": "Yeast fermentation produces energy, carbon dioxide and ethanol", "independent": "Presence of yeast (tube A has it, tube B does not)", "dependent": "Changes in temperature, limewater and the smell of ethanol", "controlled": ["The volume of boiled glucose solution", "The anaerobic condition, kept by paraffin oil"], "apparatus": ["Boiling tubes", "Test tubes", "Thermometer", "Delivery tube", "Lime water", "Paraffin oil"]});
+  Synapse.stepper(env, { steps: ["Tube A holds boiled glucose solution and yeast; tube B, the control, holds the glucose only. Both are sealed with paraffin oil.", "Turn the dial to set how much glucose tube A has fermented, and watch limewater A, the thermometer and the smell.", "Press Record at 0.002 mol and at 0.004 mol, and compare the energy from fermentation with the energy from aerobic respiration."] });
+  var c_glucose = Synapse.dial(env, {"id": "glucose", "label": "Glucose fermented in tube A", "unit": "mol", "min": 0.0, "max": 0.004, "value": 0.001, "grid": 8});
+  
+  var m_ferment = Synapse.respirationEnergy({ energy_per_mole: 210.0, glucose: c_glucose });
+  var m_aerobic = Synapse.respirationEnergy({ energy_per_mole: 2898.0, glucose: c_glucose });
+  Synapse.readout(env, { label: "Energy from fermentation", unit: "kJ", value: m_ferment, digits: 3 });
+  Synapse.readout(env, { label: "Energy if aerobic", unit: "kJ", value: m_aerobic, digits: 3 });
+  Synapse.graph(env, { title: "More glucose fermented releases more energy.", x: c_glucose, y: m_ferment, yLabel: "Energy from fermentation", yUnit: "kJ", digits: 3 });
+  Synapse.graph(env, { title: "Aerobic respiration releases far more energy from the same glucose.", x: c_glucose, y: m_aerobic, yLabel: "Energy if aerobic", yUnit: "kJ", digits: 3 });
+  Synapse.fermentationScene(env, { fermented: c_glucose, energy: m_ferment, full: 0.004 });
+  Synapse.table(env, { caption: "Results", columns: [
+    { label: "Glucose fermented", unit: "mol", value: c_glucose, digits: 4 },
+    { label: "Energy, fermentation", unit: "kJ", value: m_ferment, digits: 3 },
+    { label: "Energy, aerobic", unit: "kJ", value: m_aerobic, digits: 3 }
+  ] });
+  Synapse.text(env, "Fermentation releases 210 kJ from each mole of glucose; aerobic respiration releases 2898 kJ.");
+  
+  Synapse.conceptCheck(env, {"question": "Yeast in tube A breaks glucose down without oxygen. Which product turns the limewater cloudy?", "options": ["Oxygen", "Carbon dioxide", "Ethanol"], "correct": 1, "explanation": "Fermentation of glucose makes ethanol and carbon dioxide, and it is the carbon dioxide that turns limewater cloudy."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

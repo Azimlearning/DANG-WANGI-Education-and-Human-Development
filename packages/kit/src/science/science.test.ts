@@ -14,6 +14,7 @@ import { spec as photo } from "./photosynthesis";
 import { spec as sa } from "./sa_to_v";
 import { spec as titration } from "./titration";
 import { spec as titrationEnd } from "./titration_endpoint";
+import { spec as respiration } from "./respiration_energy";
 import { spec as hookes } from "./hookes";
 import { spec as ohm } from "./ohm";
 import { spec as pressure } from "./pressure_depth";
@@ -177,6 +178,21 @@ const BUGS: { spec: ScienceSpec; bugs: Record<string, Impl> }[] = [
       "NaN at 25 cm3 of acid": planted(titrationEnd, (a) => (n(a, "va") === 25 ? Number.NaN : (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")))),
       "no domain check on mb": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")), ["mb"]),
       "no domain check on acid coefficient": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")), ["acid_coeff"]),
+    },
+  },
+  {
+    spec: respiration,
+    bugs: {
+      "divides by the energy per mole": planted(respiration, (a) => n(a, "glucose") / n(a, "energy_per_mole")),
+      "adds instead of multiplies": planted(respiration, (a) => n(a, "glucose") + n(a, "energy_per_mole")),
+      "forgets the glucose": planted(respiration, (a) => n(a, "energy_per_mole")),
+      "kilojoules and joules mixed up": planted(respiration, (a) => n(a, "glucose") * n(a, "energy_per_mole") * 1000),
+      "aerobic figure used for everything": planted(respiration, (a) => n(a, "glucose") * 2898),
+      "caps at 100 kJ": planted(respiration, (a) => Math.min(n(a, "glucose") * n(a, "energy_per_mole"), 100)),
+      "sign flips above 0.003 mol": planted(respiration, (a) => (n(a, "glucose") > 0.003 ? -1 : 1) * n(a, "glucose") * n(a, "energy_per_mole")),
+      "NaN at 0.0025 mol": planted(respiration, (a) => (n(a, "glucose") === 0.0025 ? Number.NaN : n(a, "glucose") * n(a, "energy_per_mole"))),
+      "square of the glucose": planted(respiration, (a) => n(a, "glucose") * n(a, "glucose") * n(a, "energy_per_mole")),
+      "no domain check on the energy per mole": planted(respiration, (a) => n(a, "glucose") * n(a, "energy_per_mole"), ["energy_per_mole"]),
     },
   },
   {

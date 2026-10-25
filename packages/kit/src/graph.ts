@@ -5,7 +5,7 @@
 
 import type { Environment } from "./environment";
 import type { Observable } from "./observable";
-import { controls, copy, isObservable, nodeOf, own, ownAttr, series } from "./provenance";
+import { controls, copy, isObservable, markKitSvg, nodeOf, own, ownAttr, series } from "./provenance";
 
 const NS = "http://www.w3.org/2000/svg";
 const W = 320;
@@ -54,6 +54,7 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
   let hi = 1;
 
   const root = svg("svg", { class: "syn-graph", viewBox: `0 0 ${W} ${H}`, role: "img" });
+  markKitSvg(root);
   const label = `Graph of ${yLabel} against ${xc.label}. ${title}`;
   root.setAttribute("aria-label", label);
   ownAttr(root, "aria-label", () => label);

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { audit } from "./audit";
+import { audit, violations } from "./audit";
 import { environment } from "./environment";
 import { KIT_VERSION } from "./index";
 import { resetForTests } from "./provenance";
@@ -62,6 +62,7 @@ describe("the Kit's stylesheet and the CSS rules", () => {
     const style = document.createElement("style");
     style.textContent = "p{color:#333;margin:0}";
     document.head.appendChild(style);
-    expect(stylesheetFindings().map((f) => f.what)).toEqual(["a stylesheet the Kit did not make"]);
+    expect(audit(KIT_VERSION).foreign.map((f) => f.what)).toEqual(["a stylesheet the Kit did not make"]);
+    expect(violations(audit(KIT_VERSION))).toEqual([]); // the student's own browser does not act on it: an extension adds stylesheets
   });
 });

@@ -22,7 +22,11 @@ MAX_MASSES = 8
 """The most masses the Kit's `massHanger` takes (its `MAX_MASSES`)."""
 MAX_VALVE_STEPS = 40
 """The most steps the Kit's `valve` takes (its `MAX_VALVE_STEPS`)."""
-SCENE_MODELS = {"spring": frozenset({"mechanics.hookes"}), "titration": frozenset({"chemistry.titration_endpoint_volume"})}
+SCENE_MODELS = {
+    "spring": frozenset({"mechanics.hookes"}),
+    "titration": frozenset({"chemistry.titration_endpoint_volume"}),
+    "fermentation": frozenset({"biology.respiration_energy"}),
+}
 """Which science models each scene kind may draw: the scene's picture must be the model's own output."""
 MAX_COPY_CHARS = 1800
 
@@ -91,8 +95,10 @@ def needed_components(plan: Plan) -> set[str]:
         need.add("massHanger")
     if any(c.surface == "valve" for c in plan.controls):
         need.add("valve")
+    if any(c.surface == "dial" for c in plan.controls):
+        need.add("dial")
     if plan.scene:
-        need.add("titrationScene" if plan.scene.kind == "titration" else "springScene")
+        need.add({"titration": "titrationScene", "fermentation": "fermentationScene"}.get(plan.scene.kind, "springScene"))
     return need
 
 
@@ -175,7 +181,7 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
         if c.surface == "slider" or not (math.isfinite(c.min) and math.isfinite(c.max) and math.isfinite(c.value) and c.min < c.max):
             continue
         path = f"controls[{i}]"
-        most, what, unit_word = (MAX_MASSES, "masses", "masses") if c.surface == "masses" else (MAX_VALVE_STEPS, "a valve", "steps")
+        most, what, unit_word = (MAX_MASSES, "masses", "masses") if c.surface == "masses" else (MAX_VALVE_STEPS, f"a {c.surface}", "steps")
         if not 2 <= c.grid <= most:
             add(
                 "PLAN-018",
@@ -257,6 +263,46 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                                 f"The indicator changes at {at:g} cm3, which is not one of the stopcock's steps, so the student could never stop exactly at the end point.",
                                 f"Choose the alkali's concentration so the end point sits on a step of '{drawn.id}' (steps of {(drawn.max - drawn.min) / drawn.grid:g} cm3 from {drawn.min:g}).",
                             )
+        elif scene.kind == "fermentation":
+            drawn = controls.get(scene.source)
+            inst = instances.get(scene.model or "")
+            if drawn is None or drawn.unit != "mol":
+                add(
+                    "PLAN-019",
+                    "scene.source",
+                    f"A fermentation scene draws a control in mol, and '{scene.source}' is {'not a control' if drawn is None else 'in ' + drawn.unit}.",
+                    "Point the scene at the id of the control that is the glucose fermented, in mol.",
+                )
+            elif scene.full < drawn.max or drawn.max / scene.full < SCENE_FILL_MIN:
+                add(
+                    "PLAN-019",
+                    "scene.full",
+                    f"The scene's scale is {scene.full:g} mol but the control goes up to {drawn.max:g} mol, so the bubbling would be "
+                    f"{'overfull' if scene.full < drawn.max else 'mostly unused'}.",
+                    f"Set the scene's full to a value from {drawn.max:g} to {drawn.max / SCENE_FILL_MIN:g}.",
+                )
+            if inst is None or inst.model not in allowed:
+                add(
+                    "PLAN-019",
+                    "scene.model",
+                    f"A fermentation scene draws the energy from {sorted(allowed)}, and '{scene.model}' is "
+                    f"{'not a model instance in this Plan' if inst is None else 'a ' + inst.model + ' instance'}.",
+                    f"Point the scene's model at an instance of {sorted(allowed)}.",
+                )
+            elif inst.params.get("energy_per_mole") != 210:
+                add(
+                    "PLAN-019",
+                    "scene.model",
+                    f"The scene draws alcohol fermentation, which gives 210 kJ per mole of glucose; '{inst.id}' uses {inst.params.get('energy_per_mole')}. The picture (bubbles, cloudy limewater, a warmer tube, ethanol) is false for lactic acid fermentation and for aerobic respiration.",
+                    "Point the scene's model at the instance with energy_per_mole 210.",
+                )
+            elif inst.inputs.get("glucose") != scene.source:
+                add(
+                    "PLAN-019",
+                    "scene.model",
+                    f"The energy '{inst.id}' is not fed by '{scene.source}', the control the scene draws.",
+                    f"Bind the energy model's glucose input to '{scene.source}'.",
+                )
         else:
             inst = instances.get(scene.source)
             if inst is None:

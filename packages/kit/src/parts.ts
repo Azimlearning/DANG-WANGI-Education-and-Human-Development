@@ -3,7 +3,7 @@
 // `class`, `hidden`), changes one the Kit did not mean to change, or adds an element inside the widget (an opaque shape over the picture) is reported. All reads go through the
 // primitives captured when the bundle loaded.
 
-import { all, attrsOf } from "./dom";
+import { all, attrsOf, parentOf, textNodes, textOf } from "./dom";
 
 type Attrs = Record<string, string>;
 
@@ -24,7 +24,7 @@ export interface Guard {
 
 export function guard(): Guard {
   const parts: { el: Element; base: Attrs; dynamic?: () => Attrs }[] = [];
-  const trees: { root: Element; inside: Element[] }[] = [];
+  const trees: { root: Element; inside: Element[]; holders: Set<Element | null> }[] = [];
   return {
     part(el, dynamic) {
       const base = attrsOf(el);
@@ -32,7 +32,9 @@ export function guard(): Guard {
       parts.push({ el, base, dynamic });
     },
     tree(root) {
-      trees.push({ root, inside: all(root, "*") });
+      // The elements that hold text now are the only ones that may: text a page adds to anywhere else in the picture is a sentence the Kit did not write.
+      const holders = new Set(textNodes(root).filter((n) => textOf(n).trim() !== "").map((n) => parentOf(n)));
+      trees.push({ root, inside: all(root, "*"), holders });
     },
     problems() {
       const out: string[] = [];
@@ -46,6 +48,10 @@ export function guard(): Guard {
         const now = all(t.root, "*");
         if (now.length !== t.inside.length || now.some((el, i) => el !== t.inside[i])) {
           out.push("an element was added to, or taken out of, a picture the Kit drew");
+          break;
+        }
+        if (textNodes(t.root).some((n) => textOf(n).trim() !== "" && !t.holders.has(parentOf(n)))) {
+          out.push("text was added to a picture the Kit drew");
           break;
         }
       }
