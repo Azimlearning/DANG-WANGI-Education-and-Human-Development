@@ -35,6 +35,10 @@ const styleGet = method<(this: CSSStyleDeclaration, name: string) => string>(
 const elRect = Element.prototype.getBoundingClientRect;
 const nodeContains = Node.prototype.contains;
 const docAt = typeof Document.prototype.elementFromPoint === "function" ? Document.prototype.elementFromPoint : undefined;
+const elSheet = getter(typeof HTMLStyleElement === "undefined" ? undefined : HTMLStyleElement.prototype, "sheet");
+const sheetRules = getter(typeof CSSStyleSheet === "undefined" ? undefined : CSSStyleSheet.prototype, "cssRules");
+const ruleText = getter(typeof CSSRule === "undefined" ? undefined : CSSRule.prototype, "cssText");
+const docAdopted = getter(Document.prototype, "adoptedStyleSheets");
 const doc = document;
 // jsdom (the unit-test DOM) cannot compute pseudo-element styles and logs an error for each try; real browsers can.
 const PSEUDO_STYLES = !/jsdom/i.test(navigator.userAgent);
@@ -68,6 +72,34 @@ export function textNodes(root: Node): Node[] {
   const out: Node[] = [];
   for (let n = apply(walkNext, walker, []) as Node | null; n; n = apply(walkNext, walker, []) as Node | null) out.push(n);
   return out;
+}
+
+/** Every attribute of an element, name to value. */
+export const attrsOf = (e: Element): Record<string, string> => Object.fromEntries(attrNames(e).map((n) => [n, attr(e, n)]));
+
+/** The text of every rule in a `<style>` element's live stylesheet, or null where the environment cannot say. Insert, delete and edit a rule and this changes; the element's own text does not. */
+export function sheetText(e: Element): string | null {
+  try {
+    if (!elSheet || !sheetRules || !ruleText) return null;
+    const sheet = apply(elSheet, e, []);
+    if (!sheet) return null;
+    const rules = apply(sheetRules, sheet, []) as CSSRuleList;
+    let out = "";
+    for (let i = 0; i < rules.length; i += 1) out += String(apply(ruleText, rules[i], []));
+    return out;
+  } catch {
+    return null;
+  }
+}
+
+/** How many constructed stylesheets the document has adopted. */
+export function adoptedCount(): number {
+  try {
+    const list = docAdopted ? (apply(docAdopted, doc, []) as { length?: number } | undefined) : undefined;
+    return Number(list?.length ?? 0);
+  } catch {
+    return 0;
+  }
 }
 
 export const rectOf = (e: Element): DOMRect => apply(elRect, e, []) as DOMRect;

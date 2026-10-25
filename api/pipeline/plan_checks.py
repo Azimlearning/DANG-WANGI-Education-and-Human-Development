@@ -20,7 +20,9 @@ from api.verify.references import evaluate_model, unit_factor
 MAX_GRID_POSITIONS = 40
 MAX_MASSES = 8
 """The most masses the Kit's `massHanger` takes (its `MAX_MASSES`)."""
-SCENE_MODELS = {"spring": frozenset({"mechanics.hookes"})}
+MAX_VALVE_STEPS = 40
+"""The most steps the Kit's `valve` takes (its `MAX_VALVE_STEPS`)."""
+SCENE_MODELS = {"spring": frozenset({"mechanics.hookes"}), "titration": frozenset({"chemistry.titration_endpoint_volume"})}
 """Which science models each scene kind may draw: the scene's picture must be the model's own output."""
 MAX_COPY_CHARS = 1800
 
@@ -87,8 +89,10 @@ def needed_components(plan: Plan) -> set[str]:
         need.add("convert")
     if any(c.surface == "masses" for c in plan.controls):
         need.add("massHanger")
+    if any(c.surface == "valve" for c in plan.controls):
+        need.add("valve")
     if plan.scene:
-        need.add("springScene")
+        need.add("titrationScene" if plan.scene.kind == "titration" else "springScene")
     return need
 
 
@@ -168,55 +172,118 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
             )
 
     for i, c in enumerate(plan.controls):
-        if c.surface != "masses" or not (math.isfinite(c.min) and math.isfinite(c.max) and math.isfinite(c.value) and c.min < c.max):
+        if c.surface == "slider" or not (math.isfinite(c.min) and math.isfinite(c.max) and math.isfinite(c.value) and c.min < c.max):
             continue
         path = f"controls[{i}]"
-        if not 2 <= c.grid <= MAX_MASSES:
+        most, what, unit_word = (MAX_MASSES, "masses", "masses") if c.surface == "masses" else (MAX_VALVE_STEPS, "a valve", "steps")
+        if not 2 <= c.grid <= most:
             add(
                 "PLAN-018",
                 path,
-                f"Control '{c.id}' uses masses, so grid is the number of masses and must be from 2 to {MAX_MASSES} (it is {c.grid}).",
-                f"Set grid for '{c.id}' to the number of masses, from 2 to {MAX_MASSES}, or use a slider.",
+                f"Control '{c.id}' uses {what}, so grid is the number of {unit_word} and must be from 2 to {most} (it is {c.grid}).",
+                f"Set grid for '{c.id}' to the number of {unit_word}, from 2 to {most}, or use a slider.",
             )
             continue
         steps = (c.value - c.min) / ((c.max - c.min) / c.grid)
-        # A start outside the range is PLAN-014's to report (and to repair); only a start inside it can be off the masses.
+        # A start outside the range is PLAN-014's to report (and to repair); only a start inside it can be off the steps.
         if c.min <= c.value <= c.max and abs(steps - round(steps)) > 1e-9:
             add(
                 "PLAN-018",
                 path,
-                f"Control '{c.id}' starts at {c.value:g}, which is not a whole number of masses between {c.min:g} and {c.max:g}.",
+                f"Control '{c.id}' starts at {c.value:g}, which is not a whole number of steps between {c.min:g} and {c.max:g}.",
                 f"Start '{c.id}' at {c.min:g} plus a whole number of steps of {(c.max - c.min) / c.grid:g}.",
             )
 
     if plan.scene is not None:
-        inst = instances.get(plan.scene.source)
-        allowed = SCENE_MODELS.get(plan.scene.kind, frozenset())
-        if inst is None:
-            add(
-                "PLAN-019",
-                "scene.source",
-                f"The scene draws '{plan.scene.source}', which is not a model instance in this Plan.",
-                "Point the scene at the id of a model instance whose output it draws.",
-            )
-        elif inst.model not in allowed:
-            add(
-                "PLAN-019",
-                "scene.source",
-                f"A {plan.scene.kind} scene draws the output of {sorted(allowed)}, not of '{inst.model}'.",
-                f"Draw a {plan.scene.kind} scene only from {sorted(allowed)}, or leave the scene out.",
-            )
-        else:
-            # The drawing scale must fit the model: at the controls' largest values the picture should be nearly full, and never clipped.
-            peak = _scene_peak(inst, controls, constants)
-            if peak is not None and not (SCENE_FILL_MIN <= peak / plan.scene.full <= 1 + 1e-9):
+        scene = plan.scene
+        allowed = SCENE_MODELS.get(scene.kind, frozenset())
+        if scene.kind == "titration":
+            drawn = controls.get(scene.source)
+            inst = instances.get(scene.endpoint or "")
+            if drawn is None or drawn.unit != "cm3":
+                add(
+                    "PLAN-019",
+                    "scene.source",
+                    f"A titration scene draws a control in cm3, and '{scene.source}' is {'not a control' if drawn is None else 'in ' + drawn.unit}.",
+                    "Point the scene at the id of the control that is the volume run in, in cm3.",
+                )
+            elif scene.full < drawn.max or drawn.max / scene.full < SCENE_FILL_MIN:
                 add(
                     "PLAN-019",
                     "scene.full",
-                    f"The scene's full scale is {plan.scene.full:g}, but '{inst.id}' reaches {peak:g} at the controls' maximum, so the picture would be "
-                    f"{'clipped' if peak > plan.scene.full else 'mostly unused'}.",
-                    f"Set the scene's full to a value from {peak:g} to {peak / SCENE_FILL_MIN:g}.",
+                    f"The burette's capacity is {scene.full:g} cm3 but the control runs in up to {drawn.max:g} cm3, so the picture would be "
+                    f"{'overfull' if scene.full < drawn.max else 'mostly unused'}.",
+                    f"Set the scene's full to a value from {drawn.max:g} to {drawn.max / SCENE_FILL_MIN:g}.",
                 )
+            if inst is None or inst.model not in allowed:
+                add(
+                    "PLAN-019",
+                    "scene.endpoint",
+                    f"A titration scene's end point is the output of {sorted(allowed)}, and '{scene.endpoint}' is "
+                    f"{'not a model instance in this Plan' if inst is None else 'a ' + inst.model + ' instance'}.",
+                    f"Point the scene's endpoint at an instance of {sorted(allowed)}.",
+                )
+            else:
+                if any(bound in controls for bound in inst.inputs.values()):
+                    add(
+                        "PLAN-019",
+                        "scene.endpoint",
+                        f"The end point '{inst.id}' follows a control. Where the indicator changes depends on the two solutions, never on how far the student has run.",
+                        "Feed the end-point model only constants: the acid's volume and the alkali's concentration.",
+                    )
+                for other in (m for m in plan.models if m.model == "chemistry.titration_concentration"):
+                    if other.inputs.get("va") != inst.inputs.get("va") or any(other.params.get(k) != inst.params.get(k) for k in ("ma", "acid_coeff", "base_coeff")):
+                        add(
+                            "PLAN-019",
+                            "scene.endpoint",
+                            f"The end point '{inst.id}' and the concentration '{other.id}' describe different titrations (the acid volume, its concentration or the coefficients differ).",
+                            "Give both models the same acid volume, acid concentration and coefficients.",
+                        )
+                if drawn is not None and drawn.unit == "cm3":
+                    at = _scene_peak(inst, controls, constants)
+                    if at is not None and not (drawn.min <= at <= drawn.max):
+                        add(
+                            "PLAN-019",
+                            "scene.endpoint",
+                            f"The indicator changes at {at:g} cm3, which the control ('{drawn.id}', {drawn.min:g} to {drawn.max:g} cm3) can never reach.",
+                            f"Choose the alkali's concentration or the control's range so the end point lies between {drawn.min:g} and {drawn.max:g} cm3.",
+                        )
+                    elif at is not None and drawn.surface == "valve" and drawn.grid > 0:
+                        steps = (at - drawn.min) / ((drawn.max - drawn.min) / drawn.grid)
+                        if abs(steps - round(steps)) > 1e-6:
+                            add(
+                                "PLAN-019",
+                                "scene.endpoint",
+                                f"The indicator changes at {at:g} cm3, which is not one of the stopcock's steps, so the student could never stop exactly at the end point.",
+                                f"Choose the alkali's concentration so the end point sits on a step of '{drawn.id}' (steps of {(drawn.max - drawn.min) / drawn.grid:g} cm3 from {drawn.min:g}).",
+                            )
+        else:
+            inst = instances.get(scene.source)
+            if inst is None:
+                add(
+                    "PLAN-019",
+                    "scene.source",
+                    f"The scene draws '{scene.source}', which is not a model instance in this Plan.",
+                    "Point the scene at the id of a model instance whose output it draws.",
+                )
+            elif inst.model not in allowed:
+                add(
+                    "PLAN-019",
+                    "scene.source",
+                    f"A {scene.kind} scene draws the output of {sorted(allowed)}, not of '{inst.model}'.",
+                    f"Draw a {scene.kind} scene only from {sorted(allowed)}, or leave the scene out.",
+                )
+            else:
+                # The drawing scale must fit the model: at the controls' largest values the picture should be nearly full, and never clipped.
+                peak = _scene_peak(inst, controls, constants)
+                if peak is not None and not (SCENE_FILL_MIN <= peak / scene.full <= 1 + 1e-9):
+                    add(
+                        "PLAN-019",
+                        "scene.full",
+                        f"The scene's full scale is {scene.full:g}, but '{inst.id}' reaches {peak:g} at the controls' maximum, so the picture would be "
+                        f"{'clipped' if peak > scene.full else 'mostly unused'}.",
+                        f"Set the scene's full to a value from {peak:g} to {peak / SCENE_FILL_MIN:g}.",
+                    )
 
     for i, m in enumerate(plan.models):
         path = f"models[{i}]"

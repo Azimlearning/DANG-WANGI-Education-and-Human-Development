@@ -1,0 +1,40 @@
+{
+  "id": "reference-titration",
+  "title": "Titration: finding a concentration",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "The titration bench: a stopcock the student holds to run alkali into acid (the Kit's valve), a burette and flask whose indicator turns pink at the end point (the end-point model), an eye to read the meniscus, and the concentration readout. Checked by the L0 scan, the render harness (which taps, presses and holds the stopcock by mouse, key and finger, and moves the eye by key, mouse and finger) and L1 to L3.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "vb"
+  ],
+  "readouts": [
+    "Concentration of the alkali"
+  ],
+  "models": [
+    {
+      "id": "chemistry.titration_concentration",
+      "params": {
+        "ma": 0.1,
+        "acid_coeff": 1,
+        "base_coeff": 1
+      }
+    },
+    {
+      "id": "chemistry.titration_endpoint_volume",
+      "params": {
+        "ma": 0.1,
+        "acid_coeff": 1,
+        "base_coeff": 1
+      }
+    }
+  ]
+}

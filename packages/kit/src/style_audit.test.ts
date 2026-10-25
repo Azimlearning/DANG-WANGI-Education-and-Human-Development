@@ -57,11 +57,11 @@ describe("the Kit's stylesheet and the CSS rules", () => {
     expect(stylesheetFindings()).toHaveLength(1);
   });
 
-  it("leaves an ordinary page stylesheet alone", () => {
+  it("refuses every stylesheet the Kit did not make, even an ordinary one: a Kit page carries no CSS but the Kit's", () => {
     environment({ title: "t", note: "n" });
     const style = document.createElement("style");
     style.textContent = "p{color:#333;margin:0}";
     document.head.appendChild(style);
-    expect(stylesheetFindings()).toEqual([]);
+    expect(stylesheetFindings().map((f) => f.what)).toEqual(["a stylesheet the Kit did not make"]);
   });
 });

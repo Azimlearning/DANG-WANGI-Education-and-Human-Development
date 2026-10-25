@@ -1,4 +1,4 @@
-# Execution: W4 stage 1, the Hooke mass bench
+# Execution: W4 stages 1 and 2, the Hooke mass bench and the titration bench
 
 > Plan: `refdocs/plans/2026-10-24-w4-interaction-kit-and-benches.md`. Written after the build; kept true to what happened (CLAUDE.md rule 4). No paid call is made by anything here.
 
@@ -24,3 +24,23 @@
 - **My own test mistakes fixed:** the tray comes before the hanger in document order (tests now sort the masses by letter); PLAN-018 reported twice for a start outside the range (now left to PLAN-014).
 - **After this work every stored or seeded Environment is stale** (the Kit's bytes changed, D-16): re-run `uv run python -m api.library_seed`.
 - **Not done:** stages 2 to 4; a real phone; a screen-reader pass of the live region; a paid planner canary (W8).
+
+
+## Stage 2: the titration bench (2026-10-25)
+
+| # | Task | Files | Verify | Status |
+|---|---|---|---|---|
+| 1 | The end-point model, with its registration suite, independent reference and pointers | `packages/kit/src/science/titration_endpoint.ts`, `science.test.ts`, `api/verify/references.py`, `data/citations/pointers.json` | 11 planted bugs refused; the two models are each other's inverse | Done |
+| 2 | `valve` and `titrationScene` (burette, flask, eye) | `valve.ts`, `titration_scene.ts`, `parts.ts`, `style.ts`, `manifest.ts`, `index.ts` | `valve.test.ts` | Done |
+| 3 | Plan fields, PLAN-018 for valves, PLAN-019 for titration scenes, assembler | `plan.py`, `plan_checks.py`, `assemble.py`, `failchecks.py` | `test_plan_titration.py` | Done |
+| 4 | The titration Plan rewritten, the eye-level citation | `data/plans/chemistry-f4-titration.json`, `pointers.json`, the local corpus quotation file | 16 of 16 `kit-verified` | Done |
+| 5 | The verifier holds the scene to the plan; the harness drives every valve and the eye | `api/verify/{provenance,render}.py` | `test_gestures.py` | Done |
+| 6 | Second-review answers: no page CSS, guarded parts, derived end point, scoped eye lookup, wording, planner pack v4 | `audit.ts`, `dom.ts`, `provenance.ts`, `environment.ts`, `watch.ts`, `parts.ts`, `plan_checks.py`, `provenance.py`, `render.py`, `planner.v4.md` | L6, gesture tests | Done |
+| 7 | Planted defects | `eval/l6/mutations.py`, `data/fixtures/envs/reference-titration.*` | L6 | Done |
+| 8 | Relock the Kit | `packages/kit/kit-lock.json` | build hash `79974807fd91` | Done |
+
+**Verification (run 2026-10-25):** `pnpm --filter @synapse/kit test` (393); `pnpm -r typecheck`; `uv run ruff check api eval`; `uv run pyright api eval`; `uv run pytest -q` (938 passed, 1 skipped); `eval/l6/run.py` (127 of 132 refused, 0 of 15 false positives, no surprise misses); `eval/hostile/run.py`; `eval/environments/build.py --corpus ...` (16 of 16 `kit-verified`); `eval/smoke/web_smoke.py --no-build`; `eval/cost/project.py` regenerated; screenshots of the bench in use at 360 px, light and dark, looked at.
+
+**Notes.** The first build was refused by its own reviewer in three ways (12 attacks minted, 3 valid benches refused, V3's parallax wording backwards); the answers are in D-45. My own test mistakes fixed: a pointer drag in jsdom must use the element's own rectangle (the audit's reads go through captured primitives, which a test cannot patch); the valve's status sentence did not follow the control; the eye drag in my screenshot script needed the eye scrolled into view. **Not done:** stages 3 and 4; a screen-reader pass of the eye and the stopcock; a real phone; a gradual indicator change; a paid planner canary (W8).
+
+**Two things I did not diagnose.** One browser-smoke run raised `StopIteration` straight after the Environments build; two reruns passed 27 of 27. Seeding the library over the previous store raised `ConflictingRecord` (the same HTML with different metadata is never replaced), so I set that local store aside, rebuilt it (16 of 16 `kit-verified`) and removed the old file.

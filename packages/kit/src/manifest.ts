@@ -11,6 +11,7 @@ import { spec as saSpec } from "./science/sa_to_v";
 import { spec as photoSpec } from "./science/photosynthesis";
 import { spec as molesSpec } from "./science/moles";
 import { spec as titrSpec } from "./science/titration";
+import { spec as titrEndSpec } from "./science/titration_endpoint";
 import { spec as dilSpec } from "./science/dilution";
 import { spec as heatSpec } from "./science/heat_energy";
 import { spec as rateSpec } from "./science/average_rate";
@@ -82,6 +83,22 @@ export const manifestEntries: ManifestEntry[] = [
     precondition: "Use it INSTEAD of slider for a quantity a student adds in equal steps, such as hanging slotted masses. grid is the number of masses, an integer from 2 to 8; value must sit on a step (min plus a whole number of steps); id is unique in the page. The returned observable is a control exactly as a slider's is.",
     doc: "Drag masses from a tray onto a hanger, or press a mass to move it. The control's value is min plus one step per hung mass. A range input with the same id stays on the page for the keyboard and screen readers.",
     useWhen: "Use for a load, a stack of weights or any quantity added in equal whole steps that a student can hang or place by hand.",
+  },
+  {
+    id: "valve",
+    kind: "interaction",
+    signature: "valve(env, {id, label, unit, min, max, value, grid}): Observable<number>",
+    precondition: "Use it INSTEAD of slider for a quantity a student runs in by turning a stopcock, such as the volume of liquid let out of a burette. grid is the number of steps, an integer from 2 to 40; value must sit on a step (min plus a whole number of steps); id is unique in the page. The returned observable is a control exactly as a slider's is.",
+    doc: "A stopcock the student holds to run the liquid in (one step every moment it is held), taps to let out one measure, or presses from the keyboard. Letting go stops the flow. A range input with the same id stays on the page for the keyboard and screen readers.",
+    useWhen: "Use for the volume added from a burette in a titration, or any quantity let in by a tap that a student opens and closes by hand.",
+  },
+  {
+    id: "titrationScene",
+    kind: "scene",
+    signature: "titrationScene(env, {added: Observable<number>, endpoint: Observable<number>, full: number}): HTMLDivElement",
+    precondition: "added is a control in cm3 (the one a valve makes); endpoint is the output of the end-point model (Synapse.titrationEndpoint), in cm3; full is the burette's capacity in cm3, at least the control's maximum and at most twice it. Create it after the model.",
+    doc: "A burette over a flask, and an eye the student drags up and down the burette to read the meniscus. The burette empties as the control rises; the flask turns pink when the volume run in reaches the end point. It draws quantities and never prints a number; its text says in words how full the burette is, the flask's colour, and whether the eye is level, above or below the meniscus.",
+    useWhen: "Use beside a titration readout so the student sees the burette empty, the indicator change colour, and practises reading a burette at eye level.",
   },
   {
     id: "springScene",
@@ -298,6 +315,19 @@ export const manifestEntries: ManifestEntry[] = [
     citation: "UNVERIFIED (corpus not loaded until P2)",
     units: { va: "cm3", vb: "cm3", ma: "mol/dm3", acid_coeff: "1", base_coeff: "1", output: "mol/dm3" },
     ...fromSpec(titrSpec),
+  },
+  {
+    id: "titrationEndpoint",
+    kind: "science",
+    signature: "titrationEndpoint({va: Observable<number>, mb: Observable<number>, ma: number, acid_coeff: number, base_coeff: number}): Observable<number>",
+    precondition: "Domain: all above 0. Units: va cm3, mb mol/dm3, ma mol/dm3, coefficients from the balanced equation. The output is the volume of base, in cm3, that neutralises va of the acid.",
+    doc: "Volume of base at the end point Vb = Ma x Va x b / (a x Mb). A read-only observable that follows the acid's volume and the base's concentration.",
+    useWhen: "Use to say where the indicator changes colour in a titration, given the base's concentration (Acids, Bases and Salts).",
+    modelId: "chemistry.titration_endpoint_volume",
+    topics: ["chemistry_form4_acids_bases_salts"],
+    citation: "UNVERIFIED (corpus not loaded until P2)",
+    units: { va: "cm3", mb: "mol/dm3", ma: "mol/dm3", acid_coeff: "1", base_coeff: "1", output: "cm3" },
+    ...fromSpec(titrEndSpec),
   },
   {
     id: "dilution",

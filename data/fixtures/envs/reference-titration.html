@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Titration: finding a concentration</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Titration: finding a concentration", note: "The end point is where the indicator changes colour, and the acid and the alkali are then taken to have neutralised each other. For hydrochloric acid and sodium hydroxide, one mole of acid reacts with one mole of alkali." });
+  
+  Synapse.experiment(env, {"aim": "To find the concentration of a sodium hydroxide solution by titration with hydrochloric acid", "hypothesis": "The more alkali needed to neutralise the acid, the lower its concentration", "independent": "Volume of alkali run in (cm3)", "dependent": "Concentration of the alkali (mol/dm3)", "controlled": ["Volume and concentration of the acid", "The indicator"], "apparatus": ["Burette", "Pipette", "Conical flask", "Indicator"]});
+  Synapse.stepper(env, { steps: ["Put 25 cm3 of 0.1 mol/dm3 hydrochloric acid in the flask.", "Hold the stopcock to run in sodium hydroxide until the indicator turns pink.", "Drag the eye level with the meniscus, then press Record.", "Record the volume at 10 cm3 and 40 cm3 too, and compare: only the volume at the end point gives the alkali's true concentration."] });
+  var c_vb = Synapse.valve(env, {"id": "vb", "label": "Alkali run in from the burette", "unit": "cm3", "min": 5.0, "max": 40.0, "value": 10.0, "grid": 7});
+  var k_va = Synapse.constant(25.0, {"label": "Volume of acid", "unit": "cm3"});
+  var k_mb = Synapse.constant(0.125, {"label": "True concentration of the alkali", "unit": "mol/dm3"});
+  var m_alkali = Synapse.titration({ acid_coeff: 1.0, base_coeff: 1.0, ma: 0.1, va: k_va, vb: c_vb });
+  var m_endpoint = Synapse.titrationEndpoint({ acid_coeff: 1.0, base_coeff: 1.0, ma: 0.1, mb: k_mb, va: k_va });
+  Synapse.readout(env, { label: "Concentration worked out from this volume", unit: "mol/dm3", value: m_alkali, digits: 3 });
+  Synapse.graph(env, { title: "The more alkali needed to neutralise the acid, the weaker it is.", x: c_vb, y: m_alkali, yLabel: "Concentration", yUnit: "mol/dm3", digits: 3 });
+  Synapse.titrationScene(env, { added: c_vb, endpoint: m_endpoint, full: 50.0 });
+  Synapse.table(env, { caption: "Results", columns: [
+    { label: "Volume run in", unit: "cm3", value: c_vb, digits: 0 },
+    { label: "Concentration", unit: "mol/dm3", value: m_alkali, digits: 3 }
+  ] });
+  
+  
+  Synapse.workedSolution(env, { steps: ["Write the equation: HCl + NaOH gives NaCl + H2O.", "The acid and the alkali react in a 1 to 1 ratio, so at the end point the moles of alkali equal the moles of acid.", "Moles of acid = concentration of acid x volume of acid.", "Concentration of alkali = moles of alkali / volume of alkali."] });
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

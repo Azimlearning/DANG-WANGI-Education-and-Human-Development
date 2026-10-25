@@ -165,12 +165,16 @@ export interface ActionRecord {
 
 /** A composite widget the Kit built (the mass hanger, a scene). It reports facts about itself that a page could falsify (where its parts are, what they show), as problems; none means intact. */
 export interface WidgetRecord {
-  kind: "masses" | "scene";
+  kind: "masses" | "scene" | "valve";
   id: string;
   /** Masses only: how many masses the Kit made for the control. */
   masses?: number;
-  /** Scenes only: the observable the scene draws. */
+  /** Scenes only: the observable the scene draws (the model's output). */
   obs?: object;
+  /** Titration scene only: the control the scene is driven by. */
+  source?: object;
+  /** Titration scene only: the scene has an eye the student places. */
+  eye?: boolean;
   /** Scenes only: the drawing scale the page was given, so the verifier can check it against the model's range. */
   full?: number;
   /** Structural problems: where the parts are in the document, what they say. Cheap and free of false alarms, so the student's runtime self-check acts on them too. */
@@ -215,6 +219,21 @@ export function resetForTests(): void {
 const kitStyles = new WeakSet<object>();
 export function markKitStyle(el: Element): void {
   kitStyles.add(el);
+}
+const ownStyles = new WeakSet<object>();
+/** An element the Kit may give an inline style (the eye's place, a mass while it is dragged). Any other inline style on the page is refused by the audit. */
+export function markOwnStyle(el: Element): void {
+  ownStyles.add(el);
+}
+export function isOwnStyle(el: Element): boolean {
+  return ownStyles.has(el);
+}
+const kitSheets = new WeakMap<object, string | null>();
+export function recordKitSheet(el: Element, rules: string | null): void {
+  kitSheets.set(el, rules);
+}
+export function kitSheetRules(el: Element): string | null | undefined {
+  return kitSheets.get(el);
 }
 export function isKitStyle(el: Element): boolean {
   return kitStyles.has(el);

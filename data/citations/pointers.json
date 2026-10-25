@@ -212,9 +212,10 @@
         "chemistry_form4_acids_bases_salts"
       ],
       "models": [
-        "chemistry.titration_concentration"
+        "chemistry.titration_concentration",
+        "chemistry.titration_endpoint_volume"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person; the end-point volume model (the same relation read the other way) was added to its models 2026-10-25"
     },
     "titr_endpoint": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -224,9 +225,10 @@
         "chemistry_form4_acids_bases_salts"
       ],
       "models": [
-        "chemistry.titration_concentration"
+        "chemistry.titration_concentration",
+        "chemistry.titration_endpoint_volume"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person; the end-point volume model (the same relation read the other way) was added to its models 2026-10-25"
     },
     "heat_q": {
       "doc": "textbook-chemistry-chemistry-f5",
@@ -311,6 +313,19 @@
         "biology.photosynthesis_net"
       ],
       "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+    },
+    "titr_eye_level": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 181,
+      "printed_page": 171,
+      "claim": "Tells the student to keep the eye level with the meniscus when taking a burette reading (a safety precaution beside the titration activity).",
+      "topics": [
+        "chemistry_form4_acids_bases_salts"
+      ],
+      "models": [
+        "chemistry.titration_endpoint_volume"
+      ],
+      "checked_by": "assistant 2026-10-25: read the page; NOT yet reviewed by a person"
     }
   }
 }

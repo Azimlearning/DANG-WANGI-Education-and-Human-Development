@@ -7,6 +7,7 @@
 import { audit, violations } from "./audit";
 import { violation } from "./bridge";
 import { bodyEl } from "./dom";
+import { markOwnStyle } from "./provenance";
 import { KIT_VERSION } from "./manifest";
 
 const Observer = MutationObserver;
@@ -38,6 +39,7 @@ function check(): void {
   if (VERIFY_MODE) return;
   try {
     bodyEl().textContent = "";
+    markOwnStyle(document.documentElement);
     document.documentElement.style.display = "none";
   } catch {
     /* the host hides the frame regardless */

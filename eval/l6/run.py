@@ -66,6 +66,8 @@ LAYER_OF_RULE = {
     # L2: behaviour
     "dead_control": "L2 behaviour",
     "drag_dead": "L2 behaviour",
+    "valve_dead": "L2 behaviour",
+    "eye_dead": "L2 behaviour",
     "unstable_readout": "L2 behaviour",
     "no_controls": "L2 behaviour",
     "undeclared_control": "L2 behaviour",

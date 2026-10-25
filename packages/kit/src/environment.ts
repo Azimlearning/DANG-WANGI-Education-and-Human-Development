@@ -3,7 +3,8 @@
 // text is registered as Kit-owned with the text it must have, so the L1 audit can tell a Kit-made number from a typed one.
 
 import { installErrorHandlers } from "./bridge";
-import { copy, isKitStyle, markKitStyle, own, ownAttr } from "./provenance";
+import { sheetText } from "./dom";
+import { copy, isKitStyle, markKitStyle, own, ownAttr, recordKitSheet } from "./provenance";
 import { STYLE } from "./style";
 
 export interface Environment {
@@ -62,6 +63,7 @@ export function environment(opts: EnvironmentOptions): Environment {
     style.textContent = STYLE;
     document.head.appendChild(style);
     markKitStyle(style);
+    recordKitSheet(style, sheetText(style));
   }
   const root = document.createElement("main");
   root.className = "syn-env";

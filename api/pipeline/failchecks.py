@@ -194,6 +194,8 @@ _ENTRIES = [
         "retry_plan",
         "Every slider must feed a model that a readout shows.",
     ),
+    _e("valve_dead", "L2-007", "L2 behaviour", "block", "none", "A stopcock must run the liquid when held, let out one measure when pressed, and stop when let go."),
+    _e("eye_dead", "L2-008", "L2 behaviour", "block", "none", "The eye must move when dragged or pressed from the keyboard, and say in words how it reads the meniscus."),
     _e(
         "drag_dead",
         "L2-006",

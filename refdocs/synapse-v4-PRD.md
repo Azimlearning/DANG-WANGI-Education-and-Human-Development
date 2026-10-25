@@ -289,6 +289,7 @@ Canonical one-line list. Load-bearing entries are expanded as ADRs in `changelog
 | D-40 | Paid runs are raised one at a time; the caps stay hard stops and the owner edits `.env` | Owner, 2026-10-22 |
 | D-43 | The Kit's stylesheet is exempt from the CSS audit only by identity and exact text; CSS counters and `@counter-style` are refused at L0 for Kit pages | kit-guardian W3 review; D-37 class |
 | D-44 | Composite widgets (mass hanger, scene) answer to the audit for structure and layout; the harness drives every mass by mouse, key and finger; planner pack v3 | kit-guardian W4 reviews (two rounds); hard constraints 1, 6 and 9 |
+| D-45 | The titration bench as Kit parts; the end point is derived and agrees with the answer; a Kit page carries no CSS but the Kit's | kit-guardian W4 stage 2 review; hard constraints 1, 6 and 9 |
 | D-42 | A covered question is answered from the library (an exact repeat, or a topic the local router recognises at 0.55 or more) before anything is paid for; every hit goes through the gate | P5 exit criterion; measured on the golden set |
 | D-41 | L4 reads the Plan's words in the pipeline and is claimed only when a real judge passed them; the Free lane is a labelled last resort that needs that judge; a Kit gap log; L4 has its own pinned case set apart from L6 | Owner asked for both together; `page-false-prose`; hard constraints 1, 3 and 9 |
 

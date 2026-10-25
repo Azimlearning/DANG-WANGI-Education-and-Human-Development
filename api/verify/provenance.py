@@ -294,9 +294,50 @@ def _value_problems(what: str, unit: str, chain: dict, audit: dict) -> list[Prob
 
 
 # The model each kind of scene may draw. A scene is a picture of a model's number; one bound to anything else is a picture the audit cannot ground.
-SCENE_MODELS = {"spring": "mechanics.hookes"}
+SCENE_MODELS = {"spring": "mechanics.hookes", "titration": "chemistry.titration_endpoint_volume"}
 SCENE_FILL_MIN = 0.5
 """A scene's drawing scale must be no less than the model's output at the controls' maximum and no more than twice it (the picture is then nearly full and never clipped)."""
+
+
+def _walk(chain: dict):  # noqa: ANN202
+    """Every node of a provenance chain, the chain itself first."""
+    yield chain
+    for child in (chain.get("inputs") or {}).values():
+        if isinstance(child, dict):
+            yield from _walk(child)
+
+
+def _titration_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
+    """A titration scene draws a control in cm3 against the end-point model's output: the burette must hold what the control can run in, and the end point must be reachable."""
+    source = w.get("sourceChain") or {}
+    control = next((c for c in audit.get("controls", []) if source.get("kind") == "control" and c["id"] == source.get("id")), None)
+    if control is None or control.get("unit") != "cm3":
+        return [Problem("scene_ungrounded", "the titration scene is not driven by a control in cm3")]
+    out: list[Problem] = []
+    full = w.get("full")
+    if not isinstance(full, (int, float)) or isinstance(full, bool) or not math.isfinite(full) or full < float(control["max"]) or float(control["max"]) / full < SCENE_FILL_MIN:
+        out.append(Problem("scene_scale", f"the burette is drawn to a capacity of {full!r} cm3 but the control runs in up to {control['max']} cm3"))
+    # Where the indicator changes is a property of the two solutions, never of how far the student has run: no control may feed it, and it must describe the same titration as the
+    # concentration the page works out (the same acid volume and concentration and the same coefficients), or the colour change and the answer would disagree.
+    if any(node.get("kind") == "control" for node in _walk(chain)):
+        out.append(Problem("scene_ungrounded", "the end point follows a control; it must depend only on the solutions"))
+    constants = {c["label"]: float(c["value"]) for c in audit.get("constants", [])}
+    for _, other in all_chains(audit):
+        for node in _walk(other):
+            if node.get("kind") == "model" and node.get("id") == "chemistry.titration_concentration":
+                same_params = all(float((node.get("params") or {}).get(k, math.nan)) == float((chain.get("params") or {}).get(k, math.nan)) for k in ("ma", "acid_coeff", "base_coeff"))
+                va_end = (chain.get("inputs") or {}).get("va") or {}
+                va_conc = (node.get("inputs") or {}).get("va") or {}
+                same_va = va_end.get("kind") == va_conc.get("kind") == "constant" and constants.get(va_end.get("id", "")) == constants.get(va_conc.get("id", ""))
+                if not (same_params and same_va):
+                    out.append(Problem("scene_ungrounded", "the end point and the concentration describe different titrations (the acid volume, its concentration or the coefficients differ)"))
+    try:
+        end = evaluate_chain(chain, {c["id"]: float(c["max"]) for c in audit.get("controls", [])}, {c["label"]: float(c["value"]) for c in audit.get("constants", [])})
+    except (ValueError, KeyError):
+        return out
+    if not (float(control["min"]) <= end <= float(control["max"])):
+        out.append(Problem("scene_scale", f"the indicator changes at {end:g} cm3, which the control ({control['min']} to {control['max']} cm3) can never reach"))
+    return out
 
 
 def _scene_scale_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
@@ -328,7 +369,7 @@ def widget_problems(audit: dict) -> list[Problem]:
                 if found:
                     out.append(Problem(found.rule, f"the {w.get('id')} scene: {found.reason}"))
                 out += [Problem(p.rule, f"the {w.get('id')} scene: {p.reason}") for p in input_unit_problems(chain, audit)]
-                out += _scene_scale_problems(w, chain, audit)
+                out += _titration_problems(w, chain, audit) if w.get("id") == "titration" else _scene_scale_problems(w, chain, audit)
     return out
 
 

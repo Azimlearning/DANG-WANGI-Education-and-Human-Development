@@ -333,7 +333,7 @@ describe("the public surface", () => {
   });
   it("exposes no way to create an observable that the registry would accept except through the Kit", () => {
     expect(Object.keys(Synapse).sort()).toEqual(
-      ["audit", "averageRate", "cardiacOutput", "gasVolume", "newtonSecond", "percentChangeMass", "ph", "waveSpeed", "bridge", "conceptCheck", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hintLadder", "hookes", "magnification", "massHanger", "moles", "netPhotosynthesis", "observable", "ohm", "predictCard", "pressureDepth", "readout", "reset", "slider", "springScene", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "version", "workedSolution"].sort(),
+      ["audit", "averageRate", "cardiacOutput", "gasVolume", "newtonSecond", "percentChangeMass", "ph", "waveSpeed", "bridge", "conceptCheck", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hintLadder", "hookes", "magnification", "massHanger", "moles", "netPhotosynthesis", "observable", "ohm", "predictCard", "pressureDepth", "readout", "reset", "slider", "springScene", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "titrationEndpoint", "titrationScene", "valve", "version", "workedSolution"].sort(),
     );
   });
 });
@@ -483,7 +483,7 @@ describe("what the audit refuses to leave unseen", () => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     document.head.appendChild(link);
-    expect(forbiddenWhat().join("|")).toContain("stylesheet with an image");
+    expect(forbiddenWhat().join("|")).toContain("stylesheet the Kit did not make");
     expect(forbiddenWhat().join("|")).toContain("<link> element");
   });
 
@@ -502,7 +502,7 @@ describe("what the audit refuses to leave unseen", () => {
       const sheet = document.createElement("style");
       sheet.textContent = css;
       document.body.appendChild(sheet);
-      expect(forbiddenWhat().join("|"), css).toContain("stylesheet with an image");
+      expect(forbiddenWhat().join("|"), css).toContain("stylesheet the Kit did not make");
       sheet.remove();
     }
     expect(forbiddenWhat()).toEqual([]);
@@ -548,7 +548,7 @@ describe("what the audit refuses to leave unseen", () => {
     expect(forbiddenWhat()).toEqual([]);
   });
 
-  it("leaves ordinary hidden non-visual elements and ordinary inline styles alone", () => {
+  it("leaves ordinary hidden non-visual elements alone, and refuses an inline style the Kit did not set", () => {
     const { env } = spring();
     const script = document.createElement("script");
     script.textContent = "var x = 1;";
@@ -556,10 +556,16 @@ describe("what the audit refuses to leave unseen", () => {
     const hidden = document.createElement("title");
     hidden.textContent = "A title";
     document.head.appendChild(hidden);
+    expect(forbiddenWhat()).toEqual([]);
     const p = document.createElement("p");
     p.setAttribute("style", "color: red; margin: 0");
     env.stage.appendChild(p);
-    expect(forbiddenWhat()).toEqual([]);
+    expect(forbiddenWhat()).toContain("an inline style the Kit did not set");
+    p.removeAttribute("style");
+    const q = document.createElement("div");
+    q.setAttribute("popover", "");
+    env.stage.appendChild(q);
+    expect(forbiddenWhat()).toContain("a popover (it draws in the top layer)");
   });
 
   it("counts non-ASCII digits as digits in text and in attributes", () => {

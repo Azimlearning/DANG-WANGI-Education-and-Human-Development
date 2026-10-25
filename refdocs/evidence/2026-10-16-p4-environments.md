@@ -21,7 +21,7 @@
 | Chemistry | 4 | How many moles are in a sample? | simulation | chemistry.moles_from_mass | 11 | 33 | instantiate | kit-verified | 2 | mole_mass, mole_formula |
 | Chemistry | 4 | The pH scale and hydrogen ion concentration | simulation | chemistry.ph_from_h | 12 | 156 | instantiate | kit-verified | 2 | ph_formula, ph_higher |
 | Chemistry | 4 | Rate of reaction from gas collected | simulation | chemistry.average_rate | 24 | 288 | instantiate | kit-verified | 2 | rate_def, rate_avg |
-| Chemistry | 4 | Titration: finding a concentration | virtual experiment | chemistry.titration_concentration | 7 | 77 | instantiate | kit-verified | 2 | titr_formula, titr_endpoint |
+| Chemistry | 4 | Titration: finding a concentration | virtual experiment | chemistry.titration_concentration, chemistry.titration_endpoint_volume | 9 | 108 | instantiate | kit-verified | 3 | titr_formula, titr_endpoint, titr_eye_level |
 | Chemistry | 5 | Heat released by a temperature rise | virtual experiment | chemistry.heat_energy | 11 | 165 | instantiate | kit-verified | 2 | heat_q, heat_neut |
 
 ## What this does and does not show

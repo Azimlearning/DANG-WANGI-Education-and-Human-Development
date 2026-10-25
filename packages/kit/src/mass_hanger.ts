@@ -14,7 +14,7 @@ import { event } from "./bridge";
 import { attr, contains, effectiveOpacity, hasAttribute, hitAt, layoutAvailable, parentOf, rectOf, style, tagOf } from "./dom";
 import type { Environment } from "./environment";
 import type { Observable } from "./observable";
-import { controls, own, ownAttr, registerAction, widgets } from "./provenance";
+import { controls, markOwnStyle, own, ownAttr, registerAction, widgets } from "./provenance";
 import { slider } from "./slider";
 
 export interface MassHangerOptions {
@@ -98,6 +98,7 @@ export function massHanger(env: Environment, options: MassHangerOptions): Observ
     b.setAttribute("data-synapse-drag", id);
     ownAttr(b, "aria-label", () => nameOf(i));
     registerAction(b, "drag", `Mass ${LETTERS[i]}`);
+    markOwnStyle(b);
     tokens.push(b);
   }
 

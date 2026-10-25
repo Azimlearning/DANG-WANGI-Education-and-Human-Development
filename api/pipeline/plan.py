@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 Slug = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,23}$")]
 Short = Annotated[str, StringConstraints(min_length=1, max_length=60)]
@@ -34,8 +34,8 @@ class ControlSpec(_Strict):
     max: float
     value: float
     grid: int = Field(ge=1, le=40)
-    surface: Literal["slider", "masses"] = "slider"
-    """How the student operates the control. `masses` (Kit `massHanger`) is dragging equal masses onto a hanger: `grid` is then the number of masses."""
+    surface: Literal["slider", "masses", "valve"] = "slider"
+    """How the student operates the control. `masses` (Kit `massHanger`) is dragging equal masses onto a hanger: `grid` is then the number of masses. `valve` (Kit `valve`) is a stopcock the student holds or presses: `grid` is then the number of steps."""
 
 
 class ConstantSpec(_Strict):
@@ -90,11 +90,19 @@ class TableSpec(_Strict):
 class SceneSpec(_Strict):
     """A picture bound to a model's output. It draws the quantity and never prints it."""
 
-    kind: Literal["spring"]
+    kind: Literal["spring", "titration"]
     source: Slug
-    """A model instance id: the quantity drawn (for the spring, an extension in metres)."""
+    """What is drawn. A spring: a model instance id (the extension, in metres). A titration: a control id (the volume run in, in cm3)."""
+    endpoint: Slug | None = None
+    """A titration only: the model instance id of the end-point volume, where the indicator changes colour."""
     full: float = Field(gt=0, allow_inf_nan=False)
-    """The value, in the source's unit, at which the picture is fully stretched. A drawing scale; it is never shown."""
+    """The value, in the source's unit, at which the picture is full (a spring fully stretched, a burette's capacity). A drawing scale; it is never shown."""
+
+    @model_validator(mode="after")
+    def _endpoint_only_for_a_titration(self) -> SceneSpec:
+        if (self.kind == "titration") != (self.endpoint is not None):
+            raise ValueError("a titration scene needs an endpoint, and no other scene has one")
+        return self
 
 
 class ExperimentCard(_Strict):

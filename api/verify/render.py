@@ -24,8 +24,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
+from playwright.sync_api import ElementHandle, Frame, Route, sync_playwright
 from playwright.sync_api import Error as PlaywrightError
-from playwright.sync_api import Frame, Route, sync_playwright
 
 from api.verify import provenance as prov
 
@@ -88,6 +88,8 @@ class RenderReport:
     reference_cases: int = 0
     models: list[tuple[str, tuple[tuple[str, float], ...]]] = field(default_factory=list)
     drag_problems: list[str] = field(default_factory=list)
+    valve_problems: list[str] = field(default_factory=list)
+    eye_problems: list[str] = field(default_factory=list)
     kit_lane: bool = True
     """False for a Free page: it has no Kit, so the harness decides readiness and the refusal message says so."""
 
@@ -122,6 +124,10 @@ class RenderReport:
                 )
         if self.drag_problems:
             return ("drag_dead", self.drag_problems[0])
+        if self.valve_problems:
+            return ("valve_dead", self.valve_problems[0])
+        if self.eye_problems:
+            return ("eye_dead", self.eye_problems[0])
         for c in self.controls:
             if not c.stable:
                 return (
@@ -425,6 +431,8 @@ def _exercise(
     if kit_lane:
         _audit_and_sweep(frame, handles, report, plan_models)
         _drive_drags(page, frame, report)
+        _drive_valves(page, frame, report)
+        _drive_eyes(page, frame, report)
 
     # Scripted interaction: sweep every declared control and press real input for the time box.
     start = time.monotonic()
@@ -603,6 +611,263 @@ def _drive_drags(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN
         except PlaywrightError as exc:
             # The harness lost the page or the input path; that is not evidence about the masses, so it is a harness error (fail closed), not drag_dead.
             report.harness_error = report.harness_error or f"driving the masses for '{cid}': {str(exc).splitlines()[0][:150]}"
+    if cdp is not None:
+        try:
+            cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": False})
+            cdp.detach()
+        except PlaywrightError:
+            pass
+
+
+def _touch_hold(cdp, source, hold_ms: int, page) -> bool:  # noqa: ANN001
+    """Put a finger on the middle of `source`, keep it there for `hold_ms`, lift it."""
+    a = source.bounding_box()
+    if not a:
+        return False
+    x, y = a["x"] + a["width"] / 2, a["y"] + a["height"] / 2
+    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y}]})
+    page.wait_for_timeout(hold_ms)
+    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+    return True
+
+
+def _drive_valves(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
+    """L2 for a control operated by a stopcock (`valve`). What must exist comes from the Kit's own audit. For each valve: a tap with the mouse lets out exactly one step, Enter and Space
+    each let out one step, holding with the mouse runs at least two steps and stops when let go, and a finger does the same (a tap and a hold). A dead stopcock is `valve_dead`;
+    a Playwright failure is a harness error."""
+    audit = _audit(frame)
+    if audit is None:
+        return
+    widgets = [w for w in audit.get("widgets", []) if w.get("kind") == "valve"]
+    if not widgets:
+        if frame.query_selector("[data-synapse-valve]") is not None:
+            report.valve_problems.append("the page has a stopcock the Kit did not report")
+        return
+    cdp = None
+
+    def one(w: dict) -> None:
+        nonlocal cdp
+        cid = str(w["id"])
+        try:
+            control = frame.query_selector(f"[data-synapse-control='{cid}']")
+            buttons = frame.query_selector_all(f"[data-synapse-valve='{cid}']")
+            record = next((c for c in audit["controls"] if c["id"] == cid), None)
+            if control is None or record is None or len(buttons) != 1:
+                report.valve_problems.append(f"the stopcock for '{cid}' is missing, or the page has more than the one the Kit made")
+                return
+            button = buttons[0]
+            step = float(record["step"])
+            tol = max(step * 0.02, 1e-9)
+
+            def value(c=control) -> float:  # noqa: ANN001
+                return float(c.input_value())
+
+            def fresh() -> None:
+                _set_control(control, "min")
+                _settle(page, 250)
+
+            def once(label: str, act) -> bool:  # noqa: ANN001
+                fresh()
+                before = value()
+                act()
+                _settle(page, 250)
+                if abs(value() - (before + step)) > tol:
+                    report.valve_problems.append(f"{label} did not let out exactly one step for '{cid}'")
+                    return False
+                return True
+
+            def holds(label: str, act) -> bool:  # noqa: ANN001
+                before = value()
+                act()
+                after = value()
+                if after - before < 2 * step - tol:
+                    report.valve_problems.append(f"{label} did not run at least two steps for '{cid}'")
+                    return False
+                steps = (after - before) / step
+                if abs(steps - round(steps)) > 0.02:
+                    report.valve_problems.append(f"{label} left '{cid}' between two steps")
+                    return False
+                page.wait_for_timeout(450)
+                if abs(value() - after) > tol:
+                    report.valve_problems.append(f"the liquid kept running after {label} ended, for '{cid}'")
+                    return False
+                return True
+
+            button.scroll_into_view_if_needed()
+            _settle(page, 150)
+            _add(report.problems_l1, prov.l1_problems(_audit(frame)))
+            box = button.bounding_box()
+            if not box:
+                report.valve_problems.append(f"the stopcock for '{cid}' has no place on the page")
+                return
+            cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+
+            def mouse_tap() -> None:
+                page.mouse.move(cx, cy)
+                page.mouse.down()
+                page.mouse.up()
+
+            def mouse_hold() -> None:
+                page.mouse.move(cx, cy)
+                page.mouse.down()
+                page.wait_for_timeout(850)
+                page.mouse.up()
+
+            fresh()
+            start = _readout_texts(frame)  # at the lowest position, before anything is let out
+            if not once("a tap on the stopcock", mouse_tap):
+                return
+            if _readout_texts(frame) == start:
+                report.valve_problems.append(f"letting out liquid changed no readout (control '{cid}')")
+                return
+            if not once("pressing Enter on the stopcock", lambda: (button.focus(), page.keyboard.press("Enter"))):
+                return
+            if not once("pressing Space on the stopcock", lambda: (button.focus(), page.keyboard.press("Space"))):
+                return
+            fresh()
+            if not holds("holding the stopcock with the mouse", mouse_hold):
+                return
+            if cdp is None:
+                cdp = page.context.new_cdp_session(page)
+                cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 1})
+            fresh()
+            if not once("a finger tap on the stopcock", lambda: _touch_hold(cdp, button, 40, page)):
+                return
+            fresh()
+            if not holds("holding the stopcock with a finger", lambda: _touch_hold(cdp, button, 850, page)):
+                return
+            _set_control(control, "min")
+            _settle(page, 200)
+        except PlaywrightError as exc:
+            report.harness_error = report.harness_error or f"driving the stopcock for '{cid}': {str(exc).splitlines()[0][:150]}"
+    for w in widgets:
+        one(w)
+    if cdp is not None:
+        try:
+            cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": False})
+            cdp.detach()
+        except PlaywrightError:
+            pass
+
+
+def _drive_eyes(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
+    """L2 for the eye of a titration scene. What must exist comes from the Kit's audit. With the control high, the eye is sent to the top and bottom of the burette by the keyboard
+    (the sentence must say above, then below), dragged to the meniscus with the mouse and with a finger (level), and dragged to the top and bottom (above, below). A dead eye is
+    `eye_dead`. The sentence is Kit-owned text, so reading it is reading the Kit."""
+    audit = _audit(frame)
+    if audit is None:
+        return
+    scenes = [w for w in audit.get("widgets", []) if w.get("kind") == "scene" and w.get("eye")]
+    if not scenes:
+        if frame.query_selector("[data-synapse-eye]") is not None:
+            report.eye_problems.append("the page has an eye the Kit did not report")
+        return
+    cdp = None
+
+    def one(w: dict) -> None:
+        nonlocal cdp
+        try:
+            source = w.get("sourceChain") or {}
+            record = next((c for c in audit["controls"] if c["id"] == source.get("id")), None)
+            control = frame.query_selector(f"[data-synapse-control='{source.get('id')}']")
+            eyes = frame.query_selector_all("[data-synapse-eye]")
+            if control is None or record is None or len(eyes) != 1:
+                report.eye_problems.append("the burette scene is missing its eye or its control, or the page has more than the one eye the Kit made")
+                return
+            eye: ElementHandle = eyes[0]
+            # Everything else is found from the Kit's own eye (its widget wrapper), not by a marker anywhere on the page that a decoy could carry.
+            wrapper = eye.evaluate_handle("e => e.closest('.syn-titr')").as_element()
+            note = wrapper.query_selector("[data-synapse-eye-status]") if wrapper else None
+            marker = wrapper.query_selector("[data-synapse-meniscus]") if wrapper else None
+            root = wrapper.query_selector("svg.syn-titration") if wrapper else None
+            if note is None or marker is None or root is None:
+                report.eye_problems.append("the burette scene is missing its sentence, its meniscus or its picture")
+                return
+            note_h: ElementHandle = note
+            marker_h: ElementHandle = marker
+            root_h: ElementHandle = root
+            # With the burette about half run in, the meniscus is clear of both ends, so the eye can be above, level and below it.
+            full = float(w.get("full") or 0)
+            step = float(record["step"])
+            target = min(float(record["max"]), max(float(record["min"]), float(record["min"]) + round((full / 2 - float(record["min"])) / step) * step))
+            if not (0.08 < target / full < 0.92):
+                return  # a range this close to an end of the burette cannot be driven both ways; the Plan checks allow it, and nothing is claimed about it
+            _set_value(control, target)
+            _settle(page, 250)
+            eye.scroll_into_view_if_needed()
+            _settle(page, 150)
+            if not (note_h.is_visible() and root_h.is_visible()):
+                report.eye_problems.append("the eye's sentence or the burette picture is not visible")
+                return
+            def words() -> str:
+                return (note_h.inner_text() or "").strip()
+
+            eye.focus()
+            page.keyboard.press("Home")
+            _settle(page, 120)
+            if "above" not in words():
+                report.eye_problems.append(f"moving the eye to the top of the burette from the keyboard did not say it was above the meniscus ({words()[:60]!r})")
+                return
+            page.keyboard.press("End")
+            _settle(page, 120)
+            if "below" not in words():
+                report.eye_problems.append(f"moving the eye to the bottom of the burette from the keyboard did not say it was below the meniscus ({words()[:60]!r})")
+                return
+
+            def drag_eye_to(y_target: float, touch: bool = False) -> bool:
+                nonlocal cdp
+                e = eye.bounding_box()
+                if not e:
+                    return False
+                x, y = e["x"] + e["width"] / 2, e["y"] + e["height"] / 2
+                if touch:
+                    if cdp is None:
+                        cdp = page.context.new_cdp_session(page)
+                        cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 1})
+                    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y}]})
+                    for i in range(1, 9):
+                        cdp.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": x, "y": y + (y_target - y) * i / 8}]})
+                    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+                else:
+                    page.mouse.move(x, y)
+                    page.mouse.down()
+                    page.mouse.move(x, y_target, steps=8)
+                    page.mouse.up()
+                _settle(page, 150)
+                return True
+
+            def meniscus_y() -> float:
+                m = marker_h.bounding_box()
+                return (m["y"] + m["height"] / 2) if m else float("nan")
+
+            box = root_h.bounding_box()
+            if not box:
+                report.eye_problems.append("the burette picture has no place on the page")
+                return
+            scale = min(box["width"] / 220, box["height"] / 280)
+            top_of = box["y"] + (box["height"] - 280 * scale) / 2
+
+            def burette_at(fraction: float) -> float:
+                return top_of + (20 + fraction * 130) * scale
+
+            for label, touch in (("with the mouse", False), ("with a finger", True)):
+                if not drag_eye_to(burette_at(0.02), touch) or "above" not in words():
+                    report.eye_problems.append(f"dragging the eye to the top of the burette {label} did not say it was above the meniscus ({words()[:60]!r})")
+                    break
+                if not drag_eye_to(meniscus_y(), touch) or "level" not in words():
+                    report.eye_problems.append(f"dragging the eye to the meniscus {label} did not say it was level ({words()[:60]!r})")
+                    break
+                if not drag_eye_to(burette_at(0.98), touch) or "below" not in words():
+                    report.eye_problems.append(f"dragging the eye to the bottom of the burette {label} did not say it was below the meniscus ({words()[:60]!r})")
+                    break
+            # with the eye moved, the picture must still be what the numbers say (structure and layout)
+            _add(report.problems_l1, prov.l1_problems(_audit(frame)))
+            _set_control(control, "min")
+            _settle(page, 200)
+        except PlaywrightError as exc:
+            report.harness_error = report.harness_error or f"driving the eye: {str(exc).splitlines()[0][:150]}"
+    for w in scenes:
+        one(w)
     if cdp is not None:
         try:
             cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": False})

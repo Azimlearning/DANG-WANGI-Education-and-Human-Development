@@ -19,7 +19,6 @@ KNOWN_MISSES = {
     "page-false-prose",
     "g-timer-60s-forge",
     "g-coarse-pointer-forge",
-    "drag-overlay-pointer-transparent",
 }
 
 

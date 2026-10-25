@@ -6,11 +6,17 @@
       "label": "Volume of acid",
       "unit": "cm3",
       "value": 25
+    },
+    {
+      "id": "mb",
+      "label": "True concentration of the alkali",
+      "unit": "mol/dm3",
+      "value": 0.125
     }
   ],
   "graphs": [
     {
-      "title": "A bigger end-point volume means a weaker alkali.",
+      "title": "The more alkali needed to neutralise the acid, the weaker it is.",
       "x": "vb",
       "source": "alkali",
       "label": "Concentration",
@@ -22,7 +28,7 @@
     "caption": "Results",
     "columns": [
       {
-        "label": "End point",
+        "label": "Volume run in",
         "unit": "cm3",
         "source": "vb",
         "digits": 0
@@ -38,7 +44,7 @@
   "experiment": {
     "aim": "To find the concentration of a sodium hydroxide solution by titration with hydrochloric acid",
     "hypothesis": "The more alkali needed to neutralise the acid, the lower its concentration",
-    "independent": "Volume of alkali at the end point (cm3)",
+    "independent": "Volume of alkali run in (cm3)",
     "dependent": "Concentration of the alkali (mol/dm3)",
     "controlled": [
       "Volume and concentration of the acid",
@@ -54,11 +60,15 @@
   "sentences": [],
   "steps": [
     "Put 25 cm3 of 0.1 mol/dm3 hydrochloric acid in the flask.",
-    "Add alkali from the burette until the indicator just changes colour.",
-    "Set the end point to 20 cm3 and press Record.",
-    "Try 10 cm3 and 40 cm3 as well."
+    "Hold the stopcock to run in sodium hydroxide until the indicator turns pink.",
+    "Drag the eye level with the meniscus, then press Record.",
+    "Record the volume at 10 cm3 and 40 cm3 too, and compare: only the volume at the end point gives the alkali's true concentration."
   ],
-  "citation_ids": ["titr_formula", "titr_endpoint"],
+  "citation_ids": [
+    "titr_formula",
+    "titr_endpoint",
+    "titr_eye_level"
+  ],
   "presentation": "stage",
   "custom": [],
   "id": "titration_virtual",
@@ -70,12 +80,13 @@
   "controls": [
     {
       "id": "vb",
-      "label": "Volume of alkali at the end point",
+      "label": "Alkali run in from the burette",
       "unit": "cm3",
-      "min": 10,
+      "min": 5,
       "max": 40,
-      "value": 20,
-      "grid": 6
+      "value": 10,
+      "grid": 7,
+      "surface": "valve"
     }
   ],
   "models": [
@@ -91,11 +102,24 @@
         "va": "va",
         "vb": "vb"
       }
+    },
+    {
+      "id": "endpoint",
+      "model": "chemistry.titration_endpoint_volume",
+      "params": {
+        "ma": 0.1,
+        "acid_coeff": 1,
+        "base_coeff": 1
+      },
+      "inputs": {
+        "va": "va",
+        "mb": "mb"
+      }
     }
   ],
   "readouts": [
     {
-      "label": "Concentration of the alkali",
+      "label": "Concentration worked out from this volume",
       "unit": "mol/dm3",
       "digits": 3,
       "source": "alkali",
@@ -107,5 +131,11 @@
     "The acid and the alkali react in a 1 to 1 ratio, so at the end point the moles of alkali equal the moles of acid.",
     "Moles of acid = concentration of acid x volume of acid.",
     "Concentration of alkali = moles of alkali / volume of alkali."
-  ]
+  ],
+  "scene": {
+    "kind": "titration",
+    "source": "vb",
+    "endpoint": "endpoint",
+    "full": 50
+  }
 }

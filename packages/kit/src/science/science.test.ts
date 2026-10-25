@@ -13,6 +13,7 @@ import { spec as gasVol } from "./gas_volume";
 import { spec as photo } from "./photosynthesis";
 import { spec as sa } from "./sa_to_v";
 import { spec as titration } from "./titration";
+import { spec as titrationEnd } from "./titration_endpoint";
 import { spec as hookes } from "./hookes";
 import { spec as ohm } from "./ohm";
 import { spec as pressure } from "./pressure_depth";
@@ -160,6 +161,22 @@ const BUGS: { spec: ScienceSpec; bugs: Record<string, Impl> }[] = [
       "NaN at 25 cm3 of acid": planted(titration, (a) => (n(a, "va") === 25 ? Number.NaN : (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "vb")))),
       "no domain check on vb": planted(titration, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "vb")), ["vb"]),
       "no domain check on acid coefficient": planted(titration, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "vb")), ["acid_coeff"]),
+    },
+  },
+  {
+    spec: titrationEnd,
+    bugs: {
+      "coefficients inverted": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va") * n(a, "acid_coeff")) / (n(a, "base_coeff") * n(a, "mb"))),
+      "coefficients ignored": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va")) / n(a, "mb")),
+      "base concentration multiplied, not divided": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff") * n(a, "mb")) / n(a, "acid_coeff")),
+      "forgets the acid concentration": planted(titrationEnd, (a) => (n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb"))),
+      "forgets the acid volume": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb"))),
+      "cm3 and dm3 mixed up": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")) / 1000),
+      "caps at 30 cm3": planted(titrationEnd, (a) => Math.min((n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")), 30)),
+      "sign flips above 35 cm3": planted(titrationEnd, (a) => (n(a, "va") > 35 ? -1 : 1) * ((n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")))),
+      "NaN at 25 cm3 of acid": planted(titrationEnd, (a) => (n(a, "va") === 25 ? Number.NaN : (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")))),
+      "no domain check on mb": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")), ["mb"]),
+      "no domain check on acid coefficient": planted(titrationEnd, (a) => (n(a, "ma") * n(a, "va") * n(a, "base_coeff")) / (n(a, "acid_coeff") * n(a, "mb")), ["acid_coeff"]),
     },
   },
   {

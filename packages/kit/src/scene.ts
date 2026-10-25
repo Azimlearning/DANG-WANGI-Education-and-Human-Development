@@ -1,7 +1,8 @@
 // Scenes: pictures bound to observables. A scene DRAWS a quantity and never prints one: its text is words only, so there is nothing for the audit to ground and nothing a page
 // could pass off as a computed number. Bound to a model's output (an observable the Kit made), it moves when the control moves; its text equivalent is a sentence with no digits.
 
-import { attr, effectiveOpacity, layoutAvailable, parentOf, rectOf, style } from "./dom";
+import { all, attr, effectiveOpacity, layoutAvailable, parentOf, rectOf, style } from "./dom";
+import { guard } from "./parts";
 import type { Environment } from "./environment";
 import type { Observable } from "./observable";
 import { nodeOf, ownAttr, widgets } from "./provenance";
@@ -74,6 +75,12 @@ export function springScene(env: Environment, options: SpringSceneOptions): SVGS
   // The picture is a claim about the model's number, so the audit holds it to that number: the spring is drawn where the extension says, described in the words the Kit
   // chose, still on the stage and still visible. A page that redraws or relabels it, or hides it, is reported.
   const parent = parentOf(root);
+  const kept = guard();
+  kept.tree(root);
+  kept.part(root, () => ({ "aria-label": describe() }));
+  kept.part(coil, () => ({ points: geometry().points }));
+  kept.part(pan, () => ({ y: geometry().panY }));
+  for (const el of all(root, "*")) if (el !== coil && el !== pan) kept.part(el);
   const check = (): string[] => {
     const out: string[] = [];
     const g = geometry();
@@ -82,6 +89,7 @@ export function springScene(env: Environment, options: SpringSceneOptions): SVGS
     if (parentOf(root) !== parent || parent === null) out.push("the spring picture was moved off the stage");
     if (style(root, "display") === "none" || style(root, "visibility") === "hidden" || style(root, "opacity") === "0") out.push("the spring picture is hidden");
     if (attr(coil, "stroke") !== COIL_STROKE || attr(coil, "stroke-width") !== "4" || attr(coil, "fill") !== "none" || attr(pan, "fill") !== PAN_FILL) out.push("the spring picture was restyled by the page");
+    out.push(...kept.problems());
     return out;
   };
   // The layout half, read only by the verifier: the picture takes up room, shows, strokes its coil, and the pan sits where the extension puts it (a style rule that squashes,
