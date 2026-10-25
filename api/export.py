@@ -16,6 +16,7 @@ import html as htmllib
 import json
 import re
 
+from api.evidence.titles import citation_text
 from api.schema.generated import EnvironmentBlock
 
 LANE_TEXT = {
@@ -113,10 +114,7 @@ def standalone_page(block: EnvironmentBlock, kit_js: bytes) -> str:
         raise ExportRefused("the page does not match its recorded hash")
 
     esc = htmllib.escape
-    sources = "; ".join(
-        f"{c.source}{f', page {c.page}' if c.page is not None else ''}{'' if c.verified else ' (not verified)'}"
-        for c in block.citations
-    )
+    sources = "; ".join(citation_text(c.source, c.page, c.verified) for c in block.citations)
     c = block.checked
     checked = (
         f"{', '.join(c.layers)}; {c.controlsExercised} controls pressed, {c.gridPoints} positions swept, "
@@ -137,3 +135,141 @@ def standalone_page(block: EnvironmentBlock, kit_js: bytes) -> str:
     }
     # One pass over the TEMPLATE: text that came from the block is never scanned again for placeholders.
     return re.sub(r"__[A-Z]+__", lambda m: values[m.group(0)], _SHELL)
+
+
+# ── chapter packs (W6, D-49): several Environments in one offline file ─────────────────────────────────────────────────────────────────────────────
+
+_PACK = """<!doctype html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; frame-src about: data:; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none';">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; margin: 0 auto; max-width: 42rem; padding: 1rem; line-height: 1.5; }
+  iframe { width: 100%; height: 70vh; min-height: 24rem; border: 1px solid #8884; border-radius: 12px; }
+  section.prov { margin-top: 1rem; padding: 1rem; border: 1px solid #8884; border-radius: 12px; font-size: 0.95rem; }
+  ul { list-style: none; padding: 0; display: grid; gap: .75rem; }
+  li { border: 1px solid #8884; border-radius: 12px; padding: .75rem 1rem; }
+  button { min-height: 44px; min-width: 44px; padding: 0 1rem; font: inherit; font-weight: 600; border-radius: 12px; border: 1px solid #8886; cursor: pointer; }
+  button[disabled] { opacity: .6; cursor: not-allowed; }
+  .meta { font-size: .9rem; opacity: .8; }
+  [role=alert] { padding: 1rem; border-radius: 12px; background: #fde8e8; color: #7a1010; }
+</style>
+</head>
+<body>
+<h1>__TITLE__</h1>
+<p id="state" role="status">Checking this file before anything runs.</p>
+<noscript><p role="alert">This pack needs JavaScript to run. Turn it on and reload.</p></noscript>
+<div id="list">
+<ul>
+__ITEMS__
+</ul>
+</div>
+<div id="viewer" hidden>
+<p><button type="button" id="back">Back to the list</button></p>
+<iframe id="frame" title="Environment" sandbox="allow-scripts"></iframe>
+__PROVENANCE__
+</div>
+<script>
+(function () {
+  var EXPECT = __EXPECT__;
+  var PAYLOAD = __PAYLOAD__;
+  var state = document.getElementById("state");
+  var list = document.getElementById("list");
+  var viewer = document.getElementById("viewer");
+  var frame = document.getElementById("frame");
+  function fail(message) { state.setAttribute("role", "alert"); state.textContent = message; }
+  function hex(buffer) { return Array.prototype.map.call(new Uint8Array(buffer), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); }
+  function sha(text) { return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(hex); }
+  if (!window.crypto || !crypto.subtle) { fail("This browser cannot check the file's fingerprints, so it will not run any Environment. Open the file in a current browser."); return; }
+  var ok = {};
+  Promise.all([sha(PAYLOAD.kit)].concat(PAYLOAD.pages.map(function (p) { return sha(p.html); }))).then(function (got) {
+    var kitOk = got[0] === EXPECT.kit;
+    var good = 0;
+    PAYLOAD.pages.forEach(function (p, i) {
+      var fine = kitOk && got[i + 1] === EXPECT.pages[i] && p.html.indexOf(PAYLOAD.tag) >= 0;
+      ok[p.id] = fine;
+      var button = document.querySelector('button[data-open="' + p.id + '"]');
+      if (fine) { good += 1; button.disabled = false; } else { button.textContent = "Not run: fingerprint does not match"; }
+    });
+    if (good === PAYLOAD.pages.length) state.textContent = "All " + good + " fingerprints checked.";
+    else fail(good + " of " + PAYLOAD.pages.length + " Environments passed their fingerprint check. The others were not run. Get a fresh copy of this file.");
+  });
+  function show(id) {
+    var p = PAYLOAD.pages.filter(function (x) { return x.id === id; })[0];
+    if (!p || !ok[id]) return;
+    var at = p.html.indexOf(PAYLOAD.tag);
+    frame.title = p.title;
+    frame.srcdoc = p.html.slice(0, at) + "<script>" + PAYLOAD.kit + "</" + "script>" + p.html.slice(at + PAYLOAD.tag.length);
+    Array.prototype.forEach.call(document.querySelectorAll("section.prov"), function (s) { s.hidden = s.getAttribute("data-for") !== id; });
+    list.hidden = true; viewer.hidden = false;
+    document.getElementById("back").focus();
+  }
+  function home() {
+    frame.removeAttribute("srcdoc"); viewer.hidden = true; list.hidden = false;
+    var b = document.querySelector("button[data-open]:not([disabled])"); if (b) b.focus();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("button[data-open]"), function (b) { b.addEventListener("click", function () { show(b.getAttribute("data-open")); }); });
+  document.getElementById("back").addEventListener("click", home);
+  window.addEventListener("message", function (event) {
+    if (event.source !== frame.contentWindow) return;
+    if (event.data && event.data.type === "synapse_violation") { home(); fail("An Environment tried to do something it must not, so it was closed."); }
+  });
+})();
+</script>
+</body>
+</html>
+"""
+
+
+def chapter_pack(title: str, blocks: list[EnvironmentBlock], kit_js: bytes) -> str:
+    """One offline file holding several Environments that were all verified against the same Kit. Each is checked against its own fingerprint (and the Kit against its) before
+    the file lets it open, runs in its own `sandbox="allow-scripts"` frame, and keeps its provenance beside it. A block that did not come through the gate is the caller's
+    bug; a block this function cannot place safely refuses the whole pack, so nothing half-built is handed out."""
+    if not blocks:
+        raise ExportRefused("a chapter pack needs at least one Environment")
+    versions = {b.kitVersion for b in blocks}
+    if len(versions) != 1:
+        raise ExportRefused("the Environments were verified against different Kits, so they cannot share one")
+    if len({b.id for b in blocks}) != len(blocks):
+        raise ExportRefused("the same Environment appears twice")
+    tag = _kit_tag(blocks[0].kitVersion)
+    kit = kit_js.decode("utf-8")
+    if re.search(r"</script", kit, re.IGNORECASE) or "<!--" in kit:
+        raise ExportRefused("the Kit contains a sequence that would end its script element")
+    esc = htmllib.escape
+    items: list[str] = []
+    provenance: list[str] = []
+    for b in blocks:
+        if b.html.count(tag) != 1:
+            raise ExportRefused(f"'{b.title}' does not load the Kit from the expected tag exactly once")
+        if hashlib.sha256(b.html.encode("utf-8")).hexdigest() != b.htmlSha256:
+            raise ExportRefused(f"'{b.title}' does not match its recorded hash")
+        sources = "; ".join(citation_text(c.source, c.page, c.verified) for c in b.citations)
+        c = b.checked
+        checked = (
+            f"{', '.join(c.layers)}; {c.controlsExercised} controls pressed, {c.gridPoints} positions swept, "
+            f"{c.referenceCases} values compared with independent references"
+        )
+        items.append(
+            f'<li><strong>{esc(b.title)}</strong><div class="meta">{esc(LABEL_TEXT[b.label])}. Source: {esc(sources or "none stated")}.</div>'
+            f'<p class="meta">{esc(b.planSummary)}</p><button type="button" data-open="{esc(b.id)}" disabled>Open</button></li>'
+        )
+        provenance.append(
+            f'<section class="prov" data-for="{esc(b.id)}" aria-label="Where this Environment comes from" hidden>'
+            f"<p><strong>{esc(LABEL_TEXT[b.label])}.</strong> Lane: {esc(LANE_TEXT[b.lane])}.</p><p>{esc(b.planSummary)}</p>"
+            f"<p><strong>Source:</strong> {esc(sources or 'none stated')}</p><p><strong>What was checked:</strong> {esc(checked)}</p>"
+            f"<p><strong>Limits:</strong> {esc(c.limits)}</p>"
+            f"<p>Environment {esc(b.id)}, Kit {esc(b.kitVersion)}. This is a saved copy: it cannot be updated, and if the textbook or the Kit changes it may be out of date.</p></section>"
+        )
+    values = {
+        "__TITLE__": esc(title),
+        "__ITEMS__": "\n".join(items),
+        "__PROVENANCE__": "\n".join(provenance),
+        "__EXPECT__": _json_for_script({"kit": hashlib.sha256(kit_js).hexdigest(), "pages": [b.htmlSha256 for b in blocks]}),
+        "__PAYLOAD__": _json_for_script({"kit": kit, "tag": tag, "pages": [{"id": b.id, "title": b.title, "html": b.html} for b in blocks]}),
+    }
+    return re.sub(r"__[A-Z]+__", lambda m: values[m.group(0)], _PACK)

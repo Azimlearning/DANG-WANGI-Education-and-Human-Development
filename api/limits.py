@@ -72,3 +72,49 @@ class ConcurrencyGate:
     def in_flight(self) -> int:
         with self._lock:
             return len(self._held)
+
+
+class DailyLimiter:
+    """At most `per_client` admissions per client address and `total` admissions overall in one UTC day. 0 turns a limit off. The deploy gate asks for per-session and
+    per-day limits (D-11); there are no accounts, so a "session" is a client address, and the overall count is what keeps a crowd of addresses from running up a bill
+    (the monthly spend cap in the LLM seam is the last stop, this is the earlier and gentler one). Counts reset at 00:00 UTC. In-process and per worker, like the others.
+    A table that grows past `MAX_CLIENTS` in one day refuses new addresses (fail closed) instead of growing without bound."""
+
+    MAX_CLIENTS = 50_000
+
+    def __init__(self, per_client: int, total: int, clock: Callable[[], float] = time.time):
+        self._per_client = per_client
+        self._total = total
+        self._clock = clock
+        self._day = -1
+        self._counts: dict[str, int] = defaultdict(int)
+        self._all = 0
+        self._lock = threading.Lock()
+
+    def _roll(self) -> None:
+        day = int(self._clock() // 86400)
+        if day != self._day:
+            self._day = day
+            self._counts.clear()
+            self._all = 0
+
+    def allow(self, key: str) -> bool:
+        if self._per_client <= 0 and self._total <= 0:
+            return True
+        with self._lock:
+            self._roll()
+            if self._total > 0 and self._all >= self._total:
+                return False
+            if self._per_client > 0:
+                if key not in self._counts and len(self._counts) >= self.MAX_CLIENTS:
+                    return False
+                if self._counts[key] >= self._per_client:
+                    return False
+                self._counts[key] += 1
+            self._all += 1
+            return True
+
+    def used_today(self) -> int:
+        with self._lock:
+            self._roll()
+            return self._all

@@ -794,3 +794,89 @@ describe("pedagogy components", () => {
     expect(violations(a)).toEqual([]);
   });
 });
+
+describe("lab messages for the host's report (W5b)", () => {
+  function capture() {
+    const sent: any[] = [];
+    const before = bridgeState.poster;
+    bridgeState.poster = (m) => sent.push(m);
+    return { sent, restore: () => (bridgeState.poster = before) };
+  }
+
+  it("tells the host the table whole at creation, after each Record and after Clear", () => {
+    const c = capture();
+    try {
+      const { env, load, extension } = spring();
+      table(env, {
+        caption: "Load and extension",
+        columns: [
+          { label: "Load", unit: "N", value: load, digits: 1 },
+          { label: "Extension", unit: "m", value: extension, digits: 3 },
+        ],
+      });
+      const labs = () => c.sent.filter((m) => m.type === "synapse_lab" && m.part === "table");
+      expect(labs()).toHaveLength(1);
+      expect(labs()[0]).toEqual({
+        type: "synapse_lab",
+        part: "table",
+        caption: "Load and extension",
+        columns: [
+          { label: "Load", unit: "N" },
+          { label: "Extension", unit: "m" },
+        ],
+        rows: [],
+      });
+      const [record, clear] = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-synapse-action]"));
+      record!.click();
+      load.set(4);
+      record!.click();
+      expect(labs().at(-1).rows).toEqual([
+        ["2.0", "0.040"],
+        ["4.0", "0.080"],
+      ]);
+      clear!.click();
+      expect(labs().at(-1).rows).toEqual([]);
+    } finally {
+      c.restore();
+    }
+  });
+
+  it("sends the Amali card and the steps once each, as the text the Kit showed", () => {
+    const c = capture();
+    try {
+      const { env } = spring();
+      experiment(env, { aim: "To find how the extension depends on the load.", hypothesis: "The extension is proportional to the load.", independent: "The load", dependent: "The extension", controlled: ["The spring"], apparatus: ["Spring", "Ruler"] });
+      stepper(env, { steps: ["Hang a load.", "Read the extension."] });
+      const labs = c.sent.filter((m) => m.type === "synapse_lab");
+      expect(labs.map((m) => m.part)).toEqual(["experiment", "steps"]);
+      expect(labs[0].fields[0]).toEqual(["Aim", "To find how the extension depends on the load."]);
+      expect(labs[0].fields).toHaveLength(6);
+      expect(labs[1].steps).toEqual(["Hang a load.", "Read the extension."]);
+    } finally {
+      c.restore();
+    }
+  });
+
+  it("cuts what it sends to the sizes the host accepts", () => {
+    const c = capture();
+    try {
+      bridge.lab({ part: "steps", steps: Array.from({ length: 12 }, () => "x".repeat(900)) });
+      bridge.lab({ part: "table", caption: "c".repeat(500), columns: Array.from({ length: 9 }, () => ({ label: "l".repeat(200), unit: "u".repeat(99) })), rows: Array.from({ length: 50 }, () => Array.from({ length: 9 }, () => "9".repeat(99))) });
+      const [steps, tbl] = c.sent;
+      expect(steps.steps).toHaveLength(8);
+      expect(steps.steps[0]).toHaveLength(300);
+      expect(tbl.caption).toHaveLength(120);
+      expect(tbl.columns).toHaveLength(6);
+      expect(tbl.rows).toHaveLength(30);
+      expect(tbl.rows[0]).toHaveLength(6);
+      expect(tbl.rows[0][0]).toHaveLength(40);
+    } finally {
+      c.restore();
+    }
+  });
+
+  it("is not reachable from page code: the public bridge is still exactly four functions", () => {
+    expect(Object.keys(Synapse.bridge).sort()).toEqual(["error", "event", "installErrorHandlers", "ready"]);
+    expect(Object.keys(Synapse)).not.toContain("lab");
+  });
+});

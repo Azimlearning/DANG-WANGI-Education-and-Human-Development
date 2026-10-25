@@ -34,7 +34,9 @@ from api.evidence.registry import CitationBook
 from api.kit import latest_version
 from api.llm.service import LLMService
 from api.llm.types import LLMRequest
+from api.models.exam import event_for as exam_event_for
 from api.models.misconceptions import default_matcher
+from api.models.probes import basis_of, probe_for
 from api.pipeline import failchecks, fill, gaplog, library, prompts, wording
 from api.pipeline import free as free_module
 from api.pipeline import plan as plan_module
@@ -52,6 +54,7 @@ from api.schema.generated import (
     PlanDraft,
     PlanEvent,
     PlanPart,
+    ProbeEvent,
     StageEvent,
     StreamErrorEvent,
     StreamEvent,
@@ -147,6 +150,8 @@ class _Run:
         self.trace = Trace(self.request_id, hashlib.sha256(self.q.encode()).hexdigest()[:16])
         self.answer = ""
         """The written answer that streamed for this request; kept with the question so a repeat needs no model call for the words either."""
+        self.topic: str | None = None
+        """The topic the router settled on, when it is sure enough to offer a topic-specific practice question (W5c)."""
         self.version = latest_version(deps.kit_dist)
         self.manifest = kitmanifest.load(deps.kit_dist, self.version)
 
@@ -248,7 +253,38 @@ async def run(question: str, deps: Deps) -> AsyncIterator[StreamEvent]:
         r.trace.outcome = "error"
     finally:
         _write_trace(r)
+    if r.trace.outcome not in ("refused", "error"):
+        probe = _probe_event(r.q)
+        if probe is not None:
+            yield probe
+        practice = exam_event_for(r.topic) if r.topic else None
+        if practice is not None:
+            yield practice
     yield DoneEvent(type="done")
+
+
+def _note_topic(r: _Run, topic) -> None:  # noqa: ANN001
+    """Remember the topic only when it can be trusted: a local guess below the library's confidence bar would offer a practice question about the wrong chapter."""
+    if topic.value == "none" or (topic.source == "local" and topic.confidence < library.INSTANTIATE_MIN_CONFIDENCE):
+        return
+    r.topic = str(topic.value)
+
+
+def _probe_event(question: str) -> ProbeEvent | None:
+    """The optional follow-up question (W5a): plain text from data/probes.json, no model call, never HTML."""
+    found = probe_for(question)
+    if found is None:
+        return None
+    probe, source_verified = found
+    return ProbeEvent(
+        type="probe",
+        id=probe.id,
+        question=probe.question,
+        options=list(probe.options),
+        correct=probe.correct,
+        explanation=probe.explanation,
+        basis=basis_of(source_verified),
+    )
 
 
 def _write_trace(r: _Run) -> None:
@@ -297,6 +333,7 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
         "route", "ok", started, **{h: {"value": d.value, "source": d.source} for h, d in decision.decisions().items()}
     )
     route_text = _route_summary(decision)
+    _note_topic(r, decision.topic)
     yield _stage("route", "done")
 
     # 2 look up (misconceptions now; the library and the textbook arrive in P5 and P2)
@@ -578,6 +615,7 @@ async def _from_library(r: _Run, canon: str) -> AsyncIterator[StreamEvent]:
     entries = r.deps.store.topic_entries(str(topic.value))
     if not entries:
         return
+    _note_topic(r, topic)
     chosen = library.best_entry(r.q, entries)
     block = _gate(r, chosen["env_id"], "topic", started)
     if block is None:

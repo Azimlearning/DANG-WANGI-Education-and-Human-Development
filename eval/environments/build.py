@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import sys
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -28,6 +29,7 @@ from api.evidence.registry import CitationBook  # noqa: E402
 from api.kit import latest_version  # noqa: E402
 from api.pipeline import library  # noqa: E402
 from api.pipeline import plan as plan_module  # noqa: E402
+from api.schema.generated import EnvironmentBlock  # noqa: E402
 from api.verify.gate import deliver  # noqa: E402
 from api.verify.store import SqliteEnvironmentStore  # noqa: E402
 
@@ -43,7 +45,7 @@ def corpus_dir(argument: Path | None) -> Path | None:
     return argument or Settings(_env_file=REPO / ".env").corpus_dir  # pyright: ignore[reportCallIssue]
 
 
-def build(corpus_path: Path | None = None) -> list[dict]:
+def build(corpus_path: Path | None = None, on_block: Callable[[plan_module.Plan, EnvironmentBlock], None] | None = None) -> list[dict]:
     version = latest_version(KIT)
     manifest = kitmanifest.load(KIT, version)
     book = evidence = None
@@ -72,6 +74,8 @@ def build(corpus_path: Path | None = None) -> list[dict]:
                 print(f"  {plan.id}: NOT grounded, downgraded: {why.get('problems') or why['why']}")
             store.put_verified(env)
             block = deliver(store, env.env_id, public_origin=ORIGIN, kit_dist=KIT, evidence=evidence)
+            if on_block is not None:
+                on_block(plan, block)
             subject, form = plan.topic.split("_")[0], plan.topic.split("_")[1].removeprefix("form")
             rows.append(
                 {

@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
+from api import regressions
 from api.app import create_app
 from api.core.settings import Settings
 from api.schema.generated import EnvironmentEvent, ErrorEnvelope, StreamEvent
@@ -43,7 +44,8 @@ def test_health(client: TestClient) -> None:
 def test_stream_order_is_meta_stages_text_plan_environment_done_and_every_event_validates(client: TestClient) -> None:
     events = _events(client)
     kinds = [e.type for e in events]
-    assert kinds[0] == "meta" and kinds[-1] == "done" and kinds[-2] == "environment"
+    assert kinds[0] == "meta" and kinds[-1] == "done"
+    assert [k for k in kinds if k not in ("probe", "exam")][-2:] == ["environment", "done"]  # the optional practice cards come after the page
     assert (
         kinds.index("text_delta") < kinds.index("plan") < kinds.index("environment")
     )  # the words come first, then the draft, then the verified page
@@ -238,6 +240,32 @@ def test_flagging_counts_but_withdrawing_takes_it_down_and_the_cache_then_regene
     assert client.post(f"/library/{env_id}/restore").json() == {"status": "active"}
 
 
+def test_enough_flags_evict_the_environment_and_write_one_regression_record(kit_dist: Path, tmp_path: Path) -> None:
+    client = TestClient(create_app(_settings(tmp_path / "data", kit_dist, flag_evict_threshold=3)))
+    env_id = _environment_id(client)
+    assert client.post(f"/library/{env_id}/flag", json={"note": "the units look odd"}).json() == {"flags": 1}
+    assert client.post(f"/library/{env_id}/flag", json={"note": "the readout is wrong"}).json() == {"flags": 2}
+    assert client.get(f"/library/{env_id}").status_code == 200  # two flags change nothing
+    assert not (tmp_path / "data" / "regressions.jsonl").exists()
+    assert client.post(f"/library/{env_id}/flag", json={"note": "still wrong"}).json() == {"flags": 3, "evicted": True}
+    assert client.get(f"/library/{env_id}").status_code >= 400  # withdrawn: the gate refuses it
+    rows = regressions.load(tmp_path / "data" / "regressions.jsonl")
+    assert len(rows) == 1 and rows[0]["env_id"] == env_id and rows[0]["flags"] == 3
+    assert rows[0]["notes"] == ["still wrong", "the readout is wrong", "the units look odd"]
+    assert "question" not in rows[0] and "q" not in rows[0]
+    # A fourth flag on an Environment that is already out does not write a second record.
+    assert client.post(f"/library/{env_id}/flag", json={"note": "again"}).json() == {"flags": 4}
+    assert len(regressions.load(tmp_path / "data" / "regressions.jsonl")) == 1
+
+
+def test_a_threshold_of_zero_only_counts_flags(kit_dist: Path, tmp_path: Path) -> None:
+    client = TestClient(create_app(_settings(tmp_path / "data", kit_dist, flag_evict_threshold=0)))
+    env_id = _environment_id(client)
+    for i in range(5):
+        assert client.post(f"/library/{env_id}/flag", json={"note": f"n{i}"}).json() == {"flags": i + 1}
+    assert client.get(f"/library/{env_id}").status_code == 200
+
+
 def test_library_actions_on_an_unknown_environment_are_404_and_bodies_are_strict(client: TestClient) -> None:
     assert client.post("/library/nope-000000000000/flag", json={"note": "x"}).status_code == 404
     env_id = _environment_id(client)
@@ -273,6 +301,15 @@ def test_the_third_question_in_a_minute_is_refused_with_429_when_the_limit_is_tw
     assert (
         refused.status_code == 429 and refused.json()["code"] == "rate_limited" and refused.json()["retryable"] is True
     )
+
+
+def test_the_daily_limit_refuses_with_429_and_a_refused_question_holds_no_slot(kit_dist: Path, tmp_path: Path) -> None:
+    app = create_app(_settings(tmp_path / "data", kit_dist, daily_limit_per_client=1, rate_limit_per_minute=0))
+    client = TestClient(app)
+    assert client.post("/ask", json={"question": "Why does a spring stretch?"}).status_code == 200
+    refused = client.post("/ask", json={"question": "Why does a spring stretch?"})
+    assert refused.status_code == 429 and refused.json()["code"] == "rate_limited" and "today" in refused.json()["message"]
+    assert app.state.gate.in_flight() == 0
 
 
 def test_a_full_server_refuses_with_429_and_a_finished_stream_frees_its_slot(kit_dist: Path, tmp_path: Path) -> None:

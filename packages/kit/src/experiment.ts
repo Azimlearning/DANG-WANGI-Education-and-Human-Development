@@ -2,6 +2,7 @@
 // (SPM practical test): what is being investigated, what is changed, what is measured, what is kept the same and what is used. Every word is
 // Kit-owned text, so a number in it must be a slider value, a model setting or a declared constant.
 
+import { lab } from "./bridge";
 import type { Environment } from "./environment";
 import { copy, own } from "./provenance";
 
@@ -42,5 +43,6 @@ export function experiment(env: Environment, options: ExperimentOptions): HTMLEl
   }
   card.appendChild(list);
   env.stage.appendChild(card);
+  lab({ part: "experiment", fields });
   return card;
 }

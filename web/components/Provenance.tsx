@@ -1,6 +1,7 @@
 // Provenance is always visible (hard constraint 11): the lane, the trust label in words, the source, WHAT WAS CHECKED and the limits.
 // "What was checked" is rendered from the verifier's own stored record, not from a generic badge (enhancement N10).
 import type { CheckedSummary, EnvironmentBlock } from "@synapse/schema";
+import { citationText } from "../lib/citation";
 
 const LANE_TEXT: Record<EnvironmentBlock["lane"], string> = {
   instantiate: "Instantiate: a stored Environment reused as it was",
@@ -53,7 +54,7 @@ export function Provenance({ block }: { block: EnvironmentBlock }) {
         <strong>Source:</strong>{" "}
         {block.citations.length === 0
           ? "none stated"
-          : block.citations.map((c) => `${c.source}${c.page !== null ? `, page ${c.page}` : ""}${c.verified ? "" : " (not verified)"}`).join("; ")}
+          : block.citations.map((c) => citationText(c)).join("; ")}
       </p>
       <div className="text-ink-dim">
         <p>

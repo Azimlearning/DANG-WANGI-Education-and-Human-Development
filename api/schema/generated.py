@@ -77,6 +77,22 @@ class ErrorEnvelope(BaseModel):
     retryable: bool
 
 
+class ExamEvent(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    type: Literal['exam']
+    id: str
+    stem: str
+    marks: int
+    points: list[ExamPoint]
+    sample: str
+
+
+class ExamPoint(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    text: str
+    wordings: list[list[str]]
+
+
 class FieldIssue(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
     path: str
@@ -121,6 +137,17 @@ class PlanPart(BaseModel):
     unit: str
 
 
+class ProbeEvent(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    type: Literal['probe']
+    id: str
+    question: str
+    options: list[str]
+    correct: int
+    explanation: str
+    basis: str
+
+
 class StageEvent(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
     type: Literal['stage']
@@ -149,7 +176,7 @@ ErrorCode = Literal['validation_failed', 'bad_request', 'not_found', 'spend_cap_
 
 Lane = Literal['instantiate', 'compose', 'free']
 
-StreamEvent = Annotated[MetaEvent | StageEvent | PlanEvent | TextDeltaEvent | EnvironmentEvent | StreamErrorEvent | DoneEvent, Field(discriminator='type')]
+StreamEvent = Annotated[MetaEvent | StageEvent | PlanEvent | TextDeltaEvent | EnvironmentEvent | ProbeEvent | ExamEvent | StreamErrorEvent | DoneEvent, Field(discriminator='type')]
 
 TrustLabel = Literal['kit-verified', 'model-checked', 'reviewed', 'canonical']
 
@@ -161,12 +188,15 @@ DoneEvent.model_rebuild()
 EnvironmentBlock.model_rebuild()
 EnvironmentEvent.model_rebuild()
 ErrorEnvelope.model_rebuild()
+ExamEvent.model_rebuild()
+ExamPoint.model_rebuild()
 FieldIssue.model_rebuild()
 MetaEvent.model_rebuild()
 ModelUse.model_rebuild()
 PlanDraft.model_rebuild()
 PlanEvent.model_rebuild()
 PlanPart.model_rebuild()
+ProbeEvent.model_rebuild()
 StageEvent.model_rebuild()
 StreamErrorEvent.model_rebuild()
 TextDeltaEvent.model_rebuild()

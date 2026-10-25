@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pydantic import ValidationError
 
 from api.kitmanifest import Manifest
+from api.pipeline import constants as known_constants
 from api.pipeline.plan import Plan
 from api.verify.provenance import SCENE_FILL_MIN, copy_number_problems
 from api.verify.references import evaluate_model, unit_factor
@@ -431,6 +432,27 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                     f"{m.model} needs {input_name} to be at least {param_name} ({floor}), but '{bound}' can be {lowest}.",
                     f"Make '{bound}' start at {floor} or more, or lower {param_name}.",
                 )
+
+    # PLAN-020: a constant the textbooks fix (g, the molar volume of a gas) must carry a value the textbooks use.
+    for i, m in enumerate(plan.models):
+        for name, value in m.params.items():
+            k = known_constants.find(m.model, name)
+            if k is not None and not known_constants.is_accepted(k, value):
+                add(
+                    "PLAN-020",
+                    f"models[{i}].params.{name}",
+                    f"{name} = {value:g} {k.unit} is not a value the textbook uses for the {k.name}.",
+                    f"Use {known_constants.accepted_text(k)} {k.unit} for the {k.name}.",
+                )
+    for i, c in enumerate(plan.constants):
+        k = known_constants.find(None, None, c.id)
+        if k is not None and c.unit == k.unit and not known_constants.is_accepted(k, c.value):
+            add(
+                "PLAN-020",
+                f"constants[{i}]",
+                f"{c.id} = {c.value:g} {c.unit} is not a value the textbook uses for the {k.name}.",
+                f"Use {known_constants.accepted_text(k)} {k.unit} for the {k.name}.",
+            )
 
     # S4: a control that no readout can show a difference for is a "dead control" to the verifier. Evaluate each readout's model (the independent
     # Python reference) at the control's min and max and compare what the readout would DISPLAY at its digits.

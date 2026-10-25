@@ -62,7 +62,7 @@ Commands marked above do not exist until P0 task 1 creates them.
 
 All must be true and recorded in the changelog before a public URL exists.
 
-- [ ] Per-session and per-day request limits exist and are tested (BUILT in part: a per-client-address per-minute limit and a cap on questions in flight, in-process per worker, `api/limits.py`; per-session and per-day limits are NOT built, and a multi-worker or proxied deploy needs the same limits at the proxy)
+- [ ] Per-session and per-day request limits exist and are tested (BUILT in part: a per-client-address per-minute limit, a cap on questions in flight, and since 2026-10-25 a per-client-address and an overall limit per UTC day (`DAILY_LIMIT_PER_CLIENT`, default 200; `DAILY_LIMIT_TOTAL`, default 0 = off, set it before any public deploy), all in-process per worker, `api/limits.py`; there are no accounts, so an address stands for a session; a multi-worker or proxied deploy needs the same limits at the proxy)
 - [ ] A monthly spend cap is enforced at the LLM seam and a dashboard shows cost per student per week (BUILT in part: `GET /spend` shows the month's total, split by purpose and model; there are no student accounts, so no per-student view)
 - [ ] Generated HTML is verified in a no-network container with resource limits (not `node:vm`)
 - [ ] The Free lane policy is set and its trust label is shown to students (ADR D-07)

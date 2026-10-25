@@ -1,6 +1,7 @@
 // `stepper(env, {steps})`: the procedure of an experiment as an ordered list. Every step is Kit-owned text, so the numbers in it are checked
 // like any other sentence (a step may state a slider value, a model setting or a declared constant, and nothing else).
 
+import { lab } from "./bridge";
 import type { Environment } from "./environment";
 import { copy, own } from "./provenance";
 
@@ -19,5 +20,6 @@ export function stepper(env: Environment, options: { steps: string[] }): HTMLOLi
     list.appendChild(item);
   }
   env.stage.appendChild(list);
+  lab({ part: "steps", steps });
   return list;
 }

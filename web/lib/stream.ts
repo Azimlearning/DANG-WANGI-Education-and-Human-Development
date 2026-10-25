@@ -131,6 +131,39 @@ export function parseStreamEvent(v: unknown): StreamEvent | null {
       const block = parseEnvironmentBlock(v.block);
       return block ? { type: "environment", block } : null;
     }
+    case "probe":
+      if (
+        isStr(v.id) &&
+        isStr(v.question) &&
+        isStr(v.explanation) &&
+        isStr(v.basis) &&
+        Array.isArray(v.options) &&
+        v.options.length >= 2 &&
+        v.options.length <= 4 &&
+        v.options.every(isStr) &&
+        typeof v.correct === "number" &&
+        Number.isInteger(v.correct) &&
+        v.correct >= 0 &&
+        v.correct < v.options.length
+      ) {
+        return { type: "probe", id: v.id, question: v.question, options: v.options as string[], correct: v.correct, explanation: v.explanation, basis: v.basis };
+      }
+      return null;
+    case "exam": {
+      if (!isStr(v.id) || !isStr(v.stem) || !isStr(v.sample) || !Array.isArray(v.points) || v.points.length < 2 || v.points.length > 6) return null;
+      const points = [];
+      for (const p of v.points) {
+        if (!isRec(p) || !isStr(p.text) || !Array.isArray(p.wordings) || p.wordings.length < 1 || p.wordings.length > 8) return null;
+        const wordings = [];
+        for (const w of p.wordings) {
+          if (!Array.isArray(w) || w.length < 1 || w.length > 8 || !w.every((x) => isStr(x) && /^[a-z0-9]{1,24}$/.test(x))) return null;
+          wordings.push(w as string[]);
+        }
+        points.push({ text: p.text, wordings });
+      }
+      if (v.marks !== points.length) return null;
+      return { type: "exam", id: v.id, stem: v.stem, marks: points.length, points, sample: v.sample };
+    }
     case "error": {
       const error = parseErrorEnvelope(v.error);
       return error ? { type: "error", error } : null;

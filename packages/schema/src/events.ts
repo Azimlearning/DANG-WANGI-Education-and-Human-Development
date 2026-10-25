@@ -11,7 +11,7 @@ export interface AskRequest {
 
 // ── SSE stream (POST /ask) ──────────────────────────────────────────────────
 // Each SSE message carries exactly one StreamEvent as JSON in `data:`.
-// Order on success: meta, stage events, text_delta (one or more), plan, more stage events, environment, done. A turn that cannot make an
+// Order on success: meta, stage events, text_delta (one or more), plan, more stage events, environment, probe (optional), exam (optional), done. A turn that cannot make an
 // Environment ends with a text answer and a degraded stage event instead of an environment.
 
 /** First event. The lane and label are NOT here: they are decided by what verification the Environment survives, so they arrive on the block. */
@@ -68,8 +68,40 @@ export interface StreamErrorEvent {
   error: ErrorEnvelope;
 }
 
+/** An optional follow-up question about an idea the student's question touched (W5a). Host text, not an Environment: it is never HTML and is not verified by the
+ * verifier. `basis` says in plain words what the correction rests on. A match is a topic detector, so the card asks a question and never says what the student thinks. */
+export interface ProbeEvent {
+  type: "probe";
+  id: string;
+  question: string;
+  options: string[];
+  /** @int Zero-based index of the correct option. */
+  correct: number;
+  explanation: string;
+  basis: string;
+}
+
+/** One marking point of an exam-mirror question (W5c): the sentence shown after marking, and the wordings that earn it. A wording is a list of word stems that must ALL
+ * appear in the answer; a point is earned when any one wording matches. A stem made only of digits must match a whole number; any other stem matches a word that starts with it. */
+export interface ExamPoint {
+  text: string;
+  wordings: string[][];
+}
+
+/** An optional practice question in the style of a structured exam question, marked in the browser by matching key words (W5c). It is host text, not an Environment, and the
+ * answer a student types never leaves the browser. */
+export interface ExamEvent {
+  type: "exam";
+  id: string;
+  stem: string;
+  /** @int One mark for each point. */
+  marks: number;
+  points: ExamPoint[];
+  sample: string;
+}
+
 export interface DoneEvent {
   type: "done";
 }
 
-export type StreamEvent = MetaEvent | StageEvent | PlanEvent | TextDeltaEvent | EnvironmentEvent | StreamErrorEvent | DoneEvent;
+export type StreamEvent = MetaEvent | StageEvent | PlanEvent | TextDeltaEvent | EnvironmentEvent | ProbeEvent | ExamEvent | StreamErrorEvent | DoneEvent;

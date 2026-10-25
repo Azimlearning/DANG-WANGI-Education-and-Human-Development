@@ -309,6 +309,19 @@ def main() -> int:
             else:
                 check("the library holds the Environment that was just made", False)
 
+            # ── the exam mirror (W5c): marked in the browser, shown in words, answer never sent ─────────────────────────
+            page.wait_for_selector("[data-testid=exam]", timeout=30_000)
+            exam_requests: list[str] = []
+            page.on("request", lambda r: exam_requests.append(r.url) if r.method == "POST" else None)
+            page.fill("[data-testid=exam] textarea", "The extension is directly proportional to the load. The graph is a straight line through the origin. The spring returns to its original length.")
+            page.click("button:has-text('Mark my answer')")
+            score = page.inner_text("[data-testid=exam-score]")
+            check("the exam answer is marked in words", score == "3 of 3 marks", score)
+            check("the exam answer is not sent to any server", not exam_requests, str(exam_requests))
+            exam_heights = page.eval_on_selector_all("[data-testid=exam] button", "els => els.map(e => Math.round(e.getBoundingClientRect().height))")
+            check("the exam card's controls are at least 44 px tall", bool(exam_heights) and all(h >= 44 for h in exam_heights), str(exam_heights))
+            check("the exam card does not widen the page at 360 px", page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 0)
+
             # ── Stage ─────────────────────────────────────────────────────────────────────────────────────────────────
             page.click("button:has-text('Open')")
             page.wait_for_selector("[role=dialog]")
@@ -319,6 +332,31 @@ def main() -> int:
                 f"{stage_sandbox!r}",
             )
             page.screenshot(path=str(SHOTS / "02-stage-360.png"))
+            # ── the lab report (W5b): rows recorded inside the frame reach the host's report ────────────────────────────
+            stage_frame = page.frame_locator("[role=dialog] iframe")
+            stage_frame.locator("[data-synapse-action='record']").first.wait_for(timeout=10_000)
+            check("the report asks for a row before any is recorded", "No rows yet" in page.inner_text("[data-testid=lab-report]"))
+            stage_frame.locator("[data-synapse-action='record']").first.click()
+            stage_frame.locator("input[data-synapse-control='load']").first.focus()
+            page.keyboard.press("End")
+            stage_frame.locator("[data-synapse-action='record']").first.click()
+            page.wait_for_function("document.querySelectorAll('[data-testid=lab-report] tbody tr').length === 2", timeout=5_000)
+            report_text = page.inner_text("[data-testid=lab-report]")
+            check("two recorded rows appear in the lab report", "Procedure" in report_text and "Aim" in report_text)
+            report_heights = page.eval_on_selector_all("[data-testid=lab-report] button", "els => els.map(e => Math.round(e.getBoundingClientRect().height))")
+            check("the report's buttons are at least 44 px tall", bool(report_heights) and all(h >= 44 for h in report_heights), str(report_heights))
+            check("the report does not widen the page at 360 px", page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 0)
+            page.screenshot(path=str(SHOTS / "02b-lab-report-360.png"), full_page=True)
+            # ── Present mode (D-39): large, still labelled, still sourced, and reversible ─────────────────────────────────
+            normal_h = page.eval_on_selector("[role=dialog] iframe", "e => Math.round(e.getBoundingClientRect().height)")
+            page.click("button:has-text('Present')")
+            page.wait_for_selector("[data-testid=present-source]", timeout=5_000)
+            present_h = page.eval_on_selector("[role=dialog] iframe", "e => Math.round(e.getBoundingClientRect().height)")
+            check("Present mode shows a Presenting chip and a larger frame", present_h > normal_h and page.locator("text=Presenting").count() >= 1, f"{normal_h} -> {present_h}")
+            check("Present mode keeps the label, the lane and the source on screen", page.locator("[role=dialog] .study-badge").count() >= 2 and page.locator("[data-testid=present-source]").is_visible())
+            page.click("button:has-text('Stop presenting')")
+            check("Stop presenting brings the provenance and the report back", page.locator("[data-testid=lab-report]").is_visible() and page.locator("section[aria-label='Where this Environment comes from']").is_visible())
+            page.locator("[role=dialog] button", has_text="Back").focus()  # focus was inside the frame, where Escape is the frame's
             page.keyboard.press("Escape")
             page.wait_for_selector("[role=dialog]", state="detached")
             check("Escape returns from Stage to Peek", page.locator("article").count() == 1)
@@ -387,6 +425,74 @@ def main() -> int:
                 bool(violation),
                 (violation[0][:90] if violation else "none"),
             )
+
+            # ── the misconception probe (W5a): an optional card, plain text, answered once ──────────────────────────────
+            quick = context.new_page()
+            quick.goto(WEB)
+            quick.fill("#q", "Is osmosis when water moves to where there is more water?")
+            quick.click("button[type=submit]")
+            quick.wait_for_selector("[data-testid=probe]", timeout=60_000)
+            probe_heights = quick.eval_on_selector_all(
+                "[data-testid=probe] button", "els => els.map(e => Math.round(e.getBoundingClientRect().height))"
+            )
+            check("the quick check appears for a matching question", quick.locator("[data-testid=probe]").count() == 1)
+            check("every quick-check control is at least 44 px tall", bool(probe_heights) and all(h >= 44 for h in probe_heights), str(probe_heights))
+            check("the quick check shows no answer before one is chosen", "What this rests on" not in quick.inner_text("[data-testid=probe]"))
+            quick.get_by_role("button", name="Water moves out of the cells", exact=False).click()
+            probe_text = quick.inner_text("[data-testid=probe]")
+            check("a right answer is said in words and the basis is shown", "Yes, that is right." in probe_text and "What this rests on" in probe_text)
+            check(
+                "the quick check does not widen the page at 360 px",
+                quick.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 0,
+            )
+            quick.close()
+
+            # ── keyboard only, visible focus and reduced motion (W9, hard constraint 10) ────────────────────────────────────
+            kb_context = browser.new_context(viewport={"width": 360, "height": 780}, reduced_motion="reduce")
+            kb = kb_context.new_page()
+            kb.goto(WEB)
+            reached = False
+            for _ in range(25):
+                kb.keyboard.press("Tab")
+                if kb.evaluate("document.activeElement && document.activeElement.id") == "q":
+                    reached = True
+                    break
+            check("the question box is reachable with Tab alone", reached)
+            if reached:
+                focus_visible = kb.evaluate(
+                    "(() => { const s = getComputedStyle(document.activeElement); return (s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0) || s.boxShadow !== 'none'; })()"
+                )
+                check("the focused question box shows a visible focus indicator", bool(focus_visible))
+                kb.keyboard.type("Why does a spring stretch when I hang a weight on it?")
+                kb.keyboard.press("Enter")
+                kb.wait_for_selector("article[aria-label]:not([aria-label$='(draft)'])", timeout=60_000)
+                opened = False
+                for _ in range(60):
+                    kb.keyboard.press("Tab")
+                    if (kb.evaluate("document.activeElement && document.activeElement.textContent") or "").strip() == "Open":
+                        opened = True
+                        break
+                check("the Open button for the Environment is reachable with Tab alone", opened)
+                if opened:
+                    kb.keyboard.press("Enter")
+                    kb.wait_for_selector("[role=dialog]", timeout=5_000)
+                    first = (kb.evaluate("document.activeElement && document.activeElement.textContent") or "").strip()
+                    check("Stage puts keyboard focus on Back when it opens", first == "Back", first)
+                    kb.keyboard.press("Escape")
+                    kb.wait_for_selector("[role=dialog]", state="detached", timeout=5_000)
+                    check("Escape closes Stage from the keyboard", kb.locator("[role=dialog]").count() == 0)
+            looping = kb.evaluate("document.getAnimations().filter(a => a.effect && a.effect.getComputedTiming().iterations === Infinity).length")
+            check("with reduced motion on, no animation on the page loops forever", looping == 0, str(looping))
+            frame_looping = 0
+            for f in kb.frames:
+                if f != kb.main_frame:
+                    frame_looping += f.evaluate("document.getAnimations().filter(a => a.effect && a.effect.getComputedTiming().iterations === Infinity).length")
+            check("with reduced motion on, no animation in the Environment loops forever", frame_looping == 0, str(frame_looping))
+            unnamed = kb.evaluate(
+                "Array.from(document.querySelectorAll('button, a[href], input, textarea, select')).filter(e => !(e.getAttribute('aria-label') || e.textContent.trim() || e.labels && e.labels.length || e.getAttribute('title') || e.getAttribute('aria-labelledby'))).length"
+            )
+            check("every button, link and field on the page has an accessible name", unnamed == 0, str(unnamed))
+            kb_context.close()
 
             # ── the host's own defences, on crafted streams ───────────────────────────────────────────────────────────
             page.unroute_all()

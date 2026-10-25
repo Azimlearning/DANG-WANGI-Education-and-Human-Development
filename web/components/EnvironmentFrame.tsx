@@ -7,7 +7,7 @@ import type { EnvironmentBlock } from "@synapse/schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkBlockHash } from "../lib/hash";
 import { load, record, save } from "../lib/progress";
-import { parseBridgeMessage, SANDBOX } from "../lib/sandbox";
+import { parseBridgeMessage, SANDBOX, type LabPart } from "../lib/sandbox";
 import { currentTheme, THEME_EVENT, themeMessage } from "../lib/theme";
 
 type Phase = { kind: "checking" } | { kind: "ok" } | { kind: "refused"; reason: string };
@@ -16,10 +16,13 @@ export function EnvironmentFrame({
   block,
   height,
   onRefused,
+  onLab,
 }: {
   block: EnvironmentBlock;
   height: number | string;
   onRefused?: (reason: string) => void;
+  /** The experiment card, steps and recorded table the Kit reports, for the lab report (W5b). */
+  onLab?: (part: LabPart) => void;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
@@ -59,6 +62,10 @@ export function EnvironmentFrame({
       if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return; // only our own frame
       const message = parseBridgeMessage(e.data);
       if (message?.type === "synapse_error") setRuntimeError(message.message);
+      if (message?.type === "synapse_lab") {
+        const { type: _type, ...part } = message;
+        onLab?.(part);
+      }
       if (message?.type === "synapse_event" && message.control === "concept_check" && (message.value === "correct" || message.value === "incorrect")) {
         // The first answer to a concept check, kept on this device only (P6). A failure to store is silent: progress is a convenience.
         save(record(load(), { id: block.id, title: block.title }, message.value));
@@ -73,7 +80,7 @@ export function EnvironmentFrame({
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onRefused, block.id, block.title]);
+  }, [onRefused, onLab, block.id, block.title]);
 
   if (phase.kind === "checking") {
     return (

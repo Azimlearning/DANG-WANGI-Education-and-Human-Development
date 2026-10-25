@@ -1,4 +1,4 @@
-# Where the project stands and everything that is left (2026-10-19)
+# Where the project stands and everything that is left (2026-10-19; rows updated 2026-10-25)
 
 > Written for the owner, who asked "how complete is this at hackathon level, and what is still pending". The percentages are the author's judgement with the arithmetic shown, not measurements. Update this file when a row changes, and keep `STATUS.md` (the phase table and known gaps) as the authority on facts.
 >
@@ -55,23 +55,23 @@ Effort: S under an hour of work, M a few hours, L a day or more. "You" means it 
 | B1 | OCR the five Chemistry experiment scans (159 pages) and match the experiment catalogue | The PRD wants one record per KSSM practical; every entry says `confirmed_by_person: false` | M |
 | B2 | Check the five misconception citations (`source_verified` is false) | Needed before the follow-up feature relies on them | S |
 | B3 | Kit manifest and spec `citation` fields still say UNVERIFIED; remove or flag the `biology.cardiac_output` model (no textbook states it) | Hard constraint 6; relocks the Kit | M |
-| B4 | Show a book title and printed page instead of the file id and PDF page in the citation | A student currently sees `textbook-physics-physics-f5-removed`, page 36; needs a wire-type change | M |
-| B5 | A small table of well-known constants (g = 9.81 and so on) checked by the plan checks | The live planner chose g = 10 where the book uses 9.81 | S |
+| B4 | ~~Show a book title and printed page instead of the file id and PDF page in the citation~~ Done 2026-10-25 (D-47): a book title and a PDF page, derived from the id; the printed page is not recorded | | Done |
+| B5 | ~~A small table of well-known constants (g = 9.81 and so on) checked by the plan checks~~ Done 2026-10-25 (D-47): PLAN-020 | | Done |
 | B6 | Teach the ledger cache prices and turn prompt caching on | About 5,000 of the 9,000 input tokens of every plan call are the same each time; could cut the plan cost by roughly a third to a half. Needs a measurement | M |
 | B7 | ~~Harden `audit.ts` for the three open leads~~ Done 2026-10-19 (D-37); the supervised pass is still needed for the other three scopes | | Done |
 | B8 | More science models and Environments by measured gap (half-life, parallel resistance, refraction, logistic growth, molarity, percentage yield) | 16 of 53 topics today; each needs a textbook citation, a hand-written reference and planted-bug tests | L each batch |
-| B9 | Continuous integration (tests on every push, and the smoke on Linux) | The Linux path of the smoke has never run since it was adapted; there is no CI | M |
+| B9 | ~~Continuous integration (tests on every push, and the smoke on Linux)~~ Written 2026-10-25 (D-47): `.github/workflows/ci.yml`; the first run on GitHub has not happened | | Partly |
 | B10 | Router retrain on more data and an embedding comparison | Only if data beyond the v3 set exists; the measured spot check suggests the topic gate is permissive | M, skip unless data appears |
 
 ### C. Product features not built yet (each needs a plan and an execution doc first)
 
 | # | Feature | PRD phase | Effort |
 |---|---|---|---|
-| C1 | Misconception follow-up end to end for three flagship misconceptions (probe, correction, check). The PRD's P6 success bar. The matcher is only a topic detector, so it should offer a probe, not a correction | P6 | L |
-| C2 | Amali mode scaffold: problem, hypothesis, variables, procedure, a results table the student fills, a report skeleton on export | P6 | L |
-| C3 | Exam mirror and challenge levels (design first; no design exists) | P6 | L |
+| C1 | ~~Misconception follow-up end to end for three flagship misconceptions (probe, correction, check). The PRD's P6 success bar. The matcher is only a topic detector, so it should offer a probe, not a correction~~ Built 2026-10-25 (D-48) for all five listed misconceptions as a probe; no adaptive follow-up | | Done |
+| C2 | ~~Amali mode scaffold: problem, hypothesis, variables, procedure, a results table the student fills, a report skeleton on export~~ Built 2026-10-25 (D-49): lab report from recorded rows in Stage, text export | | Done |
+| C3 | ~~Exam mirror and challenge levels (design first; no design exists)~~ Built 2026-10-25 (D-50): six items, keyword marking in the browser | | Done |
 | C4 | Bahasa Melayu for reviewed Environments: the translation mechanism and a review workflow; only reviewed strings ship | P7 | L |
-| C5 | Chapter packs (several Environments in one offline file) and the MCP-Apps-shaped bridge | P7 | M to L |
+| C5 | ~~Chapter packs (several Environments in one offline file) and the MCP-Apps-shaped bridge~~ Chapter packs built 2026-10-25 (D-51); the MCP-Apps-shaped bridge is not | | Partly |
 | C6 | Per-session and per-day limits; the same limits at the proxy; verification in a no-network container with memory limits; a Kit release (bump 0.1.0 and make files immutable) | P7, deploy gate | L |
 
 ### D. Paid measurements (the only part that spends API money)

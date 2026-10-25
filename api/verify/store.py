@@ -313,6 +313,14 @@ class SqliteEnvironmentStore:
             )
             return int(db.execute("SELECT COUNT(*) FROM flags WHERE env_id = ?", (env_id,)).fetchone()[0])
 
+    def flag_notes(self, env_id: str, limit: int = 5) -> list[str]:
+        """The most recent flag notes for an Environment, newest first."""
+        with closing(self._connect()) as db:
+            rows = db.execute(
+                "SELECT note FROM flags WHERE env_id = ? ORDER BY id DESC LIMIT ?", (env_id, limit)
+            ).fetchall()
+        return [str(r[0]) for r in rows]
+
     def flag_count(self, env_id: str) -> int:
         with closing(self._connect()) as db:
             return int(db.execute("SELECT COUNT(*) FROM flags WHERE env_id = ?", (env_id,)).fetchone()[0])

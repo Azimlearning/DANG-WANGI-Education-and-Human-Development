@@ -55,6 +55,12 @@ class Settings(BaseSettings):
 
     rate_limit_per_minute: int = 20
     """Questions one client address may ask per minute (0 turns the limit off). Behind a proxy every client shares the proxy's address: set it at the proxy too."""
+    flag_evict_threshold: int = 3
+    """How many flags take an Environment out of the library and write a regression record (P5). 0 turns eviction off; a flag is then only counted."""
+    daily_limit_per_client: int = 200
+    """Questions one client address may ask per UTC day (0 turns the limit off). There are no accounts, so an address stands for a session (deploy gate, D-11)."""
+    daily_limit_total: int = 0
+    """Questions the whole server answers per UTC day (0 turns the limit off). Set it before any public deploy: it bounds a crowd of addresses before the monthly spend cap does."""
     max_concurrent_asks: int = 3
     """How many questions are worked on at once. Each can launch a browser to verify an Environment, so this bounds memory and CPU (0 turns it off)."""
     free_lane_enabled: bool = False

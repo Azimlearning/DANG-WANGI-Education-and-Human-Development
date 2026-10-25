@@ -1,0 +1,71 @@
+{
+  "note": "Hand-written structured questions for the exam mirror (W5c). Original wording of standard ideas, written by the assistant on 2026-10-25; no past-paper text, no textbook page was read, and no teacher has reviewed the marking points. A word stem matches any word that starts with it; a stem made only of digits must match a whole number. A point is earned when every stem of at least one wording is in the answer.",
+  "items": [
+    {
+      "id": "hookes-law-short",
+      "topic": "physics_form5_force_and_elasticity",
+      "stem": "A student hangs different loads on a spring and measures the extension each time, keeping within the elastic limit. State the relationship between the extension and the load, describe the graph of extension against load, and say what happens to the spring when the load is removed.",
+      "points": [
+        { "text": "The extension is directly proportional to the load.", "wordings": [["extens", "proportion", "load"], ["extens", "proportion", "forc"], ["extens", "doubl", "load"], ["extens", "doubl", "forc"]] },
+        { "text": "The graph is a straight line through the origin.", "wordings": [["straight", "line", "origin"], ["straight", "line", "zero"], ["linear", "origin"]] },
+        { "text": "The spring returns to its original length when the load is removed.", "wordings": [["return", "origin", "length"], ["return", "origin", "shape"], ["regain", "origin", "length"]] }
+      ],
+      "sample": "Within the elastic limit the extension is directly proportional to the load, so doubling the load doubles the extension. The graph of extension against load is a straight line through the origin. When the load is removed the spring returns to its original length."
+    },
+    {
+      "id": "ohms-law-short",
+      "topic": "physics_form5_electricity",
+      "stem": "State Ohm's law, and say what happens to the current in a wire when the voltage across it is doubled and its resistance stays the same.",
+      "points": [
+        { "text": "The current is directly proportional to the potential difference (voltage).", "wordings": [["current", "proportion", "voltag"], ["current", "proportion", "potential"]] },
+        { "text": "The temperature stays constant.", "wordings": [["temperature", "constant"], ["temperature", "same"], ["temperature", "unchang"]] },
+        { "text": "The current doubles.", "wordings": [["current", "doubl"], ["current", "twice"], ["current", "two", "times"]] }
+      ],
+      "sample": "Ohm's law says the current through a conductor is directly proportional to the potential difference across it, provided the temperature stays constant. If the voltage is doubled and the resistance is the same, the current doubles."
+    },
+    {
+      "id": "osmosis-potato-short",
+      "topic": "biology_form4_movement_of_substances",
+      "stem": "A potato strip is placed in a concentrated sugar solution. After one hour its mass has decreased. Explain why.",
+      "points": [
+        { "text": "Water moves out of the potato cells.", "wordings": [["water", "move", "out"], ["water", "leav"], ["water", "los"]] },
+        { "text": "The process is osmosis.", "wordings": [["osmosis"]] },
+        { "text": "Water moves from the less concentrated cell sap to the more concentrated solution.", "wordings": [["higher", "water", "potential", "lower"], ["lower", "concentrat", "higher", "concentrat"], ["less", "concentrat", "more", "concentrat"], ["dilute", "concentrated"], ["hypotonic", "hypertonic"]] }
+      ],
+      "sample": "The sugar solution is more concentrated than the cell sap, so by osmosis water moves out of the potato cells, from the less concentrated cell sap to the more concentrated solution, through the partially permeable membrane. The strip loses water, so its mass decreases."
+    },
+    {
+      "id": "collision-theory-surface-area",
+      "topic": "chemistry_form4_rate_of_reaction",
+      "stem": "Explain, using the collision theory, why using smaller pieces of marble chips increases the rate of reaction with dilute hydrochloric acid.",
+      "points": [
+        { "text": "Smaller pieces have a larger total surface area.", "wordings": [["larger", "surface", "area"], ["greater", "surface", "area"], ["surface", "area", "increas"]] },
+        { "text": "There are more collisions between the particles of the reactants.", "wordings": [["more", "collision"], ["collision", "increas"]] },
+        { "text": "The frequency of effective collisions is higher.", "wordings": [["frequen", "effective", "collision"], ["higher", "rate", "effective", "collision"]] }
+      ],
+      "sample": "Smaller pieces have a larger total surface area exposed to the acid. This gives more collisions between the particles of the marble and the acid, so the frequency of effective collisions is higher and the rate of reaction increases."
+    },
+    {
+      "id": "titration-endpoint-short",
+      "topic": "chemistry_form4_acids_bases_salts",
+      "stem": "In a titration, hydrochloric acid is added from a burette to sodium hydroxide solution in a conical flask containing phenolphthalein. State what the end point is, state the colour change at the end point, and write the equation for the reaction.",
+      "points": [
+        { "text": "The end point is when the acid has exactly neutralised the alkali.", "wordings": [["neutrali", "exact"], ["neutrali", "complet"], ["neutrali", "just"]] },
+        { "text": "The colour changes from pink to colourless.", "wordings": [["pink", "colourless"], ["pink", "colorless"]] },
+        { "text": "NaOH + HCl gives NaCl + H2O.", "wordings": [["naoh", "hcl", "nacl", "h2o"], ["sodium", "hydroxide", "hydrochloric", "chloride", "water"]] }
+      ],
+      "sample": "The end point is reached when the acid has exactly neutralised the alkali. With phenolphthalein the solution changes from pink to colourless. The equation is NaOH + HCl gives NaCl + H2O."
+    },
+    {
+      "id": "wave-speed-short",
+      "topic": "physics_form4_waves",
+      "stem": "A wave has a frequency of 50 Hz and a wavelength of 2 m. State how the speed of a wave is found from its frequency and wavelength, show your substitution, and give the speed.",
+      "points": [
+        { "text": "Speed equals frequency multiplied by wavelength.", "wordings": [["speed", "frequen", "wavelength"], ["v", "f", "wavelength"]] },
+        { "text": "The substitution uses 50 and 2.", "wordings": [["50", "2"]] },
+        { "text": "The speed is 100 m/s.", "wordings": [["100"]] }
+      ],
+      "sample": "Wave speed equals frequency multiplied by wavelength. Speed = 50 x 2 = 100 m/s."
+    }
+  ]
+}

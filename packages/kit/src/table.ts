@@ -2,6 +2,7 @@
 // holding the current values, formatted by the Kit. Cells are Kit-owned with the text they were given, so editing one is detected.
 // Each column is reported to the verifier as a series, so its chain must be grounded in controls and models like a readout's.
 
+import { lab } from "./bridge";
 import type { Environment } from "./environment";
 import type { Observable } from "./observable";
 import { isObservable } from "./provenance";
@@ -59,16 +60,23 @@ export function table(env: Environment, options: { caption: string; columns: Tab
     b.setAttribute("data-synapse-action", kind);
     registerAction(b, kind, label);
   }
+  // What the student has recorded, as the cells show it. The host builds the lab report from this (W5b); it is sent whole each time so a lost message cannot corrupt it.
+  const recorded: string[][] = [];
+  const tell = () => lab({ part: "table", caption, columns: columns.map((c) => ({ label: c.label, unit: c.unit })), rows: recorded });
   record.addEventListener("click", () => {
     if (body.rows.length >= MAX_ROWS) return;
     const tr = document.createElement("tr");
+    const cells: string[] = [];
     for (const c of columns) {
       const text = c.value.get().toFixed(c.digits);
       const td = own(document.createElement("td"), () => text);
       td.textContent = text;
       tr.appendChild(td);
+      cells.push(text);
     }
     body.appendChild(tr);
+    recorded.push(cells);
+    tell();
     announce("Row recorded");
   });
   clear.addEventListener("click", () => {
@@ -76,6 +84,8 @@ export function table(env: Environment, options: { caption: string; columns: Tab
       // The owned-element registry holds the cells; they leave the page with the row and the audit only visits attached nodes.
       tr.remove();
     }
+    recorded.length = 0;
+    tell();
     announce("Table cleared");
   });
   // Rows are added silently otherwise; a polite status tells a screen-reader user what the button did.
@@ -92,5 +102,6 @@ export function table(env: Environment, options: { caption: string; columns: Tab
   scroller.appendChild(el);
   wrap.append(scroller, buttons, status);
   env.stage.appendChild(wrap);
+  tell();
   return el;
 }

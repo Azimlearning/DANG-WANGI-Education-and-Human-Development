@@ -6,7 +6,9 @@
 import { useEffect, useRef } from "react";
 import type { Turn } from "../lib/turns";
 import { DegradedCard } from "./DegradedCard";
+import { ExamCard } from "./ExamCard";
 import { Peek } from "./Peek";
+import { ProbeCard } from "./ProbeCard";
 import { PeekSkeleton } from "./PeekSkeleton";
 import { ProgressStages } from "./ProgressStages";
 import { Stage } from "./Stage";
@@ -61,6 +63,8 @@ export function MessageList({
             {!wide && turn.block ? (
               stagedId === turn.block.id ? <Stage block={turn.block} onBack={onBack} /> : <Peek block={turn.block} onOpen={() => onOpen(turn.block!.id)} />
             ) : null}
+            {turn.probe ? <ProbeCard probe={turn.probe} /> : null}
+            {turn.exam ? <ExamCard item={turn.exam} /> : null}
           </div>
         </div>
       ))}

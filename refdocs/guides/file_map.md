@@ -21,7 +21,7 @@
 | File | Role |
 |---|---|
 | `api/pipeline/run.py` | The orchestrator: intake, route, explain, plan, assemble, verify, deliver; the degrade ladder; the trace |
-| `api/pipeline/plan.py`, `plan_checks.py` | The Plan model (strict) and its checks, PLAN-001 to PLAN-017 |
+| `api/pipeline/plan.py`, `plan_checks.py` | The Plan model (strict) and its checks, PLAN-001 to PLAN-020 |
 | `api/pipeline/assemble.py`, `skeletons/*.html` | The deterministic assembler and the two skeletons (simulation, virtual experiment) |
 | `api/pipeline/fill.py` | Contracts for the only place a model writes page code (custom slots) |
 | `api/pipeline/failchecks.py` | The registry of every rule the verifier, plan checks, fills and gate can emit; tied to the code by a test |
@@ -33,6 +33,15 @@
 | `api/pipeline/library.py`, `api/library_seed.py` | One builder for hand-written Plans, the topic index and `best_entry`; `python -m api.library_seed` fills the library (W2, D-42) |
 | `eval/l4/`, `data/l4/` | The pinned L4 case set (25 planted wording defects, 16 true controls) and its scorer; a stub judge scores 0 |
 | `api/routing/`, `api/models/` | The trained router (pure-Python inference), its gate, the keyword fallback, the misconception matcher |
+
+| `api/pipeline/constants.py` | The table of well-known constants PLAN-020 checks (g, molar volume, speed of light, Avogadro) |
+| `api/models/probes.py`, `data/probes.json` | The misconception probe: strict loader, threshold, the basis text (W5a, D-48) |
+| `api/models/exam.py`, `data/exam_items.json` | The exam mirror items, strict loader and the reference marker (W5c, D-50) |
+| `api/evidence/titles.py`, `web/lib/citation.ts` | A citation as a book title and a PDF page; the same rule on both surfaces (D-47) |
+| `web/components/{ProbeCard,ExamCard,LabReport}.tsx`, `web/lib/{exam,labreport}.ts` | The probe card, the exam card (marked in the browser) and the lab report panel; Stage also holds Present mode (D-48 to D-51) |
+| `api/export.py` | The one-file export and `chapter_pack`, several Environments in one offline file (D-32, D-51) |
+| `eval/gallery/build.py` | Builds every Environment as an offline file, one chapter pack per subject and form, and a static index; output `gallery-output/` is ignored by git |
+| `.github/workflows/ci.yml` | Kit and web tests, codegen drift, lint and types, the Python suite, hostile set, L6 and the Linux smoke |
 
 ## Services and API
 

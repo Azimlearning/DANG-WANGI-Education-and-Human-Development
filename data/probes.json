@@ -1,0 +1,38 @@
+{
+  "note": "Hand-written follow-up questions for three flagship misconceptions (W5a). Written by the assistant on 2026-10-25 from the entries in data/misconceptions.json; no textbook page was read, and no person has reviewed the wording. A probe is a question about an idea, never a diagnosis of the student. The source status shown with a probe is copied from its misconception entry, not typed here.",
+  "probes": [
+    {
+      "id": "osmosis-inverted-gradient",
+      "question": "A piece of potato is put into a very concentrated salt solution. What happens to the water in the potato cells?",
+      "options": [
+        "Water moves into the cells, because it goes to where there is more water.",
+        "Salt moves into the cells and no water moves.",
+        "Water moves out of the cells, towards the more concentrated solution."
+      ],
+      "correct": 2,
+      "explanation": "In osmosis, water moves across a partially permeable membrane from the less concentrated solution to the more concentrated one. The salt solution is more concentrated than the cell sap, so water leaves the cells and the potato loses mass."
+    },
+    {
+      "id": "newton-force-needed-to-keep-moving",
+      "question": "A puck slides on very smooth ice, so there is almost no friction, and nobody pushes it. What does it do?",
+      "options": [
+        "It keeps moving at almost the same speed in a straight line.",
+        "It slows down and stops, because a force is needed to keep it moving.",
+        "It speeds up, because nothing holds it back."
+      ],
+      "correct": 0,
+      "explanation": "With no resultant force, an object keeps its velocity. This is Newton's first law. Everyday objects stop because friction acts on them, not because a pushing force has run out."
+    },
+    {
+      "id": "bonding-sharing-vs-transfer",
+      "question": "Sodium reacts with chlorine to make sodium chloride. What happens to the electrons?",
+      "options": [
+        "A sodium atom and a chlorine atom share a pair of electrons.",
+        "A sodium atom gives an electron to a chlorine atom, and the two ions attract each other.",
+        "The sodium atom loses an electron and nothing takes it."
+      ],
+      "correct": 1,
+      "explanation": "A metal and a non-metal form an ionic bond by transfer of electrons. Sodium loses one electron to become a positive ion and chlorine gains it to become a negative ion. Covalent bonds, between non-metals, share electrons instead."
+    }
+  ]
+}

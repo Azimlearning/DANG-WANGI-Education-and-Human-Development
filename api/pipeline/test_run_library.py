@@ -102,7 +102,7 @@ def test_a_question_the_local_router_recognises_is_answered_from_the_library_wit
     block = next(e for e in events if e.type == "environment").block
     assert block.lane == "instantiate" and block.id.startswith("hookes_amali-")
     assert words(events) == plan_note("hookes_amali")  # the hand-written Plan's own words, not a model's
-    assert kinds(events)[-2:] == ["environment", "done"]
+    assert [k for k in kinds(events) if k not in ("probe", "exam")][-2:] == ["environment", "done"]
     library_record = next(r for r in trace_records(deps) if r["layer"] == "library")
     assert library_record["status"] == "hit" and library_record["detail"]["kind"] == "topic"
     assert json.loads(deps.trace_path.read_text().splitlines()[-1])["outcome"] == "library:instantiate"  # type: ignore[union-attr]

@@ -470,6 +470,14 @@ _ENTRIES = [
         "retry_plan",
         "Show more digits so the control visibly changes a readout, or widen its range.",
     ),
+    _e(
+        "PLAN-020",
+        "PLAN-020",
+        "plan",
+        "block",
+        "retry_plan",
+        "Use the textbook's value for a well-known constant (g is 9.81 m/s2).",
+    ),
     _e("PLAN-015", "PLAN-015", "plan", "block", "retry_plan", "Keep the final volume at or above the starting volume."),
     _e("PLAN-014", "PLAN-014", "plan", "block", "deterministic", "Start each control inside its range."),
     # fill checks

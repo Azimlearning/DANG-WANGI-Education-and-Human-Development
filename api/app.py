@@ -14,12 +14,12 @@ from fastapi.responses import JSONResponse, Response
 from fastapi.sse import EventSourceResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from api import postprocess
+from api import postprocess, regressions
 from api.core.errors import HTTP_STATUS, BadRequest, NotFound, RateLimited, SynapseError, envelope_from_exception
 from api.core.settings import ConfigError, Settings, load_settings
 from api.export import ExportRefused, standalone_page
 from api.kit import built_versions
-from api.limits import ConcurrencyGate, RateLimiter
+from api.limits import ConcurrencyGate, DailyLimiter, RateLimiter
 from api.llm.factory import build_ledger, build_llm_service
 from api.llm.service import LLMService
 from api.pipeline.run import Deps
@@ -103,6 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.ledger = build_ledger(settings)
     app.state.rate = RateLimiter(settings.rate_limit_per_minute)
     app.state.gate = ConcurrencyGate(settings.max_concurrent_asks)
+    app.state.daily = DailyLimiter(settings.daily_limit_per_client, settings.daily_limit_total)
     app.state.llm = (
         None  # built on first use, so a live config without a provider fails per request, not at import (D-15)
     )
@@ -151,13 +152,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return request.app.state.llm
 
     def admitted(request: Request, question: str = Depends(checked_question)) -> tuple[str, int]:
-        """Rate limit per client address, then a slot among the questions in flight. Raises RateLimited (HTTP 429) before any work starts."""
+        """Rate limit per client address, then a slot among the questions in flight, then the daily limits. Raises RateLimited (HTTP 429) before any work starts."""
         client = request.client.host if request.client else "unknown"
         if not request.app.state.rate.allow(client):
             raise RateLimited("Too many questions in a short time. Wait a minute and try again.")
         token = request.app.state.gate.acquire()
         if token is None:
             raise RateLimited("The server is making as many Environments as it can right now. Try again in a moment.")
+        if not request.app.state.daily.allow(client):
+            request.app.state.gate.release(token)  # a refused question holds no slot
+            raise RateLimited("The limit on questions for today has been reached. Try again tomorrow.")
         return question, token
 
     @app.post("/ask", response_class=EventSourceResponse)
@@ -262,8 +266,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/library/{env_id}/flag")
     async def flag(env_id: str, body: _Note, request: Request) -> dict:
-        """Anyone can say an Environment looks wrong. A flag is recorded and counted; it does not take the Environment down by itself."""
-        return {"flags": _known(request, env_id).flag(env_id, body.note)}
+        """Anyone can say an Environment looks wrong. A flag is recorded and counted. Enough flags (`flag_evict_threshold`) withdraw it from the library and write a
+        regression record for a person to turn into a verifier row or a fixed Plan; fewer do not change what is delivered."""
+        store = _known(request, env_id)
+        flags = store.flag(env_id, body.note)
+        limit = request.app.state.settings.flag_evict_threshold
+        if limit > 0 and flags >= limit and store.status(env_id) == "active":
+            record = store.get_record(env_id)
+            store.withdraw(env_id, f"evicted after {flags} flags")
+            if record is not None:
+                regressions.record(
+                    request.app.state.settings.data_dir / "regressions.jsonl",
+                    env_id=env_id,
+                    title=record.title,
+                    lane=record.lane,
+                    label=record.label,
+                    kit_version=record.kit_version,
+                    html_sha256=record.html_sha256,
+                    plan_summary=record.plan_summary,
+                    flags=flags,
+                    notes=store.flag_notes(env_id),
+                )
+            return {"flags": flags, "evicted": True}
+        return {"flags": flags}
 
     @app.post("/library/{env_id}/withdraw")
     async def withdraw(env_id: str, body: _Note, request: Request) -> dict:

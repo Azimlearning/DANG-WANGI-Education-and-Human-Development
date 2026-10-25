@@ -69,3 +69,4 @@ corpus/
 # Brag / demo video output (local only, large media)
 brag-output/
 brag-output-*/
+gallery-output/

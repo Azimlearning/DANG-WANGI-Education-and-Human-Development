@@ -65,7 +65,7 @@ def trace_records(deps: Deps) -> list[dict]:
 def test_the_happy_path_makes_three_model_calls_at_most_and_traces_every_layer(tmp_path: Path, kit_dist: Path) -> None:
     deps, provider = deps_for(tmp_path, kit_dist, fakes.fake_responder)
     events = collect(SPRING, deps)
-    assert kinds(events)[0] == "meta" and kinds(events)[-2:] == ["environment", "done"]
+    assert kinds(events)[0] == "meta" and [k for k in kinds(events) if k not in ("probe", "exam")][-2:] == ["environment", "done"]
     assert len(provider.calls) <= 3 and {c.purpose for c in provider.calls} >= {"explain", "plan"}
     layers = {r["layer"] for r in trace_records(deps)}
     assert {
@@ -115,7 +115,7 @@ def test_a_bad_plan_is_retried_once_with_the_named_issue_and_then_accepted(tmp_p
 
     deps, _ = deps_for(tmp_path, kit_dist, responder)
     events = collect(SPRING, deps)
-    assert kinds(events)[-2:] == ["environment", "done"]
+    assert [k for k in kinds(events) if k not in ("probe", "exam")][-2:] == ["environment", "done"]
     assert len(attempts) == 2 and "PLAN-003" in attempts[1] and "PLAN-003" not in attempts[0]
 
 
@@ -128,7 +128,7 @@ def test_a_start_outside_its_range_is_repaired_without_asking_the_model_again(tm
 
     deps, provider = deps_for(tmp_path, kit_dist, responder)
     events = collect(SPRING, deps)
-    assert kinds(events)[-2:] == ["environment", "done"] and sum(c.purpose == "plan" for c in provider.calls) == 1
+    assert [k for k in kinds(events) if k not in ("probe", "exam")][-2:] == ["environment", "done"] and sum(c.purpose == "plan" for c in provider.calls) == 1
 
 
 def test_a_budget_overrun_degrades_instead_of_starting_another_call(
