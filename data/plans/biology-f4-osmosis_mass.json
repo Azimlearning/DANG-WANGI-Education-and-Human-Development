@@ -17,7 +17,10 @@
     "Set the final mass to 6 g and then to 14 g and compare the sign of the change."
   ],
   "steps": [],
-  "citation_ids": ["osmo_hypo", "osmo_pct"],
+  "citation_ids": [
+    "osmo_hypo",
+    "osmo_pct"
+  ],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -67,5 +70,22 @@
     ],
     "correct": 1,
     "explanation": "The strip lost mass, so the change is negative: water left the cells by osmosis."
-  }
+  },
+  "hints": [
+    "Think about which way the water moves through the potato cell membrane.",
+    "Did the potato gain or lose mass? Look at the sign of the change.",
+    "Divide the change in mass by the starting mass."
+  ],
+  "apparatus": [
+    {
+      "kind": "balance",
+      "label": "Potato strip",
+      "channels": {
+        "mass": {
+          "source": "final_mass",
+          "full": 14
+        }
+      }
+    }
+  ]
 }

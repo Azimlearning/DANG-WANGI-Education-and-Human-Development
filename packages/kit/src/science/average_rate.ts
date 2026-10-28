@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: {},
   output: { unit: "cm3/s" },
   fn: ({ volume, time }) => (volume as number) / (time as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { volume: 24, time: 60 }, expected: 0.4, tolerance: 1e-12, derivation: "24 cm3 / 60 s = 0.4 cm3 per s" },

@@ -1,0 +1,512 @@
+{
+  "started_at": "2026-10-27T22:56:09+00:00",
+  "approved_usd": 0.76,
+  "exemplars": false,
+  "spent_usd": 0.270992,
+  "projection": {
+    "low": 0.1409,
+    "high": 0.303,
+    "hard_bound": 0.5293
+  },
+  "stopped": null,
+  "questions": [
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 905
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4034,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 13538,
+          "models": [
+            "biology.magnification"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 15
+        }
+      ],
+      "id": "b01",
+      "question": "How much is a cell magnified in my drawing?",
+      "expected_topic": "biology_form4_cell_structure_function",
+      "environment": "Magnification of a cell",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 22.3,
+      "cost_usd": 0.030906,
+      "projected_high_usd": 0.047083,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1575,
+          "tokens_out": 33,
+          "cost_usd": 0.000174,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 860,
+          "tokens_out": 272,
+          "cost_usd": 0.00444,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10571,
+          "tokens_out": 515,
+          "cost_usd": 0.026292,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 937
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4206,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12255,
+          "models": [
+            "biology.photosynthesis_net"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 15
+        }
+      ],
+      "id": "b05",
+      "question": "What is the compensation point of a leaf and how does light intensity affect photosynthesis?",
+      "expected_topic": "biology_form5_leaf_structure_function",
+      "environment": "Leaf compensation point",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 20.1,
+      "cost_usd": 0.032095,
+      "projected_high_usd": 0.049811,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1588,
+          "tokens_out": 44,
+          "cost_usd": 0.0001808,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 867,
+          "tokens_out": 312,
+          "cost_usd": 0.004854,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10610,
+          "tokens_out": 584,
+          "cost_usd": 0.02706,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 759
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4170,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12252,
+          "models": [
+            "biology.photosynthesis_net"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 15
+        }
+      ],
+      "id": "b06",
+      "question": "How does the rate of photosynthesis change as light intensity increases?",
+      "expected_topic": "biology_form5_leaf_structure_function",
+      "environment": "Photosynthesis and light",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 19.9,
+      "cost_usd": 0.031741,
+      "projected_high_usd": 0.049603,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1581,
+          "tokens_out": 45,
+          "cost_usd": 0.00018060000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 860,
+          "tokens_out": 260,
+          "cost_usd": 0.00432,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10825,
+          "tokens_out": 559,
+          "cost_usd": 0.02724,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1057
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 9440,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 1,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 13739,
+          "models": [
+            "chemistry.titration_concentration"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 17
+        }
+      ],
+      "id": "b09",
+      "question": "How do I find the concentration of sodium hydroxide from a titration with hydrochloric acid?",
+      "expected_topic": "chemistry_form4_acids_bases_salts",
+      "environment": "Titrating NaOH with HCl",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 27.9,
+      "cost_usd": 0.04094,
+      "projected_high_usd": 0.057088,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1545,
+          "tokens_out": 12,
+          "cost_usd": 0.0001605,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 863,
+          "tokens_out": 423,
+          "cost_usd": 0.005956,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10742,
+          "tokens_out": 1334,
+          "cost_usd": 0.034824,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 873
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 4403,
+          "attempt": 0,
+          "codes": [
+            "PLAN-016",
+            "PLAN-004"
+          ],
+          "issues": [
+            "PLAN-016 models[0]: chemistry.heat_energy is registered for chemistry_form5_thermochemistry, not for the topic 'chemistry_form4_acids_bases_salts'.",
+            "PLAN-004 models[0].inputs.delta_t: Control 'delta_t' is in C but chemistry.heat_energy needs delta_t in °C."
+          ],
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4632,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12273,
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 14
+        }
+      ],
+      "id": "b11",
+      "question": "How do I calculate the heat released in the neutralisation of an acid by an alkali?",
+      "expected_topic": "chemistry_form5_thermochemistry",
+      "environment": "Heat from neutralisation",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 25.4,
+      "cost_usd": 0.061319,
+      "projected_high_usd": 0.049546,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1587,
+          "tokens_out": 44,
+          "cost_usd": 0.00018070000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 857,
+          "tokens_out": 366,
+          "cost_usd": 0.005374,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10944,
+          "tokens_out": 562,
+          "cost_usd": 0.027508,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 11153,
+          "tokens_out": 595,
+          "cost_usd": 0.028256,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 939
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 8353,
+          "attempt": 0,
+          "codes": [
+            "PLAN-004"
+          ],
+          "issues": [
+            "PLAN-004 models[0].inputs.delta_t: Control 'dt' is in C but chemistry.heat_energy needs delta_t in °C."
+          ],
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "plan",
+          "status": "invalid",
+          "ms": 8601,
+          "attempt": 1,
+          "codes": [
+            "PLAN-001"
+          ],
+          "issues": [
+            "PLAN-001 goal: The plan does not match the schema at goal: String should have at most 240 characters"
+          ]
+        }
+      ],
+      "id": "b12",
+      "question": "How do I use the temperature rise to find the heat of neutralisation?",
+      "expected_topic": "chemistry_form5_thermochemistry",
+      "environment": null,
+      "lane": null,
+      "label": null,
+      "degraded": [
+        "The interactive page could not be planned safely, so you are getting the written answer."
+      ],
+      "errors": [],
+      "seconds": 21.0,
+      "cost_usd": 0.073992,
+      "projected_high_usd": 0.049827,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1536,
+          "tokens_out": 12,
+          "cost_usd": 0.00015960000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 852,
+          "tokens_out": 313,
+          "cost_usd": 0.004834,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10869,
+          "tokens_out": 1263,
+          "cost_usd": 0.034368,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10955,
+          "tokens_out": 1272,
+          "cost_usd": 0.03463,
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

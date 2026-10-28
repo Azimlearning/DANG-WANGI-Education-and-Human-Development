@@ -1,0 +1,176 @@
+{
+  "id": "specific_heat_lab",
+  "title": "Heat: how much energy warms water?",
+  "goal": "Find how the heat needed depends on the mass and on the rise in temperature.",
+  "pattern": "virtual_experiment",
+  "topic": "physics_form4_heat",
+  "experiment_ref": null,
+  "note": "The heat needed is Q = m c delta-theta. For water the specific heat capacity c is 4200 joules for each kilogram and each degree Celsius.",
+  "controls": [
+    {
+      "id": "mass",
+      "label": "Mass of water",
+      "unit": "kg",
+      "min": 0.5,
+      "max": 4,
+      "value": 2,
+      "grid": 7
+    },
+    {
+      "id": "rise",
+      "label": "Rise in temperature",
+      "unit": "°C",
+      "min": 0,
+      "max": 60,
+      "value": 20,
+      "grid": 6
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "heat",
+      "model": "physics.specific_heat",
+      "params": {
+        "specific_heat": 4200
+      },
+      "inputs": {
+        "mass": "mass",
+        "temperature_change": "rise"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Heat needed",
+      "unit": "J",
+      "digits": 0,
+      "source": "heat",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The heat needed rises in a straight line with the rise in temperature.",
+      "x": "rise",
+      "source": "heat",
+      "label": "Heat needed",
+      "unit": "J",
+      "digits": 0
+    }
+  ],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "Mass",
+        "unit": "kg",
+        "source": "mass",
+        "digits": 1
+      },
+      {
+        "label": "Rise in temperature",
+        "unit": "°C",
+        "source": "rise",
+        "digits": 0
+      },
+      {
+        "label": "Heat needed",
+        "unit": "J",
+        "source": "heat",
+        "digits": 0
+      }
+    ]
+  },
+  "experiment": {
+    "aim": "To find how the heat needed depends on the mass and the rise in temperature of water",
+    "hypothesis": "The heat needed is directly proportional to the mass and to the rise in temperature",
+    "independent": "Rise in temperature (°C)",
+    "dependent": "Heat needed (J)",
+    "controlled": [
+      "The substance, water",
+      "The mass of water"
+    ],
+    "apparatus": [
+      "Immersion heater",
+      "Beaker",
+      "Thermometer",
+      "Electronic balance"
+    ]
+  },
+  "sentences": [
+    "Every substance has its own specific heat capacity. Water has a high one, so it needs a lot of heat to warm up and releases a lot as it cools.",
+    "Doubling the mass doubles the heat needed, and so does doubling the rise in temperature."
+  ],
+  "steps": [
+    "Keep the mass at 2, set the rise in temperature to 20, then press Record.",
+    "Set the rise in temperature to 40, then press Record.",
+    "Set the rise in temperature to 60, then press Record.",
+    "Compare the heat needed each time the rise doubles."
+  ],
+  "citation_ids": [
+    "heat_q_mcdt",
+    "heat_c_def"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "If the rise in temperature stays the same and the mass of water doubles, what happens to the heat needed?",
+    "choices": [
+      "It halves",
+      "It doubles",
+      "It stays the same"
+    ],
+    "reveal": "Set the mass to 1, then to 2, with the rise at 20, and compare the heat needed."
+  },
+  "concept_check": {
+    "question": "Why does a kilogram of water need more heat than a kilogram of aluminium for the same rise in temperature?",
+    "options": [
+      "Water has a higher specific heat capacity",
+      "Water has a lower specific heat capacity",
+      "Water is heavier than aluminium"
+    ],
+    "correct": 0,
+    "explanation": "The heat needed is mass times specific heat capacity times the rise in temperature. For the same mass and rise, the larger specific heat capacity needs more heat."
+  },
+  "hints": [
+    "A bigger mass needs more heat for the same rise.",
+    "Heat equals mass times specific heat capacity times the rise."
+  ],
+  "apparatus": [
+    {
+      "kind": "beaker",
+      "label": "Water",
+      "channels": {
+        "level": {
+          "source": "mass",
+          "full": 4
+        }
+      },
+      "drop": {
+        "source": "mass",
+        "item": "Cup of water"
+      }
+    },
+    {
+      "kind": "thermometer",
+      "label": "Thermometer",
+      "channels": {
+        "temperature": {
+          "source": "rise",
+          "full": 60
+        }
+      }
+    },
+    {
+      "kind": "burner",
+      "label": "Heat supplied",
+      "channels": {
+        "heat": {
+          "source": "heat",
+          "full": 1010000
+        }
+      }
+    }
+  ]
+}

@@ -13,6 +13,7 @@
 import { event } from "./bridge";
 import { attr, contains, effectiveOpacity, hasAttribute, hitAt, layoutAvailable, parentOf, rectOf, style, tagOf } from "./dom";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { controls, markOwnStyle, own, ownAttr, registerAction, widgets } from "./provenance";
 import { slider } from "./slider";
@@ -30,7 +31,6 @@ export interface MassHangerOptions {
 
 export const MAX_MASSES = 8;
 const LETTERS = "ABCDEFGH";
-const WORDS = ["no masses", "one mass", "two masses", "three masses", "four masses", "five masses", "six masses", "seven masses", "eight masses"];
 const DRAG_THRESHOLD = 6;
 
 function div(className: string): HTMLDivElement {
@@ -58,6 +58,8 @@ export function massHanger(env: Environment, options: MassHangerOptions): Observ
   const value = slider(env, { id, label: options.label, unit: options.unit, min, max, value: options.value, grid, snap: true });
   const record = controls.find((c) => c.id === id);
   if (!record) throw new Error(`massHanger ${id}: its control was not registered`);
+  // The masses are the control the student sees; the range input stays on the page (the sweep, the keyboard and the screen reader use it) but is drawn only when it has focus.
+  record.el?.parentElement?.classList.add("syn-control-quiet");
   const countOf = (v: number) => Math.max(0, Math.min(grid, Math.round((v - min) / step)));
 
   // Which masses are on the hanger. The control's value is derived from how many.
@@ -66,17 +68,17 @@ export function massHanger(env: Environment, options: MassHangerOptions): Observ
 
   const surface = div("syn-masses");
   surface.setAttribute("role", "group");
-  const groupLabel = `${String(options.label)}: masses to hang`;
+  const groupLabel = kt("massesToHang", String(options.label));
   surface.setAttribute("aria-label", groupLabel);
   ownAttr(surface, "aria-label", () => groupLabel);
   const tray = div("syn-tray");
   tray.setAttribute("role", "group");
-  tray.setAttribute("aria-label", "Masses in the tray");
+  tray.setAttribute("aria-label", kt("trayLabel"));
   tray.setAttribute("data-synapse-tray", id);
   const hanger = div("syn-hanger");
   hanger.setAttribute("role", "group");
   hanger.setAttribute("data-synapse-dropzone", id);
-  const hangerName = () => `Hanger, holding ${WORDS[hung.size]}`;
+  const hangerName = () => kt("hangerHolding", kt("massCount", hung.size));
   ownAttr(hanger, "aria-label", hangerName);
   // A screen reader hears the hanger's contents change here, since a label that changes on a button is not announced.
   const status = own(document.createElement("span"), () => hangerName());
@@ -84,11 +86,11 @@ export function massHanger(env: Environment, options: MassHangerOptions): Observ
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
   status.textContent = hangerName();
-  const trayCap = caption("Tray");
-  const hangerCap = caption("Hanger");
+  const trayCap = caption(kt("tray"));
+  const hangerCap = caption(kt("hanger"));
 
   const tokens: HTMLButtonElement[] = [];
-  const nameOf = (i: number) => `Mass ${LETTERS[i]}, ${hung.has(i) ? "on the hanger" : "in the tray"}. Press Enter to move it.`;
+  const nameOf = (i: number) => kt("massName", LETTERS[i] as string, hung.has(i));
   for (let i = 0; i < grid; i++) {
     const b = document.createElement("button");
     b.type = "button";
@@ -248,8 +250,7 @@ export function massHanger(env: Environment, options: MassHangerOptions): Observ
 
   surface.append(tray, hanger, status);
   render();
-  const wrap = record.el.closest(".syn-control");
-  if (wrap?.parentElement) wrap.parentElement.insertBefore(surface, wrap);
-  else env.controls.appendChild(surface);
+  // The tray and the hanger belong to the bench (V3 draws them under the spring), not to the panel of controls; the stylesheet puts them last in the stage.
+  env.stage.appendChild(surface);
   return value;
 }

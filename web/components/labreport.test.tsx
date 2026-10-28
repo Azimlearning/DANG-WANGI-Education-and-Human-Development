@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { applyLabPart, EMPTY_REPORT, hasReport, NO_WRITING, reportFileName, reportText, type LabReportData } from "../lib/labreport";
 import { parseBridgeMessage } from "../lib/sandbox";
 import { LabReport } from "./LabReport";
@@ -76,6 +76,16 @@ describe("LabReport", () => {
     render(<LabReport title="<img src=x onerror=alert(1)>" data={applyLabPart(EMPTY_REPORT, { ...steps, steps: ["<script>alert(1)</script>"] })} />);
     expect(document.querySelector("img")).toBeNull();
     expect(document.querySelector("script")).toBeNull();
+  });
+  it("offers Print or save as PDF through the browser's own print dialog, and prints the writing as plain text", () => {
+    const print = vi.spyOn(window, "print").mockImplementation(() => {});
+    render(<LabReport title="Hooke's law" data={full()} />);
+    fireEvent.change(screen.getByLabelText("Conclusion"), { target: { value: "It is proportional." } });
+    fireEvent.click(screen.getByRole("button", { name: "Print or save as PDF" }));
+    expect(print).toHaveBeenCalledTimes(1);
+    const writing = screen.getAllByTestId("print-writing").map((n) => n.textContent);
+    expect(writing).toEqual(["(not written yet)", "(not written yet)", "It is proportional."]); // what is not written is said so, never invented
+    print.mockRestore();
   });
   it("has controls of at least the 44 px button class", () => {
     render(<LabReport title="t" data={full()} />);

@@ -109,6 +109,12 @@ class SqliteEnvironmentStore:
                 "CREATE TABLE IF NOT EXISTS library_topics (topic TEXT NOT NULL, env_id TEXT NOT NULL, plan_id TEXT NOT NULL, title TEXT NOT NULL, "
                 "goal TEXT NOT NULL, note TEXT NOT NULL, indexed_at TEXT NOT NULL, PRIMARY KEY (topic, env_id))"
             )
+            # Translations (W12, D-62): which verified Environment is the Bahasa Melayu of which, and whether a fluent person has reviewed it. A decision ABOUT stored rows,
+            # like the tables above; both Environments stay in `environments` and each goes through the gate on its own.
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS translations (of_env_id TEXT NOT NULL, lang TEXT NOT NULL, env_id TEXT NOT NULL, status TEXT NOT NULL, reviewer TEXT, "
+                "reviewed_on TEXT, linked_at TEXT NOT NULL, PRIMARY KEY (of_env_id, lang))"
+            )
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self._path)
@@ -366,6 +372,42 @@ class SqliteEnvironmentStore:
             ).fetchall()
         return [{"env_id": r[0], "plan_id": r[1], "title": r[2], "goal": r[3], "note": r[4]} for r in rows]
 
+    def link_translation(self, of_env_id: str, env_id: str, *, lang: str, status: str, reviewer: str | None, reviewed_on: str | None) -> None:
+        """Say that `env_id` is the `lang` translation of `of_env_id`. Linking again updates the review status and the translation (a new Kit gives a new id)."""
+        if status not in ("draft", "reviewed"):
+            raise ValueError("a translation is a draft or reviewed")
+        if status == "reviewed" and not (reviewer and reviewed_on):
+            raise ValueError("a reviewed translation names its reviewer and the date")
+        with closing(self._connect()) as db, db:
+            db.execute(
+                "INSERT OR REPLACE INTO translations (of_env_id, lang, env_id, status, reviewer, reviewed_on, linked_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (of_env_id, lang, env_id, status, reviewer, reviewed_on, datetime.now(UTC).isoformat()),
+            )
+
+    def translation_status(self, env_id: str) -> str | None:
+        """`draft` or `reviewed` when `env_id` is the translation of another Environment, else None."""
+        with closing(self._connect()) as db:
+            row = db.execute("SELECT status FROM translations WHERE env_id = ?", (env_id,)).fetchone()
+        return None if row is None else str(row[0])
+
+    def translations_of(self, of_env_id: str) -> list[dict]:
+        """The translations of one Environment: language, id, review status, reviewer and date. Only translations whose own row is still active."""
+        with closing(self._connect()) as db:
+            rows = db.execute(
+                "SELECT lang, env_id, status, reviewer, reviewed_on FROM translations WHERE of_env_id = ? ORDER BY lang", (of_env_id,)
+            ).fetchall()
+        return [
+            {"lang": r[0], "envId": r[1], "status": r[2], "reviewer": r[3], "reviewedOn": r[4]}
+            for r in rows
+            if self.status(r[1]) == "active"
+        ]
+
+    def all_topic_entries(self) -> list[dict]:
+        """Every indexed Environment of every topic, in a stable order (for matching a question by name when the topic head is unsure)."""
+        with closing(self._connect()) as db:
+            rows = db.execute("SELECT env_id, plan_id, title, goal, note, topic FROM library_topics ORDER BY topic, plan_id, env_id").fetchall()
+        return [{"env_id": r[0], "plan_id": r[1], "title": r[2], "goal": r[3], "note": r[4], "topic": r[5]} for r in rows]
+
     def library(self, current_kit_sha: dict[str, str | None]) -> list[dict]:
         """One card per verified Environment, newest first. `current_kit_sha` maps a Kit version to the sha256 of its CURRENT build (None when not built);
         an Environment made with other bytes is `stale` and is not delivered until it is verified again."""
@@ -375,6 +417,7 @@ class SqliteEnvironmentStore:
                 "COALESCE(l.status, 'active'), (SELECT COUNT(*) FROM flags f WHERE f.env_id = e.env_id) "
                 "FROM environments e LEFT JOIN lifecycle l ON l.env_id = e.env_id WHERE e.state = 'verified' ORDER BY e.created_at DESC"
             ).fetchall()
+            translated = {str(env_id): str(of) for env_id, of in db.execute("SELECT env_id, of_env_id FROM translations")}
         cards = []
         for env_id, title, lane, label, kit_version, kit_sha, checked, status, flags in rows:
             data = json.loads(checked)
@@ -389,6 +432,7 @@ class SqliteEnvironmentStore:
                     "stale": current_kit_sha.get(kit_version) != kit_sha,
                     "flags": int(flags),
                     "models": [m["id"] for m in data.get("models", [])],
+                    "translationOf": translated.get(env_id),
                 }
             )
         return cards

@@ -1,0 +1,111 @@
+{
+  "id": "cell_voltage_lab",
+  "title": "The voltage of a chemical cell",
+  "goal": "See how the voltage of a voltaic cell depends on the standard electrode potentials of its two half-cells.",
+  "pattern": "simulation",
+  "topic": "chemistry_form5_electrochemistry_and_redox",
+  "experiment_ref": null,
+  "note": "A voltaic cell joins two half-cells. The half-cell with the more positive electrode potential is the positive terminal, and the cell voltage is its potential minus the potential of the negative terminal.",
+  "controls": [
+    {
+      "id": "positive",
+      "label": "Electrode potential of the positive half-cell",
+      "unit": "V",
+      "min": -0.26,
+      "max": 0.84,
+      "value": 0.34,
+      "grid": 11
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "cell",
+      "model": "chemistry.cell_voltage",
+      "params": {
+        "anode_potential": -0.76
+      },
+      "inputs": {
+        "cathode_potential": "positive"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Cell voltage",
+      "unit": "V",
+      "digits": 2,
+      "source": "cell",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The cell voltage rises in a straight line as the positive half-cell's potential rises.",
+      "x": "positive",
+      "source": "cell",
+      "label": "Cell voltage",
+      "unit": "V",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "The negative half-cell is a zinc electrode, the metal with the more negative electrode potential.",
+    "The cell voltage is the electrode potential of the positive terminal minus that of the negative terminal."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "cell_formula",
+    "cell_example"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "A zinc half-cell is joined to a half-cell with a more positive electrode potential. What happens to the cell voltage as the difference between the two potentials grows?",
+    "choices": [
+      "It rises",
+      "It stays the same",
+      "It falls"
+    ],
+    "reveal": "Raise the electrode potential of the positive half-cell and watch the cell voltage."
+  },
+  "concept_check": {
+    "question": "How is the standard cell voltage of a voltaic cell found?",
+    "options": [
+      "Add the two standard electrode potentials",
+      "Subtract the potential of the anode from the potential of the cathode",
+      "Subtract the potential of the cathode from the potential of the anode"
+    ],
+    "correct": 1,
+    "explanation": "The cell voltage is the electrode potential of the cathode, the positive terminal, minus the electrode potential of the anode, the negative terminal."
+  },
+  "hints": [
+    "Each half-cell has its own standard electrode potential.",
+    "Which half-cell has the more positive potential? That is the positive terminal.",
+    "Subtract the potential of the negative terminal from the potential of the positive terminal."
+  ],
+  "apparatus": [
+    {
+      "kind": "gauge",
+      "label": "Voltmeter",
+      "channels": {
+        "value": {
+          "source": "cell",
+          "full": 1.6
+        }
+      }
+    },
+    {
+      "kind": "bulb",
+      "label": "Lamp on the cell",
+      "channels": {
+        "brightness": {
+          "source": "cell",
+          "full": 1.6
+        }
+      }
+    }
+  ]
+}

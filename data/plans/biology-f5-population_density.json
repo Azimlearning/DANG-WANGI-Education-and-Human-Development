@@ -1,0 +1,102 @@
+{
+  "id": "quadrat_density_lab",
+  "title": "Estimating a population by quadrat sampling",
+  "goal": "See how the population density of a plant species is found from the plants counted in quadrats.",
+  "pattern": "simulation",
+  "topic": "biology_form5_dynamic_ecosystem",
+  "experiment_ref": null,
+  "note": "Quadrats are placed at random in a field and the plants of one species are counted in each. The population density is the total count divided by the total area of the quadrats.",
+  "controls": [
+    {
+      "id": "count",
+      "label": "Total plants counted in all the quadrats",
+      "unit": "individuals",
+      "min": 0,
+      "max": 100,
+      "value": 45,
+      "grid": 20
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "density",
+      "model": "biology.population_density",
+      "params": {
+        "quadrats": 10,
+        "quadrat_area": 1
+      },
+      "inputs": {
+        "total_count": "count"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Population density",
+      "unit": "per m2",
+      "digits": 1,
+      "source": "density",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The population density rises in a straight line as more plants are counted.",
+      "x": "count",
+      "source": "density",
+      "label": "Population density",
+      "unit": "per m2",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Ten quadrats, each one square metre, are placed at random in the school field.",
+    "The density is the total number of plants counted divided by the total area of all the quadrats."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "pop_density_def",
+    "pop_density_calc"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "The same quadrats are used in two fields, and more plants are counted in the first field. Which field has the higher population density?",
+    "choices": [
+      "The first field",
+      "The second field",
+      "They have the same density"
+    ],
+    "reveal": "Raise the number of plants counted and watch the population density."
+  },
+  "concept_check": {
+    "question": "How is the population density of a species estimated by quadrat sampling?",
+    "options": [
+      "The total number of individuals divided by the total area of the quadrats",
+      "The number of quadrats divided by the number of individuals",
+      "The area of the field divided by the number of quadrats"
+    ],
+    "correct": 0,
+    "explanation": "Density is the average number of individuals per unit area, so the count in all the quadrats is divided by the total area of those quadrats."
+  },
+  "hints": [
+    "A quadrat is a small sample of the whole field.",
+    "Which two things decide the total area that was sampled?",
+    "Divide the total count by the total area sampled."
+  ],
+  "apparatus": [
+    {
+      "kind": "field",
+      "label": "School field",
+      "channels": {
+        "density": {
+          "source": "count",
+          "full": 100
+        }
+      }
+    }
+  ]
+}

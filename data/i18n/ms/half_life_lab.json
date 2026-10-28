@@ -1,0 +1,32 @@
+{
+  "plan": "half_life_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Separuh hayat: bagaimana sampel radioaktif mereput",
+    "/goal": "Lihat berapa banyak sampel radioaktif yang tinggal selepas setiap separuh hayat.",
+    "/note": "Pada setiap separuh hayat, separuh daripada nukleus radioaktif yang tinggal mereput. Sampel di sini bermula pada 480 pereputan sesaat dan mempunyai separuh hayat 6 minit, jadi kawalan masa bergerak dalam separuh hayat yang bulat.",
+    "/controls/0/label": "Masa",
+    "/readouts/0/label": "Aktiviti yang tinggal",
+    "/graphs/0/title": "Aktiviti menjadi separuh pada setiap separuh hayat, jadi lengkung menurun dengan curam kemudian mendatar.",
+    "/graphs/0/label": "Aktiviti yang tinggal",
+    "/sentences/0": "Selepas satu separuh hayat, separuh sampel tinggal, selepas dua separuh hayat suku, selepas tiga satu perlapan, dan seterusnya.",
+    "/sentences/1": "Setiap langkah kawalan masa ialah satu separuh hayat.",
+    "/hints/0": "Separuh daripada sampel mereput dalam setiap separuh hayat.",
+    "/hints/1": "Berapa banyak yang tinggal selepas satu separuh hayat? Dan selepas dua?",
+    "/hints/2": "Teruskan membahagi dua jumlah itu sekali bagi setiap separuh hayat yang telah berlalu.",
+    "/predict/prompt": "Aktiviti bermula pada 480 sesaat. Berapakah ia selepas dua separuh hayat?",
+    "/predict/choices/0": "Separuh daripada aktiviti awal",
+    "/predict/choices/1": "Suku daripada aktiviti awal",
+    "/predict/choices/2": "Tiada langsung",
+    "/predict/reveal": "Gerakkan kawalan masa ke 12 minit, iaitu dua separuh hayat, dan baca aktivitinya.",
+    "/concept_check/question": "Sebuah sampel mempunyai separuh hayat 6 minit. Berapa banyak yang tinggal selepas 12 minit?",
+    "/concept_check/options/0": "Separuhnya",
+    "/concept_check/options/1": "Suku daripadanya",
+    "/concept_check/options/2": "Tiada langsung",
+    "/concept_check/explanation": "12 minit ialah dua separuh hayat. Separuh tinggal selepas yang pertama dan separuh daripada itu, iaitu suku, selepas yang kedua.",
+    "/apparatus/0/label": "Sampel radioaktif"
+  }
+}

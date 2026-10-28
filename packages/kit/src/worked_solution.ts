@@ -2,6 +2,7 @@
 // sentence: a step may use only slider values, grid positions, declared constants and model settings, never a computed result typed in.
 
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import { copy, own, registerAction } from "./provenance";
 
 export function workedSolution(env: Environment, options: { steps: string[] }): HTMLElement {
@@ -9,7 +10,7 @@ export function workedSolution(env: Environment, options: { steps: string[] }): 
   if (steps.length < 1 || steps.length > 6) throw new RangeError("workedSolution: 1 to 6 steps");
   const wrap = document.createElement("section");
   wrap.className = "syn-card";
-  wrap.setAttribute("aria-label", "Worked solution");
+  wrap.setAttribute("aria-label", kt("workedTitle"));
   const list = document.createElement("ol");
   list.className = "syn-steps";
   list.hidden = true;
@@ -19,7 +20,7 @@ export function workedSolution(env: Environment, options: { steps: string[] }): 
     copy.push(text);
     list.appendChild(li);
   }
-  const label = "Show the worked solution";
+  const label = kt("showWorked");
   const button = own(document.createElement("button"), () => label);
   button.type = "button";
   button.className = "syn-btn";
@@ -31,6 +32,6 @@ export function workedSolution(env: Environment, options: { steps: string[] }): 
     button.disabled = true;
   });
   wrap.append(button, list);
-  env.stage.appendChild(wrap);
+  env.extras.appendChild(wrap);
   return wrap;
 }

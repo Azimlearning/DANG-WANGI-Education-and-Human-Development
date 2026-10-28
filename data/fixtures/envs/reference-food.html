@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The energy value of a food</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "The energy value of a food", note: "A food sample is burnt under a tube of water. The heat it releases warms the water, and the energy value is that heat divided by the mass of food, in kilojoules per gram.", kicker: "Interactive biology lab", tryThis: "See how the energy value of a food is found from the warming of water by the burning food." });
+  Synapse.predictCard(env, {"prompt": "Two food samples of the same mass are burnt under the same amount of water. The water warms more with the first sample. Which sample has the higher energy value?", "choices": ["The first sample", "The second sample", "They have the same energy value"], "reveal": "Raise the temperature rise of the water while the mass of the food stays the same, and watch the energy value."});
+  var c_rise = Synapse.slider(env, {"id": "rise", "label": "Rise in water temperature", "unit": "°C", "min": 5.0, "max": 60.0, "value": 30.0, "grid": 11});
+  var c_food = Synapse.slider(env, {"id": "food", "label": "Mass of food burnt", "unit": "g", "min": 0.2, "max": 1.0, "value": 0.5, "grid": 8});
+  
+  var m_energy = Synapse.foodEnergyValue({ water_mass: 20.0, food_mass: c_food, temperature_rise: c_rise });
+  Synapse.readout(env, { label: "Energy value of the food", unit: "kJ/g", value: m_energy, digits: 2 });
+  
+  Synapse.graph(env, { title: "The energy value rises in a straight line as the water becomes warmer.", x: c_rise, y: m_energy, yLabel: "Energy value", yUnit: "kJ/g", digits: 2 });
+  
+  Synapse.text(env, "The tube holds 20 g of water, and all of the heat from the burning food is taken to reach it.");
+  Synapse.text(env, "The energy value is the heat gained by the water divided by the mass of the food.");
+  Synapse.hintLadder(env, { hints: ["The heat from the burning food warms the water.", "Which two numbers decide how much heat the water gained?", "Divide the heat gained by the mass of food to get the energy for each gram."] });
+  Synapse.conceptCheck(env, {"question": "The same heat reaches the water from two food samples, but the first sample has a larger mass. Which food has the higher energy value per gram?", "options": ["The first sample, the heavier one", "The second sample, the lighter one", "They are equal"], "correct": 1, "explanation": "The energy value is the energy released per gram of food. The same heat from less food means more energy in each gram."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

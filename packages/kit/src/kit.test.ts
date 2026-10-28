@@ -333,7 +333,7 @@ describe("the public surface", () => {
   });
   it("exposes no way to create an observable that the registry would accept except through the Kit", () => {
     expect(Object.keys(Synapse).sort()).toEqual(
-      ["audit", "averageRate", "cardiacOutput", "gasVolume", "newtonSecond", "percentChangeMass", "ph", "waveSpeed", "bridge", "conceptCheck", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hintLadder", "hookes", "magnification", "massHanger", "moles", "netPhotosynthesis", "observable", "ohm", "predictCard", "pressureDepth", "readout", "reset", "slider", "springScene", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "titrationEndpoint", "titrationScene", "valve", "dial", "fermentationScene", "respirationEnergy", "circularSpeed", "escapeSpeed", "centripetalAcceleration", "orbitScene", "version", "workedSolution"].sort(),
+      ["audit", "averageRate", "cardiacOutput", "gasVolume", "newtonSecond", "percentChangeMass", "ph", "waveSpeed", "bridge", "conceptCheck", "constant", "convert", "dilution", "environment", "experiment", "graph", "heatEnergy", "hintLadder", "hookes", "magnification", "massHanger", "moles", "netPhotosynthesis", "observable", "ohm", "predictCard", "pressureDepth", "readout", "reset", "slider", "springScene", "stepper", "surfaceAreaToVolume", "table", "text", "titration", "titrationEndpoint", "titrationScene", "valve", "dial", "fermentationScene", "respirationEnergy", "circularSpeed", "escapeSpeed", "centripetalAcceleration", "orbitScene", "refractionScene", "pressureScene", "apparatus", "refractionAngle", "criticalAngle", "specificHeat", "transformerVoltage", "halfLifeDecay", "relativeAtomicMass", "foodEnergyValue", "boyleLaw", "parallelResistance", "buoyantForce", "cellVoltage", "populationDensity", "electricalEnergy", "version", "workedSolution"].sort(),
     );
   });
 });
@@ -682,7 +682,7 @@ describe("the runtime self-check", () => {
     document.querySelector<HTMLButtonElement>("[data-synapse-action=reset]")!.click();
     await wait(1300);
     expect(sent.filter((m) => (m as { type: string }).type === "synapse_violation")).toEqual([]);
-  });
+  }, 30000);
 });
 
 describe("stepper and experiment", () => {

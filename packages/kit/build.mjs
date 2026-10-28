@@ -62,10 +62,10 @@ if (lock[version] !== bundleSha256) {
 const tmp = resolve(outdir, ".manifest.mjs");
 await build({ entryPoints: [resolve(here, "src/manifest.ts")], outfile: tmp, bundle: true, format: "esm", target: "es2020" });
 // A bare absolute path is not a valid import specifier on Windows ("c:" reads as a URL scheme), so go through a file URL.
-const { manifestEntries } = await import(pathToFileURL(tmp).href + "?t=" + Date.now());
+const { manifestEntries, APPARATUS } = await import(pathToFileURL(tmp).href + "?t=" + Date.now());
 rmSync(tmp);
 writeFileSync(
   resolve(outdir, "manifest.json"),
-  JSON.stringify({ version, bundle: "core.js", bundleSha256, components: manifestEntries }, null, 2) + "\n",
+  JSON.stringify({ version, bundle: "core.js", bundleSha256, components: manifestEntries, apparatus: APPARATUS }, null, 2) + "\n",
 );
 console.log(`kit ${version}: core.js ${bundle.length} bytes sha256 ${bundleSha256.slice(0, 12)}, ${manifestEntries.length} manifest entries -> ${outdir}`);

@@ -1,0 +1,121 @@
+{
+  "id": "electrical_energy_lab",
+  "title": "How much electrical energy does a lamp use?",
+  "goal": "See how the electrical energy used by a lamp depends on its current and on how long it is lit.",
+  "pattern": "simulation",
+  "topic": "physics_form5_electricity",
+  "experiment_ref": null,
+  "note": "The electrical energy a lamp uses is the potential difference across it times the current times the time it is lit.",
+  "controls": [
+    {
+      "id": "current",
+      "label": "Current",
+      "unit": "A",
+      "min": 0.1,
+      "max": 1.5,
+      "value": 0.7,
+      "grid": 14
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "unit": "s",
+      "min": 10,
+      "max": 120,
+      "value": 60,
+      "grid": 11
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "energy",
+      "model": "physics.electrical_energy",
+      "params": {
+        "voltage": 6
+      },
+      "inputs": {
+        "current": "current",
+        "time": "time"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Electrical energy",
+      "unit": "J",
+      "digits": 1,
+      "source": "energy",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The electrical energy rises in a straight line as the time increases.",
+      "x": "time",
+      "source": "energy",
+      "label": "Electrical energy",
+      "unit": "J",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "The lamp is supplied by a 6 V battery.",
+    "The energy used is the potential difference times the current times the time."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "energy_vit",
+    "energy_example"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "A lamp is lit for twice as long on the same battery with the same current. What happens to the electrical energy it uses?",
+    "choices": [
+      "It doubles",
+      "It stays the same",
+      "It halves"
+    ],
+    "reveal": "Make the time longer and watch the electrical energy."
+  },
+  "concept_check": {
+    "question": "Which formula gives the electrical energy used by a lamp?",
+    "options": [
+      "E = V I t",
+      "E = V / (I t)",
+      "E = I / (V t)"
+    ],
+    "correct": 0,
+    "explanation": "Energy is the potential difference times the charge, and the charge is the current times the time, so E = V I t."
+  },
+  "hints": [
+    "The lamp changes electrical energy into light and heat.",
+    "Which two controls change the energy used?",
+    "Energy equals the potential difference times the current times the time."
+  ],
+  "apparatus": [
+    {
+      "kind": "circuit",
+      "label": "Lamp circuit",
+      "channels": {
+        "current": {
+          "source": "current",
+          "full": 1.5
+        }
+      }
+    },
+    {
+      "kind": "bulb",
+      "label": "Energy used",
+      "channels": {
+        "brightness": {
+          "source": "energy",
+          "full": 1080
+        }
+      }
+    }
+  ]
+}

@@ -252,6 +252,143 @@ def gas_volume(moles: float, molar_volume: float) -> float:
     return moles * molar_volume
 
 
+def refraction_angle(incidence_angle: float, refractive_index: float) -> float:
+    """Angle of refraction in degrees for a ray meeting a medium of refractive index `n` from air at `incidence_angle` degrees (below 90): sin r = sin i / n."""
+    _finite(incidence_angle=incidence_angle, refractive_index=refractive_index)
+    if incidence_angle < 0 or incidence_angle >= 90:
+        raise ValueError("incidence_angle must be 0 degrees or more and below 90 degrees")
+    if refractive_index < 1:
+        raise ValueError("refractive_index must be 1 or more")
+    sin_r = math.sin(math.radians(incidence_angle)) / refractive_index
+    return math.degrees(math.asin(sin_r))
+
+
+def critical_angle(refractive_index: float) -> float:
+    """Critical angle in degrees at the boundary between a medium of refractive index `n` and air: sin c = 1 / n."""
+    _finite(refractive_index=refractive_index)
+    if refractive_index < 1:
+        raise ValueError("refractive_index must be 1 or more")
+    return math.degrees(math.asin(1.0 / refractive_index))
+
+
+def specific_heat(mass: float, temperature_change: float, specific_heat: float) -> float:
+    """Heat in joules to raise `mass` kg of a substance of specific heat capacity `specific_heat` (J/kg degC) by `temperature_change` degC: Q = m c dT."""
+    _finite(mass=mass, temperature_change=temperature_change, specific_heat=specific_heat)
+    if mass <= 0:
+        raise ValueError("mass must be above 0 kg")
+    if temperature_change < 0:
+        raise ValueError("temperature_change must be 0 degrees C or more")
+    if specific_heat <= 0:
+        raise ValueError("specific_heat must be above 0 J/kg degC")
+    return mass * specific_heat * temperature_change
+
+
+def transformer_voltage(primary_turns: float, secondary_turns: float, primary_voltage: float) -> float:
+    """Output voltage (V) of an ideal transformer with the given turns and input voltage: Vs / Vp = Ns / Np."""
+    _finite(primary_turns=primary_turns, secondary_turns=secondary_turns, primary_voltage=primary_voltage)
+    if primary_turns <= 0 or secondary_turns <= 0:
+        raise ValueError("the numbers of turns must be above 0")
+    if primary_voltage <= 0:
+        raise ValueError("primary_voltage must be above 0 V")
+    return primary_voltage * (secondary_turns / primary_turns)
+
+
+def half_life_decay(time: float, half_life: float, initial: float) -> float:
+    """What is left of a sample of `initial` after `time` when its half-life is `half_life` (same unit): N = N0 / 2^(t / T)."""
+    _finite(time=time, half_life=half_life, initial=initial)
+    if time < 0:
+        raise ValueError("time must be 0 or more")
+    if half_life <= 0:
+        raise ValueError("half_life must be above 0")
+    if initial <= 0:
+        raise ValueError("initial must be above 0")
+    return initial / 2.0 ** (time / half_life)
+
+
+def relative_atomic_mass(abundance_1: float, mass_1: float, mass_2: float) -> float:
+    """Relative atomic mass of an element with two isotopes: the abundance-weighted average of their masses (abundance_1 in percent)."""
+    _finite(abundance_1=abundance_1, mass_1=mass_1, mass_2=mass_2)
+    if not 0 <= abundance_1 <= 100:
+        raise ValueError("abundance_1 must be from 0 to 100 percent")
+    if mass_1 <= 0 or mass_2 <= 0:
+        raise ValueError("the isotope masses must be above 0")
+    share = abundance_1 / 100.0
+    return share * mass_1 + (1.0 - share) * mass_2
+
+
+def food_energy_value(temperature_rise: float, food_mass: float, water_mass: float) -> float:
+    """Energy value (kJ/g) of a food that warmed `water_mass` g of water by `temperature_rise` degrees C while `food_mass` g of it burnt."""
+    _finite(temperature_rise=temperature_rise, food_mass=food_mass, water_mass=water_mass)
+    if temperature_rise < 0:
+        raise ValueError("temperature_rise must be 0 or more")
+    if food_mass <= 0 or water_mass <= 0:
+        raise ValueError("the masses must be above 0 g")
+    joules_into_water = water_mass * 4.2 * temperature_rise
+    return joules_into_water / 1000.0 / food_mass
+
+
+def boyle_law(final_volume: float, initial_pressure: float, initial_volume: float) -> float:
+    """Pressure (kPa) of a fixed mass of gas at constant temperature after its volume changes: P1 V1 = P2 V2."""
+    _finite(final_volume=final_volume, initial_pressure=initial_pressure, initial_volume=initial_volume)
+    if final_volume <= 0 or initial_volume <= 0:
+        raise ValueError("the volumes must be above 0 cm3")
+    if initial_pressure <= 0:
+        raise ValueError("initial_pressure must be above 0 kPa")
+    constant = initial_pressure * initial_volume
+    return constant / final_volume
+
+
+def parallel_resistance(resistance_1: float, resistance_2: float) -> float:
+    """Effective resistance (ohm) of two resistors in parallel: 1 / R = 1 / R1 + 1 / R2."""
+    _finite(resistance_1=resistance_1, resistance_2=resistance_2)
+    if resistance_1 <= 0 or resistance_2 <= 0:
+        raise ValueError("the resistances must be above 0 ohm")
+    return 1.0 / (1.0 / resistance_1 + 1.0 / resistance_2)
+
+
+def buoyant_force(volume: float, density: float, g: float) -> float:
+    """Buoyant force (N): the weight of the fluid displaced, mass = density x volume, weight = mass x g."""
+    _finite(volume=volume, density=density, g=g)
+    if volume < 0:
+        raise ValueError("volume must be 0 m3 or more")
+    if density <= 0 or g <= 0:
+        raise ValueError("density and g must be above 0")
+    displaced_mass = density * volume
+    return displaced_mass * g
+
+
+def cell_voltage(cathode_potential: float, anode_potential: float) -> float:
+    """Standard cell voltage (V) of a voltaic cell: the positive terminal's electrode potential minus the negative terminal's."""
+    _finite(cathode_potential=cathode_potential, anode_potential=anode_potential)
+    for name, v in (("cathode_potential", cathode_potential), ("anode_potential", anode_potential)):
+        if not -3.1 <= v <= 3.0:
+            raise ValueError(f"{name} must be a standard electrode potential from -3.1 V to +3.0 V")
+    positive_terminal, negative_terminal = cathode_potential, anode_potential
+    return positive_terminal - negative_terminal
+
+
+def population_density(total_count: float, quadrats: float, quadrat_area: float) -> float:
+    """Population density (individuals per m2) from a quadrat sample: the count over the total area sampled."""
+    _finite(total_count=total_count, quadrats=quadrats, quadrat_area=quadrat_area)
+    if total_count < 0:
+        raise ValueError("total_count must be 0 or more")
+    if quadrats <= 0 or quadrat_area <= 0:
+        raise ValueError("the number of quadrats and the quadrat area must be above 0")
+    total_area = quadrats * quadrat_area
+    return total_count / total_area
+
+
+def electrical_energy(current: float, time: float, voltage: float) -> float:
+    """Electrical energy (J) used: the charge that passed (current x time) times the potential difference."""
+    _finite(current=current, time=time, voltage=voltage)
+    if current < 0 or time < 0:
+        raise ValueError("current and time must be 0 or more")
+    if voltage <= 0:
+        raise ValueError("voltage must be above 0 V")
+    charge = current * time
+    return charge * voltage
+
+
 REFERENCES: dict[str, Reference] = {
     "mechanics.hookes": Reference(hookes, ("load",), ("k",), "m", {"load": "N"}),
     "electricity.ohm": Reference(ohm, ("voltage", "resistance"), (), "A", {"voltage": "V", "resistance": "ohm"}),
@@ -289,6 +426,29 @@ REFERENCES: dict[str, Reference] = {
     ),
     "chemistry.ph_from_h": Reference(ph_from_h, ("h_conc",), (), "pH", {"h_conc": "mol/dm3"}),
     "chemistry.gas_volume": Reference(gas_volume, ("moles",), ("molar_volume",), "dm3", {"moles": "mol"}),
+    "physics.refraction_angle": Reference(
+        refraction_angle, ("incidence_angle", "refractive_index"), (), "deg", {"incidence_angle": "deg", "refractive_index": "ratio"}
+    ),
+    "physics.critical_angle": Reference(critical_angle, ("refractive_index",), (), "deg", {"refractive_index": "ratio"}),
+    "physics.specific_heat": Reference(
+        specific_heat, ("mass", "temperature_change"), ("specific_heat",), "J", {"mass": "kg", "temperature_change": "\u00b0C"}
+    ),
+    "physics.transformer_voltage": Reference(
+        transformer_voltage, ("primary_turns", "secondary_turns"), ("primary_voltage",), "V", {"primary_turns": "turns", "secondary_turns": "turns"}
+    ),
+    "physics.half_life_decay": Reference(half_life_decay, ("time",), ("half_life", "initial"), "/s", {"time": "min"}),
+    "chemistry.relative_atomic_mass": Reference(relative_atomic_mass, ("abundance_1",), ("mass_1", "mass_2"), "u", {"abundance_1": "%"}),
+    "biology.food_energy_value": Reference(
+        food_energy_value, ("temperature_rise", "food_mass"), ("water_mass",), "kJ/g", {"temperature_rise": "\u00b0C", "food_mass": "g"}
+    ),
+    "physics.boyle_law": Reference(boyle_law, ("final_volume",), ("initial_pressure", "initial_volume"), "kPa", {"final_volume": "cm3"}),
+    "physics.parallel_resistance": Reference(parallel_resistance, ("resistance_1", "resistance_2"), (), "ohm", {"resistance_1": "ohm", "resistance_2": "ohm"}),
+    "physics.buoyant_force": Reference(buoyant_force, ("volume",), ("density", "g"), "N", {"volume": "m3"}),
+    "chemistry.cell_voltage": Reference(cell_voltage, ("cathode_potential",), ("anode_potential",), "V", {"cathode_potential": "V"}),
+    "biology.population_density": Reference(
+        population_density, ("total_count",), ("quadrats", "quadrat_area"), "per m2", {"total_count": "individuals"}
+    ),
+    "physics.electrical_energy": Reference(electrical_energy, ("current", "time"), ("voltage",), "J", {"current": "A", "time": "s"}),
 }
 
 

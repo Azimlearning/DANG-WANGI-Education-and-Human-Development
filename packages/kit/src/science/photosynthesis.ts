@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: { pmax: { unit: "mg/h", min: 0, exclusive: true }, k: { unit: "klux", min: 0, exclusive: true }, resp: { unit: "mg/h", min: 0 } },
   output: { unit: "mg/h" },
   fn: ({ light, pmax, k, resp }) => ((pmax as number) * (light as number)) / ((k as number) + (light as number)) - (resp as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { light: 4, pmax: 10, k: 4, resp: 2 }, expected: 3, tolerance: 1e-9, derivation: "10 x 4 / (4 + 4) = 5, minus 2 = 3 mg/h" },

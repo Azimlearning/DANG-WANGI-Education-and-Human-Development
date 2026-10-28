@@ -1,0 +1,45 @@
+{
+  "id": "reference-refraction",
+  "title": "Refraction: how light bends in glass",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the angle of refraction depends on the angle of incidence and the refractive index, and when light cannot leave a medium.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "incidence",
+    "index"
+  ],
+  "readouts": [
+    "Angle of refraction",
+    "Critical angle"
+  ],
+  "models": [
+    {
+      "id": "physics.refraction_angle",
+      "params": {},
+      "readouts": [
+        "Angle of refraction"
+      ],
+      "series": [
+        "Angle of refraction",
+        "Angle of refraction"
+      ],
+      "scene": true
+    },
+    {
+      "id": "physics.critical_angle",
+      "params": {},
+      "readouts": [
+        "Critical angle"
+      ]
+    }
+  ]
+}

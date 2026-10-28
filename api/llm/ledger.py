@@ -15,7 +15,22 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import Column, Engine, Float, Integer, MetaData, String, Table, create_engine, func, insert, select
+from sqlalchemy import (
+    Column,
+    Engine,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    func,
+    insert,
+    inspect,
+    select,
+    text,
+)
+from sqlalchemy.exc import OperationalError
 
 from api.core.errors import SpendCapExceeded
 
@@ -36,6 +51,8 @@ spend_ledger = Table(
     Column("cost_usd", Float, nullable=False),
     Column("purpose", String, nullable=False),
     Column("status", String, nullable=False),  # "ok" or "failed" (failed attempts cost nothing)
+    Column("cache_read_tokens", Integer, nullable=False, server_default="0"),
+    Column("cache_write_tokens", Integer, nullable=False, server_default="0"),
 )
 
 
@@ -66,6 +83,21 @@ class SpendLedger:
         self._lock = threading.Lock()
         self._pending = 0.0
         metadata.create_all(engine)
+        self._add_missing_columns()
+
+    def _add_missing_columns(self) -> None:
+        """A ledger written before the cache columns existed keeps every row and gains the two columns at zero (SQLAlchemy's create_all never alters a table)."""
+        for name in ("cache_read_tokens", "cache_write_tokens"):
+            if name in {c["name"] for c in inspect(self._engine).get_columns("spend_ledger")}:
+                continue
+            try:
+                with self._engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE spend_ledger ADD COLUMN {name} INTEGER NOT NULL DEFAULT 0"))
+            except OperationalError:
+                # Another process (the API and an evaluation script opening the same file at once) added the column between the check and the ALTER.
+                # That is fine; anything else that left the column missing is a real fault and is raised.
+                if name not in {c["name"] for c in inspect(self._engine).get_columns("spend_ledger")}:
+                    raise
 
     def close(self) -> None:
         """Release the SQLite file. Windows cannot delete a database file that a pooled connection still holds open (Linux can)."""
@@ -96,14 +128,18 @@ class SpendLedger:
                     func.sum(spend_ledger.c.cost_usd),
                     func.sum(spend_ledger.c.tokens_in),
                     func.sum(spend_ledger.c.tokens_out),
+                    func.sum(spend_ledger.c.cache_read_tokens),
+                    func.sum(spend_ledger.c.cache_write_tokens),
                 )
                 .where(spend_ledger.c.month == month)
                 .group_by(spend_ledger.c.purpose, spend_ledger.c.model, spend_ledger.c.status)
             ).all()
         by_purpose: dict[str, float] = {}
         by_model: dict[str, float] = {}
-        calls = failed = 0
-        for purpose, model, status, n, cost, _tin, _tout in rows:
+        calls = failed = cache_read = cache_write = 0
+        for purpose, model, status, n, cost, _tin, _tout, c_read, c_write in rows:
+            cache_read += int(c_read or 0)
+            cache_write += int(c_write or 0)
             by_purpose[purpose] = by_purpose.get(purpose, 0.0) + float(cost or 0.0)
             by_model[model] = by_model.get(model, 0.0) + float(cost or 0.0)
             calls += int(n)
@@ -117,6 +153,8 @@ class SpendLedger:
             "all_time_spent_usd": round(self.all_time_total(), 6),
             "calls": calls,
             "failed_calls": failed,
+            "cache_read_tokens": cache_read,
+            "cache_write_tokens": cache_write,
             "by_purpose": {k: round(v, 6) for k, v in sorted(by_purpose.items())},
             "by_model": {k: round(v, 6) for k, v in sorted(by_model.items())},
         }
@@ -179,6 +217,8 @@ class SpendLedger:
         cost_usd: float,
         purpose: str,
         status: str = "ok",
+        cache_read_tokens: int = 0,
+        cache_write_tokens: int = 0,
     ) -> None:
         """Release the reservation and record what actually happened."""
         now = self._clock()
@@ -196,6 +236,8 @@ class SpendLedger:
                         cost_usd=cost_usd,
                         purpose=purpose,
                         status=status,
+                        cache_read_tokens=cache_read_tokens,
+                        cache_write_tokens=cache_write_tokens,
                     )
                 )
         log.info(

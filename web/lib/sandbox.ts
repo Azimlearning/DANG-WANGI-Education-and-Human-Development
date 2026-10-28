@@ -17,8 +17,12 @@ export type BridgeMessage =
   | { type: "synapse_violation"; problems: string[] };
 
 const isStr = (v: unknown, max: number): v is string => typeof v === "string" && v.length <= max;
-const strings = (v: unknown, count: number, max: number): string[] | null =>
-  Array.isArray(v) && v.length <= count && v.every((x) => isStr(x, max)) ? (v as string[]) : null;
+const strings = (v: unknown, count: number, max: number): string[] | null => {
+  if (!Array.isArray(v) || v.length > count) return null;
+  // A plain loop, not `every`: `every` skips the holes of a sparse array, which survive structured cloning.
+  for (let i = 0; i < v.length; i++) if (!isStr(v[i], max)) return null;
+  return v as string[];
+};
 
 export function parseLabPart(d: Record<string, unknown>): LabPart | null {
   if (d.part === "experiment") {

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estimating a population by quadrat sampling</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Estimating a population by quadrat sampling", note: "Quadrats are placed at random in a field and the plants of one species are counted in each. The population density is the total count divided by the total area of the quadrats.", kicker: "Interactive biology lab", tryThis: "See how the population density of a plant species is found from the plants counted in quadrats." });
+  Synapse.predictCard(env, {"prompt": "The same quadrats are used in two fields, and more plants are counted in the first field. Which field has the higher population density?", "choices": ["The first field", "The second field", "They have the same density"], "reveal": "Raise the number of plants counted and watch the population density."});
+  var c_count = Synapse.slider(env, {"id": "count", "label": "Total plants counted in all the quadrats", "unit": "individuals", "min": 0.0, "max": 100.0, "value": 45.0, "grid": 20});
+  
+  var m_density = Synapse.populationDensity({ quadrat_area: 1.0, quadrats: 10.0, total_count: c_count });
+  Synapse.readout(env, { label: "Population density", unit: "per m2", value: m_density, digits: 1 });
+  
+  Synapse.graph(env, { title: "The population density rises in a straight line as more plants are counted.", x: c_count, y: m_density, yLabel: "Population density", yUnit: "per m2", digits: 1 });
+  
+  Synapse.text(env, "Ten quadrats, each one square metre, are placed at random in the school field.");
+  Synapse.text(env, "The density is the total number of plants counted divided by the total area of all the quadrats.");
+  Synapse.hintLadder(env, { hints: ["A quadrat is a small sample of the whole field.", "Which two things decide the total area that was sampled?", "Divide the total count by the total area sampled."] });
+  Synapse.conceptCheck(env, {"question": "How is the population density of a species estimated by quadrat sampling?", "options": ["The total number of individuals divided by the total area of the quadrats", "The number of quadrats divided by the number of individuals", "The area of the field divided by the number of quadrats"], "correct": 0, "explanation": "Density is the average number of individuals per unit area, so the count in all the quadrats is divided by the total area of those quadrats."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

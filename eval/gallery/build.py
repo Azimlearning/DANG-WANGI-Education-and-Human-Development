@@ -59,7 +59,7 @@ __SECTIONS__
 
 def _entry_text(plan: Plan, block: EnvironmentBlock) -> str:
     esc = html.escape
-    sources = "; ".join(citation_text(c.source, c.page, c.verified) for c in block.citations)
+    sources = "; ".join(citation_text(c.source, c.page, c.verified, c.printedPage) for c in block.citations)
     return (
         f'<li><a href="{esc(plan.id)}.html">{esc(block.title)}</a>'
         f'<div class="meta">{esc(LABEL_TEXT[block.label])}. Source: {esc(sources or "none stated")}.</div>'

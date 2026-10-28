@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two resistors in parallel</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Two resistors in parallel", note: "In a parallel circuit the current has two paths. The reciprocal of the effective resistance is the sum of the reciprocals of the two resistances.", kicker: "Interactive physics lab", tryThis: "See how the effective resistance of two resistors in parallel depends on the two resistances." });
+  Synapse.predictCard(env, {"prompt": "Two resistors are joined in parallel. Will the effective resistance be larger or smaller than the smaller of the two resistances?", "choices": ["Larger than the smaller resistance", "Equal to the smaller resistance", "Smaller than the smaller resistance"], "reveal": "Compare the effective resistance with the two resistances as you change them."});
+  var c_first = Synapse.slider(env, {"id": "first", "label": "Resistance of the first resistor", "unit": "ohm", "min": 2.0, "max": 20.0, "value": 4.0, "grid": 9});
+  var c_second = Synapse.slider(env, {"id": "second", "label": "Resistance of the second resistor", "unit": "ohm", "min": 2.0, "max": 20.0, "value": 12.0, "grid": 9});
+  
+  var m_effective = Synapse.parallelResistance({ resistance_1: c_first, resistance_2: c_second });
+  Synapse.readout(env, { label: "Effective resistance", unit: "ohm", value: m_effective, digits: 2 });
+  
+  Synapse.graph(env, { title: "The effective resistance rises as the second resistance increases.", x: c_second, y: m_effective, yLabel: "Effective resistance", yUnit: "ohm", digits: 2 });
+  
+  Synapse.text(env, "Two resistors are joined in parallel to the same supply.");
+  Synapse.text(env, "The effective resistance of the combination is less than the smaller of the two resistances.");
+  Synapse.hintLadder(env, { hints: ["In a parallel circuit the current can take two paths.", "Is the effective resistance larger or smaller than the smaller resistance?", "Add the reciprocals of the two resistances, then take the reciprocal of the sum."] });
+  Synapse.conceptCheck(env, {"question": "What happens to the effective resistance when a second resistor is joined in parallel with a resistor?", "options": ["It becomes larger", "It stays the same", "It becomes smaller"], "correct": 2, "explanation": "The current gains another path, so the effective resistance becomes smaller. The reciprocal of the effective resistance is the sum of the reciprocals, which is larger than either one."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

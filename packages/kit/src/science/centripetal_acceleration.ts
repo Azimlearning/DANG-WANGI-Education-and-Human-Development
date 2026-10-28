@@ -12,7 +12,7 @@ export const spec: ScienceSpec = {
   params: {},
   output: { unit: "m/s2" },
   fn: ({ speed, radius }) => ((speed as number) * 1000) ** 2 / ((radius as number) * 1000),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Worked by hand: convert both to metres, square the speed in m/s, divide by the radius in metres.
   reference: [
     { args: { speed: 7.9095, radius: 6371 }, expected: 9.8195, tolerance: 5e-4, derivation: "(7909.5 m/s)^2 / 6.371e6 m = 6.2562e7 / 6.371e6 = 9.82 m/s2, close to g at the surface" },

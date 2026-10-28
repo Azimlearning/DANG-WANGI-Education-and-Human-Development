@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   output: { unit: "pH" },
   // `0 -` keeps the pH of a 1 mol/dm3 solution as 0, not -0.
   fn: ({ h_conc }) => 0 - Math.log10(h_conc as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed: a power of ten has a whole-number pH.
   reference: [
     { args: { h_conc: 0.1 }, expected: 1, tolerance: 1e-9, derivation: "0.1 = 10^-1, so pH 1" },

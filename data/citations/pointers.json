@@ -10,7 +10,8 @@
       "models": [
         "mechanics.hookes"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 27
     },
     "newton2_law": {
       "doc": "textbook-physics-physics-f4-removed",
@@ -22,7 +23,8 @@
       "models": [
         "physics.newton_second"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 65
     },
     "newton2_fma": {
       "doc": "textbook-physics-physics-f4-removed",
@@ -34,7 +36,8 @@
       "models": [
         "physics.newton_second"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 66
     },
     "wave_speed_eq": {
       "doc": "textbook-physics-physics-f4-removed",
@@ -46,7 +49,8 @@
       "models": [
         "physics.wave_speed"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 181
     },
     "wave_freq_src": {
       "doc": "textbook-physics-physics-f4-removed",
@@ -58,7 +62,8 @@
       "models": [
         "physics.wave_speed"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 200
     },
     "ohm_v_prop": {
       "doc": "textbook-physics-physics-f5-removed",
@@ -70,7 +75,8 @@
       "models": [
         "electricity.ohm"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 102
     },
     "ohm_v_ir": {
       "doc": "textbook-physics-physics-f5-removed",
@@ -82,7 +88,8 @@
       "models": [
         "electricity.ohm"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 125
     },
     "pressure_liquid": {
       "doc": "textbook-physics-physics-f5-removed",
@@ -94,7 +101,8 @@
       "models": [
         "fluids.pressure_depth"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 41
     },
     "pressure_g": {
       "doc": "textbook-physics-physics-f5-removed",
@@ -106,7 +114,8 @@
       "models": [
         "fluids.pressure_depth"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 48
     },
     "dilution_moles": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -118,7 +127,8 @@
       "models": [
         "chemistry.dilution"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 164
     },
     "molar_volume": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -130,7 +140,8 @@
       "models": [
         "chemistry.gas_volume"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 54
     },
     "mole_mass": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -142,7 +153,8 @@
       "models": [
         "chemistry.moles_from_mass"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 49
     },
     "mole_formula": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -154,7 +166,8 @@
       "models": [
         "chemistry.moles_from_mass"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 53
     },
     "ph_formula": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -166,7 +179,8 @@
       "models": [
         "chemistry.ph_from_h"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 143
     },
     "ph_higher": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -178,7 +192,8 @@
       "models": [
         "chemistry.ph_from_h"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 147
     },
     "rate_def": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -190,7 +205,8 @@
       "models": [
         "chemistry.average_rate"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 221
     },
     "rate_avg": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -215,7 +231,8 @@
         "chemistry.titration_concentration",
         "chemistry.titration_endpoint_volume"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person; the end-point volume model (the same relation read the other way) was added to its models 2026-10-25"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person; the end-point volume model (the same relation read the other way) was added to its models 2026-10-25",
+      "printed_page": 172
     },
     "titr_endpoint": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -228,7 +245,8 @@
         "chemistry.titration_concentration",
         "chemistry.titration_endpoint_volume"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person; the end-point volume model (the same relation read the other way) was added to its models 2026-10-25"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person; the end-point volume model (the same relation read the other way) was added to its models 2026-10-25",
+      "printed_page": 170
     },
     "heat_q": {
       "doc": "textbook-chemistry-chemistry-f5",
@@ -240,7 +258,8 @@
       "models": [
         "chemistry.heat_energy"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 122
     },
     "heat_neut": {
       "doc": "textbook-chemistry-chemistry-f5",
@@ -252,7 +271,8 @@
       "models": [
         "chemistry.heat_energy"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 127
     },
     "tsa_v": {
       "doc": "textbook-biology-form-4-dlp-biology-f4",
@@ -264,7 +284,8 @@
       "models": [
         "biology.sa_to_v_cube"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 128
     },
     "magnif": {
       "doc": "textbook-biology-form-4-dlp-biology-f4",
@@ -276,7 +297,8 @@
       "models": [
         "biology.magnification"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 13
     },
     "osmo_hypo": {
       "doc": "textbook-biology-form-4-dlp-biology-f4",
@@ -288,7 +310,8 @@
       "models": [
         "biology.percent_change_mass"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 60
     },
     "osmo_pct": {
       "doc": "textbook-biology-form-4-dlp-biology-f4",
@@ -300,7 +323,8 @@
       "models": [
         "biology.percent_change_mass"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 64
     },
     "comp_point": {
       "doc": "textbook-biology-form-5-dlp-biology-form-5",
@@ -312,7 +336,8 @@
       "models": [
         "biology.photosynthesis_net"
       ],
-      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person"
+      "checked_by": "assistant 2026-10-18: read the page; NOT yet reviewed by a person",
+      "printed_page": 52
     },
     "titr_eye_level": {
       "doc": "textbook-chemistry-chemistry-f4",
@@ -365,6 +390,370 @@
         "biology.respiration_energy"
       ],
       "checked_by": "assistant 2026-10-25: read the page; NOT yet reviewed by a person"
+    },
+    "orbit_gravity_centri": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 96,
+      "printed_page": 91,
+      "claim": "Says a satellite is pulled towards the Earth's centre and that this gravitational force acts as the centripetal force.",
+      "topics": [
+        "physics_form4_circular_motion_and_gravitation"
+      ],
+      "models": [
+        "physics.centripetal_acceleration"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "orbit_cent_acc": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 97,
+      "printed_page": 92,
+      "claim": "Worked example finding the centripetal acceleration of a satellite from its linear speed and orbit radius, a = v squared over r.",
+      "topics": [
+        "physics_form4_circular_motion_and_gravitation"
+      ],
+      "models": [
+        "physics.centripetal_acceleration"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "orbit_circ_speed": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 109,
+      "printed_page": 104,
+      "claim": "Gives the linear speed of a satellite in a circular orbit, v = square root of GM over r, which depends only on the orbit radius.",
+      "topics": [
+        "physics_form4_circular_motion_and_gravitation"
+      ],
+      "models": [
+        "physics.circular_speed"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "orbit_escape_speed": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 112,
+      "printed_page": 107,
+      "claim": "Derives escape velocity by setting kinetic plus gravitational potential energy to zero, v = square root of 2GM over r.",
+      "topics": [
+        "physics_form4_circular_motion_and_gravitation"
+      ],
+      "models": [
+        "physics.escape_speed"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "refract_snell": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 240,
+      "printed_page": 235,
+      "claim": "States Snell's law for refraction, and that for light going from air into a medium the refractive index is sin i over sin r.",
+      "topics": [
+        "physics_form4_light_and_optics"
+      ],
+      "models": [
+        "physics.refraction_angle"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "refract_critical": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 254,
+      "printed_page": 249,
+      "claim": "Worked example finding a critical angle from sin c = 1 over n for a prism of refractive index 1.49.",
+      "topics": [
+        "physics_form4_light_and_optics"
+      ],
+      "models": [
+        "physics.critical_angle"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "heat_q_mcdt": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 132,
+      "printed_page": 127,
+      "claim": "Gives the quantity of heat as Q = m c delta-theta for an object of mass m and specific heat capacity c.",
+      "topics": [
+        "physics_form4_heat"
+      ],
+      "models": [
+        "physics.specific_heat"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "heat_c_def": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 132,
+      "printed_page": 127,
+      "claim": "Defines specific heat capacity as the heat needed to raise 1 kg of a substance by 1 degree Celsius, in J per kg per degree.",
+      "topics": [
+        "physics_form4_heat"
+      ],
+      "models": [
+        "physics.specific_heat"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "transf_turns": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 175,
+      "printed_page": 166,
+      "claim": "Worked example for an ideal transformer using the ratio of secondary to primary voltage equal to the ratio of secondary to primary turns.",
+      "topics": [
+        "physics_form5_electromagnetism"
+      ],
+      "models": [
+        "physics.transformer_voltage"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "transf_ideal": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 173,
+      "printed_page": 164,
+      "claim": "Defines an ideal transformer as one with no energy loss, efficiency 100 percent, so output power equals input power.",
+      "topics": [
+        "physics_form5_electromagnetism"
+      ],
+      "models": [
+        "physics.transformer_voltage"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "halflife_rule": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 214,
+      "printed_page": 205,
+      "claim": "Gives the number of undecayed nuclei as N = (1/2)^n times N0 for n whole half-lives.",
+      "topics": [
+        "physics_form5_nuclear_physics"
+      ],
+      "models": [
+        "physics.half_life_decay"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "halflife_example": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 215,
+      "printed_page": 206,
+      "claim": "Worked example of the activity left after five half-lives of 6 minutes from a starting activity of 480 per second.",
+      "topics": [
+        "physics_form5_nuclear_physics"
+      ],
+      "models": [
+        "physics.half_life_decay"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "ram_rule": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 47,
+      "printed_page": 37,
+      "claim": "The relative atomic mass of an element depends on the natural abundance of its isotopes.",
+      "topics": [
+        "chemistry_form4_matter_and_atomic_structure"
+      ],
+      "models": [
+        "chemistry.relative_atomic_mass"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "ram_example": {
+      "doc": "textbook-chemistry-chemistry-f4",
+      "page": 48,
+      "printed_page": 38,
+      "claim": "Worked example: the relative atomic mass of chlorine from 75 percent chlorine-35 and 25 percent chlorine-37.",
+      "topics": [
+        "chemistry_form4_matter_and_atomic_structure"
+      ],
+      "models": [
+        "chemistry.relative_atomic_mass"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "food_def": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 161,
+      "printed_page": 156,
+      "claim": "Defines the energy value of a food as the energy released by one gram of it.",
+      "topics": [
+        "biology_form4_digestion"
+      ],
+      "models": [
+        "biology.food_energy_value"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "food_calc": {
+      "doc": "textbook-biology-form-4-dlp-biology-f4",
+      "page": 161,
+      "printed_page": 156,
+      "claim": "States the heat needed to warm water, the basis of the energy value calculation from water temperature rise.",
+      "topics": [
+        "biology_form4_digestion"
+      ],
+      "models": [
+        "biology.food_energy_value"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "boyle_law": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 156,
+      "printed_page": 151,
+      "claim": "States Boyle's law: pressure is inversely proportional to volume for a fixed mass of gas at constant temperature.",
+      "topics": [
+        "physics_form4_heat"
+      ],
+      "models": [
+        "physics.boyle_law"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "boyle_ex": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 157,
+      "printed_page": 152,
+      "claim": "Worked example of Boyle's law with a syringe of air compressed at constant temperature.",
+      "topics": [
+        "physics_form4_heat"
+      ],
+      "models": [
+        "physics.boyle_law"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "par_rule": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 112,
+      "printed_page": 103,
+      "claim": "Gives the effective resistance of resistors in parallel as the sum of the reciprocals of their resistances.",
+      "topics": [
+        "physics_form5_electricity"
+      ],
+      "models": [
+        "physics.parallel_resistance"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "par_ex": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 113,
+      "printed_page": 104,
+      "claim": "Worked example: resistors of 4 ohm and 12 ohm in parallel have an effective resistance of 3 ohm.",
+      "topics": [
+        "physics_form5_electricity"
+      ],
+      "models": [
+        "physics.parallel_resistance"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "buoy_arch": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 76,
+      "printed_page": 67,
+      "claim": "States Archimedes' principle: the buoyant force equals the weight of the fluid displaced.",
+      "topics": [
+        "physics_form5_forces_and_pressure"
+      ],
+      "models": [
+        "physics.buoyant_force"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "buoy_formula": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 76,
+      "printed_page": 67,
+      "claim": "Gives the buoyant force as the density of the fluid times the volume displaced times g.",
+      "topics": [
+        "physics_form5_forces_and_pressure"
+      ],
+      "models": [
+        "physics.buoyant_force"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "cell_formula": {
+      "doc": "textbook-chemistry-chemistry-f5",
+      "page": 37,
+      "printed_page": 29,
+      "claim": "States the cell voltage of a voltaic cell as the electrode potential of the cathode minus that of the anode.",
+      "topics": [
+        "chemistry_form5_electrochemistry_and_redox"
+      ],
+      "models": [
+        "chemistry.cell_voltage"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "cell_example": {
+      "doc": "textbook-chemistry-chemistry-f5",
+      "page": 37,
+      "printed_page": 29,
+      "claim": "Worked example: the Daniell cell, copper and zinc, has a cell voltage of 1.10 V.",
+      "topics": [
+        "chemistry_form5_electrochemistry_and_redox"
+      ],
+      "models": [
+        "chemistry.cell_voltage"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "pop_density_def": {
+      "doc": "textbook-biology-form-5-dlp-biology-form-5",
+      "page": 202,
+      "printed_page": 193,
+      "claim": "Defines population density as the average number of individuals per unit area.",
+      "topics": [
+        "biology_form5_dynamic_ecosystem"
+      ],
+      "models": [
+        "biology.population_density"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "pop_density_calc": {
+      "doc": "textbook-biology-form-5-dlp-biology-form-5",
+      "page": 202,
+      "printed_page": 193,
+      "claim": "Gives the density from a quadrat sample as the total count over the number of quadrats times the area of one quadrat.",
+      "topics": [
+        "biology_form5_dynamic_ecosystem"
+      ],
+      "models": [
+        "biology.population_density"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "energy_vit": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 135,
+      "printed_page": 126,
+      "claim": "Derives the electrical energy used as the potential difference times the current times the time.",
+      "topics": [
+        "physics_form5_electricity"
+      ],
+      "models": [
+        "physics.electrical_energy"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "energy_example": {
+      "doc": "textbook-physics-physics-f5-removed",
+      "page": 135,
+      "printed_page": 126,
+      "claim": "Worked example: a lamp on a 6 V battery with 0.7 A for one minute uses 252 J.",
+      "topics": [
+        "physics_form5_electricity"
+      ],
+      "models": [
+        "physics.electrical_energy"
+      ],
+      "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
     }
   }
 }

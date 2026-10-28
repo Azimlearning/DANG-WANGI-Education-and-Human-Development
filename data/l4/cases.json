@@ -18,13 +18,13 @@
     "mutated": "Substances enter a cell through its surface, but they are used by its whole volume. A cube with a bigger side has a greater surface area to volume ratio. The textbook states this for whole organisms; the cube is a model of the same idea."
   },
   {
-    "id": "biology-f4-cell_size:experiment.hypothesis",
+    "id": "biology-f4-cell_size:hints.2",
     "plan": "biology-f4-cell_size.json",
     "expect": "refuse",
     "kind": "size flipped",
-    "field": "experiment.hypothesis",
-    "original": "The bigger the cube, the smaller the surface area to volume ratio",
-    "mutated": "The bigger the cube, the greater the surface area to volume ratio"
+    "field": "hints.2",
+    "original": "Which one grows faster as the cube gets bigger?",
+    "mutated": "Which one grows slower as the cube gets bigger?"
   },
   {
     "id": "biology-f4-fermentation:true",
@@ -43,6 +43,24 @@
     "field": "controls.0.unit",
     "original": "mol",
     "mutated": "g"
+  },
+  {
+    "id": "biology-f4-food_energy:true",
+    "plan": "biology-f4-food_energy.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "biology-f4-food_energy:concept_check.explanation",
+    "plan": "biology-f4-food_energy.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "concept_check.explanation",
+    "original": "The energy value is the energy released per gram of food. The same heat from less food means more energy in each gram.",
+    "mutated": "The energy value is the energy released per gram of food. The same heat from less food means less energy in each gram."
   },
   {
     "id": "biology-f4-magnification:true",
@@ -108,6 +126,15 @@
     "mutated": "Net uptake is negative in the dark and falls with light intensity"
   },
   {
+    "id": "biology-f5-population_density:true",
+    "plan": "biology-f5-population_density.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
     "id": "chemistry-f4-dilution:true",
     "plan": "chemistry-f4-dilution.json",
     "expect": "accept",
@@ -115,6 +142,15 @@
     "field": "",
     "original": "",
     "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-dilution:hints.2",
+    "plan": "chemistry-f4-dilution.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "hints.2",
+    "original": "A bigger volume holding the same amount means a lower concentration.",
+    "mutated": "A bigger volume holding the same amount means a higher concentration."
   },
   {
     "id": "chemistry-f4-dilution:controls.0.unit",
@@ -180,13 +216,13 @@
     "mutated": "The pH of a solution is a measure of its hydrogen ion concentration: pH = -log10 of the concentration in mol/dm3. A lower concentration of hydrogen ions gives a lower pH."
   },
   {
-    "id": "chemistry-f4-ph_scale:concept_check.explanation",
+    "id": "chemistry-f4-ph_scale:hints.0",
     "plan": "chemistry-f4-ph_scale.json",
     "expect": "refuse",
     "kind": "size flipped",
-    "field": "concept_check.explanation",
-    "original": "A lower pH means a higher hydrogen ion concentration, so the solution with the lower pH is more acidic.",
-    "mutated": "A lower pH means a lower hydrogen ion concentration, so the solution with the lower pH is more acidic."
+    "field": "hints.0",
+    "original": "A lower pH means a more acidic solution.",
+    "mutated": "A higher pH means a more acidic solution."
   },
   {
     "id": "chemistry-f4-rate:true",
@@ -205,6 +241,24 @@
     "field": "controls.0.unit",
     "original": "cm3",
     "mutated": "g"
+  },
+  {
+    "id": "chemistry-f4-relative_atomic_mass:true",
+    "plan": "chemistry-f4-relative_atomic_mass.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f4-relative_atomic_mass:hints.1",
+    "plan": "chemistry-f4-relative_atomic_mass.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "hints.1",
+    "original": "Which isotope is more abundant? The average leans towards it.",
+    "mutated": "Which isotope is less abundant? The average leans towards it."
   },
   {
     "id": "chemistry-f4-titration:true",
@@ -234,6 +288,42 @@
     "mutated": "g"
   },
   {
+    "id": "chemistry-f5-cell_voltage:true",
+    "plan": "chemistry-f5-cell_voltage.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "chemistry-f5-cell_voltage:note",
+    "plan": "chemistry-f5-cell_voltage.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "A voltaic cell joins two half-cells. The half-cell with the more positive electrode potential is the positive terminal, and the cell voltage is its potential minus the potential of the negative terminal.",
+    "mutated": "A voltaic cell joins two half-cells. The half-cell with the less positive electrode potential is the positive terminal, and the cell voltage is its potential minus the potential of the negative terminal."
+  },
+  {
+    "id": "chemistry-f5-cell_voltage:sentences.0",
+    "plan": "chemistry-f5-cell_voltage.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "sentences.0",
+    "original": "The negative half-cell is a zinc electrode, the metal with the more negative electrode potential.",
+    "mutated": "The negative half-cell is a zinc electrode, the metal with the less negative electrode potential."
+  },
+  {
+    "id": "chemistry-f5-cell_voltage:controls.0.unit",
+    "plan": "chemistry-f5-cell_voltage.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "V",
+    "mutated": "A"
+  },
+  {
     "id": "chemistry-f5-thermochemistry:true",
     "plan": "chemistry-f5-thermochemistry.json",
     "expect": "accept",
@@ -250,6 +340,42 @@
     "field": "experiment.hypothesis",
     "original": "The bigger the temperature rise, the more heat is released",
     "mutated": "The bigger the temperature rise, the less heat is released"
+  },
+  {
+    "id": "physics-f4-boyle_law:true",
+    "plan": "physics-f4-boyle_law.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f4-boyle_law:note",
+    "plan": "physics-f4-boyle_law.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "Air in a syringe has a pressure and a volume. Pushing the piston in makes the volume smaller and the pressure larger, while pressure times volume stays the same.",
+    "mutated": "Air in a syringe has a pressure and a volume. Pushing the piston in makes the volume greater and the pressure larger, while pressure times volume stays the same."
+  },
+  {
+    "id": "physics-f4-boyle_law:sentences.1",
+    "plan": "physics-f4-boyle_law.json",
+    "expect": "refuse",
+    "kind": "relation flipped",
+    "field": "sentences.1",
+    "original": "A fixed mass of gas at constant temperature has a pressure that is inversely proportional to its volume.",
+    "mutated": "A fixed mass of gas at constant temperature has a pressure that is directly proportional to its volume."
+  },
+  {
+    "id": "physics-f4-boyle_law:controls.0.unit",
+    "plan": "physics-f4-boyle_law.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "cm3",
+    "mutated": "g"
   },
   {
     "id": "physics-f4-newton_second:true",
@@ -279,8 +405,143 @@
     "mutated": "kg"
   },
   {
+    "id": "physics-f4-orbit:true",
+    "plan": "physics-f4-orbit.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f4-orbit:note",
+    "plan": "physics-f4-orbit.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "Imagine a cannon on a very tall mountain firing sideways. Slow, and the ball curves down and lands. Fast enough, and it keeps missing the ground and circles Earth. Faster still, and it goes round in an oval, and past the escape speed it leaves Earth for good.",
+    "mutated": "Imagine a cannon on a very tall mountain firing sideways. Slow, and the ball curves down and lands. Fast enough, and it keeps missing the ground and circles Earth. Slower still, and it goes round in an oval, and past the escape speed it leaves Earth for good."
+  },
+  {
+    "id": "physics-f4-orbit:concept_check.explanation",
+    "plan": "physics-f4-orbit.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "concept_check.explanation",
+    "original": "The escape speed is the square root of 2 times the circular speed, so it is always greater.",
+    "mutated": "The escape speed is the square root of 2 times the circular speed, so it is always smaller."
+  },
+  {
+    "id": "physics-f4-refraction:true",
+    "plan": "physics-f4-refraction.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f4-refraction:note",
+    "plan": "physics-f4-refraction.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "A ray of light bends when it enters a denser medium. The refractive index n is sin i divided by sin r. A larger n bends the ray more, and inside the medium there is a critical angle above which the light cannot get out.",
+    "mutated": "A ray of light bends when it enters a denser medium. The refractive index n is sin i divided by sin r. A larger n bends the ray less, and inside the medium there is a critical angle above which the light cannot get out."
+  },
+  {
+    "id": "physics-f4-refraction:sentences.0",
+    "plan": "physics-f4-refraction.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "sentences.0",
+    "original": "Going from air into a denser medium, the ray bends towards the normal, so the angle of refraction is smaller than the angle of incidence.",
+    "mutated": "Going from air into a denser medium, the ray bends towards the normal, so the angle of refraction is greater than the angle of incidence."
+  },
+  {
+    "id": "physics-f4-specific_heat:true",
+    "plan": "physics-f4-specific_heat.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f4-specific_heat:sentences.1",
+    "plan": "physics-f4-specific_heat.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "sentences.1",
+    "original": "Doubling the mass doubles the heat needed, and so does doubling the rise in temperature.",
+    "mutated": "Doubling the mass halves the heat needed, and so does doubling the rise in temperature."
+  },
+  {
+    "id": "physics-f4-specific_heat:hints.0",
+    "plan": "physics-f4-specific_heat.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "hints.0",
+    "original": "A bigger mass needs more heat for the same rise.",
+    "mutated": "A bigger mass needs less heat for the same rise."
+  },
+  {
+    "id": "physics-f4-specific_heat:controls.0.unit",
+    "plan": "physics-f4-specific_heat.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "kg",
+    "mutated": "N"
+  },
+  {
     "id": "physics-f4-wave_speed:true",
     "plan": "physics-f4-wave_speed.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f4-wave_speed:hints.1",
+    "plan": "physics-f4-wave_speed.json",
+    "expect": "refuse",
+    "kind": "direction flipped",
+    "field": "hints.1",
+    "original": "What happens to the speed when the frequency rises and the wavelength stays the same?",
+    "mutated": "What happens to the speed when the frequency falls and the wavelength stays the same?"
+  },
+  {
+    "id": "physics-f5-buoyant_force:true",
+    "plan": "physics-f5-buoyant_force.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-electrical_energy:true",
+    "plan": "physics-f5-electrical_energy.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-electrical_energy:controls.0.unit",
+    "plan": "physics-f5-electrical_energy.json",
+    "expect": "refuse",
+    "kind": "wrong unit",
+    "field": "controls.0.unit",
+    "original": "A",
+    "mutated": "V"
+  },
+  {
+    "id": "physics-f5-half_life:true",
+    "plan": "physics-f5-half_life.json",
     "expect": "accept",
     "kind": "unchanged",
     "field": "",
@@ -342,13 +603,13 @@
     "mutated": "In an ohmic conductor the current is proportional to the voltage and directly proportional to the resistance."
   },
   {
-    "id": "physics-f5-ohm_explorer:concept_check.explanation",
+    "id": "physics-f5-ohm_explorer:hints.1",
     "plan": "physics-f5-ohm_explorer.json",
     "expect": "refuse",
-    "kind": "relation flipped",
-    "field": "concept_check.explanation",
-    "original": "The current is inversely proportional to the resistance, so doubling the resistance halves the current.",
-    "mutated": "The current is directly proportional to the resistance, so doubling the resistance halves the current."
+    "kind": "direction flipped",
+    "field": "hints.1",
+    "original": "What happens to the current when the voltage rises and the resistance stays the same?",
+    "mutated": "What happens to the current when the voltage falls and the resistance stays the same?"
   },
   {
     "id": "physics-f5-ohm_explorer:controls.0.unit",
@@ -358,6 +619,33 @@
     "field": "controls.0.unit",
     "original": "V",
     "mutated": "A"
+  },
+  {
+    "id": "physics-f5-parallel_resistance:true",
+    "plan": "physics-f5-parallel_resistance.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-parallel_resistance:sentences.1",
+    "plan": "physics-f5-parallel_resistance.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "sentences.1",
+    "original": "The effective resistance of the combination is less than the smaller of the two resistances.",
+    "mutated": "The effective resistance of the combination is less than the greater of the two resistances."
+  },
+  {
+    "id": "physics-f5-parallel_resistance:hints.1",
+    "plan": "physics-f5-parallel_resistance.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "hints.1",
+    "original": "Is the effective resistance larger or smaller than the smaller resistance?",
+    "mutated": "Is the effective resistance larger or greater than the smaller resistance?"
   },
   {
     "id": "physics-f5-pressure_depth:true",
@@ -385,5 +673,32 @@
     "field": "controls.0.unit",
     "original": "m",
     "mutated": "s"
+  },
+  {
+    "id": "physics-f5-transformer:true",
+    "plan": "physics-f5-transformer.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f5-transformer:note",
+    "plan": "physics-f5-transformer.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "An ideal transformer loses no energy. The output voltage is the input voltage times the secondary turns divided by the primary turns, so more secondary turns step the voltage up and fewer step it down.",
+    "mutated": "An ideal transformer loses no energy. The output voltage is the input voltage times the secondary turns divided by the primary turns, so less secondary turns step the voltage up and fewer step it down."
+  },
+  {
+    "id": "physics-f5-transformer:sentences.1",
+    "plan": "physics-f5-transformer.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "sentences.1",
+    "original": "With more turns on the secondary coil than on the primary coil the transformer is a step-up transformer; with fewer it is a step-down transformer.",
+    "mutated": "With less turns on the secondary coil than on the primary coil the transformer is a step-up transformer; with fewer it is a step-down transformer."
   }
 ]

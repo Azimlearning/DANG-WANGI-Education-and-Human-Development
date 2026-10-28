@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: {},
   output: { unit: "times" },
   fn: ({ image, actual }) => (image as number) / (actual as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { image: 50, actual: 0.5 }, expected: 100, tolerance: 1e-9, derivation: "50 mm / 0.5 mm = 100 times" },

@@ -6,6 +6,7 @@
 import type { EnvironmentBlock } from "@synapse/schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkBlockHash } from "../lib/hash";
+import { useT } from "../lib/i18n";
 import { load, record, save } from "../lib/progress";
 import { parseBridgeMessage, SANDBOX, type LabPart } from "../lib/sandbox";
 import { currentTheme, THEME_EVENT, themeMessage } from "../lib/theme";
@@ -24,6 +25,7 @@ export function EnvironmentFrame({
   /** The experiment card, steps and recorded table the Kit reports, for the lab report (W5b). */
   onLab?: (part: LabPart) => void;
 }) {
+  const t = useT();
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -73,19 +75,19 @@ export function EnvironmentFrame({
       }
       if (message?.type === "synapse_violation") {
         // The Kit watched itself and found the page showing something it did not make. Nothing it shows can be trusted: close it.
-        const reason = "This Environment changed what it was showing in a way the checker does not allow, so it was closed.";
+        const reason = t("violationClosed");
         setPhase({ kind: "refused", reason });
         onRefused?.(reason);
       }
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onRefused, onLab, block.id, block.title]);
+  }, [onRefused, onLab, block.id, block.title, t]);
 
   if (phase.kind === "checking") {
     return (
       <p role="status" className="p-4 text-sm text-ink-dim">
-        Checking the Environment&apos;s hash…
+        {t("checkingHash")}
       </p>
     );
   }
@@ -109,7 +111,7 @@ export function EnvironmentFrame({
           loads.current += 1;
           if (loads.current > 1) {
             // The frame left its srcdoc. Nothing it shows now was verified.
-            const reason = "The Environment tried to navigate away, so it was closed.";
+            const reason = t("navigatedClosed");
             setPhase({ kind: "refused", reason });
             onRefused?.(reason);
           }
@@ -118,7 +120,7 @@ export function EnvironmentFrame({
       />
       {runtimeError ? (
         <p role="alert" className="mt-2 text-sm text-warn">
-          This Environment reported an error: {runtimeError}
+          {t("runtimeError", { message: runtimeError })}
         </p>
       ) : null}
     </>

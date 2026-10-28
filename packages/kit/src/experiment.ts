@@ -4,6 +4,7 @@
 
 import { lab } from "./bridge";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import { copy, own } from "./provenance";
 
 export interface ExperimentOptions {
@@ -20,18 +21,18 @@ export interface ExperimentOptions {
 
 export function experiment(env: Environment, options: ExperimentOptions): HTMLElement {
   const fields: [string, string][] = [
-    ["Aim", String(options.aim)],
-    ["Hypothesis", String(options.hypothesis)],
-    ["Changed (manipulated variable)", String(options.independent)],
-    ["Measured (responding variable)", String(options.dependent)],
-    ["Kept the same (fixed variables)", (options.controlled ?? []).map(String).join("; ")],
-    ["Apparatus", (options.apparatus ?? []).map(String).join("; ")],
+    [kt("aim"), String(options.aim)],
+    [kt("hypothesis"), String(options.hypothesis)],
+    [kt("changed"), String(options.independent)],
+    [kt("measured"), String(options.dependent)],
+    [kt("kept"), (options.controlled ?? []).map(String).join("; ")],
+    [kt("apparatus"), (options.apparatus ?? []).map(String).join("; ")],
   ];
   if (fields.some(([, v]) => v.trim() === "")) throw new RangeError("experiment: every field needs text");
   if ((options.controlled ?? []).length > 6 || (options.apparatus ?? []).length > 8) throw new RangeError("experiment: too many items");
   const card = document.createElement("section");
   card.className = "syn-card";
-  card.setAttribute("aria-label", "Experiment");
+  card.setAttribute("aria-label", kt("experimentTitle"));
   const list = document.createElement("dl");
   for (const [name, value] of fields) {
     const dt = own(document.createElement("dt"), () => name);
@@ -42,7 +43,7 @@ export function experiment(env: Environment, options: ExperimentOptions): HTMLEl
     list.append(dt, dd);
   }
   card.appendChild(list);
-  env.stage.appendChild(card);
+  env.extras.appendChild(card);
   lab({ part: "experiment", fields });
   return card;
 }

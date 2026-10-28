@@ -1,0 +1,33 @@
+{
+  "plan": "buoyancy_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Prinsip Archimedes: tolakan bendalir",
+    "/goal": "Lihat bagaimana daya apungan pada suatu objek bergantung pada isi padu bendalir yang disesarkannya.",
+    "/note": "Objek dalam bendalir ditolak ke atas oleh daya apungan. Daya itu sama dengan berat bendalir yang disesarkan oleh objek tersebut.",
+    "/controls/0/label": "Isi padu air yang disesarkan",
+    "/readouts/0/label": "Daya apungan",
+    "/graphs/0/title": "Daya apungan naik secara garis lurus apabila isi padu air yang disesarkan bertambah.",
+    "/graphs/0/label": "Daya apungan",
+    "/sentences/0": "Bendalir itu ialah air, dan ketumpatannya 1000 kg/m3.",
+    "/sentences/1": "Daya apungan pada objek sama dengan berat air yang ditolaknya ke tepi.",
+    "/hints/0": "Bendalir menolak objek ke atas.",
+    "/hints/1": "Apakah yang ditentukan oleh daya apungan, objek atau bendalir yang ditolaknya ke tepi?",
+    "/hints/2": "Daya apungan sama dengan berat bendalir yang disesarkan.",
+    "/predict/prompt": "Sebuah blok menolak lebih banyak air ke tepi apabila lebih banyak bahagiannya ditolak ke bawah permukaan. Apakah yang berlaku kepada daya apungan padanya?",
+    "/predict/choices/0": "Ia bertambah",
+    "/predict/choices/1": "Ia kekal sama",
+    "/predict/choices/2": "Ia berkurang",
+    "/predict/reveal": "Tambahkan isi padu air yang disesarkan dan perhatikan daya apungan.",
+    "/concept_check/question": "Menurut prinsip Archimedes, daya apungan pada suatu objek dalam bendalir sama dengan apa?",
+    "/concept_check/options/0": "Berat objek itu",
+    "/concept_check/options/1": "Berat bendalir yang disesarkan",
+    "/concept_check/options/2": "Isi padu objek itu",
+    "/concept_check/explanation": "Prinsip Archimedes menyatakan bahawa daya apungan sama dengan berat bendalir yang disesarkan oleh objek itu.",
+    "/apparatus/0/label": "Air yang disesarkan",
+    "/apparatus/1/label": "Daya apungan"
+  }
+}

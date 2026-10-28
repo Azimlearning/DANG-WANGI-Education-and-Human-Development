@@ -11,13 +11,13 @@ class UnverifiableCitation(ValueError):
     pass
 
 
-def cite(corpus: Corpus, doc: str, page: int, quote: str) -> Citation:
+def cite(corpus: Corpus, doc: str, page: int, quote: str, printed_page: int | None = None) -> Citation:
     """A verified citation, or UnverifiableCitation. The quotation must be on that page, word for word."""
     if not corpus.verify_quote(doc, page, quote):
         raise UnverifiableCitation(
             f"the quotation is not on page {page} of '{doc}' (25 to 400 characters, word for word)"
         )
-    return Citation(source=doc, page=page, quote=" ".join(quote.split()), verified=True)
+    return Citation(source=doc, page=page, quote=" ".join(quote.split()), verified=True, printedPage=printed_page)
 
 
 def unverified(note: str = "UNVERIFIED (corpus not loaded)") -> Citation:

@@ -1,0 +1,37 @@
+{
+  "id": "reference-boyle",
+  "title": "Boyle's law: squeezing a gas",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the pressure of a fixed mass of gas changes when its volume changes at constant temperature.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "volume"
+  ],
+  "readouts": [
+    "Gas pressure"
+  ],
+  "models": [
+    {
+      "id": "physics.boyle_law",
+      "params": {
+        "initial_pressure": 108.0,
+        "initial_volume": 60.0
+      },
+      "readouts": [
+        "Gas pressure"
+      ],
+      "series": [
+        "Gas pressure"
+      ]
+    }
+  ]
+}

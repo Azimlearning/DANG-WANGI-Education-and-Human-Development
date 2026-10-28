@@ -54,12 +54,12 @@ Effort: S under an hour of work, M a few hours, L a day or more. "You" means it 
 |---|---|---|---|
 | B1 | OCR the five Chemistry experiment scans (159 pages) and match the experiment catalogue | The PRD wants one record per KSSM practical; every entry says `confirmed_by_person: false` | M |
 | B2 | Check the five misconception citations (`source_verified` is false) | Needed before the follow-up feature relies on them | S |
-| B3 | Kit manifest and spec `citation` fields still say UNVERIFIED; remove or flag the `biology.cardiac_output` model (no textbook states it) | Hard constraint 6; relocks the Kit | M |
+| B3 | ~~Kit manifest and spec `citation` fields still say UNVERIFIED; flag the `biology.cardiac_output` model~~ Done 2026-10-27 (D-58): honest text, cardiac output stays with a plain `useWhen` | | |
 | B4 | ~~Show a book title and printed page instead of the file id and PDF page in the citation~~ Done 2026-10-25 (D-47): a book title and a PDF page, derived from the id; the printed page is not recorded | | Done |
 | B5 | ~~A small table of well-known constants (g = 9.81 and so on) checked by the plan checks~~ Done 2026-10-25 (D-47): PLAN-020 | | Done |
-| B6 | Teach the ledger cache prices and turn prompt caching on | About 5,000 of the 9,000 input tokens of every plan call are the same each time; could cut the plan cost by roughly a third to a half. Needs a measurement | M |
+| B6 | Prompt caching: ledger side done 2026-10-27 (D-55, `PROMPT_CACHING` off by default). Turning it on waits for one measured run | About 5,000 of the 9,000 input tokens of every plan call are the same each time; could cut the plan cost by a third to a half | M |
 | B7 | ~~Harden `audit.ts` for the three open leads~~ Done 2026-10-19 (D-37); the supervised pass is still needed for the other three scopes | | Done |
-| B8 | More science models and Environments by measured gap (half-life, parallel resistance, refraction, logistic growth, molarity, percentage yield) | 16 of 53 topics today; each needs a textbook citation, a hand-written reference and planted-bug tests | L each batch |
+| B8 | More science models and Environments by measured gap. Done 2026-10-27 (D-57, D-61): refraction, critical angle, specific heat, transformer, half-life, relative atomic mass, food energy, Boyle's law, parallel resistance, buoyant force, cell voltage, population density, electrical energy (22 of 53 topics). Left: logistic growth, molarity, percentage yield, the quadrat coverage percentage (needs an input-to-parameter relation) | Each needs a textbook citation, a hand-written reference and planted-bug tests | L each batch |
 | B9 | ~~Continuous integration (tests on every push, and the smoke on Linux)~~ Written 2026-10-25 (D-47): `.github/workflows/ci.yml`; the first run on GitHub has not happened | | Partly |
 | B10 | Router retrain on more data and an embedding comparison | Only if data beyond the v3 set exists; the measured spot check suggests the topic gate is permissive | M, skip unless data appears |
 
@@ -70,7 +70,7 @@ Effort: S under an hour of work, M a few hours, L a day or more. "You" means it 
 | C1 | ~~Misconception follow-up end to end for three flagship misconceptions (probe, correction, check). The PRD's P6 success bar. The matcher is only a topic detector, so it should offer a probe, not a correction~~ Built 2026-10-25 (D-48) for all five listed misconceptions as a probe; no adaptive follow-up | | Done |
 | C2 | ~~Amali mode scaffold: problem, hypothesis, variables, procedure, a results table the student fills, a report skeleton on export~~ Built 2026-10-25 (D-49): lab report from recorded rows in Stage, text export | | Done |
 | C3 | ~~Exam mirror and challenge levels (design first; no design exists)~~ Built 2026-10-25 (D-50): six items, keyword marking in the browser | | Done |
-| C4 | Bahasa Melayu for reviewed Environments: the translation mechanism and a review workflow; only reviewed strings ship | P7 | L |
+| C4 | ~~Bahasa Melayu for reviewed Environments: the translation mechanism and a review workflow; only reviewed strings ship~~ Built 2026-10-27 (D-62) as drafts: 30 translated Environments, the page strings, the EN/BM switch, the review tools. **Nothing is public until a fluent reviewer approves it** | P7 | Done, review open |
 | C5 | ~~Chapter packs (several Environments in one offline file) and the MCP-Apps-shaped bridge~~ Chapter packs built 2026-10-25 (D-51); the MCP-Apps-shaped bridge is not | | Partly |
 | C6 | Per-session and per-day limits; the same limits at the proxy; verification in a no-network container with memory limits; a Kit release (bump 0.1.0 and make files immutable) | P7, deploy gate | L |
 
@@ -100,6 +100,38 @@ Spent so far: **$0.26** (as of 2026-10-19; read `GET /spend` or the ledger for t
 | F5 | No string tables anywhere (Kit and web strings are hard-coded English) | Bahasa Melayu (C4) needs a mechanism and a reviewer before any translated string ships | W6 |
 | F6 | Present mode (the video's "Presenting to the class" chip) has no design | D-39: a presentation of Stage, no class state; behaviour is `ASSUMED` until the owner confirms | W6 |
 | F7 | STATUS and the PRD decision log lagged the code (Kit lock, test counts, P5, D-34 to D-37) | Fixed 2026-10-22 | W0 (done) |
+
+## Added 2026-10-27: the demo-video spec (`brag-output-2026-10-21-195546/v4-video-feature-spec.md`)
+
+| # | Item | State |
+|---|---|---|
+| G1 | The visual standard: lab takeover, one lab frame with one header row, the title once, V3's lab anatomy in the Kit page | Done 2026-10-27 (D-60) and reviewed in the running app 2026-10-28 (D-64): masses beside the spring, graphs in the right column, the prediction asked first, dark-mode line art, phone top bar. Since then: illustrated scenes for refraction and pressure (D-65), and an apparatus bench of 26 reusable parts with motion on 25 Plans (D-66), so every library lab now draws its set-up. Open: the predict card is not an overlay; the chat repeats the key idea on a library answer |
+| G2 | Bahasa Melayu (EN/BM switch, reviewed strings only) | Built 2026-10-27 (D-62) after the owner lifted the hold; every string is a draft until a fluent reviewer approves it (`eval/i18n/tools.py`). Since 2026-10-28 (D-68) drafts are shown by default with the "Draf" mark; set `BM_SHOW_DRAFTS=0` and `NEXT_PUBLIC_BM_DRAFTS=0` for reviewed-only |
+| G3 | An exam item for the fermentation, Hooke's law hints | Done 2026-10-27 (D-61); five more exam items and hints on 24 more Plans |
+| G4 | Orbit bench `kit-verified` with its citations proved; `kit-guardian` review of it | Citations proved 2026-10-27 (D-54). The review has not been run (agents start only on the owner's ask) |
+| G5 | The demo's KOH titration question reaches the titration | Done: it routes to the titration (topic head 0.65), and a question that names a lab is answered by name when the head is unsure (D-59) |
+| G6 | The four demo flows confirmed end to end in a real browser | Partly: the smoke covers Hooke through the real path, the takeover layout, Present and My progress (59 checks); the titration, fermentation and orbit flows are covered by the 30-Environment build and the verifier, not by clicking through the app |
+| G7 | Numbers for the video (cost per lab, verified count, model count, L6 rate) | Counts are in STATUS (30 Environments, 35 science entries in the Kit manifest, the L6 rate in the evidence report); the cost per lab waits for W8 D1 (the owner's go) |
+
+## Added 2026-10-27: Bahasa Melayu and the trained model (W12, W13)
+
+| # | Item | State |
+|---|---|---|
+| H1 | A fluent reviewer reads the 30 Malay Plans, the 173 page strings and the Kit's fixed words | Skipped by the owner (2026-10-28); drafts are shown with their mark (D-68). Still possible: `uv run python -m eval.i18n.tools sheet review.csv`, then `import` |
+| H2 | Malay questions: the router reads them through a glossary guard | Done (D-63): 19 to 57 percent answered from the library, all right, on a 68-question probe by the same author |
+| H3 | The GPU job: NLLB translation and a multilingual encoder, against the guard | Written and tested on its pure parts, **not run**: needs a free GPU and the owner's sign-in (Kaggle `/mcp`, or a Colab notebook); `eval/models/colab/README.md` |
+| H4 | Retrain the shippable router on the translated Malay | Waits for H3's files |
+| H5 | Answer in Malay when asked in Malay | Not built: the explain prompt is English, so it is a prompt change with an eval delta (rule 7) and a paid run |
+| H6 | Paste `BM_SHOW_DRAFTS` and `NEXT_PUBLIC_BM_DRAFTS` into `.env.example` | Owner (the file is blocked to my tools); both now default on, so the lines only document the off switch |
+
+## Added 2026-10-28: the generation upgrade (W16)
+
+| # | Item | State |
+|---|---|---|
+| I1 | Reusable apparatus parts (glassware, heat, weights, circuits, planets, particles, biology) that any Plan can combine | Done (D-66): 26 parts, motion under reduced-motion rules, planner v6 asks for a bench, 25 library benches, seven L6 bench rows all caught |
+| I2 | Generate a lab for any related prompt | Done (D-67): the Free lane is on by default and draws a lab, labelled model-written; it runs only in live mode |
+| I3 | More parts and bench arrangements by measured gap | Open: each new part needs its channels, words in both languages and a test; the paid run's Free and fallback counts show where |
+| I4 | Bench animation that follows the physics (a pendulum's real period, an orbit's real speed) | Not planned: it would be a second simulation to verify; the parts show more or less in five buckets |
 
 ## Where each pending item is scheduled
 

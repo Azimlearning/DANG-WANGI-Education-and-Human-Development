@@ -66,6 +66,71 @@
         { "text": "The speed is 100 m/s.", "wordings": [["100"]] }
       ],
       "sample": "Wave speed equals frequency multiplied by wavelength. Speed = 50 x 2 = 100 m/s."
+    },
+    {
+      "id": "yeast-fermentation-limewater",
+      "topic": "biology_form4_respiration",
+      "stem": "Yeast is mixed with glucose solution in tube A. Tube B has glucose solution only and is the control. Both tubes are sealed with a layer of paraffin oil, and their delivery tubes lead into limewater. State one observation in limewater A after 60 minutes and explain your answer.",
+      "points": [
+        { "text": "Limewater A turns milky or cloudy.", "wordings": [["milky"], ["cloudy"], ["turn", "chalky"]] },
+        { "text": "The yeast produces carbon dioxide during fermentation.", "wordings": [["carbon", "dioxid"], ["co2"]] }
+      ],
+      "sample": "Limewater A turns milky. The yeast ferments the glucose and produces carbon dioxide, which turns the limewater milky."
+    },
+    {
+      "id": "newton-cannonball-short",
+      "topic": "physics_form4_circular_motion_and_gravitation",
+      "stem": "A cannonball is fired sideways from a very tall mountain. State what happens when the launch speed is too low, what happens at the circular orbit speed, and what the cannonball does at or above the escape speed.",
+      "points": [
+        { "text": "The cannonball curves down and lands on Earth when the speed is too low.", "wordings": [["land", "earth"], ["fall", "back", "earth"], ["hit", "ground"], ["curv", "down"]] },
+        { "text": "At the circular orbit speed it goes round Earth in a circle.", "wordings": [["circl"], ["round", "earth"]] },
+        { "text": "At or above the escape speed it leaves Earth and does not return.", "wordings": [["leav", "earth"], ["escap"], ["not", "return"]] }
+      ],
+      "sample": "When the speed is too low the cannonball curves down and lands on Earth. At the circular orbit speed it goes round Earth in a circle. At the escape speed or above it leaves Earth and does not return."
+    },
+    {
+      "id": "specific-heat-short",
+      "topic": "physics_form4_heat",
+      "stem": "State the formula for the heat needed to raise the temperature of a mass of water, then calculate the heat needed to warm 2 kg of water by 10 degrees Celsius. The specific heat capacity of water is 4200 J per kg per degree Celsius.",
+      "points": [
+        { "text": "Heat equals mass times specific heat capacity times the change in temperature.", "wordings": [["mass", "specif", "temperatur"], ["mc"]] },
+        { "text": "The substitution uses 2, 4200 and 10.", "wordings": [["2", "4200", "10"], ["2", "4", "200", "10"]] },
+        { "text": "The heat needed is 84000 J.", "wordings": [["84000"], ["84", "000"], ["84", "kj"]] }
+      ],
+      "sample": "Q = m c theta, which is mass times specific heat capacity times temperature change. Q = 2 x 4200 x 10 = 84000 J."
+    },
+    {
+      "id": "half-life-short",
+      "topic": "physics_form5_nuclear_physics",
+      "stem": "A radioactive sample has an activity of 480 counts per second and a half-life of 6 minutes. State what half-life means and find the activity after 18 minutes.",
+      "points": [
+        { "text": "The half-life is the time taken for the activity to fall to half.", "wordings": [["time", "halv"], ["time", "half"]] },
+        { "text": "18 minutes is three half-lives.", "wordings": [["3", "half"], ["three", "half"]] },
+        { "text": "The activity is 60 counts per second.", "wordings": [["60"]] }
+      ],
+      "sample": "The half-life is the time taken for the activity to halve. 18 minutes is three half-lives, so the activity is 480 divided by 8, which is 60 counts per second."
+    },
+    {
+      "id": "daniell-cell-voltage-short",
+      "topic": "chemistry_form5_electrochemistry_and_redox",
+      "stem": "A Daniell cell joins a zinc electrode, with a standard electrode potential of minus 0.76 V, to a copper electrode of plus 0.34 V. State which electrode is the negative terminal and calculate the cell voltage.",
+      "points": [
+        { "text": "Zinc is the negative terminal, the anode.", "wordings": [["zinc", "negativ"], ["zinc", "anode"]] },
+        { "text": "The cell voltage is the potential of the cathode minus the potential of the anode.", "wordings": [["e0", "cathode", "anode"], ["cathode", "minus", "anode"], ["subtract"], ["difference"]] },
+        { "text": "The cell voltage is 1.10 V.", "wordings": [["1", "10"], ["1", "1", "v"]] }
+      ],
+      "sample": "Zinc is the negative terminal, the anode. E0 cell is E0 cathode minus E0 anode, which is 0.34 minus minus 0.76, so the cell voltage is 1.10 V."
+    },
+    {
+      "id": "relative-atomic-mass-short",
+      "topic": "chemistry_form4_matter_and_atomic_structure",
+      "stem": "Chlorine has two isotopes, chlorine 35 with an abundance of 75 percent and chlorine 37 with an abundance of 25 percent. State what isotopes are and calculate the relative atomic mass of chlorine.",
+      "points": [
+        { "text": "Isotopes are atoms of the same element with the same number of protons but different numbers of neutrons.", "wordings": [["same", "proton", "differ", "neutron"], ["same", "proton", "differ", "nucleon"]] },
+        { "text": "The calculation uses 75 x 35 and 25 x 37.", "wordings": [["75", "35", "25", "37"]] },
+        { "text": "The relative atomic mass is 35.5.", "wordings": [["35", "5"]] }
+      ],
+      "sample": "Isotopes are atoms of the same element with the same number of protons but different numbers of neutrons. Relative atomic mass = (75 x 35 + 25 x 37) / 100 = 35.5."
     }
   ]
 }

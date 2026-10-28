@@ -26,7 +26,7 @@ def item(item_id: str) -> exam.Item:
 
 def test_the_shipped_items_load_and_every_sample_answer_earns_every_mark() -> None:
     items = exam.default_items()
-    assert len(items) == 6
+    assert len(items) == 12
     for it in items.values():
         assert exam.mark(it, it.sample) == (it.marks, [True] * it.marks)
 
@@ -123,3 +123,31 @@ def test_the_event_carries_the_marks_and_only_for_a_topic_with_an_item() -> None
     ev = exam.event_for("physics_form5_force_and_elasticity")
     assert ev is not None and ev.marks == len(ev.points) == 3
     assert exam.event_for("physics_form5_nothing") is None
+
+
+def test_the_fermentation_item_needs_both_the_observation_and_the_gas() -> None:
+    f = item("yeast-fermentation-limewater")
+    assert f.marks == 2
+    assert exam.mark(f, "Limewater A turns cloudy.") == (1, [True, False])
+    assert exam.mark(f, "The yeast produces CO2 as it ferments.") == (1, [False, True])
+    assert exam.mark(f, "It turns milky because yeast makes carbon dioxide") == (2, [True, True])
+    assert exam.mark(f, "Limewater A stays clear.") == (0, [False, False])
+
+
+def test_the_lab_items_mark_each_idea_on_its_own() -> None:
+    cannon = item("newton-cannonball-short")
+    assert exam.mark(cannon, "It lands on Earth.") == (1, [True, False, False])
+    assert exam.mark(cannon, "It escapes.") == (1, [False, False, True])
+    heat = item("specific-heat-short")
+    assert exam.mark(heat, "Heat is mass times specific heat capacity times temperature change.") == (1, [True, False, False])
+    assert exam.mark(heat, "2 x 4200 x 10 = 840000 J") == (1, [False, True, False])  # 840000 is not 84000: a digit stem needs the whole number
+    assert exam.mark(heat, "Q = mc theta = 84 000 J")[1] == [True, False, True]
+    half = item("half-life-short")
+    assert exam.mark(half, "After 18 minutes it is 120 counts per second.") == (0, [False, False, False])
+    assert exam.mark(half, "three half-lives so 60") == (2, [False, True, True])
+    cell = item("daniell-cell-voltage-short")
+    assert exam.mark(cell, "The cell voltage is 1.10 V.") == (1, [False, False, True])
+    assert exam.mark(cell, "zinc is the anode, cathode minus anode") == (2, [True, True, False])
+    ram = item("relative-atomic-mass-short")
+    assert exam.mark(ram, "The answer is 35.4")[1][2] is False
+    assert exam.mark(ram, "(75 x 35 + 25 x 37) / 100 = 35.5") == (2, [False, True, True])

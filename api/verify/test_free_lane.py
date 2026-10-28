@@ -159,3 +159,37 @@ def test_the_free_limits_line_is_honest_about_what_the_browser_run_covers(kit_di
         assert limits.startswith("Written whole by a model") and "short, scripted stretch of time" in limits
         assert ("a second model read" in limits) is reader
         assert "Check it against your textbook" in limits
+
+
+# W17 (D-71): a model-written page may draw handles for its sliders. The harness drags each one; a handle that moves nothing, or names no slider, is refused.
+_GRIP = '<div id="grip" data-synapse-handle="depth" aria-hidden="true" style="width:48px;height:48px;border-radius:24px;background:#0a7;touch-action:none;cursor:grab"></div>\n'
+_DRAG = """
+  var grip = document.getElementById("grip");
+  var held = false;
+  grip.addEventListener("pointerdown", function (e) { held = true; grip.setPointerCapture(e.pointerId); });
+  grip.addEventListener("pointermove", function (e) {
+    if (!held) return;
+    var r = grip.parentElement.getBoundingClientRect();
+    var f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    depth.value = String(Math.round(f * 20) / 2);
+    depth.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  grip.addEventListener("pointerup", function () { held = false; });
+  show();
+})();"""
+
+
+def _with_grip(html: str, script: bool = True, name: str = "depth") -> str:
+    out = html.replace('<output data-synapse-readout="pressure"', _GRIP.replace('"depth"', f'"{name}"') + '<output data-synapse-readout="pressure"', 1)
+    return out.replace("  show();\n})();", _DRAG, 1) if script else out
+
+
+def test_a_free_page_with_a_working_handle_is_minted(kit_dist: Path) -> None:
+    assert free(kit_dist, _with_grip(GOOD)).lane == "free"
+
+
+@pytest.mark.parametrize("html", [_with_grip(GOOD, script=False), _with_grip(GOOD, name="nothing")], ids=["dead", "orphan"])
+def test_a_free_page_whose_handle_moves_nothing_or_names_no_slider_is_refused(kit_dist: Path, html: str) -> None:
+    with pytest.raises(VerificationFailed) as err:
+        free(kit_dist, html)
+    assert (err.value.stage, err.value.rule) == ("render", "handle_dead")

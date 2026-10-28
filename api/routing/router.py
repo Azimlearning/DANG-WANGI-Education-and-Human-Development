@@ -14,7 +14,7 @@ from typing import Literal
 
 from api.llm.service import LLMService
 from api.models import gate as gate_module
-from api.models import router_model
+from api.models import malay, router_model
 from api.routing import fallback
 
 log = logging.getLogger(__name__)
@@ -36,9 +36,30 @@ class Route:
     domain: Decision
     pattern: Decision
     complexity: Decision
+    english: str = ""
+    """The question as the router read it: the question itself, or, for one in Bahasa Melayu, its glossary translation (D-63). Empty on a Route built by hand."""
 
     def decisions(self) -> dict[str, Decision]:
         return {"topic": self.topic, "domain": self.domain, "pattern": self.pattern, "complexity": self.complexity}
+
+
+@dataclass(frozen=True)
+class Prepared:
+    """What the local model is shown, and whether its answer may be trusted."""
+
+    query: str
+    language: Literal["en", "ms"]
+    coverage: float
+    trusted: bool
+
+
+def prepare(question: str, model: router_model.RouterModel | None) -> Prepared:
+    """An English question is read as it is. A Malay one is translated with the glossary and trusted only when most of it was understood (D-63): the model was trained on
+    English, and asked a Malay question as it stands it is confidently wrong."""
+    if not malay.is_malay(question):
+        return Prepared(question, "en", 1.0, True)
+    translation = malay.to_english(question, model.knows_word if model is not None else None)
+    return Prepared(translation.text, "ms", round(translation.coverage, 3), translation.coverage >= malay.MIN_COVERAGE)
 
 
 def topic_names() -> dict[str, str]:
@@ -54,10 +75,14 @@ async def route(
     llm: LLMService | None = None,
 ) -> Route:
     local: dict[str, router_model.HeadPrediction] = {}
+    english = question
     try:
         model = model or router_model.default_model()
         gates = gates if gates is not None else gate_module.load(model)
-        local = model.predict(question)
+        prepared = prepare(question, model)
+        english = prepared.query
+        # A Malay question the glossary mostly could not read is sent to the fallback on every head, like any question the local model cannot judge.
+        local = model.predict(prepared.query) if prepared.trusted else {}
     except router_model.ArtifactError as exc:
         log.warning("router_model_unavailable reason=%s", exc)
         gates = {}
@@ -103,4 +128,4 @@ async def route(
                 decisions[head] = Decision(prediction.label, round(prediction.confidence, 4), "default")
             else:
                 decisions[head] = Decision("none" if head == "topic" else "unknown", 0.0, "default")
-    return Route(question, decisions["topic"], decisions["domain"], decisions["pattern"], decisions["complexity"])
+    return Route(question, decisions["topic"], decisions["domain"], decisions["pattern"], decisions["complexity"], english)

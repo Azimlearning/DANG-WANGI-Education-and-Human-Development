@@ -34,8 +34,10 @@ sys.path.insert(0, str(REPO))
 from api.kit import latest_version  # noqa: E402
 
 SHOTS = REPO / "test-results" / "web-smoke"
-API = "http://localhost:8000"
-WEB = "http://localhost:3000"
+API_PORT = int(os.environ.get("SMOKE_API_PORT", "8000"))
+WEB_PORT = int(os.environ.get("SMOKE_WEB_PORT", "3000"))
+API = f"http://localhost:{API_PORT}"
+WEB = f"http://localhost:{WEB_PORT}"
 TITLE = "Hooke's law: how does a spring stretch?"
 RESULTS: list[tuple[str, bool, str]] = []
 
@@ -153,8 +155,8 @@ def main() -> int:
     pnpm = shutil.which("pnpm") or "pnpm"
     SHOTS.mkdir(parents=True, exist_ok=True)
     procs: list[subprocess.Popen] = []
-    require_free_port(8000)
-    require_free_port(3000)
+    require_free_port(API_PORT)
+    require_free_port(WEB_PORT)
     tmp = Path(tempfile.mkdtemp(prefix="synapse-smoke-"))
     try:
         # A private data directory: /ask runs the whole pipeline on fakes and verifies the Environment in a real browser.
@@ -163,6 +165,7 @@ def main() -> int:
             "SYNAPSE_LLM_MODE": "fake",
             "DATA_DIR": str(tmp),
             "PUBLIC_ORIGIN": WEB,
+            "NEXT_PUBLIC_API_BASE_URL": API,
             "VERIFY_INTERACTION_SECONDS": "3",
             "KIT_DIST_DIR": str(REPO / "packages" / "kit" / "dist"),
         }
@@ -170,13 +173,13 @@ def main() -> int:
         env.pop("CORPUS_DIR", None)
 
         if build:
-            subprocess.run([pnpm, "--filter", "web", "build"], cwd=REPO, check=True, capture_output=True)
+            subprocess.run([pnpm, "--filter", "web", "build"], cwd=REPO, env=env, check=True, capture_output=True)
         # The API runs from a scratch directory so it cannot find the developer's .env: the smoke checks the corpus-free product (labels, wording),
         # whatever CORPUS_DIR, keys or caps the machine has configured. The app directory and the Kit path are absolute for the same reason.
         procs.append(
-            spawn([sys.executable, "-m", "uvicorn", "api.main:app", "--app-dir", str(REPO), "--port", "8000"], env, cwd=tmp)
+            spawn([sys.executable, "-m", "uvicorn", "api.main:app", "--app-dir", str(REPO), "--port", str(API_PORT)], env, cwd=tmp)
         )
-        procs.append(spawn([pnpm, "--filter", "web", "start"], env))
+        procs.append(spawn([pnpm, "--filter", "web", "exec", "next", "start", "--port", str(WEB_PORT)], env))
         wait_http(f"{API}/health")
         wait_http(WEB)
 
@@ -270,10 +273,12 @@ def main() -> int:
             choices = page.frame_locator("iframe").first.locator("[data-synapse-action=choose]")
             if choices.count() > 0:
                 choices.first.click()
+                page.click("button[aria-controls=progress-menu]")  # "My progress" opens from the top bar
                 page.wait_for_function(
-                    "[...document.querySelectorAll('summary')].some(s => s.textContent.includes('My progress (1)'))",
+                    "[...document.querySelectorAll('#progress-menu h2')].some(h => h.textContent.includes('My progress (1)'))",
                     timeout=5000,
                 )
+                page.click("button[aria-controls=progress-menu]")
                 stored = page.evaluate("localStorage.getItem('synapse.progress.v1')")
                 check(
                     "the first concept-check answer is kept in this browser's storage and counted in My progress",
@@ -398,7 +403,28 @@ def main() -> int:
                 wide.locator("iframe").count() == 1 and wide.locator("aside[aria-label='Lab bench'] iframe").count() == 1,
             )
             check("no horizontal scroll at 1280 px", wide.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 0)
+            # The visual standard (D-60): the lab takeover, one frame, one header row, the title once.
+            share = wide.evaluate("document.querySelector(\"aside[aria-label='Lab bench']\").getBoundingClientRect().width / window.innerWidth")
+            check("after a question the lab pane takes at least three quarters of the width", share >= 0.75, f"{share:.2f}")
+            check("the study rail folds away during the takeover", wide.locator("aside[aria-label='Study guide']").count() == 0)
+            tool_names = wide.evaluate(
+                "[...document.querySelectorAll(\"aside[aria-label='Lab bench'] [aria-label='Lab tools'] button, aside[aria-label='Lab bench'] [aria-label='Lab tools'] a\")].map(e => e.textContent.trim())"
+            )
+            check("one compact tool group: Present, Share, Save offline, Full screen and the EN/BM switch", tool_names == ["Present", "Share", "Save offline", "Full screen", "EN", "BM"], str(tool_names))
+            check("the lab is one bordered frame (one article in the lab pane)", wide.locator("aside[aria-label='Lab bench'] article").count() == 1)
+            visible_titles = wide.evaluate(
+                "[...document.querySelectorAll(\"aside[aria-label='Lab bench'] h1, aside[aria-label='Lab bench'] h2\")].filter(e => e.getBoundingClientRect().width > 4 && e.textContent.includes(\"Hooke\")).length"
+            )
+            check("the lab title is not repeated by the host (the Environment page shows it)", visible_titles == 0, str(visible_titles))
+            inner_title = wide.frame_locator("iframe").first.locator("h1").inner_text()
+            check("the Environment page shows its title once, in the Kit's heading", "Hooke" in inner_title, inner_title[:50])
+            check("the Kit page has the kicker, the Try this line and the key idea", all(wide.frame_locator("iframe").first.locator(sel).count() == 1 for sel in (".syn-kicker", ".syn-try", ".syn-keyidea")))
             wide.screenshot(path=str(SHOTS / "04-wide-1280.png"))
+            wide.click("aside[aria-label='Lab bench'] >> text=Present")
+            wide.wait_for_selector("[role=dialog] >> text=Stop presenting", timeout=5000)
+            check("Present opens the lab full screen and already presenting", wide.locator("[role=status] >> text=Presenting").count() == 1)
+            wide.keyboard.press("Escape")
+            wide.wait_for_selector("aside[aria-label='Lab bench'] article", timeout=5000)
             wide.click("button[aria-label='Switch to dark mode']")
             wide.wait_for_function("document.documentElement.dataset.theme === 'dark'", timeout=5000)
             wide.wait_for_timeout(500)

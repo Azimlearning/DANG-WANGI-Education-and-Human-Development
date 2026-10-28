@@ -17,7 +17,9 @@
     "Keep the actual size the same and make the image size larger, then smaller."
   ],
   "steps": [],
-  "citation_ids": ["magnif"],
+  "citation_ids": [
+    "magnif"
+  ],
   "presentation": "stage",
   "custom": [],
   "id": "magnification_lab",
@@ -74,5 +76,22 @@
       "It stays the same"
     ],
     "reveal": "Try an image size of 20 mm and then 40 mm with the actual size fixed."
-  }
+  },
+  "hints": [
+    "Magnification compares the size of the picture with the real size.",
+    "Which size goes on top of the fraction, the drawing or the real cell?",
+    "Check that both sizes are in the same unit before you divide."
+  ],
+  "apparatus": [
+    {
+      "kind": "cell",
+      "label": "Drawing of the cell",
+      "channels": {
+        "size": {
+          "source": "image",
+          "full": 100
+        }
+      }
+    }
+  ]
 }

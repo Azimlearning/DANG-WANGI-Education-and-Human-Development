@@ -258,7 +258,7 @@ body {
   transition: transform 0.06s ease, box-shadow 0.06s ease;
 }
 .btn:disabled {
-  opacity: 0.55;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 .btn-primary {
@@ -369,4 +369,32 @@ body {
   .caret::after {
     opacity: 1;
   }
+}
+
+/* Print or save as PDF (W5b follow-up): only the lab report is printed. Everything else on the page is hidden, and the report is laid out as a plain page. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  [data-testid="lab-report"],
+  [data-testid="lab-report"] * {
+    visibility: visible;
+  }
+  [data-testid="lab-report"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+    border: 0;
+    background: #fff;
+    color: #000;
+  }
+}
+
+/* The question box keeps its hint on one line: in the narrow conversation column of the lab takeover a wrapped hint was cut in half. */
+.composer-field::placeholder {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

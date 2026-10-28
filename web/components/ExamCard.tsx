@@ -5,26 +5,28 @@
 import { useState } from "react";
 import type { ExamEvent } from "@synapse/schema";
 import { mark } from "../lib/exam";
+import { useT } from "../lib/i18n";
 
 export function ExamCard({ item }: { item: ExamEvent }) {
+  const t = useT();
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<{ score: number; got: boolean[] } | null>(null);
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
 
   return (
-    <section aria-label="Exam practice" className="study-card grid gap-3 p-4" data-testid="exam">
+    <section aria-label={t("examAria")} className="study-card grid gap-3 p-4" data-testid="exam">
       <div className="flex items-start justify-between gap-3">
-        <p className="study-kicker">Exam practice (optional) [{item.marks} marks]</p>
-        <button type="button" onClick={() => setHidden(true)} className="btn btn-ghost px-3 text-sm" aria-label="Hide this exam practice">
-          Hide
+        <p className="study-kicker">{t("examKicker", { marks: item.marks })}</p>
+        <button type="button" onClick={() => setHidden(true)} className="btn btn-ghost px-3 text-sm" aria-label={t("hideExam")}>
+          {t("hide")}
         </button>
       </div>
       <p id={`exam-${item.id}`} className="text-[15px] font-medium leading-relaxed">
         {item.stem}
       </p>
       <label className="grid gap-1">
-        <span className="text-sm font-semibold">Your answer</span>
+        <span className="text-sm font-semibold">{t("yourAnswer")}</span>
         <textarea
           aria-describedby={`exam-${item.id}`}
           value={answer}
@@ -38,29 +40,29 @@ export function ExamCard({ item }: { item: ExamEvent }) {
       {result === null ? (
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => setResult(mark(item, answer))} disabled={answer.trim() === ""} className="btn btn-primary px-5 text-sm">
-            Mark my answer
+            {t("markAnswer")}
           </button>
-          <span className="text-sm text-ink-dim">Your answer stays in this browser.</span>
+          <span className="text-sm text-ink-dim">{t("staysHere")}</span>
         </div>
       ) : (
         <div role="status" aria-live="polite" className="grid gap-2 text-[15px] leading-relaxed">
           <p className="font-semibold" data-testid="exam-score">
-            {result.score} of {item.marks} marks
+            {t("marksOf", { score: result.score, marks: item.marks })}
           </p>
           <ul className="grid gap-1">
             {item.points.map((p, i) => (
               <li key={p.text}>
-                <strong>{result.got[i] ? "Earned" : "Missed"}:</strong> {p.text}
+                <strong>{result.got[i] ? t("earned") : t("missed")}:</strong> {p.text}
               </li>
             ))}
           </ul>
           <p>
-            <strong>A full-mark answer:</strong> {item.sample}
+            <strong>{t("fullMarkAnswer")}</strong> {item.sample}
           </p>
         </div>
       )}
       <p className="text-sm text-ink-dim">
-        Marked by matching key words, not by a teacher, so a correct answer in different words can lose a mark. Use it to practise, not as a grade. The marking points were written by the assistant and have not been reviewed by a teacher.
+        {t("examNote")}
       </p>
     </section>
   );

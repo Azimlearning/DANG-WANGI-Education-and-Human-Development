@@ -17,7 +17,10 @@
     "Compare a concentration of 0.001 mol/dm3 with 1 mol/dm3."
   ],
   "steps": [],
-  "citation_ids": ["ph_formula", "ph_higher"],
+  "citation_ids": [
+    "ph_formula",
+    "ph_higher"
+  ],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -74,5 +77,21 @@
     ],
     "correct": 0,
     "explanation": "A lower pH means a higher hydrogen ion concentration, so the solution with the lower pH is more acidic."
-  }
+  },
+  "hints": [
+    "A lower pH means a more acidic solution.",
+    "What happens to the pH when the hydrogen ion concentration becomes ten times larger?",
+    "The pH scale changes by one unit for every tenfold change in concentration."
+  ],
+  "apparatus": [
+    {
+      "kind": "indicator",
+      "label": "Acid solution",
+      "channels": {
+        "ph": {
+          "source": "acid"
+        }
+      }
+    }
+  ]
 }

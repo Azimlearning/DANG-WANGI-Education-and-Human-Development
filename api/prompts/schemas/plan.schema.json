@@ -1,5 +1,79 @@
 {
   "$defs": {
+    "ApparatusPart": {
+      "additionalProperties": false,
+      "description": "One piece of apparatus on the bench (W16, D-66): a part from the Kit's apparatus catalogue, its label, and what each channel draws. A channel bound to a slider\ngets a grip the student drags on the drawing when the part has one there (W17, D-69); `drop` gives the part a tray of items to drag onto it.",
+      "properties": {
+        "channels": {
+          "maxProperties": 4,
+          "minProperties": 1,
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,23}$": {
+              "$ref": "#/$defs/ChannelBind"
+            }
+          },
+          "title": "Channels",
+          "type": "object"
+        },
+        "drop": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DropBind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "pattern": "^[a-z_]{2,24}$",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "channels"
+      ],
+      "title": "ApparatusPart",
+      "type": "object"
+    },
+    "ChannelBind": {
+      "additionalProperties": false,
+      "properties": {
+        "full": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Full"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "ChannelBind",
+      "type": "object"
+    },
     "ConceptCheckSpec": {
       "additionalProperties": false,
       "properties": {
@@ -158,6 +232,29 @@
         "purpose"
       ],
       "title": "CustomSlot",
+      "type": "object"
+    },
+    "DropBind": {
+      "additionalProperties": false,
+      "description": "Items the student drags onto a part (W17, D-70): each one is one step of a slider with 2 to 8 steps.",
+      "properties": {
+        "item": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Item",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,23}$",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "item"
+      ],
+      "title": "DropBind",
       "type": "object"
     },
     "ExperimentCard": {
@@ -440,7 +537,9 @@
             "spring",
             "titration",
             "fermentation",
-            "orbit"
+            "orbit",
+            "refraction",
+            "pressure"
           ],
           "title": "Kind",
           "type": "string"
@@ -537,6 +636,14 @@
   },
   "additionalProperties": false,
   "properties": {
+    "apparatus": {
+      "items": {
+        "$ref": "#/$defs/ApparatusPart"
+      },
+      "maxItems": 4,
+      "title": "Apparatus",
+      "type": "array"
+    },
     "citation_ids": {
       "items": {
         "pattern": "^[a-z][a-z0-9_]{0,23}$",

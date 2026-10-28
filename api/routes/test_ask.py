@@ -38,7 +38,9 @@ def _events(client: TestClient, question: str = SPRING) -> list:
 
 
 def test_health(client: TestClient) -> None:
-    assert client.get("/health").json() == {"status": "ok"}
+    body = client.get("/health").json()
+    assert body["status"] == "ok"
+    assert body["llm_mode"] in ("fake", "live")
 
 
 def test_stream_order_is_meta_stages_text_plan_environment_done_and_every_event_validates(client: TestClient) -> None:
@@ -335,6 +337,8 @@ def test_spend_reports_the_month_against_the_cap_and_holds_no_text(client: TestC
         "all_time_spent_usd",
         "calls",
         "failed_calls",
+        "cache_read_tokens",
+        "cache_write_tokens",
         "by_purpose",
         "by_model",
     }

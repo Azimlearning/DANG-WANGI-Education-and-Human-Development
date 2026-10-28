@@ -1,0 +1,26 @@
+{
+  "plan": "gas_volume_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Isi padu gas daripada kuantitinya",
+    "/goal": "Bandingkan isi padu gas yang sama kuantitinya pada keadaan bilik dan pada suhu dan tekanan piawai.",
+    "/note": "Satu mol sebarang gas mempunyai isi padu yang sama dalam keadaan yang sama. Pada keadaan bilik, isi padu molar ialah 24 dm3/mol dan pada STP ialah 22.4 dm3/mol. Isi padu ialah kuantiti dalam mol darab isi padu molar.",
+    "/controls/0/label": "Kuantiti gas",
+    "/readouts/0/label": "Isi padu pada keadaan bilik",
+    "/readouts/1/label": "Isi padu pada STP",
+    "/graphs/0/title": "Isi padu naik secara garis lurus dengan kuantiti gas.",
+    "/graphs/0/label": "Isi padu pada keadaan bilik",
+    "/sentences/0": "Tetapkan kuantiti kepada 2 mol dan bandingkan kedua-dua isi padu.",
+    "/hints/0": "Tulis formulanya: isi padu = kuantiti x isi padu molar.",
+    "/hints/1": "Pilih isi padu molar bagi keadaan itu.",
+    "/hints/2": "Darabkan kuantiti dalam mol dengan isi padu molar.",
+    "/worked_solution/0": "Tulis formulanya: isi padu = kuantiti x isi padu molar.",
+    "/worked_solution/1": "Gunakan 24 dm3/mol bagi keadaan bilik.",
+    "/worked_solution/2": "Darabkan dengan kuantiti dalam mol untuk mendapatkan isi padu dalam dm3.",
+    "/apparatus/0/label": "Gas pada keadaan bilik",
+    "/apparatus/1/label": "Gas pada STP"
+  }
+}

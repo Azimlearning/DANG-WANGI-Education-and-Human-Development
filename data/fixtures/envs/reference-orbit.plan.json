@@ -4,7 +4,7 @@
   "lane": "instantiate",
   "label": "model-checked",
   "kitVersion": "0.1.0",
-  "planSummary": "Newton's cannonball: a launch-speed slider, Earth's circular and escape speeds from the two gravitation models, the centripetal acceleration needed to stay on a circle, and a picture of the cannonball's path. Checked by the L0 scan, the render harness (which sweeps the slider through all four outcomes) and L1 to L3.",
+  "planSummary": "See how the launch speed decides whether a cannonball falls back to Earth, circles it, goes round in an oval or leaves for good.",
   "citations": [
     {
       "source": "UNVERIFIED (fixture, no corpus)",

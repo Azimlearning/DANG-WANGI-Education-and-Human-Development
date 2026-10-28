@@ -7,19 +7,19 @@
 
 | Case | USD per Environment | What it assumes |
 |---|---|---|
-| Low | **0.0181** | no plan retry, no slot fill, 4 characters per token, short outputs (no caching in any case) |
-| High | **0.0389** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0528** | the high case with every plan retried once (retry rate 100 percent) |
-| Hard bound | **0.0792** | what the ledger itself would reserve for the worst allowed Compose path of 8 calls (route, explain, plan, wording check, plan retry, wording check, fill, fill retry), every reply running to its max_tokens |
-| Free lane, extra when it fires | **0.0276** to **0.0646** | the Free page and its reading (2500 to 6000 output tokens for the page), on top of the failed Compose attempts. Off by default; unmeasured |
-| Hard bound with the Free lane on | **0.1457** | route, explain, two plans each read by the judge, then one Free page and its reading (8 calls), every reply running to its max_tokens |
+| Low | **0.0238** | no plan retry, no slot fill, 4 characters per token, short outputs (no caching in any case) |
+| High | **0.0508** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0698** | the high case with every plan retried once (retry rate 100 percent) |
+| Hard bound | **0.0912** | what the ledger itself would reserve for the worst allowed Compose path of 8 calls (route, explain, plan, wording check, plan retry, wording check, fill, fill retry), every reply running to its max_tokens |
+| Free lane, extra when it fires | **0.0285** to **0.0658** | the Free page and its reading (2500 to 6000 output tokens for the page), on top of the failed Compose attempts. On by default since D-67 (live mode only); unmeasured |
+| Hard bound with the Free lane on | **0.1589** | route, explain, two plans each read by the judge, then one Free page and its reading (8 calls), every reply running to its max_tokens |
 
 Mean over the 24 golden questions (each hard bound is the largest over them; the wording check is counted because live mode turns it on), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amounts to confirm)
 
-1. **A canary of 1 question** first: up to **$0.0792** (hard bound), expected about $0.018 to $0.039. It checks model ids, token counts and error handling for almost nothing.
-2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.16 to $0.48**, hard bound **$0.71**.
+1. **A canary of 1 question** first: up to **$0.0912** (hard bound), expected about $0.024 to $0.051. It checks model ids, token counts and error handling for almost nothing.
+2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.21 to $0.63**, hard bound **$0.82**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the real characters per token and any hidden thinking tokens, and whether the fail-check registry's hints fix a bad plan.
 - It would not measure: whether the content is right. That is checked by reading the textbook pages against each Plan (Step 2, D-36), and a model-written Plan can only earn `kit-verified` by naming citation ids that exist and support it. A teacher's judgement is not measured at all.
@@ -28,12 +28,12 @@ Mean over the 24 golden questions (each hard bound is the largest over them; the
 ## What must exist before the first live call (from the cost audit)
 
 - Done: live mode refuses to build without a key, a positive cap and an absolute ledger path; a provider failure that retrying cannot fix (balance, key, bad request) stops the run and says it is not the cap; timed-out and cancelled calls are booked at their input cost, not zero; `LLMService.ensure_budget` refuses a run whose worst case does not fit; tests no longer inherit a shell's `SYNAPSE_LLM_MODE`.
-- Done in the provider class (D-34, re-checked against the provider's pages on 2026-10-18): plain httpx with no retries and a 90 s timeout; usage mapped including cache tokens (caching is off and no saving is assumed); explicit prices for the three tier models; a reply that was billed and then rejected (cut off at max_tokens, empty, refused) is booked at its real tokens, so the cap cannot be under-counted.
+- Done in the provider class (D-34, re-checked against the provider's pages on 2026-10-18): plain httpx with no retries and a 90 s timeout; usage mapped including cache tokens, which the ledger now prices (D-55; caching is off by default and no saving is assumed); explicit prices for the three tier models; a reply that was billed and then rejected (cut off at max_tokens, empty, refused) is booked at its real tokens, so the cap cannot be under-counted.
 - To do in the live run script (`eval/golden/run.py --live`, not yet built): print the ledger path and the month-to-date total, call `ensure_budget`, take the ledger from settings (never a temporary folder), print this projection, refuse without `LLM_MONTHLY_CAP_USD`, and require a typed confirmation.
 
 ## Size of the real prompts (characters, rounded)
 
-- Plan request (virtual experiment): about 20122 characters, of which 14822 are the stable prefix (sent in full every time: caching is off).
+- Plan request (virtual experiment): about 28282 characters, of which 21921 are the stable prefix (sent in full every time: caching is off, PROMPT_CACHING).
 - The router-fallback request is built by the real builder, with the full topic list.
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
@@ -43,7 +43,7 @@ Mean over the 24 golden questions (each hard bound is the largest over them; the
 3. Output sizes: plan = the golden plan's JSON length times 0.8 (low) or 1.6 (high); explain 150 to 450 tokens; route fallback 40 to 100; fill 60 to 220. The hard bound assumes every reply runs to its max_tokens.
 4. The router fallback is called for 90 percent of questions (the pattern and complexity heads clear their gates for about a third of questions, and a local `none` topic always goes to the fallback).
 5. Plan retry rate 0 to 40 percent in the high case and 100 percent in the pessimistic one (Arcana v2 was accepted on 2 of 8 first attempts). Nothing here can measure it: fakes always return a valid plan.
-6. Prompt caching is off, so every input token is priced at the full rate in every case. Turning it on needs the ledger to price cache writes and reads, and a measured saving first.
+6. Prompt caching is off (PROMPT_CACHING), so every input token is priced at the full rate in every case. The ledger can now price cache reads and writes (D-55), but the saving is unmeasured, so none is assumed. With it on, the hard bound would reserve the input at 1.25 times the base rate (the first call writes the cache), so this projection's bound is for the setting as shipped.
 7. The repair prompt beyond one retry is not built. The wording check is included in every case (live mode turns it on) at the light tier. The Free lane is NOT in Low, High or Pessimistic: it fires only when the Kit cannot take a question, how often is unknown, and its page length (2500 to 6000 tokens) is a guess. Its cost is shown on its own rows.
 8. Verification costs no model call.
 9. The Free sample page used for input sizes is a short hand-written fixture; a model's page is longer, so the Free input estimate (the reading of the page) is low. The output bound is exact: the request's max_tokens.
@@ -52,27 +52,27 @@ Mean over the 24 golden questions (each hard bound is the largest over them; the
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0198 | 0.0437 | 0.0596 |
-| g02 | 0.0202 | 0.0445 | 0.0608 |
-| g03 | 0.0202 | 0.0444 | 0.0606 |
-| g04 | 0.0202 | 0.0445 | 0.0608 |
-| g05 | 0.0198 | 0.0437 | 0.0596 |
-| g06 | 0.0197 | 0.0437 | 0.0595 |
-| g07 | 0.0198 | 0.0437 | 0.0597 |
-| g08 | 0.0202 | 0.0445 | 0.0608 |
-| g09 | 0.0172 | 0.0370 | 0.0500 |
-| g10 | 0.0172 | 0.0370 | 0.0500 |
-| g11 | 0.0176 | 0.0377 | 0.0510 |
-| g12 | 0.0176 | 0.0377 | 0.0510 |
-| g13 | 0.0177 | 0.0378 | 0.0511 |
-| g14 | 0.0174 | 0.0373 | 0.0505 |
-| g15 | 0.0176 | 0.0377 | 0.0510 |
-| g16 | 0.0173 | 0.0370 | 0.0500 |
-| g17 | 0.0168 | 0.0355 | 0.0478 |
-| g18 | 0.0164 | 0.0347 | 0.0468 |
-| g19 | 0.0168 | 0.0355 | 0.0478 |
-| g20 | 0.0168 | 0.0355 | 0.0479 |
-| g21 | 0.0169 | 0.0358 | 0.0483 |
-| g22 | 0.0168 | 0.0355 | 0.0478 |
-| g23 | 0.0168 | 0.0355 | 0.0478 |
-| g24 | 0.0164 | 0.0347 | 0.0468 |
+| g01 | 0.0245 | 0.0530 | 0.0729 |
+| g02 | 0.0252 | 0.0543 | 0.0747 |
+| g03 | 0.0252 | 0.0543 | 0.0747 |
+| g04 | 0.0252 | 0.0544 | 0.0748 |
+| g05 | 0.0245 | 0.0530 | 0.0729 |
+| g06 | 0.0245 | 0.0530 | 0.0729 |
+| g07 | 0.0245 | 0.0531 | 0.0730 |
+| g08 | 0.0253 | 0.0545 | 0.0750 |
+| g09 | 0.0245 | 0.0527 | 0.0725 |
+| g10 | 0.0248 | 0.0533 | 0.0733 |
+| g11 | 0.0246 | 0.0530 | 0.0730 |
+| g12 | 0.0248 | 0.0534 | 0.0734 |
+| g13 | 0.0248 | 0.0533 | 0.0733 |
+| g14 | 0.0248 | 0.0534 | 0.0734 |
+| g15 | 0.0247 | 0.0531 | 0.0730 |
+| g16 | 0.0250 | 0.0537 | 0.0739 |
+| g17 | 0.0219 | 0.0455 | 0.0622 |
+| g18 | 0.0217 | 0.0451 | 0.0617 |
+| g19 | 0.0218 | 0.0455 | 0.0621 |
+| g20 | 0.0218 | 0.0455 | 0.0622 |
+| g21 | 0.0224 | 0.0465 | 0.0636 |
+| g22 | 0.0219 | 0.0455 | 0.0622 |
+| g23 | 0.0219 | 0.0455 | 0.0622 |
+| g24 | 0.0217 | 0.0451 | 0.0617 |

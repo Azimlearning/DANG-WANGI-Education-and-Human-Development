@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relative atomic mass: the average of the isotopes</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Relative atomic mass: the average of the isotopes", note: "Most elements are a mixture of isotopes. The relative atomic mass is the average of the isotope masses, weighted by the percentage of each isotope in a natural sample.", kicker: "Interactive chemistry lab", tryThis: "See how the relative atomic mass of chlorine depends on how abundant each of its two isotopes is." });
+  Synapse.predictCard(env, {"prompt": "The lighter isotope of chlorine is more abundant than the heavier one. Will the relative atomic mass be closer to the mass of the lighter or the heavier isotope?", "choices": ["Closer to the lighter isotope", "Exactly halfway between them", "Closer to the heavier isotope"], "reveal": "Set the abundance of chlorine-35 to 75 and compare the relative atomic mass with the two isotope masses."});
+  var c_abundance = Synapse.slider(env, {"id": "abundance", "label": "Abundance of chlorine-35", "unit": "%", "min": 10.0, "max": 90.0, "value": 75.0, "grid": 16});
+  
+  var m_ram = Synapse.relativeAtomicMass({ mass_1: 35.0, mass_2: 37.0, abundance_1: c_abundance });
+  Synapse.readout(env, { label: "Relative atomic mass of chlorine", unit: "u", value: m_ram, digits: 2 });
+  
+  Synapse.graph(env, { title: "The relative atomic mass falls as the lighter isotope becomes more abundant.", x: c_abundance, y: m_ram, yLabel: "Relative atomic mass", yUnit: "u", digits: 2 });
+  
+  Synapse.text(env, "Chlorine has two isotopes, chlorine-35 and chlorine-37, and the rest of the sample is chlorine-37.");
+  Synapse.text(env, "The relative atomic mass is the average of the two masses, weighted by how abundant each isotope is.");
+  Synapse.hintLadder(env, { hints: ["An element can be a mixture of atoms with different masses.", "Which isotope is more abundant? The average leans towards it.", "Multiply each mass by its percentage, add them and divide by one hundred."] });
+  Synapse.conceptCheck(env, {"question": "What does the relative atomic mass of an element depend on?", "options": ["Only the number of protons", "The masses of its isotopes and how abundant each is", "Only the number of electrons"], "correct": 1, "explanation": "An element is a mixture of isotopes, so its relative atomic mass is the average of their masses weighted by the natural abundance of each."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

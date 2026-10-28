@@ -165,7 +165,15 @@ export interface ActionRecord {
 
 /** A composite widget the Kit built (the mass hanger, a scene). It reports facts about itself that a page could falsify (where its parts are, what they show), as problems; none means intact. */
 export interface WidgetRecord {
-  kind: "masses" | "scene" | "valve" | "dial";
+  kind: "masses" | "scene" | "valve" | "dial" | "apparatus" | "handle";
+  /** Handles only (W17): the control a grip on the drawing moves, and where the grip runs in the part's drawing units. */
+  control?: string;
+  grab?: { from: [number, number]; to: [number, number] } | { pivot: [number, number]; radius: number };
+  /** Apparatus only: the part, the channel, its type and the units it accepts (empty: any unit, judged by its scale). */
+  part?: string;
+  channel?: string;
+  channelType?: string;
+  units?: string[];
   id: string;
   /** Masses only: how many masses the Kit made for the control. */
   masses?: number;

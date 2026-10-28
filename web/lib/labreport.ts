@@ -27,6 +27,8 @@ export function hasReport(data: LabReportData): boolean {
   return data.experiment !== null || data.steps !== null || (data.table !== null && data.table.columns.length > 0);
 }
 
+import { english, type T } from "./i18n";
+
 export interface Writing {
   observations: string;
   discussion: string;
@@ -35,27 +37,26 @@ export interface Writing {
 
 export const NO_WRITING: Writing = { observations: "", discussion: "", conclusion: "" };
 
-const BLANK = "(not written yet)";
-
 /** The report as plain text. This is exactly what the panel shows, so a screen reader and a printout see the same thing. */
-export function reportText(title: string, data: LabReportData, writing: Writing): string {
-  const out: string[] = [`Lab report: ${title}`, ""];
+export function reportText(title: string, data: LabReportData, writing: Writing, t: T = english): string {
+  const blank = t("notWritten");
+  const out: string[] = [t("labReportHeading", { title }), ""];
   for (const [name, value] of data.experiment ?? []) out.push(`${name}: ${value}`);
   if (data.steps?.length) {
-    out.push("", "Procedure");
+    out.push("", t("procedure"));
     data.steps.forEach((s, i) => out.push(`${i + 1}. ${s}`));
   }
   if (data.table) {
-    out.push("", `Results: ${data.table.caption}`);
+    out.push("", t("resultsCaption", { caption: data.table.caption }));
     const header = data.table.columns.map((c) => `${c.label} (${c.unit})`);
     out.push(header.join(" | "));
-    if (data.table.rows.length === 0) out.push("(no rows recorded yet)");
+    if (data.table.rows.length === 0) out.push(t("noRowsText"));
     for (const row of data.table.rows) out.push(row.join(" | "));
   }
-  out.push("", "Observations", writing.observations.trim() || BLANK);
-  out.push("", "Discussion", writing.discussion.trim() || BLANK);
-  out.push("", "Conclusion", writing.conclusion.trim() || BLANK);
-  out.push("", "The experiment, procedure and results above come from the model you used. The observations, discussion and conclusion are your own words.");
+  out.push("", t("observations"), writing.observations.trim() || blank);
+  out.push("", t("discussion"), writing.discussion.trim() || blank);
+  out.push("", t("conclusion"), writing.conclusion.trim() || blank);
+  out.push("", t("reportTextNote"));
   return out.join("\n");
 }
 

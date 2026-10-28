@@ -5,8 +5,10 @@
 // says what the student thinks. Only the first answer counts; the correction and what it rests on appear after it. Every verdict is in words, not colour alone.
 import { useState } from "react";
 import type { ProbeEvent } from "@synapse/schema";
+import { useT } from "../lib/i18n";
 
 export function ProbeCard({ probe }: { probe: ProbeEvent }) {
+  const t = useT();
   const [chosen, setChosen] = useState<number | null>(null);
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
@@ -14,11 +16,11 @@ export function ProbeCard({ probe }: { probe: ProbeEvent }) {
   const right = chosen === probe.correct;
 
   return (
-    <section aria-label="Quick check" className="study-card grid gap-3 p-4" data-testid="probe">
+    <section aria-label={t("quickAria")} className="study-card grid gap-3 p-4" data-testid="probe">
       <div className="flex items-start justify-between gap-3">
-        <p className="study-kicker">Quick check (optional)</p>
-        <button type="button" onClick={() => setHidden(true)} className="btn btn-ghost px-3 text-sm" aria-label="Hide this quick check">
-          Hide
+        <p className="study-kicker">{t("quickKicker")}</p>
+        <button type="button" onClick={() => setHidden(true)} className="btn btn-ghost px-3 text-sm" aria-label={t("hideQuick")}>
+          {t("hide")}
         </button>
       </div>
       <p id={`probe-${probe.id}`} className="text-[15px] font-medium leading-relaxed">
@@ -39,8 +41,8 @@ export function ProbeCard({ probe }: { probe: ProbeEvent }) {
               >
                 <span>
                   {option}
-                  {answered && isChosen ? <span className="sr-only"> (your answer)</span> : null}
-                  {isCorrect ? <span className="font-semibold"> (correct answer)</span> : null}
+                  {answered && isChosen ? <span className="sr-only">{t("yourAnswerSr")}</span> : null}
+                  {isCorrect ? <span className="font-semibold">{t("correctAnswerMark")}</span> : null}
                 </span>
               </button>
             </li>
@@ -50,10 +52,10 @@ export function ProbeCard({ probe }: { probe: ProbeEvent }) {
       <div role="status" aria-live="polite" className="grid gap-2 text-[15px] leading-relaxed">
         {answered ? (
           <>
-            <p className="font-semibold">{right ? "Yes, that is right." : "Not quite. Here is the idea."}</p>
+            <p className="font-semibold">{right ? t("yesRight") : t("notQuiteIdea")}</p>
             <p>{probe.explanation}</p>
             <p className="text-sm text-ink-dim">
-              <strong>What this rests on:</strong> {probe.basis}
+              <strong>{t("restsOn")}</strong> {probe.basis}
             </p>
           </>
         ) : null}

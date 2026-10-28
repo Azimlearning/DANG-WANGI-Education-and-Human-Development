@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transformers: stepping a voltage up or down</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Transformers: stepping a voltage up or down", note: "An ideal transformer loses no energy. The output voltage is the input voltage times the secondary turns divided by the primary turns, so more secondary turns step the voltage up and fewer step it down.", kicker: "Interactive physics lab", tryThis: "See how the output voltage of an ideal transformer depends on the turns of its two coils." });
+  Synapse.predictCard(env, {"prompt": "The primary coil has 400 turns and the secondary has 100. Will the output voltage be higher or lower than 240 V?", "choices": ["Higher", "The same", "Lower"], "reveal": "Look at the output voltage with the primary at 400 turns and the secondary at 100 turns."});
+  var c_primary = Synapse.slider(env, {"id": "primary", "label": "Primary turns", "unit": "turns", "min": 100.0, "max": 1000.0, "value": 400.0, "grid": 9});
+  var c_secondary = Synapse.slider(env, {"id": "secondary", "label": "Secondary turns", "unit": "turns", "min": 100.0, "max": 1000.0, "value": 100.0, "grid": 9});
+  
+  var m_volts = Synapse.transformerVoltage({ primary_voltage: 240.0, primary_turns: c_primary, secondary_turns: c_secondary });
+  Synapse.readout(env, { label: "Output voltage", unit: "V", value: m_volts, digits: 1 });
+  
+  Synapse.graph(env, { title: "The output voltage rises in a straight line as the secondary turns increase.", x: c_secondary, y: m_volts, yLabel: "Output voltage", yUnit: "V", digits: 1 });
+  
+  Synapse.text(env, "The input voltage is 240 V, as from a mains socket.");
+  Synapse.text(env, "With more turns on the secondary coil than on the primary coil the transformer is a step-up transformer; with fewer it is a step-down transformer.");
+  Synapse.hintLadder(env, { hints: ["The voltage depends on how many turns each coil has.", "What happens to the output voltage when the secondary coil has more turns?", "The output voltage equals the input voltage times the secondary turns divided by the primary turns."] });
+  Synapse.conceptCheck(env, {"question": "A transformer has fewer turns on its secondary coil than on its primary coil. What kind of transformer is it?", "options": ["A step-up transformer", "A step-down transformer", "It does not change the voltage"], "correct": 1, "explanation": "The output voltage is the input voltage times the secondary turns divided by the primary turns. Fewer secondary turns make that fraction less than one, so the voltage steps down."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

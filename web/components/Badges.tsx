@@ -2,18 +2,19 @@
 // green check appears only for `kit-verified` (a textbook citation re-proved by the corpus, D-25). A `model-checked` Environment gets a plain, neutral badge, and a
 // Free-lane Environment says outright that a model wrote it whole (hard constraint 3). The words on the badge never claim more than `Provenance` below it says.
 import type { EnvironmentBlock } from "@synapse/schema";
+import { useT, type StringKey } from "../lib/i18n";
 
-const LABEL_BADGE: Record<EnvironmentBlock["label"], { text: string; tone: "verified" | "checked" }> = {
-  "kit-verified": { text: "Kit verified", tone: "verified" },
-  "model-checked": { text: "Checked by code", tone: "checked" },
-  reviewed: { text: "Reviewed by a person", tone: "verified" },
-  canonical: { text: "Canonical", tone: "verified" },
+const LABEL_BADGE: Record<EnvironmentBlock["label"], { text: StringKey; tone: "verified" | "checked" }> = {
+  "kit-verified": { text: "badgeKitVerified", tone: "verified" },
+  "model-checked": { text: "badgeCheckedByCode", tone: "checked" },
+  reviewed: { text: "badgeReviewed", tone: "verified" },
+  canonical: { text: "badgeCanonical", tone: "verified" },
 };
 
-const LANE_BADGE: Record<EnvironmentBlock["lane"], string> = {
-  instantiate: "From the library",
-  compose: "Built for your question",
-  free: "Written whole by a model",
+const LANE_BADGE: Record<EnvironmentBlock["lane"], StringKey> = {
+  instantiate: "laneLibrary",
+  compose: "laneCompose",
+  free: "laneFree",
 };
 
 const Check = () => (
@@ -23,15 +24,17 @@ const Check = () => (
 );
 
 export function LabelBadge({ label }: { label: EnvironmentBlock["label"] }) {
+  const t = useT();
   const { text, tone } = LABEL_BADGE[label];
   return (
     <span className={`study-badge ${tone === "verified" ? "study-badge-verified pop" : "study-badge-checked"}`}>
       {tone === "verified" ? <Check /> : null}
-      {text}
+      {t(text)}
     </span>
   );
 }
 
 export function LaneBadge({ lane }: { lane: EnvironmentBlock["lane"] }) {
-  return <span className={`study-badge ${lane === "free" ? "study-badge-free" : ""}`}>{LANE_BADGE[lane]}</span>;
+  const t = useT();
+  return <span className={`study-badge ${lane === "free" ? "study-badge-free" : ""}`}>{t(LANE_BADGE[lane])}</span>;
 }

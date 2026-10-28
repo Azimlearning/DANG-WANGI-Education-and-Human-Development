@@ -22,7 +22,11 @@
         "less salt"
       ],
       "source": "Odom, A.L. & Barrow, L.H. (1995), 'Development and application of a two-tier diagnostic test measuring college biology students' understanding of diffusion and osmosis', Journal of Research in Science Teaching 32(1).",
-      "source_verified": false
+      "source_verified": false,
+      "source_check": {
+        "by": "assistant, 2026-10-27, web search of bibliographic records and papers that cite it; the papers were not read in full; not reviewed by a person",
+        "note": "Odom and Barrow created the Diffusion and Osmosis Diagnostic Test in 1995, per later papers that cite it. The journal record itself (volume, pages) was not found in this check."
+      }
     },
     {
       "id": "bonding-sharing-vs-transfer",
@@ -37,7 +41,11 @@
         "bond"
       ],
       "source": "Taber, K.S. (1998), 'An alternative conceptual framework from chemistry education', International Journal of Science Education 20(5); and Taber & Coll (2002) on chemical bonding alternative conceptions.",
-      "source_verified": false
+      "source_verified": false,
+      "source_check": {
+        "by": "assistant, 2026-10-27, web search of bibliographic records and papers that cite it; the papers were not read in full; not reviewed by a person",
+        "note": "The 1998 paper exists (IJSE 20(5), 597-608, doi 10.1080/0950069980200507). Secondary sources say it describes ionic bonding as electron transfer within the octet framework."
+      }
     },
     {
       "id": "newton-force-needed-to-keep-moving",
@@ -53,7 +61,11 @@
         "need force"
       ],
       "source": "Clement, J. (1982), 'Students' preconceptions in introductory mechanics', American Journal of Physics 50(1); and Halloun & Hestenes (1985), 'Common sense concepts about motion', American Journal of Physics 53(11).",
-      "source_verified": false
+      "source_verified": false,
+      "source_check": {
+        "by": "assistant, 2026-10-27, web search of bibliographic records and papers that cite it; the papers were not read in full; not reviewed by a person",
+        "note": "Both papers exist: Clement 1982 (AJP 50(1), 66-71, doi 10.1119/1.12989) and Halloun and Hestenes 1985 (AJP 53(11), 1056-1065), the latter a taxonomy of common-sense beliefs about motion. Clement's text was not read."
+      }
     },
     {
       "id": "photosynthesis-food-from-soil",
@@ -70,7 +82,11 @@
         "photosynth"
       ],
       "source": "Driver, R. et al. (1994), 'Making Sense of Secondary Science: Research into Children's Ideas', Routledge.",
-      "source_verified": false
+      "source_verified": false,
+      "source_check": {
+        "by": "assistant, 2026-10-27, web search of bibliographic records and papers that cite it; the papers were not read in full; not reviewed by a person",
+        "note": "The book exists (Driver, Squires, Rushworth, Wood-Robinson; Routledge; 1993 or 1994 by listing). Its passage on plants taking food from soil was not found in this check."
+      }
     },
     {
       "id": "current-used-up",
@@ -86,7 +102,11 @@
         "runs out of current"
       ],
       "source": "Shipstone, D. (1984), 'A study of children's understanding of electricity in simple DC circuits', European Journal of Science Education 6(2).",
-      "source_verified": false
+      "source_verified": false,
+      "source_check": {
+        "by": "assistant, 2026-10-27, web search of bibliographic records and papers that cite it; the papers were not read in full; not reviewed by a person",
+        "note": "The paper exists (EJSE 6(2), 185-198, doi 10.1080/0140528840060208). Secondary sources tie it to the idea that current is used up in a circuit."
+      }
     }
   ]
 }

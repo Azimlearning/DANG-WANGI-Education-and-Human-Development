@@ -32,6 +32,7 @@ Last updated: 2026-10-16
 | `RATE_LIMIT_PER_MINUTE` | `20` | Questions one client address may ask per minute; above it `/ask` answers HTTP 429 `rate_limited`. `0` turns it off. Behind a proxy every client shares the proxy's address, so set the limit at the proxy as well. Not a secret |
 | `DAILY_LIMIT_PER_CLIENT` | `200` | Questions one client address may ask per UTC day; above it `/ask` answers HTTP 429 `rate_limited`. `0` turns it off. There are no accounts, so an address stands for a session (D-11). Not a secret |
 | `DAILY_LIMIT_TOTAL` | `0` | Questions the whole server answers per UTC day; `0` turns it off. Set it before any public deploy: it stops a crowd of addresses before the monthly spend cap does. Not a secret |
+| `PROMPT_CACHING` | `false` | Ask the provider to cache the system prompt of every call (D-55). The ledger prices cache reads and writes, so turning it on cannot under-count spend, but the saving is not yet measured: leave it off until one measured run (the owner confirms its cost first). Not a secret |
 | `MAX_CONCURRENT_ASKS` | `3` | How many questions are worked on at once (each may launch a browser to verify an Environment, so this bounds memory and CPU). Above it `/ask` answers 429. `0` turns it off. Not a secret |
 | `DATA_DIR` | `./data` | Where local stores and the default spend ledger live |
 | `LEDGER_PATH` | `<DATA_DIR>/ledger.db` | Overrides the spend ledger file. Keep ONE ledger so the monthly cap covers every run |

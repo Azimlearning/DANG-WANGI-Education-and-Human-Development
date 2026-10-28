@@ -1,0 +1,109 @@
+{
+  "id": "parallel_resistors_lab",
+  "title": "Two resistors in parallel",
+  "goal": "See how the effective resistance of two resistors in parallel depends on the two resistances.",
+  "pattern": "simulation",
+  "topic": "physics_form5_electricity",
+  "experiment_ref": null,
+  "note": "In a parallel circuit the current has two paths. The reciprocal of the effective resistance is the sum of the reciprocals of the two resistances.",
+  "controls": [
+    {
+      "id": "first",
+      "label": "Resistance of the first resistor",
+      "unit": "ohm",
+      "min": 2,
+      "max": 20,
+      "value": 4,
+      "grid": 9
+    },
+    {
+      "id": "second",
+      "label": "Resistance of the second resistor",
+      "unit": "ohm",
+      "min": 2,
+      "max": 20,
+      "value": 12,
+      "grid": 9
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "effective",
+      "model": "physics.parallel_resistance",
+      "params": {},
+      "inputs": {
+        "resistance_1": "first",
+        "resistance_2": "second"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Effective resistance",
+      "unit": "ohm",
+      "digits": 2,
+      "source": "effective",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The effective resistance rises as the second resistance increases.",
+      "x": "second",
+      "source": "effective",
+      "label": "Effective resistance",
+      "unit": "ohm",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Two resistors are joined in parallel to the same supply.",
+    "The effective resistance of the combination is less than the smaller of the two resistances."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "par_rule",
+    "par_ex"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "Two resistors are joined in parallel. Will the effective resistance be larger or smaller than the smaller of the two resistances?",
+    "choices": [
+      "Larger than the smaller resistance",
+      "Equal to the smaller resistance",
+      "Smaller than the smaller resistance"
+    ],
+    "reveal": "Compare the effective resistance with the two resistances as you change them."
+  },
+  "concept_check": {
+    "question": "What happens to the effective resistance when a second resistor is joined in parallel with a resistor?",
+    "options": [
+      "It becomes larger",
+      "It stays the same",
+      "It becomes smaller"
+    ],
+    "correct": 2,
+    "explanation": "The current gains another path, so the effective resistance becomes smaller. The reciprocal of the effective resistance is the sum of the reciprocals, which is larger than either one."
+  },
+  "hints": [
+    "In a parallel circuit the current can take two paths.",
+    "Is the effective resistance larger or smaller than the smaller resistance?",
+    "Add the reciprocals of the two resistances, then take the reciprocal of the sum."
+  ],
+  "apparatus": [
+    {
+      "kind": "gauge",
+      "label": "Ohmmeter",
+      "channels": {
+        "value": {
+          "source": "effective",
+          "full": 10
+        }
+      }
+    }
+  ]
+}

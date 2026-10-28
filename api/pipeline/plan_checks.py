@@ -35,9 +35,15 @@ SCENE_MODELS = {
     "titration": frozenset({"chemistry.titration_endpoint_volume"}),
     "fermentation": frozenset({"biology.respiration_energy"}),
     "orbit": frozenset({"physics.circular_speed"}),
+    "refraction": frozenset({"physics.refraction_angle"}),
+    "pressure": frozenset({"fluids.pressure_depth"}),
 }
+REFRACTION_FULL = 90.0
+"""The refraction scene is drawn to the whole range of an angle of incidence (the Kit's `REFRACTION_FULL`)."""
 """Which science models each scene kind may draw: the scene's picture must be the model's own output."""
 MAX_COPY_CHARS = 1800
+COPY_FACTOR = {"ms": 1.35}
+"""The copy budget of a language relative to English. ASSUMED (D-62): a Malay sentence is about a fifth to a third longer than its English; measured on the drafts."""
 
 
 def _scene_peak(inst, controls: dict, constants: dict) -> float | None:  # noqa: ANN001
@@ -54,6 +60,126 @@ def _scene_peak(inst, controls: dict, constants: dict) -> float | None:  # noqa:
         return float(evaluate_model(inst.model, dict(inst.params), values))
     except (KeyError, ValueError):
         return None
+
+
+APPARATUS_FILL_MIN = 0.25
+"""A part's fraction channel must reach at least a quarter of its scale somewhere in the controls' range, and never pass it (the verifier's own rule)."""
+APPARATUS_LIMITS = {"angle": (0.0, 60.0), "ph": (0.0, 14.0)}
+MAX_CORNER_CONTROLS = 6
+
+
+def _source_range(source: str, controls: dict, constants: dict, instances: dict) -> tuple[float, float] | None:
+    """The least and greatest value a control or a model instance takes over every corner of the controls' ranges, from the independent references."""
+    if source in controls:
+        c = controls[source]
+        return (c.min, c.max)
+    inst = instances.get(source)
+    if inst is None:
+        return None
+    moving = sorted({b for b in inst.inputs.values() if b in controls})
+    if len(moving) > MAX_CORNER_CONTROLS or any(b not in controls and b not in constants for b in inst.inputs.values()):
+        return None
+    values: list[float] = []
+    for corner in range(2 ** len(moving)):
+        at = {}
+        for name, bound in inst.inputs.items():
+            if bound in constants:
+                at[name] = constants[bound].value
+            else:
+                c = controls[bound]
+                at[name] = c.max if corner >> moving.index(bound) & 1 else c.min
+        try:
+            values.append(float(evaluate_model(inst.model, dict(inst.params), at)))
+        except (KeyError, ValueError):
+            return None
+    return (min(values), max(values)) if values else None
+
+
+def _apparatus_issues(plan: Plan, manifest: Manifest, add) -> None:  # noqa: ANN001
+    """PLAN-022: every part is in the Kit's catalogue, every required channel is bound and no other, each to a control or a model instance, in a unit the channel accepts, at a
+    scale that fits the controls' range (a fraction channel) or within its limits (an angle, a pH)."""
+    catalogue = manifest.apparatus or {}
+    controls = {c.id: c for c in plan.controls}
+    constants = {k.id: k for k in plan.constants}
+    instances = {m.id: m for m in plan.models}
+    for i, part in enumerate(plan.apparatus):
+        path = f"apparatus[{i}]"
+        info = catalogue.get(part.kind)
+        if info is None:
+            add("PLAN-022", path, f"The Kit has no apparatus part '{part.kind}'.", f"Use one of the Kit's parts: {sorted(catalogue)}.")
+            continue
+        channels = info.get("channels", {})
+        for name in sorted(set(part.channels) - set(channels)):
+            add("PLAN-022", f"{path}.channels.{name}", f"A {part.kind} has no channel '{name}'.", f"Its channels are {sorted(channels)}.")
+        for name in sorted(n for n, ch in channels.items() if not ch.get("optional") and n not in part.channels):
+            add("PLAN-022", f"{path}.channels", f"A {part.kind} needs its '{name}' channel bound.", f"Bind '{name}' to a control or a model instance.")
+        for name, bind in part.channels.items():
+            ch = channels.get(name)
+            if ch is None:
+                continue
+            where = f"{path}.channels.{name}"
+            if bind.source in constants or (bind.source not in controls and bind.source not in instances):
+                add("PLAN-022", where, f"'{bind.source}' is not a control or a model instance, so the {part.kind}'s {name} would show nothing that moves.", "Bind it to a control or a model instance id.")
+                continue
+            unit = controls[bind.source].unit if bind.source in controls else manifest.models[instances[bind.source].model].output_unit if instances[bind.source].model in manifest.models else None
+            accepted = ch.get("units") or []
+            if accepted and unit not in accepted:
+                add("PLAN-022", where, f"A {part.kind}'s {name} draws a value in {' or '.join(accepted)}, and '{bind.source}' is in {unit}.", f"Bind it to a value in {' or '.join(accepted)}.")
+                continue
+            span = _source_range(bind.source, controls, constants, instances)
+            kind = ch.get("type")
+            if kind in APPARATUS_LIMITS:
+                if bind.full is not None:
+                    add("PLAN-022", where, f"A {part.kind}'s {name} is drawn to its own scale and takes no full.", "Remove full.")
+                lo_ok, hi_ok = APPARATUS_LIMITS[kind]
+                if span is not None and (span[0] < lo_ok - 1e-9 or span[1] > hi_ok + 1e-9):
+                    add("PLAN-022", where, f"'{bind.source}' runs from {span[0]:g} to {span[1]:g}, outside {lo_ok:g} to {hi_ok:g}.", f"Keep it within {lo_ok:g} to {hi_ok:g}.")
+                continue
+            if bind.full is None:
+                add("PLAN-022", where, f"A {part.kind}'s {name} needs a full: the value drawn as full.", "Set full to a little above the largest value it reaches.")
+                continue
+            if span is None:
+                continue
+            lo, hi = span
+            if lo < -1e-9:
+                add("PLAN-022", where, f"'{bind.source}' can be negative ({lo:g}), which a {name} cannot show.", "Bind a channel only to a value that stays at zero or above.")
+            elif hi > bind.full * (1 + 1e-9) or hi < bind.full * APPARATUS_FILL_MIN:
+                add(
+                    "PLAN-022",
+                    where,
+                    f"The {part.kind}'s {name} is drawn to a full of {bind.full:g} but '{bind.source}' reaches {hi:g}, so it would be {'clipped' if hi > bind.full else 'mostly unused'}.",
+                    f"Set full to a value from {hi:g} to {hi / APPARATUS_FILL_MIN:g}.",
+                )
+        if part.drop is not None:
+            _drop_issues(part, path, controls, instances, plan, add)
+
+
+MAX_DROP_ITEMS = 8
+
+
+def _drop_issues(part, path: str, controls: dict, instances: dict, plan: Plan, add) -> None:  # noqa: ANN001
+    """PLAN-022 for a drop (W17, D-70): its items add up to a plain slider with 2 to 8 steps that starts on a step, used by no other drop, and the part shows what the items do (a
+    channel bound to that slider, or to a model the slider feeds), so dropping one onto it visibly changes it."""
+    drop = part.drop
+    where = f"{path}.drop"
+    c = controls.get(drop.source)
+    if c is None:
+        add("PLAN-022", where, f"A drop adds up to a slider, and '{drop.source}' is not one of the Plan's controls.", "Set source to the id of the slider the items add up to.")
+        return
+    if c.surface != "slider":
+        add("PLAN-022", where, f"The control '{c.id}' is a {c.surface}; a drop needs a plain slider.", "Set its surface to slider.")
+        return
+    if not 2 <= c.grid <= MAX_DROP_ITEMS:
+        add("PLAN-022", where, f"A drop needs a slider with 2 to {MAX_DROP_ITEMS} steps (one per item), and '{c.id}' has {c.grid}.", f"Set its grid to 2 to {MAX_DROP_ITEMS}.")
+        return
+    at = (c.value - c.min) / ((c.max - c.min) / c.grid)
+    if abs(at - round(at)) > 1e-9:
+        add("PLAN-022", where, f"'{c.id}' starts at {c.value:g}, between two items.", "Start it on a whole number of items from its minimum.")
+    if sum(1 for p in plan.apparatus if p.drop is not None and p.drop.source == c.id) > 1:
+        add("PLAN-022", where, f"Two parts take items for '{c.id}'.", "Give each slider at most one drop.")
+    fed = {m.id for m in instances.values() if c.id in m.inputs.values()}
+    if not any(b.source == c.id or b.source in fed for b in part.channels.values()):
+        add("PLAN-022", where, f"Nothing on the {part.kind} changes when an item is dropped onto it.", f"Bind one of its channels to '{c.id}' or to a model it feeds.")
 
 
 @dataclass(frozen=True)
@@ -106,8 +232,10 @@ def needed_components(plan: Plan) -> set[str]:
         need.add("valve")
     if any(c.surface == "dial" for c in plan.controls):
         need.add("dial")
+    if plan.apparatus:
+        need.add("apparatus")
     if plan.scene:
-        need.add({"titration": "titrationScene", "fermentation": "fermentationScene", "orbit": "orbitScene"}.get(plan.scene.kind, "springScene"))
+        need.add({"titration": "titrationScene", "fermentation": "fermentationScene", "orbit": "orbitScene", "refraction": "refractionScene", "pressure": "pressureScene"}.get(plan.scene.kind, "springScene"))
     return need
 
 
@@ -119,6 +247,8 @@ def _texts(plan: Plan) -> list[str]:
         out += [plan.concept_check.question, *plan.concept_check.options, plan.concept_check.explanation]
     out += [c.label for c in plan.controls] + [r.label for r in plan.readouts]
     out += [g.title for g in plan.graphs]
+    out += [p.label for p in plan.apparatus]
+    out += [p.drop.item for p in plan.apparatus if p.drop is not None]
     if plan.table:
         out.append(plan.table.caption)
     if plan.experiment:
@@ -148,9 +278,25 @@ RELATIONS: dict[str, tuple[tuple[str, str], ...]] = {
     "chemistry.dilution": (("v2", "v1"),),
 }
 
+# model id: (input, parameter). The input's control must start at a whole multiple of the parameter and move in whole multiples of it (PLAN-021). The textbook
+# states the half-life rule for whole numbers of half-lives only, so a time control that stops between them shows values the book never gives.
+WHOLE_MULTIPLES: dict[str, tuple[tuple[str, str], ...]] = {
+    "physics.half_life_decay": (("time", "half_life"),),
+}
 
-def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
+
+
+def _over_ceiling(value: float, q) -> bool:  # noqa: ANN001
+    """True when `value` is above a quantity's ceiling (a `max`); a quantity with no ceiling never is."""
+    if q.max is None or not math.isfinite(value):
+        return False
+    return value >= q.max if q.max_exclusive else value > q.max
+
+
+def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue]:
+    """`lang` only widens the copy budget: Bahasa Melayu runs longer than English for the same meaning (D-62). Every other rule is about numbers, units and structure."""
     issues: list[PlanIssue] = []
+    copy_budget = round(MAX_COPY_CHARS * COPY_FACTOR.get(lang, 1.0))
 
     def add(code: str, path: str, message: str, hint: str, repairable: bool = False) -> None:
         issues.append(PlanIssue(code, path, message, hint, repairable))
@@ -350,6 +496,45 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                                 f"The launch control ({drawn.min:g} to {drawn.max:g} km/s in {drawn.grid} steps) can never show: {', '.join(missing)}. The circular speed is {c_speed:.2f} km/s and the escape speed {e_speed:.2f} km/s.",
                                 f"Choose the control's range and steps so some position falls short of {c_speed:.2f} km/s, one is within 2 percent of it, one is between it and {e_speed:.2f} km/s, and one reaches {e_speed:.2f} km/s.",
                             )
+        elif scene.kind == "refraction":
+            drawn = controls.get(scene.source)
+            inst = instances.get(scene.model or "")
+            if drawn is None or drawn.unit != "deg":
+                add(
+                    "PLAN-019",
+                    "scene.source",
+                    f"A refraction scene draws a control in deg, and '{scene.source}' is {'not a control' if drawn is None else 'in ' + drawn.unit}.",
+                    "Point the scene at the id of the control that is the angle of incidence, in deg.",
+                )
+            elif drawn.min < 0 or drawn.max > REFRACTION_FULL:
+                add(
+                    "PLAN-019",
+                    "scene.source",
+                    f"The angle of incidence runs from {drawn.min:g} to {drawn.max:g} degrees; a ray can only meet the boundary at 0 to 90 degrees from the normal.",
+                    "Keep the angle of incidence within 0 to 90 degrees.",
+                )
+            if scene.full != REFRACTION_FULL:
+                add(
+                    "PLAN-019",
+                    "scene.full",
+                    f"A refraction scene is drawn to the whole range of an angle, {REFRACTION_FULL:g} degrees; this one says {scene.full:g}.",
+                    f"Set the scene's full to {REFRACTION_FULL:g}.",
+                )
+            if inst is None or inst.model not in allowed:
+                add(
+                    "PLAN-019",
+                    "scene.model",
+                    f"A refraction scene draws the angle of refraction from {sorted(allowed)}, and '{scene.model}' is "
+                    f"{'not a model instance in this Plan' if inst is None else 'a ' + inst.model + ' instance'}.",
+                    f"Point the scene's model at an instance of {sorted(allowed)}.",
+                )
+            elif inst.inputs.get("incidence_angle") != scene.source:
+                add(
+                    "PLAN-019",
+                    "scene.model",
+                    f"The angle of refraction '{inst.id}' is not fed by '{scene.source}', the angle of incidence the scene draws.",
+                    f"Bind the refraction model's incidence_angle input to '{scene.source}'.",
+                )
         elif scene.kind == "fermentation":
             drawn = controls.get(scene.source)
             inst = instances.get(scene.model or "")
@@ -453,6 +638,13 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                     f"{name} = {value} is outside {m.model}'s domain ({'above' if q.exclusive else 'at least'} {q.min} {q.unit}).",
                     f"Set {name} {'above' if q.exclusive else 'to at least'} {q.min} {q.unit}.",
                 )
+            elif _over_ceiling(value, q):
+                add(
+                    "PLAN-003",
+                    f"{path}.params.{name}",
+                    f"{name} = {value} is outside {m.model}'s domain ({'below' if q.max_exclusive else 'at most'} {q.max} {q.unit}).",
+                    f"Set {name} {'below' if q.max_exclusive else 'to at most'} {q.max} {q.unit}.",
+                )
         if set(m.inputs) != set(entry.inputs):
             add(
                 "PLAN-004",
@@ -480,6 +672,13 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                         f"Control '{bound}' starts at {c.min}, below {m.model}'s domain for {name} ({'above' if q.exclusive else 'at least'} {q.min} {q.unit}).",
                         f"Make {bound}'s min {'above' if q.exclusive else 'at least'} {q.min}.",
                     )
+                if _over_ceiling(c.max, q):
+                    add(
+                        "PLAN-005",
+                        f"controls[{list(controls).index(bound)}]",
+                        f"Control '{bound}' can reach {c.max}, above {m.model}'s domain for {name} ({'below' if q.max_exclusive else 'at most'} {q.max} {q.unit}).",
+                        f"Make {bound}'s max {'below' if q.max_exclusive else 'at most'} {q.max}.",
+                    )
             elif bound in constants:
                 k = constants[bound]
                 if k.unit != q.unit:
@@ -495,6 +694,13 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                         f"constants[{list(constants).index(bound)}]",
                         f"Constant '{bound}' = {k.value} is outside {m.model}'s domain for {name}.",
                         f"Set {bound} {'above' if q.exclusive else 'to at least'} {q.min}.",
+                    )
+                elif _over_ceiling(k.value, q):
+                    add(
+                        "PLAN-005",
+                        f"constants[{list(constants).index(bound)}]",
+                        f"Constant '{bound}' = {k.value} is outside {m.model}'s domain for {name} ({'below' if q.max_exclusive else 'at most'} {q.max} {q.unit}).",
+                        f"Set {bound} {'below' if q.max_exclusive else 'to at most'} {q.max}.",
                     )
             else:
                 add(
@@ -518,6 +724,26 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
                     f"{m.model} needs {input_name} to be at least {param_name} ({floor}), but '{bound}' can be {lowest}.",
                     f"Make '{bound}' start at {floor} or more, or lower {param_name}.",
                 )
+
+    # PLAN-021: a control that stands for a number of whole units of a model parameter (half-lives) must start on one and move in whole ones.
+    for m in plan.models:
+        for input_name, param_name in WHOLE_MULTIPLES.get(m.model, ()):
+            bound = m.inputs.get(input_name)
+            unit = m.params.get(param_name)
+            if bound not in controls or unit is None or not unit > 0:
+                continue
+            c = controls[bound]
+            step = (c.max - c.min) / c.grid if c.grid > 0 else math.nan
+            for what, value in (("starts at", c.min), ("moves in steps of", step)):
+                ratio = value / unit
+                if not math.isfinite(ratio) or abs(ratio - round(ratio)) > 1e-9 or round(ratio) < (0 if what == "starts at" else 1):
+                    add(
+                        "PLAN-021",
+                        f"controls[{list(controls).index(bound)}]",
+                        f"Control '{bound}' {what} {value:g}, which is not a whole number of {param_name}s ({unit:g}); the textbook states the rule for whole numbers only.",
+                        f"Make '{bound}' start at 0 or a whole multiple of {unit:g} and move in whole multiples of {unit:g} (min, max and grid so that (max - min) / grid is one).",
+                    )
+                    break
 
     # PLAN-020: a constant the textbooks fix (g, the molar volume of a gas) must carry a value the textbooks use.
     for i, m in enumerate(plan.models):
@@ -680,11 +906,13 @@ def check(plan: Plan, manifest: Manifest) -> list[PlanIssue]:
     if plan.custom and plan.pattern not in ("simulation", "virtual_experiment"):
         add("PLAN-012", "custom", "Custom slots are not allowed for this pattern.", "Remove the custom slots.")
 
-    if sum(len(t) for t in _texts(plan)) > MAX_COPY_CHARS:
+    _apparatus_issues(plan, manifest, add)
+
+    if sum(len(t) for t in _texts(plan)) > copy_budget:
         add(
             "PLAN-010",
             "(plan)",
-            f"The words in the plan add up to more than {MAX_COPY_CHARS} characters.",
+            f"The words in the plan add up to more than {copy_budget} characters.",
             "Shorten the note, sentences and steps.",
         )
     if any(c.grid > MAX_GRID_POSITIONS for c in plan.controls):

@@ -1,0 +1,6 @@
+{
+  "digest": null,
+  "reviewer": null,
+  "reviewed_on": null,
+  "note": "The Kit's Malay words (packages/kit/src/i18n.ts) have not been reviewed. A reviewer approves them with eval/i18n/tools.py; the digest ties the review to the exact words."
+}

@@ -10,6 +10,6 @@ export function text(env: Environment, raw: string): HTMLParagraphElement {
   p.className = "syn-text";
   p.textContent = content;
   copy.push(content);
-  env.stage.appendChild(p);
+  env.panel.appendChild(p);
   return p;
 }

@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: { density: { unit: "kg/m3", min: 0, exclusive: true }, g: { unit: "m/s2", min: 0, exclusive: true } },
   output: { unit: "Pa" },
   fn: ({ depth, density, g }) => (depth as number) * (density as number) * (g as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed from P = h rho g.
   reference: [
     { args: { depth: 2, density: 1000, g: 10 }, expected: 20000, tolerance: 1e-9, derivation: "2 m x 1000 kg/m3 x 10 m/s2 = 20 000 Pa" },

@@ -10,7 +10,7 @@ export const spec: ScienceSpec = {
   params: { initial_mass: { unit: "g", min: 0, exclusive: true } },
   output: { unit: "%" },
   fn: ({ final_mass, initial_mass }) => (((final_mass as number) - (initial_mass as number)) / (initial_mass as number)) * 100,
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed: (final - initial) / initial x 100.
   reference: [
     { args: { final_mass: 12, initial_mass: 10 }, expected: 20, tolerance: 1e-9, derivation: "(12 - 10) / 10 x 100 = 20 %" },

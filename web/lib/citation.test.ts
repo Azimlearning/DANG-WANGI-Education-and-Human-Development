@@ -23,6 +23,11 @@ describe("citationText", () => {
       "KSSM Physics Form 5 textbook, PDF page 36",
     );
   });
+  it("shows the book's own page first when it is known, and the PDF page beside it", () => {
+    expect(citationText({ source: "textbook-physics-physics-f4-removed", page: 112, printedPage: 107, verified: true })).toBe(
+      "KSSM Physics Form 4 textbook, page 107 (PDF page 112)",
+    );
+  });
   it("says when a citation is not verified, and omits a missing page", () => {
     expect(citationText({ source: "UNVERIFIED (no textbook page has been checked for this Environment)", page: null, verified: false })).toBe(
       "UNVERIFIED (no textbook page has been checked for this Environment) (not verified)",

@@ -32,6 +32,8 @@ export interface Citation {
   page: number | null;
   quote: string | null;
   verified: boolean;
+  /** The number printed on the book's own page, when it is known (the PDF page is not what a student sees on paper). Display only: the proof is `quote` on `page`. @int */
+  printedPage?: number | null;
 }
 
 /** A science micro-model an Environment uses, with the parameters it was built with. */
@@ -74,6 +76,26 @@ export interface EnvironmentBlock {
   checked: CheckedSummary;
   /** One plain sentence on what was composed and what was checked. */
   planSummary: string;
+}
+
+/** The languages an Environment can be read in. English is the original; Bahasa Melayu is a second Environment built from a translated Plan (D-62). */
+export type Language = "en" | "ms";
+
+/** A translation of an Environment: another verified Environment, linked to the original, with its review state. */
+export interface Translation {
+  lang: Language;
+  /** The id of the translated Environment. Open it like any other: it goes through the same delivery gate. */
+  envId: string;
+  /** `draft`: written but not yet read by a fluent reviewer. `reviewed`: a person approved every string. */
+  status: "draft" | "reviewed";
+  reviewer: string | null;
+  /** The date of the review, ISO 8601. */
+  reviewedOn: string | null;
+}
+
+/** What `GET /library/{id}/translations` answers. A draft is listed only when the server is set to show drafts (a demo or a review session). */
+export interface TranslationsResponse {
+  translations: Translation[];
 }
 
 export type Block = EnvironmentBlock;

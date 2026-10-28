@@ -31,6 +31,8 @@ from api.schema.generated import (
     FieldIssue,
     StreamErrorEvent,
     StreamEvent,
+    Translation,
+    TranslationsResponse,
 )
 from api.seed import open_store
 from api.static import mount_kit
@@ -136,7 +138,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/health")
     async def health() -> dict[str, str]:
-        return {"status": "ok"}
+        # `llm_mode` lets the web page say plainly when the answers come from the offline fake model (only the stored library answers a question then).
+        return {"status": "ok", "llm_mode": settings.synapse_llm_mode}
 
     def checked_question(body: AskRequest) -> str:
         question = body.question.strip()
@@ -211,9 +214,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def library(request: Request) -> dict:
         return {"environments": request.app.state.store.library(current_kit_shas())}
 
+    def _only_if_shown(request: Request, env_id: str) -> None:
+        """A Bahasa Melayu Environment whose translation nobody has reviewed is not served unless the server is set to show drafts (D-62). Looks like any unknown id."""
+        store: SqliteEnvironmentStore = request.app.state.store
+        if store.translation_status(env_id) == "draft" and not settings.bm_show_drafts:
+            raise NotFound(f"No verified Environment '{env_id}'.")
+
+    @app.get("/library/{env_id}/translations")
+    async def library_translations(env_id: str, request: Request) -> TranslationsResponse:
+        """The translations of one Environment that may be shown: reviewed ones, and drafts only when the server shows drafts."""
+        store: SqliteEnvironmentStore = request.app.state.store
+        return TranslationsResponse(
+            translations=[
+                Translation(**t) for t in store.translations_of(env_id) if t["status"] == "reviewed" or settings.bm_show_drafts
+            ]
+        )
+
     @app.get("/library/{env_id}")
     async def library_item(env_id: str, request: Request) -> JSONResponse:
         """One Environment through the delivery gate, exactly as /ask delivers it."""
+        _only_if_shown(request, env_id)
         try:
             block = deliver(
                 request.app.state.store,
@@ -235,6 +255,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/library/{env_id}/export")
     async def library_export(env_id: str, request: Request) -> Response:
         """The offline single-file copy of one Environment (P7). Built from the block the gate delivers, with the Kit bytes it was verified against."""
+        _only_if_shown(request, env_id)
         try:
             block = deliver(
                 request.app.state.store,

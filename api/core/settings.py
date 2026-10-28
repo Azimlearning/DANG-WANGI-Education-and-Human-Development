@@ -63,9 +63,16 @@ class Settings(BaseSettings):
     """Questions the whole server answers per UTC day (0 turns the limit off). Set it before any public deploy: it bounds a crowd of addresses before the monthly spend cap does."""
     max_concurrent_asks: int = 3
     """How many questions are worked on at once. Each can launch a browser to verify an Environment, so this bounds memory and CPU (0 turns it off)."""
-    free_lane_enabled: bool = False
-    """Let a question the Kit cannot express get a whole model-written page (the labelled Free lane, D-07, D-41). Off by default. It also needs the wording
-    check, which the API turns on only in live mode, so it does nothing in fake mode. Each Free page costs a paid generation and a paid second reading."""
+    prompt_caching: bool = False
+    """Ask the provider to cache the system prompt of every call (B6, D-55). Off until one measured run shows a real saving: the ledger already prices cache reads and
+    writes, so turning it on cannot under-count, but the saving is not yet measured."""
+    free_lane_enabled: bool = True
+    """Let a question the Kit cannot express get a whole model-written page (the labelled Free lane, D-07, D-41). On by default since W16 (D-67, the owner's call:
+    "u should be able to generate anything related to simulation or experiments"). It also needs the wording check, which the API turns on only in live mode, so it
+    does nothing in fake mode. Each Free page costs a paid generation and a paid second reading, inside the spend caps."""
+    bm_show_drafts: bool = True
+    """Serve Bahasa Melayu Environments whose translation has not been reviewed by a fluent person (W12, D-62). On by default since W16 (D-68, the owner's call: no
+    reviewer will be found, "basically just leave on"); the web marks every such lab "draft translation". Turn it off to serve reviewed translations only."""
     store_attestation_key: SecretStr | None = None
     """HMAC key that signs stored Environments (A-19). Keep it OUTSIDE the data directory. Unset: rows are unsigned and the gate trusts the store."""
     anthropic_api_key: SecretStr | None = None

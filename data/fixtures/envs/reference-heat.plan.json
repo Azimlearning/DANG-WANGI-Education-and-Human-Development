@@ -1,0 +1,38 @@
+{
+  "id": "reference-heat",
+  "title": "Heat: how much energy warms water?",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "Find how the heat needed depends on the mass and on the rise in temperature.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "mass",
+    "rise"
+  ],
+  "readouts": [
+    "Heat needed"
+  ],
+  "models": [
+    {
+      "id": "physics.specific_heat",
+      "params": {
+        "specific_heat": 4200.0
+      },
+      "readouts": [
+        "Heat needed"
+      ],
+      "series": [
+        "Heat needed",
+        "Heat needed"
+      ]
+    }
+  ]
+}

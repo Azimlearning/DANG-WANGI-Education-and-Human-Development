@@ -1,0 +1,37 @@
+{
+  "id": "reference-ram",
+  "title": "Relative atomic mass: the average of the isotopes",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the relative atomic mass of chlorine depends on how abundant each of its two isotopes is.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "abundance"
+  ],
+  "readouts": [
+    "Relative atomic mass of chlorine"
+  ],
+  "models": [
+    {
+      "id": "chemistry.relative_atomic_mass",
+      "params": {
+        "mass_1": 35.0,
+        "mass_2": 37.0
+      },
+      "readouts": [
+        "Relative atomic mass of chlorine"
+      ],
+      "series": [
+        "Relative atomic mass"
+      ]
+    }
+  ]
+}

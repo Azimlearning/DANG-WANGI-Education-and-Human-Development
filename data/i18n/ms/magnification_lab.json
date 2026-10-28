@@ -1,0 +1,27 @@
+{
+  "plan": "magnification_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Berapakah pembesaran sebuah sel?",
+    "/goal": "Cari pembesaran daripada saiz lukisan dan saiz sel.",
+    "/note": "Pembesaran memberitahu anda berapa kali lebih besar lukisan atau imej berbanding spesimen sebenar: pembesaran = saiz imej / saiz sebenar.",
+    "/controls/0/label": "Saiz imej",
+    "/controls/1/label": "Saiz sebenar",
+    "/readouts/0/label": "Pembesaran",
+    "/graphs/0/title": "Lukisan yang lebih besar bagi sel yang sama bermakna pembesaran yang lebih besar.",
+    "/graphs/0/label": "Pembesaran",
+    "/sentences/0": "Kekalkan saiz sebenar dan jadikan saiz imej lebih besar, kemudian lebih kecil.",
+    "/hints/0": "Pembesaran membandingkan saiz gambar dengan saiz sebenar.",
+    "/hints/1": "Saiz yang manakah berada di atas pecahan, lukisan atau sel sebenar?",
+    "/hints/2": "Pastikan kedua-dua saiz dalam unit yang sama sebelum anda membahagi.",
+    "/predict/prompt": "Jika anda menjadikan lukisan dua kali lebih besar tetapi saiz sel kekal sama, apakah yang berlaku kepada pembesaran?",
+    "/predict/choices/0": "Ia menjadi separuh",
+    "/predict/choices/1": "Ia menjadi dua kali ganda",
+    "/predict/choices/2": "Ia kekal sama",
+    "/predict/reveal": "Cuba saiz imej 20 mm dan kemudian 40 mm dengan saiz sebenar yang tetap.",
+    "/apparatus/0/label": "Lukisan sel"
+  }
+}

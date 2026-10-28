@@ -17,7 +17,9 @@
     "Set the amount to 2 mol and compare the two volumes."
   ],
   "steps": [],
-  "citation_ids": ["molar_volume"],
+  "citation_ids": [
+    "molar_volume"
+  ],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -84,5 +86,27 @@
     "Write the formula: volume = amount x molar volume.",
     "Take 24 dm3/mol for room conditions.",
     "Multiply by the amount in moles to get the volume in dm3."
+  ],
+  "apparatus": [
+    {
+      "kind": "syringe",
+      "label": "Gas at room conditions",
+      "channels": {
+        "volume": {
+          "source": "room",
+          "full": 120
+        }
+      }
+    },
+    {
+      "kind": "syringe",
+      "label": "Gas at STP",
+      "channels": {
+        "volume": {
+          "source": "stp",
+          "full": 120
+        }
+      }
+    }
   ]
 }

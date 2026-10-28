@@ -251,7 +251,7 @@ describe("springScene", () => {
     const load = massHanger(env, { id: "load", label: "Load", unit: "N", min: 0, max: 10, value: 0, grid: 5 });
     const x = hookes({ k: 50, load });
     const scene = springScene(env, { extension: x, full: 0.25 });
-    const bottom = () => Number(scene.querySelector("rect")?.getAttribute("y"));
+    const bottom = () => Number(scene.querySelector("rect[width='56']")?.getAttribute("y"));
     const label = () => scene.getAttribute("aria-label") ?? "";
     const short = bottom();
     expect(label()).toBe("A spring hanging from a bracket, not stretched.");

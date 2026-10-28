@@ -1,0 +1,37 @@
+{
+  "id": "reference-halflife",
+  "title": "Half-life: how a radioactive sample decays",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how much of a radioactive sample is left after each half-life.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "time"
+  ],
+  "readouts": [
+    "Activity left"
+  ],
+  "models": [
+    {
+      "id": "physics.half_life_decay",
+      "params": {
+        "half_life": 6.0,
+        "initial": 480.0
+      },
+      "readouts": [
+        "Activity left"
+      ],
+      "series": [
+        "Activity left"
+      ]
+    }
+  ]
+}

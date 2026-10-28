@@ -35,4 +35,5 @@ def test_an_unrecognised_id_is_shown_as_it_is() -> None:
 
 def test_text_matches_the_web_wording() -> None:
     assert citation_text("textbook-physics-physics-f5-removed", 36, True) == "KSSM Physics Form 5 textbook, PDF page 36"
+    assert citation_text("textbook-physics-physics-f4-removed", 112, True, 107) == "KSSM Physics Form 4 textbook, page 107 (PDF page 112)"
     assert citation_text("UNVERIFIED (x)", None, False) == "UNVERIFIED (x) (not verified)"

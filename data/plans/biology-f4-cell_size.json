@@ -49,7 +49,9 @@
     "Set the side to 3 cm and press Record.",
     "Compare the three ratios."
   ],
-  "citation_ids": ["tsa_v"],
+  "citation_ids": [
+    "tsa_v"
+  ],
   "presentation": "stage",
   "custom": [],
   "id": "cell_size_agar",
@@ -86,6 +88,23 @@
       "digits": 2,
       "source": "cube",
       "convert_to": null
+    }
+  ],
+  "hints": [
+    "Think about what a cell needs to take in through its surface.",
+    "Compare the surface area with the volume as the cube grows.",
+    "Which one grows faster as the cube gets bigger?"
+  ],
+  "apparatus": [
+    {
+      "kind": "cell",
+      "label": "Agar cube",
+      "channels": {
+        "size": {
+          "source": "side",
+          "full": 4
+        }
+      }
     }
   ]
 }

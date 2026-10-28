@@ -1,0 +1,193 @@
+{
+  "started_at": "2026-10-27T22:59:11+00:00",
+  "approved_usd": 0.49,
+  "exemplars": false,
+  "spent_usd": 0.102468,
+  "projection": {
+    "low": 0.0465,
+    "high": 0.0997,
+    "hard_bound": 0.1767
+  },
+  "stopped": null,
+  "questions": [
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 2265
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 5297,
+          "attempt": 0,
+          "codes": [
+            "PLAN-016"
+          ],
+          "issues": [
+            "PLAN-016 models[0]: chemistry.heat_energy is registered for chemistry_form5_thermochemistry, not for the topic 'chemistry_form4_acids_bases_salts'."
+          ],
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4693,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 1,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12325,
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 17
+        }
+      ],
+      "id": "b11",
+      "question": "How do I calculate the heat released in the neutralisation of an acid by an alkali?",
+      "expected_topic": "chemistry_form5_thermochemistry",
+      "environment": "Heat from neutralisation",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 28.4,
+      "cost_usd": 0.064029,
+      "projected_high_usd": 0.049695,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1587,
+          "tokens_out": 44,
+          "cost_usd": 0.00018070000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 857,
+          "tokens_out": 394,
+          "cost_usd": 0.005654,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 11008,
+          "tokens_out": 718,
+          "cost_usd": 0.029196,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 11144,
+          "tokens_out": 671,
+          "cost_usd": 0.028998,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 664
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 6736,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 1,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12230,
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 17
+        }
+      ],
+      "id": "b12",
+      "question": "How do I use the temperature rise to find the heat of neutralisation?",
+      "expected_topic": "chemistry_form5_thermochemistry",
+      "environment": "Heat of neutralisation",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 23.8,
+      "cost_usd": 0.03844,
+      "projected_high_usd": 0.049975,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1536,
+          "tokens_out": 12,
+          "cost_usd": 0.00015960000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 852,
+          "tokens_out": 436,
+          "cost_usd": 0.006064,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10933,
+          "tokens_out": 1035,
+          "cost_usd": 0.032216,
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

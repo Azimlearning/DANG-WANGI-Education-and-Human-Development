@@ -63,7 +63,10 @@
     "Try a resistance of 4 ohm and then 20 ohm at the same voltage."
   ],
   "steps": [],
-  "citation_ids": ["ohm_v_prop", "ohm_v_ir"],
+  "citation_ids": [
+    "ohm_v_prop",
+    "ohm_v_ir"
+  ],
   "presentation": "stage",
   "custom": [],
   "concept_check": {
@@ -75,5 +78,32 @@
     ],
     "correct": 1,
     "explanation": "The current is inversely proportional to the resistance, so doubling the resistance halves the current."
-  }
+  },
+  "hints": [
+    "Change one control at a time.",
+    "What happens to the current when the voltage rises and the resistance stays the same?",
+    "Current equals voltage divided by resistance."
+  ],
+  "apparatus": [
+    {
+      "kind": "circuit",
+      "label": "Circuit",
+      "channels": {
+        "current": {
+          "source": "conductor",
+          "full": 12
+        }
+      }
+    },
+    {
+      "kind": "gauge",
+      "label": "Ammeter",
+      "channels": {
+        "value": {
+          "source": "conductor",
+          "full": 12
+        }
+      }
+    }
+  ]
 }

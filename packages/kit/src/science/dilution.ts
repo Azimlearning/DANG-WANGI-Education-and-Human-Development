@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: { m1: { unit: "mol/dm3", min: 0, exclusive: true }, v1: { unit: "cm3", min: 0, exclusive: true } },
   output: { unit: "mol/dm3" },
   fn: ({ v2, m1, v1 }) => ((m1 as number) * (v1 as number)) / (v2 as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { v2: 100, m1: 2, v1: 25 }, expected: 0.5, tolerance: 1e-12, derivation: "2.0 x 25 / 100 = 0.5 mol/dm3" },

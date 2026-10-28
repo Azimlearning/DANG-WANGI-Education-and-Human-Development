@@ -23,6 +23,8 @@ class LLMRequest:
     max_tokens: int = 1024
     effort: Effort | None = None
     """Thinking depth. Sent only to models that accept it."""
+    cache_system: bool = False
+    """Ask the provider to cache the system prompt. The service sets it, not a caller, and only when PROMPT_CACHING is on (off until a measured saving, B6)."""
 
 
 @dataclass(frozen=True)
@@ -33,6 +35,10 @@ class ProviderResponse:
     tokens_out: int
     cost_usd: float | None = None
     """The provider's own cost figure when it reports one; otherwise the ledger estimates it."""
+    cache_read_tokens: int = 0
+    """Of `tokens_in`: the tokens served from the provider's cache, billed at a fraction of the base rate."""
+    cache_write_tokens: int = 0
+    """Of `tokens_in`: the tokens written to the provider's cache, billed at more than the base rate."""
 
 
 @dataclass(frozen=True)
@@ -44,3 +50,5 @@ class LLMResult:
     tokens_out: int
     cost_usd: float
     fell_back: bool
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0

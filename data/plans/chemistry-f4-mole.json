@@ -8,7 +8,10 @@
     "The same mass gives different amounts of different substances. Try 20 g and then 100 g."
   ],
   "steps": [],
-  "citation_ids": ["mole_mass", "mole_formula"],
+  "citation_ids": [
+    "mole_mass",
+    "mole_formula"
+  ],
   "presentation": "stage",
   "custom": [],
   "id": "mole_calculator",
@@ -87,5 +90,22 @@
     "Write the formula: amount = mass / molar mass.",
     "Look up the molar mass of water: 18 g/mol.",
     "Divide the mass of water by 18 to get the amount in moles."
+  ],
+  "hints": [
+    "The number of moles depends on the mass and on the molar mass.",
+    "Which substance has the largest molar mass?",
+    "Divide the mass by the molar mass for each substance."
+  ],
+  "apparatus": [
+    {
+      "kind": "balance",
+      "label": "Sample",
+      "channels": {
+        "mass": {
+          "source": "mass",
+          "full": 100
+        }
+      }
+    }
   ]
 }

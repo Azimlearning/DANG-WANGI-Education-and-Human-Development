@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refraction: how light bends in glass</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Refraction: how light bends in glass", note: "A ray of light bends when it enters a denser medium. The refractive index n is sin i divided by sin r. A larger n bends the ray more, and inside the medium there is a critical angle above which the light cannot get out.", kicker: "Interactive physics lab", tryThis: "See how the angle of refraction depends on the angle of incidence and the refractive index, and when light cannot leave a medium." });
+  Synapse.predictCard(env, {"prompt": "Light enters glass from air. How will the angle of refraction compare with the angle of incidence?", "choices": ["It will be larger", "It will be the same", "It will be smaller"], "reveal": "Set the refractive index to 1.5 and the angle of incidence to 40, then compare the two angles."});
+  Synapse.experiment(env, {"aim": "To find how the angle of refraction depends on the angle of incidence", "hypothesis": "The larger the angle of incidence, the larger the angle of refraction", "independent": "Angle of incidence (deg)", "dependent": "Angle of refraction (deg)", "controlled": ["The refractive index of the medium"], "apparatus": ["Ray box", "Glass block", "Protractor"]});
+  Synapse.stepper(env, { steps: ["Keep the refractive index at 1.5, set the angle of incidence to 20, then press Record.", "Set the angle of incidence to 40, then press Record.", "Set the angle of incidence to 60, then press Record.", "Compare the angle of refraction with the angle of incidence each time."] });
+  var c_incidence = Synapse.slider(env, {"id": "incidence", "label": "Angle of incidence", "unit": "deg", "min": 0.0, "max": 80.0, "value": 30.0, "grid": 8});
+  var c_index = Synapse.slider(env, {"id": "index", "label": "Refractive index", "unit": "ratio", "min": 1.1, "max": 2.5, "value": 1.5, "grid": 14});
+  
+  var m_bend = Synapse.refractionAngle({ incidence_angle: c_incidence, refractive_index: c_index });
+  var m_limit = Synapse.criticalAngle({ refractive_index: c_index });
+  Synapse.readout(env, { label: "Angle of refraction", unit: "deg", value: m_bend, digits: 1 });
+  Synapse.readout(env, { label: "Critical angle", unit: "deg", value: m_limit, digits: 1 });
+  Synapse.refractionScene(env, { incidence: c_incidence, refraction: m_bend });
+  Synapse.graph(env, { title: "The angle of refraction rises with the angle of incidence but stays smaller than it.", x: c_incidence, y: m_bend, yLabel: "Angle of refraction", yUnit: "deg", digits: 1 });
+  Synapse.table(env, { caption: "Results", columns: [
+    { label: "Angle of incidence", unit: "deg", value: c_incidence, digits: 0 },
+    { label: "Refractive index", unit: "ratio", value: c_index, digits: 1 },
+    { label: "Angle of refraction", unit: "deg", value: m_bend, digits: 1 }
+  ] });
+  Synapse.text(env, "Going from air into a denser medium, the ray bends towards the normal, so the angle of refraction is smaller than the angle of incidence.");
+  Synapse.text(env, "The critical angle belongs to the medium: light inside it that meets the boundary at a larger angle is totally internally reflected.");
+  
+  Synapse.conceptCheck(env, {"question": "What happens to the angle of refraction if the refractive index rises and the angle of incidence stays the same?", "options": ["It gets larger", "It stays the same", "It gets smaller"], "correct": 2, "explanation": "The refractive index is sin i divided by sin r, so a larger index means a smaller sin r: the ray bends more towards the normal."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

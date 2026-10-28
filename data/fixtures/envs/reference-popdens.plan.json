@@ -1,0 +1,37 @@
+{
+  "id": "reference-popdens",
+  "title": "Estimating a population by quadrat sampling",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the population density of a plant species is found from the plants counted in quadrats.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "count"
+  ],
+  "readouts": [
+    "Population density"
+  ],
+  "models": [
+    {
+      "id": "biology.population_density",
+      "params": {
+        "quadrats": 10.0,
+        "quadrat_area": 1.0
+      },
+      "readouts": [
+        "Population density"
+      ],
+      "series": [
+        "Population density"
+      ]
+    }
+  ]
+}

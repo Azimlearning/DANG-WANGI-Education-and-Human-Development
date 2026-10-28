@@ -315,6 +315,50 @@ WORKED = [
     ("chemistry.ph_from_h", {}, {"h_conc": 1e-7}, 7.0),
     ("chemistry.gas_volume", {"molar_volume": 24}, {"moles": 2}, 48.0),
     ("chemistry.gas_volume", {"molar_volume": 22.4}, {"moles": 0.5}, 11.2),
+    # Worked by hand. Refraction: sin 45 = sqrt2/2 and n = sqrt2 give sin r = 1/2, so r = 30; likewise sin 60 = sqrt3/2 with n = sqrt3.
+    ("physics.refraction_angle", {}, {"incidence_angle": 45, "refractive_index": 2**0.5}, 30.0),
+    ("physics.refraction_angle", {}, {"incidence_angle": 60, "refractive_index": 3**0.5}, 30.0),
+    ("physics.refraction_angle", {}, {"incidence_angle": 30, "refractive_index": 1}, 30.0),
+    ("physics.refraction_angle", {}, {"incidence_angle": 0, "refractive_index": 1.5}, 0.0),
+    # Critical angle: sin c = 1/n. n = 1 gives 90, n = 2 gives 30, n = sqrt2 gives 45.
+    ("physics.critical_angle", {}, {"refractive_index": 1}, 90.0),
+    ("physics.critical_angle", {}, {"refractive_index": 2}, 30.0),
+    ("physics.critical_angle", {}, {"refractive_index": 2**0.5}, 45.0),
+    # Specific heat: Q = m c dT.
+    ("physics.specific_heat", {"specific_heat": 4200}, {"mass": 1, "temperature_change": 1}, 4200.0),
+    ("physics.specific_heat", {"specific_heat": 4200}, {"mass": 2, "temperature_change": 50}, 420000.0),
+    ("physics.specific_heat", {"specific_heat": 900}, {"mass": 0.5, "temperature_change": 40}, 18000.0),
+    # Transformer: Vs = Vp Ns / Np. The first is the textbook's worked example.
+    ("physics.transformer_voltage", {"primary_voltage": 240}, {"primary_turns": 800, "secondary_turns": 60}, 18.0),
+    ("physics.transformer_voltage", {"primary_voltage": 12}, {"primary_turns": 100, "secondary_turns": 500}, 60.0),
+    # Half-life: N = N0 / 2^(t / T). The first is the textbook's worked example: five half-lives of 6 minutes leave 480 / 32 = 15.
+    ("physics.half_life_decay", {"half_life": 6, "initial": 480}, {"time": 30}, 15.0),
+    ("physics.half_life_decay", {"half_life": 10, "initial": 100}, {"time": 20}, 25.0),
+    # Relative atomic mass: the first is the textbook's chlorine example.
+    ("chemistry.relative_atomic_mass", {"mass_1": 35, "mass_2": 37}, {"abundance_1": 75}, 35.5),
+    ("chemistry.relative_atomic_mass", {"mass_1": 63, "mass_2": 65}, {"abundance_1": 70}, 63.6),
+    ("chemistry.relative_atomic_mass", {"mass_1": 35, "mass_2": 37}, {"abundance_1": 100}, 35.0),
+    # Energy value of a food: water mass x 4.2 x rise / (food mass x 1000).
+    ("biology.food_energy_value", {"water_mass": 20}, {"temperature_rise": 25, "food_mass": 0.8}, 2.625),
+    ("biology.food_energy_value", {"water_mass": 50}, {"temperature_rise": 10, "food_mass": 2}, 1.05),
+    # Boyle's law: the first is the textbook's syringe example.
+    ("physics.boyle_law", {"initial_pressure": 108, "initial_volume": 60}, {"final_volume": 48}, 135.0),
+    ("physics.boyle_law", {"initial_pressure": 100, "initial_volume": 50}, {"final_volume": 25}, 200.0),
+    # Two resistors in parallel: the first is the textbook's 4 ohm and 12 ohm example.
+    ("physics.parallel_resistance", {}, {"resistance_1": 4, "resistance_2": 12}, 3.0),
+    ("physics.parallel_resistance", {}, {"resistance_1": 6, "resistance_2": 6}, 3.0),
+    # Buoyant force: F = rho V g.
+    ("physics.buoyant_force", {"density": 1000, "g": 10}, {"volume": 0.002}, 20.0),
+    ("physics.buoyant_force", {"density": 1000, "g": 9.81}, {"volume": 0.001}, 9.81),
+    # Cell voltage: the first is the textbook's Daniell cell, +1.10 V.
+    ("chemistry.cell_voltage", {"anode_potential": -0.76}, {"cathode_potential": 0.34}, 1.1),
+    ("chemistry.cell_voltage", {"anode_potential": 0.34}, {"cathode_potential": 0.8}, 0.46),
+    # Population density by quadrat sampling.
+    ("biology.population_density", {"quadrats": 10, "quadrat_area": 1}, {"total_count": 45}, 4.5),
+    ("biology.population_density", {"quadrats": 5, "quadrat_area": 0.25}, {"total_count": 20}, 16.0),
+    # Electrical energy: the first is the textbook's lamp, 252 J.
+    ("physics.electrical_energy", {"voltage": 6}, {"current": 0.7, "time": 60}, 252.0),
+    ("physics.electrical_energy", {"voltage": 12}, {"current": 1.5, "time": 120}, 2160.0),
 ]
 
 
@@ -350,6 +394,42 @@ def test_references_match_the_values_worked_out_by_hand(
         ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 0, "base_coeff": 1}, {"va": 25, "vb": 20}),
         ("chemistry.titration_concentration", {"ma": 0.1, "acid_coeff": 1, "base_coeff": 1}, {"va": 25, "vb": 0}),
         ("chemistry.dilution", {"m1": 1, "v1": 10}, {"v2": 0}),
+        ("physics.refraction_angle", {}, {"incidence_angle": 90, "refractive_index": 1.5}),  # the ceiling is exclusive
+        ("physics.refraction_angle", {}, {"incidence_angle": 120, "refractive_index": 1.5}),
+        ("physics.refraction_angle", {}, {"incidence_angle": -1, "refractive_index": 1.5}),
+        ("physics.refraction_angle", {}, {"incidence_angle": 30, "refractive_index": 0.99}),
+        ("physics.critical_angle", {}, {"refractive_index": 0.99}),
+        ("physics.specific_heat", {"specific_heat": 4200}, {"mass": 0, "temperature_change": 1}),
+        ("physics.specific_heat", {"specific_heat": 4200}, {"mass": 1, "temperature_change": -1}),
+        ("physics.specific_heat", {"specific_heat": 0}, {"mass": 1, "temperature_change": 1}),
+        ("physics.transformer_voltage", {"primary_voltage": 240}, {"primary_turns": 0, "secondary_turns": 60}),
+        ("physics.transformer_voltage", {"primary_voltage": 240}, {"primary_turns": 800, "secondary_turns": 0}),
+        ("physics.transformer_voltage", {"primary_voltage": 0}, {"primary_turns": 800, "secondary_turns": 60}),
+        ("physics.half_life_decay", {"half_life": 0, "initial": 100}, {"time": 1}),
+        ("physics.half_life_decay", {"half_life": 10, "initial": 0}, {"time": 1}),
+        ("physics.half_life_decay", {"half_life": 10, "initial": 100}, {"time": -1}),
+        ("chemistry.relative_atomic_mass", {"mass_1": 35, "mass_2": 37}, {"abundance_1": 101}),
+        ("chemistry.relative_atomic_mass", {"mass_1": 35, "mass_2": 37}, {"abundance_1": -1}),
+        ("chemistry.relative_atomic_mass", {"mass_1": 0, "mass_2": 37}, {"abundance_1": 50}),
+        ("biology.food_energy_value", {"water_mass": 20}, {"temperature_rise": -1, "food_mass": 1}),
+        ("biology.food_energy_value", {"water_mass": 20}, {"temperature_rise": 10, "food_mass": 0}),
+        ("biology.food_energy_value", {"water_mass": 0}, {"temperature_rise": 10, "food_mass": 1}),
+        ("physics.boyle_law", {"initial_pressure": 108, "initial_volume": 60}, {"final_volume": 0}),
+        ("physics.boyle_law", {"initial_pressure": 0, "initial_volume": 60}, {"final_volume": 48}),
+        ("physics.boyle_law", {"initial_pressure": 108, "initial_volume": 0}, {"final_volume": 48}),
+        ("physics.parallel_resistance", {}, {"resistance_1": 0, "resistance_2": 12}),
+        ("physics.parallel_resistance", {}, {"resistance_1": 4, "resistance_2": -1}),
+        ("physics.buoyant_force", {"density": 1000, "g": 10}, {"volume": -0.001}),
+        ("physics.buoyant_force", {"density": 0, "g": 10}, {"volume": 0.002}),
+        ("physics.buoyant_force", {"density": 1000, "g": 0}, {"volume": 0.002}),
+        ("chemistry.cell_voltage", {"anode_potential": -0.76}, {"cathode_potential": 3.5}),
+        ("chemistry.cell_voltage", {"anode_potential": -3.5}, {"cathode_potential": 0.34}),
+        ("biology.population_density", {"quadrats": 10, "quadrat_area": 1}, {"total_count": -1}),
+        ("biology.population_density", {"quadrats": 0, "quadrat_area": 1}, {"total_count": 45}),
+        ("biology.population_density", {"quadrats": 10, "quadrat_area": 0}, {"total_count": 45}),
+        ("physics.electrical_energy", {"voltage": 6}, {"current": -0.1, "time": 60}),
+        ("physics.electrical_energy", {"voltage": 6}, {"current": 0.7, "time": -1}),
+        ("physics.electrical_energy", {"voltage": 0}, {"current": 0.7, "time": 60}),
         ("chemistry.heat_energy", {"mass": 0, "c": 4.2}, {"delta_t": 1}),
         ("chemistry.heat_energy", {"mass": 100, "c": 4.2}, {"delta_t": -1}),
         ("chemistry.average_rate", {}, {"volume": 1, "time": 0}),

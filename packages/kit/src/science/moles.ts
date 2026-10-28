@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: { molar_mass: { unit: "g/mol", min: 0, exclusive: true } },
   output: { unit: "mol" },
   fn: ({ mass, molar_mass }) => (mass as number) / (molar_mass as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { mass: 36, molar_mass: 18 }, expected: 2, tolerance: 1e-12, derivation: "36 g / 18 g per mol = 2 mol" },

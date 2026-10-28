@@ -1,0 +1,153 @@
+{
+  "id": "refraction_lab",
+  "title": "Refraction: how light bends in glass",
+  "goal": "See how the angle of refraction depends on the angle of incidence and the refractive index, and when light cannot leave a medium.",
+  "pattern": "virtual_experiment",
+  "topic": "physics_form4_light_and_optics",
+  "experiment_ref": null,
+  "note": "A ray of light bends when it enters a denser medium. The refractive index n is sin i divided by sin r. A larger n bends the ray more, and inside the medium there is a critical angle above which the light cannot get out.",
+  "controls": [
+    {
+      "id": "incidence",
+      "label": "Angle of incidence",
+      "unit": "deg",
+      "min": 0,
+      "max": 80,
+      "value": 30,
+      "grid": 8
+    },
+    {
+      "id": "index",
+      "label": "Refractive index",
+      "unit": "ratio",
+      "min": 1.1,
+      "max": 2.5,
+      "value": 1.5,
+      "grid": 14
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "bend",
+      "model": "physics.refraction_angle",
+      "params": {},
+      "inputs": {
+        "incidence_angle": "incidence",
+        "refractive_index": "index"
+      }
+    },
+    {
+      "id": "limit",
+      "model": "physics.critical_angle",
+      "params": {},
+      "inputs": {
+        "refractive_index": "index"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Angle of refraction",
+      "unit": "deg",
+      "digits": 1,
+      "source": "bend",
+      "convert_to": null
+    },
+    {
+      "label": "Critical angle",
+      "unit": "deg",
+      "digits": 1,
+      "source": "limit",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The angle of refraction rises with the angle of incidence but stays smaller than it.",
+      "x": "incidence",
+      "source": "bend",
+      "label": "Angle of refraction",
+      "unit": "deg",
+      "digits": 1
+    }
+  ],
+  "table": {
+    "caption": "Results",
+    "columns": [
+      {
+        "label": "Angle of incidence",
+        "unit": "deg",
+        "source": "incidence",
+        "digits": 0
+      },
+      {
+        "label": "Refractive index",
+        "unit": "ratio",
+        "source": "index",
+        "digits": 1
+      },
+      {
+        "label": "Angle of refraction",
+        "unit": "deg",
+        "source": "bend",
+        "digits": 1
+      }
+    ]
+  },
+  "experiment": {
+    "aim": "To find how the angle of refraction depends on the angle of incidence",
+    "hypothesis": "The larger the angle of incidence, the larger the angle of refraction",
+    "independent": "Angle of incidence (deg)",
+    "dependent": "Angle of refraction (deg)",
+    "controlled": [
+      "The refractive index of the medium"
+    ],
+    "apparatus": [
+      "Ray box",
+      "Glass block",
+      "Protractor"
+    ]
+  },
+  "sentences": [
+    "Going from air into a denser medium, the ray bends towards the normal, so the angle of refraction is smaller than the angle of incidence.",
+    "The critical angle belongs to the medium: light inside it that meets the boundary at a larger angle is totally internally reflected."
+  ],
+  "steps": [
+    "Keep the refractive index at 1.5, set the angle of incidence to 20, then press Record.",
+    "Set the angle of incidence to 40, then press Record.",
+    "Set the angle of incidence to 60, then press Record.",
+    "Compare the angle of refraction with the angle of incidence each time."
+  ],
+  "citation_ids": [
+    "refract_snell",
+    "refract_critical"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "Light enters glass from air. How will the angle of refraction compare with the angle of incidence?",
+    "choices": [
+      "It will be larger",
+      "It will be the same",
+      "It will be smaller"
+    ],
+    "reveal": "Set the refractive index to 1.5 and the angle of incidence to 40, then compare the two angles."
+  },
+  "concept_check": {
+    "question": "What happens to the angle of refraction if the refractive index rises and the angle of incidence stays the same?",
+    "options": [
+      "It gets larger",
+      "It stays the same",
+      "It gets smaller"
+    ],
+    "correct": 2,
+    "explanation": "The refractive index is sin i divided by sin r, so a larger index means a smaller sin r: the ray bends more towards the normal."
+  },
+  "scene": {
+    "kind": "refraction",
+    "source": "incidence",
+    "model": "bend",
+    "full": 90
+  }
+}

@@ -8,6 +8,7 @@ import { event } from "./bridge";
 import { contains, hasAttribute, hitAt, layoutAvailable, parentOf, rectOf, style, tagOf } from "./dom";
 import { guard } from "./parts";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { controls, own, ownAttr, registerAction, widgets } from "./provenance";
 import { slider } from "./slider";
@@ -44,20 +45,20 @@ export function valve(env: Environment, options: ValveOptions): Observable<numbe
   const record = controls.find((c) => c.id === id);
   if (!record) throw new Error(`valve ${id}: its control was not registered`);
 
-  const wordsNow = (): string => (running ? "Stopcock open: the liquid is running." : value.get() >= max ? "Stopcock closed: the burette is at its limit." : "Stopcock closed.");
+  const wordsNow = (): string => (running ? kt("stopcockOpen") : value.get() >= max ? kt("stopcockLimit") : kt("stopcockClosed"));
   let running = false;
 
   const button = document.createElement("button");
   button.type = "button";
   button.className = "syn-valve";
-  button.textContent = "Stopcock";
+  button.textContent = kt("stopcock");
   button.setAttribute("data-synapse-action", "valve");
   button.setAttribute("data-synapse-valve", id);
-  const name = "Stopcock. Hold to run the liquid, or press to let out one measure.";
+  const name = kt("stopcockName");
   button.setAttribute("aria-label", name);
   ownAttr(button, "aria-label", () => name);
-  own(button, () => "Stopcock");
-  registerAction(button, "valve", "Stopcock");
+  own(button, () => kt("stopcock"));
+  registerAction(button, "valve", kt("stopcock"));
 
   const status = own(document.createElement("span"), () => wordsNow());
   status.className = "syn-sr";

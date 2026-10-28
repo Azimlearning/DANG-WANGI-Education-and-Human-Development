@@ -1,0 +1,37 @@
+{
+  "id": "reference-transformer",
+  "title": "Transformers: stepping a voltage up or down",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the output voltage of an ideal transformer depends on the turns of its two coils.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "primary",
+    "secondary"
+  ],
+  "readouts": [
+    "Output voltage"
+  ],
+  "models": [
+    {
+      "id": "physics.transformer_voltage",
+      "params": {
+        "primary_voltage": 240.0
+      },
+      "readouts": [
+        "Output voltage"
+      ],
+      "series": [
+        "Output voltage"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "plan": "newton_second_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Hukum gerakan Newton kedua: daya, jisim dan pecutan",
+    "/goal": "Terokai bagaimana pecutan sesuatu objek bergantung pada daya paduan dan jisim.",
+    "/note": "Pecutan sesuatu objek ialah daya paduan dibahagi dengan jisimnya: a = F / m. Daya yang lebih besar memberikan pecutan yang lebih besar, dan jisim yang lebih besar memberikan pecutan yang lebih kecil.",
+    "/controls/0/label": "Daya paduan",
+    "/controls/1/label": "Jisim",
+    "/readouts/0/label": "Pecutan",
+    "/graphs/0/title": "Pecutan naik secara garis lurus apabila daya bertambah.",
+    "/graphs/0/label": "Pecutan",
+    "/sentences/0": "Cuba jisim 2 kg dan kemudian 10 kg pada daya yang sama.",
+    "/hints/0": "Tulis formulanya: pecutan = daya / jisim.",
+    "/hints/1": "Letakkan daya dalam newton dan jisim dalam kilogram.",
+    "/hints/2": "Bahagikan daya dengan jisim.",
+    "/worked_solution/0": "Tulis formulanya: a = F / m.",
+    "/worked_solution/1": "Gantikan daya paduan dan jisim.",
+    "/worked_solution/2": "Bahagikan untuk mendapatkan pecutan dalam m/s2.",
+    "/predict/prompt": "Jika daya paduan kekal sama dan jisim digandakan, apakah yang berlaku kepada pecutan?",
+    "/predict/choices/0": "Ia menjadi dua kali ganda",
+    "/predict/choices/1": "Ia menjadi separuh",
+    "/predict/choices/2": "Ia kekal sama",
+    "/predict/reveal": "Kekalkan daya pada nilai asalnya dan bandingkan jisim 2 kg dengan 4 kg.",
+    "/apparatus/0/label": "Troli"
+  }
+}

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EnvironmentBlock } from "@synapse/schema";
 import { sha256Hex } from "../lib/hash";
 import { EnvironmentFrame } from "./EnvironmentFrame";
+import { LabFrame } from "./LabFrame";
 import { MAX_PEEK_ACTIONS, Peek } from "./Peek";
 import { Stage } from "./Stage";
 
@@ -141,5 +142,49 @@ describe("ShareButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
     const field = await screen.findByLabelText("Link to this Environment");
     expect((field as HTMLInputElement).value).toMatch(/\/e\/spring-0123456789ab$/);
+  });
+});
+
+
+describe("LabFrame (the wide-screen frame, D-60)", () => {
+  it("is one frame with one header row of badges and tools, the title only for screen readers, and the provenance below", async () => {
+    const block = await makeBlock({ label: "kit-verified" });
+    const onOpen = vi.fn();
+    const { container } = render(<LabFrame block={block} onOpen={onOpen} />);
+    const frame = screen.getByRole("article", { name: block.title });
+    expect(frame.className).toMatch(/border-verify/); // the soft green frame is for a Kit verified label only
+    expect(container.querySelectorAll("article")).toHaveLength(1);
+    const heading = screen.getByRole("heading", { name: block.title, hidden: true });
+    expect(heading.className).toMatch(/sr-only/); // the Environment page shows the title once
+    expect(screen.getByText("Kit verified")).toBeTruthy();
+    const tools = screen.getByRole("group", { name: "Lab tools" });
+    expect([...tools.querySelectorAll("button, a")].map((e) => e.textContent)).toEqual(["Present", "Share", "Save offline", "Full screen"]);
+    fireEvent.click(screen.getByRole("button", { name: "Present" }));
+    expect(onOpen).toHaveBeenLastCalledWith(true);
+    fireEvent.click(screen.getByRole("button", { name: "Full screen" }));
+    expect(onOpen).toHaveBeenLastCalledWith(false);
+    expect(screen.getByText(/What was checked/)).toBeTruthy(); // provenance stays on screen (hard constraint 11)
+  });
+
+  it("is not green for a label that is not verified", async () => {
+    render(<LabFrame block={await makeBlock({ label: "model-checked" })} onOpen={() => undefined} />);
+    expect(screen.getByRole("article").className).not.toMatch(/border-verify/);
+  });
+
+  it("the sandbox is still exactly allow-scripts", async () => {
+    const { container } = render(<LabFrame block={await makeBlock()} onOpen={() => undefined} />);
+    await waitFor(() => expect(container.querySelector("iframe")).not.toBeNull());
+    expect(container.querySelector("iframe")!.getAttribute("sandbox")).toBe("allow-scripts");
+  });
+});
+
+describe("Stage opened for Present", () => {
+  it("starts presenting when asked to, and not otherwise", async () => {
+    const block = await makeBlock();
+    const first = render(<Stage block={block} onBack={() => undefined} startPresenting />);
+    expect(screen.getByRole("button", { name: "Stop presenting" })).toBeTruthy();
+    first.unmount();
+    render(<Stage block={block} onBack={() => undefined} />);
+    expect(screen.getByRole("button", { name: "Present" })).toBeTruthy();
   });
 });

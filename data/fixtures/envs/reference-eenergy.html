@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How much electrical energy does a lamp use?</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "How much electrical energy does a lamp use?", note: "The electrical energy a lamp uses is the potential difference across it times the current times the time it is lit.", kicker: "Interactive physics lab", tryThis: "See how the electrical energy used by a lamp depends on its current and on how long it is lit." });
+  Synapse.predictCard(env, {"prompt": "A lamp is lit for twice as long on the same battery with the same current. What happens to the electrical energy it uses?", "choices": ["It doubles", "It stays the same", "It halves"], "reveal": "Make the time longer and watch the electrical energy."});
+  var c_current = Synapse.slider(env, {"id": "current", "label": "Current", "unit": "A", "min": 0.1, "max": 1.5, "value": 0.7, "grid": 14});
+  var c_time = Synapse.slider(env, {"id": "time", "label": "Time", "unit": "s", "min": 10.0, "max": 120.0, "value": 60.0, "grid": 11});
+  
+  var m_energy = Synapse.electricalEnergy({ voltage: 6.0, current: c_current, time: c_time });
+  Synapse.readout(env, { label: "Electrical energy", unit: "J", value: m_energy, digits: 1 });
+  
+  Synapse.graph(env, { title: "The electrical energy rises in a straight line as the time increases.", x: c_time, y: m_energy, yLabel: "Electrical energy", yUnit: "J", digits: 1 });
+  
+  Synapse.text(env, "The lamp is supplied by a 6 V battery.");
+  Synapse.text(env, "The energy used is the potential difference times the current times the time.");
+  Synapse.hintLadder(env, { hints: ["The lamp changes electrical energy into light and heat.", "Which two controls change the energy used?", "Energy equals the potential difference times the current times the time."] });
+  Synapse.conceptCheck(env, {"question": "Which formula gives the electrical energy used by a lamp?", "options": ["E = V I t", "E = V / (I t)", "E = I / (V t)"], "correct": 0, "explanation": "Energy is the potential difference times the charge, and the charge is the current times the time, so E = V I t."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

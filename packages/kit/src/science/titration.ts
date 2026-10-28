@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: { ma: { unit: "mol/dm3", min: 0, exclusive: true }, acid_coeff: { unit: "1", min: 0, exclusive: true }, base_coeff: { unit: "1", min: 0, exclusive: true } },
   output: { unit: "mol/dm3" },
   fn: ({ va, vb, ma, acid_coeff, base_coeff }) => ((ma as number) * (va as number) * (base_coeff as number)) / ((acid_coeff as number) * (vb as number)),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { va: 25, vb: 20, ma: 0.1, acid_coeff: 1, base_coeff: 1 }, expected: 0.125, tolerance: 1e-12, derivation: "0.1 x 25 x 1 / (1 x 20) = 0.125 mol/dm3" },

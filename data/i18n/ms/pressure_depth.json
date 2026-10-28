@@ -1,0 +1,21 @@
+{
+  "plan": "pressure_depth",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Tekanan dalam cecair",
+    "/goal": "Lihat bagaimana tekanan dalam cecair bertambah dengan kedalaman.",
+    "/note": "Tekanan dalam cecair bertambah dengan kedalaman. Di sini air mempunyai ketumpatan 1000 kg/m3 dan g diambil sebagai 9.81 m/s2, seperti dalam masalah berselesai buku teks.",
+    "/controls/0/label": "Kedalaman",
+    "/readouts/0/label": "Tekanan",
+    "/graphs/0/title": "Tekanan naik secara garis lurus dengan kedalaman.",
+    "/graphs/0/label": "Tekanan",
+    "/sentences/0": "Gerakkan kedalaman daripada 0 m ke 20 m dan perhatikan tekanan bertambah.",
+    "/hints/0": "Tekanan bergantung pada betapa dalamnya anda.",
+    "/hints/1": "Bandingkan tekanan pada dua kedalaman yang berbeza.",
+    "/hints/2": "Cuba kedalaman 5 m dan kemudian 10 m.",
+    "/apparatus/0/label": "Tolok tekanan"
+  }
+}

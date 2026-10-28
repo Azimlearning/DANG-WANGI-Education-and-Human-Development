@@ -1,0 +1,33 @@
+{
+  "plan": "cell_voltage_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Voltan sebuah sel kimia",
+    "/goal": "Lihat bagaimana voltan sel voltan bergantung pada keupayaan elektrod piawai kedua-dua separuh selnya.",
+    "/note": "Sel voltan menggabungkan dua separuh sel. Separuh sel yang mempunyai keupayaan elektrod lebih positif ialah terminal positif, dan voltan sel ialah keupayaannya tolak keupayaan terminal negatif.",
+    "/controls/0/label": "Keupayaan elektrod separuh sel positif",
+    "/readouts/0/label": "Voltan sel",
+    "/graphs/0/title": "Voltan sel naik secara garis lurus apabila keupayaan separuh sel positif bertambah.",
+    "/graphs/0/label": "Voltan sel",
+    "/sentences/0": "Separuh sel negatif ialah elektrod zink, logam yang mempunyai keupayaan elektrod lebih negatif.",
+    "/sentences/1": "Voltan sel ialah keupayaan elektrod terminal positif tolak keupayaan terminal negatif.",
+    "/hints/0": "Setiap separuh sel mempunyai keupayaan elektrod piawainya sendiri.",
+    "/hints/1": "Separuh sel yang manakah mempunyai keupayaan lebih positif? Itulah terminal positif.",
+    "/hints/2": "Tolakkan keupayaan terminal negatif daripada keupayaan terminal positif.",
+    "/predict/prompt": "Separuh sel zink digabungkan dengan separuh sel yang mempunyai keupayaan elektrod lebih positif. Apakah yang berlaku kepada voltan sel apabila beza antara kedua-dua keupayaan itu bertambah?",
+    "/predict/choices/0": "Ia naik",
+    "/predict/choices/1": "Ia kekal sama",
+    "/predict/choices/2": "Ia turun",
+    "/predict/reveal": "Naikkan keupayaan elektrod separuh sel positif dan perhatikan voltan sel.",
+    "/concept_check/question": "Bagaimanakah voltan sel piawai bagi sel voltan dicari?",
+    "/concept_check/options/0": "Tambahkan kedua-dua keupayaan elektrod piawai",
+    "/concept_check/options/1": "Tolakkan keupayaan anod daripada keupayaan katod",
+    "/concept_check/options/2": "Tolakkan keupayaan katod daripada keupayaan anod",
+    "/concept_check/explanation": "Voltan sel ialah keupayaan elektrod katod, terminal positif, tolak keupayaan elektrod anod, terminal negatif.",
+    "/apparatus/0/label": "Voltmeter sel",
+    "/apparatus/1/label": "Lampu pada sel"
+  }
+}

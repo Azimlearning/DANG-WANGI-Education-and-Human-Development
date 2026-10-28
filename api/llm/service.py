@@ -10,6 +10,7 @@ failed ones, is written to the spend ledger.
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 
 from api.core.errors import BadRequest, ProviderRejected, ProviderUnavailable, SpendCapExceeded
 from api.llm.ledger import SpendLedger
@@ -21,9 +22,17 @@ log = logging.getLogger(__name__)
 
 
 class LLMService:
-    def __init__(self, primary: Provider, fallback: Provider | None, ledger: SpendLedger):
+    def __init__(self, primary: Provider, fallback: Provider | None, ledger: SpendLedger, *, prompt_caching: bool = False):
         self._providers = [primary] + ([fallback] if fallback is not None else [])
         self._ledger = ledger
+        self._prompt_caching = prompt_caching
+        """Ask providers to cache every system prompt (PROMPT_CACHING, off by default). The ledger prices what comes back; see api/llm/pricing.py."""
+
+    def _prepared(self, request: LLMRequest) -> LLMRequest:
+        """The request as it will be sent: with caching on, a request that has a system prompt asks for it to be cached."""
+        if self._prompt_caching and request.system and not request.cache_system:
+            return replace(request, cache_system=True)
+        return request
 
     def remaining_usd(self) -> float | None:
         """What the monthly cap still allows (None: no cap). For up-front checks before a big job."""
@@ -45,10 +54,11 @@ class LLMService:
         if remaining is None:
             return True
         provider = self._providers[0]
-        total = sum(estimate_call_cost(provider.name, provider.model_for(r.tier), r) for r in requests)
+        total = sum(estimate_call_cost(provider.name, provider.model_for(r.tier), self._prepared(r)) for r in requests)
         return remaining >= total
 
     async def complete(self, request: LLMRequest) -> LLMResult:
+        request = self._prepared(request)
         if not 1 <= request.max_tokens <= MAX_OUTPUT_TOKENS:
             raise BadRequest(f"max_tokens must be between 1 and {MAX_OUTPUT_TOKENS}.")
 
@@ -64,7 +74,7 @@ class LLMService:
                 # generating after our client gives up: with nothing to read, book the worst case the reservation already assumed, not the input alone.
                 if failure.tokens_in is not None and failure.tokens_out is not None:
                     tokens_in, tokens_out = failure.tokens_in, failure.tokens_out
-                    billed = cost_usd(provider.name, model, tokens_in, tokens_out)
+                    billed = cost_usd(provider.name, model, tokens_in, tokens_out, assume_cache_writes=request.cache_system)
                 else:
                     tokens_in = tokens_out = 0
                     billed = reservation.estimate_usd if failure.kind in ("timeout", "truncated") else 0.0
@@ -97,7 +107,7 @@ class LLMService:
                     model=model,
                     tokens_in=0,
                     tokens_out=0,
-                    cost_usd=cost_usd(provider.name, model, estimate_input_tokens(request), 0),
+                    cost_usd=cost_usd(provider.name, model, estimate_input_tokens(request), 0, assume_cache_writes=request.cache_system),
                     purpose=request.purpose,
                     status="failed",
                 )
@@ -105,7 +115,9 @@ class LLMService:
 
             # Price by the model that was REQUESTED (an id this code chose and the table knows), never by the id echoed
             # back. A provider-reported cost is trusted only as a lower bound: book the larger of the two.
-            estimated = cost_usd(provider.name, model, response.tokens_in, response.tokens_out)
+            estimated = cost_usd(
+                provider.name, model, response.tokens_in, response.tokens_out, response.cache_read_tokens, response.cache_write_tokens
+            )
             cost = estimated if response.cost_usd is None else max(response.cost_usd, estimated)
             self._ledger.settle(
                 reservation,
@@ -115,6 +127,8 @@ class LLMService:
                 tokens_out=response.tokens_out,
                 cost_usd=cost,
                 purpose=request.purpose,
+                cache_read_tokens=response.cache_read_tokens,
+                cache_write_tokens=response.cache_write_tokens,
             )
             return LLMResult(
                 text=response.text,
@@ -124,6 +138,8 @@ class LLMService:
                 tokens_out=response.tokens_out,
                 cost_usd=cost,
                 fell_back=index > 0,
+                cache_read_tokens=response.cache_read_tokens,
+                cache_write_tokens=response.cache_write_tokens,
             )
 
         raise ProviderUnavailable("No LLM provider could serve the request.") from last_failure

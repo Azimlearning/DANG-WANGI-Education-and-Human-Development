@@ -4,6 +4,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fredoka, JetBrains_Mono, Nunito } from "next/font/google";
 import type { ReactNode } from "react";
+import { LangProvider } from "../lib/i18n";
 import "./globals.css";
 
 const display = Fredoka({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--face-display", display: "swap" });
@@ -26,7 +27,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen font-sans antialiased">{children}</body>
+      {/* Browser extensions (Grammarly and others) add attributes to <body> before React loads; this silences only that one-level attribute mismatch. */}
+      <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
+        <LangProvider>{children}</LangProvider>
+      </body>
     </html>
   );
 }

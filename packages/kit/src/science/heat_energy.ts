@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: { mass: { unit: "g", min: 0, exclusive: true }, c: { unit: "J/(g°C)", min: 0, exclusive: true } },
   output: { unit: "J" },
   fn: ({ delta_t, mass, c }) => (mass as number) * (c as number) * (delta_t as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { delta_t: 5, mass: 100, c: 4.2 }, expected: 2100, tolerance: 1e-9, derivation: "100 x 4.2 x 5 = 2100 J" },

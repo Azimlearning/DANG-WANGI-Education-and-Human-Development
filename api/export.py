@@ -45,6 +45,134 @@ def _json_for_script(value: object) -> str:
     return json.dumps(value, ensure_ascii=True).replace("<", "\\u003c")
 
 
+
+# ── the lab report inside an offline file (W5b follow-up, D-56) ─────────────────────────────────────────────────────────────────
+# The web app builds the lab report from what the Kit tells the host (`synapse_lab`). A saved file has no web app, so its own shell does the same, in a few lines of
+# plain script. It trusts nothing that crosses the frame boundary: only the frame this file made may speak, every size is re-checked (the same limits as
+# `web/lib/sandbox.ts`), and everything is written with textContent, never as markup. The student's own words stay in the file's page and go nowhere.
+
+_LAB_CSS = """
+  #lab { margin-top: 1rem; padding: 1rem; border: 1px solid #8884; border-radius: 12px; display: grid; gap: .75rem; }
+  #lab label { display: grid; gap: .25rem; font-weight: 600; }
+  #lab textarea { font: inherit; font-weight: 400; min-height: 4.5rem; padding: .5rem; border-radius: 8px; border: 1px solid #8886; }
+  #lab table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  #lab th, #lab td { text-align: left; border-bottom: 1px solid #8884; padding: .25rem .5rem; }
+  #lab .actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+  #lab .actions button { min-height: 44px; min-width: 44px; padding: 0 1rem; font: inherit; font-weight: 600; border-radius: 12px; border: 1px solid #8886; cursor: pointer; }
+  #lab[hidden] { display: none; }
+  #labprint { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    #lab, #lab * { visibility: visible; }
+    #lab { position: absolute; left: 0; top: 0; width: 100%; border: 0; }
+    #lab h2, #labbody, #lab label, #lab .actions, #labnote, #labfoot { display: none; }
+    #labprint { display: block; white-space: pre-wrap; font: 12pt/1.5 system-ui, sans-serif; }
+  }
+"""
+
+_LAB_HTML = """<section id="lab" aria-label="Lab report" hidden>
+<h2>Lab report</h2>
+<div id="labbody"></div>
+<label>Observations<textarea id="lab-observations" maxlength="1500" placeholder="What did you see happen as you changed it?"></textarea></label>
+<label>Discussion<textarea id="lab-discussion" maxlength="1500" placeholder="Why do you think it happened? Did the results match the hypothesis?"></textarea></label>
+<label>Conclusion<textarea id="lab-conclusion" maxlength="1500" placeholder="State what the experiment shows, in one or two sentences."></textarea></label>
+<div class="actions">
+<button type="button" id="labcopy">Copy report</button>
+<button type="button" id="labsave">Download lab report</button>
+<button type="button" id="labprintbtn">Print or save as PDF</button>
+</div>
+<p id="labnote" role="status" aria-live="polite"></p>
+<p id="labfoot">The experiment, procedure and results come from the model you used. The observations, discussion and conclusion are your own words: they stay in this file and are not checked.</p>
+<div id="labprint" aria-hidden="true"></div>
+</section>"""
+
+_LAB_JS = r"""
+  var LAB = { experiment: null, steps: null, table: null }, labTitle = "", labClosed = false;
+  var labBox = { observations: document.getElementById("lab-observations"), discussion: document.getElementById("lab-discussion"), conclusion: document.getElementById("lab-conclusion") };
+  var labEl = document.getElementById("lab"), labBody = document.getElementById("labbody"), labNote = document.getElementById("labnote"), labPrint = document.getElementById("labprint");
+  function isStr(v, max) { return typeof v === "string" && v.length <= max; }
+  function strs(v, count, max) { if (!Array.isArray(v) || v.length > count) return null; for (var i = 0; i < v.length; i++) if (!isStr(v[i], max)) return null; return v; }
+  function parseLab(d) {
+    var i, j, f, c, r;
+    if (d.part === "experiment") {
+      if (!Array.isArray(d.fields) || d.fields.length > 8) return null;
+      var fields = [];
+      for (i = 0; i < d.fields.length; i++) { f = d.fields[i]; if (!Array.isArray(f) || f.length !== 2 || !isStr(f[0], 80) || !isStr(f[1], 400)) return null; fields.push([f[0], f[1]]); }
+      return { part: "experiment", fields: fields };
+    }
+    if (d.part === "steps") { var st = strs(d.steps, 8, 300); return st ? { part: "steps", steps: st } : null; }
+    if (d.part === "table") {
+      if (!isStr(d.caption, 120) || !Array.isArray(d.columns) || d.columns.length < 1 || d.columns.length > 6 || !Array.isArray(d.rows) || d.rows.length > 30) return null;
+      var cols = [], rows = [];
+      for (i = 0; i < d.columns.length; i++) { c = d.columns[i]; if (typeof c !== "object" || c === null || !isStr(c.label, 60) || !isStr(c.unit, 16)) return null; cols.push({ label: c.label, unit: c.unit }); }
+      for (j = 0; j < d.rows.length; j++) { r = strs(d.rows[j], cols.length, 40); if (!r || r.length !== cols.length) return null; rows.push(r); }
+      return { part: "table", caption: d.caption, columns: cols, rows: rows };
+    }
+    return null;
+  }
+  function labHas() { return LAB.experiment !== null || LAB.steps !== null || (LAB.table !== null && LAB.table.columns.length > 0); }
+  function labText() {
+    var out = ["Lab report: " + labTitle, ""], i;
+    if (LAB.experiment) for (i = 0; i < LAB.experiment.length; i++) out.push(LAB.experiment[i][0] + ": " + LAB.experiment[i][1]);
+    if (LAB.steps && LAB.steps.length) { out.push("", "Procedure"); for (i = 0; i < LAB.steps.length; i++) out.push((i + 1) + ". " + LAB.steps[i]); }
+    if (LAB.table) {
+      out.push("", "Results: " + LAB.table.caption);
+      out.push(LAB.table.columns.map(function (c) { return c.label + " (" + c.unit + ")"; }).join(" | "));
+      if (LAB.table.rows.length === 0) out.push("(no rows recorded yet)");
+      LAB.table.rows.forEach(function (row) { out.push(row.join(" | ")); });
+    }
+    out.push("", "Observations", labBox.observations.value.trim() || "(not written yet)");
+    out.push("", "Discussion", labBox.discussion.value.trim() || "(not written yet)");
+    out.push("", "Conclusion", labBox.conclusion.value.trim() || "(not written yet)");
+    out.push("", "The experiment, procedure and results above come from the model you used. The observations, discussion and conclusion are your own words.");
+    return out.join("\n");
+  }
+  function el(tag, text, parent) { var e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+  function labDraw() {
+    labEl.hidden = !labHas();
+    labBody.textContent = "";
+    if (LAB.experiment) { var dl = el("dl", undefined, labBody); LAB.experiment.forEach(function (f) { el("dt", f[0], dl).style.fontWeight = "600"; el("dd", f[1], dl); }); }
+    if (LAB.steps && LAB.steps.length) { el("p", "Procedure", labBody).style.fontWeight = "600"; var ol = el("ol", undefined, labBody); LAB.steps.forEach(function (s) { el("li", s, ol); }); }
+    if (LAB.table) {
+      el("p", "Results: " + LAB.table.caption, labBody).style.fontWeight = "600";
+      if (LAB.table.rows.length === 0) el("p", "No rows yet. Press Record in the model to add a row of your results.", labBody);
+      else {
+        var box = el("div", undefined, labBody); box.style.overflowX = "auto";
+        var t = el("table", undefined, box), hr = el("tr", undefined, el("thead", undefined, t)), tb = el("tbody", undefined, t);
+        LAB.table.columns.forEach(function (c) { var th = el("th", c.label + " (" + c.unit + ")", hr); th.scope = "col"; });
+        LAB.table.rows.forEach(function (row) { var tr = el("tr", undefined, tb); row.forEach(function (cell) { el("td", cell, tr); }); });
+      }
+    }
+    labPrint.textContent = labText();
+  }
+  function labShut() { labReset(""); labClosed = true; }
+  function labReset(title) {
+    LAB = { experiment: null, steps: null, table: null }; labTitle = title || ""; labClosed = false;
+    for (var k in labBox) labBox[k].value = "";
+    labNote.textContent = ""; labDraw();
+  }
+  function labAccept(data) {
+    if (labClosed) return;
+    var part = parseLab(data);
+    if (!part) return;
+    if (part.part === "experiment") LAB.experiment = part.fields; else if (part.part === "steps") LAB.steps = part.steps; else LAB.table = { caption: part.caption, columns: part.columns, rows: part.rows };
+    labDraw();
+  }
+  for (var kk in labBox) labBox[kk].addEventListener("input", function () { labPrint.textContent = labText(); });
+  document.getElementById("labcopy").addEventListener("click", function () {
+    var done = function () { labNote.textContent = "Report copied."; }, fail = function () { labNote.textContent = "Could not copy. Use Download lab report instead."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(labText()).then(done, fail); else fail();
+  });
+  document.getElementById("labsave").addEventListener("click", function () {
+    var slug = labTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50) || "environment";
+    var url = URL.createObjectURL(new Blob([labText()], { type: "text/plain;charset=utf-8" })), a = document.createElement("a");
+    a.href = url; a.download = "lab-report-" + slug + ".txt"; a.click(); URL.revokeObjectURL(url);
+    labNote.textContent = "Lab report saved.";
+  });
+  document.getElementById("labprintbtn").addEventListener("click", function () { labPrint.textContent = labText(); window.print(); });
+"""
+
+
 _SHELL = """<!doctype html>
 <html lang="en">
 <head>
@@ -58,6 +186,7 @@ _SHELL = """<!doctype html>
   iframe { width: 100%; height: 70vh; min-height: 24rem; border: 1px solid #8884; border-radius: 12px; }
   section { margin-top: 1rem; padding: 1rem; border: 1px solid #8884; border-radius: 12px; font-size: 0.95rem; }
   [role=alert] { padding: 1rem; border-radius: 12px; background: #fde8e8; color: #7a1010; }
+__LABCSS__
 </style>
 </head>
 <body>
@@ -73,12 +202,14 @@ _SHELL = """<!doctype html>
 <p><strong>Limits:</strong> __LIMITS__</p>
 <p>Environment __ID__, Kit __KIT__. This is a saved copy: it cannot be updated, and if the textbook or the Kit changes it may be out of date.</p>
 </section>
+__LABHTML__
 <script>
 (function () {
   var EXPECT = __EXPECT__;
   var PAYLOAD = __PAYLOAD__;
   var state = document.getElementById("state");
   var frame = document.getElementById("frame");
+__LABJS__
   function fail(message) { state.setAttribute("role", "alert"); state.textContent = message; }
   function hex(buffer) { return Array.prototype.map.call(new Uint8Array(buffer), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); }
   function sha(text) { return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(hex); }
@@ -89,11 +220,13 @@ _SHELL = """<!doctype html>
     if (at < 0) { fail("This file is damaged, so it was not run."); return; }
     frame.srcdoc = PAYLOAD.html.slice(0, at) + "<script>" + PAYLOAD.kit + "</" + "script>" + PAYLOAD.html.slice(at + PAYLOAD.tag.length);
     frame.hidden = false;
+    labReset(PAYLOAD.title);
     state.textContent = "Fingerprint checked.";
   });
   window.addEventListener("message", function (event) {
     if (event.source !== frame.contentWindow) return;
-    if (event.data && event.data.type === "synapse_violation") { frame.hidden = true; frame.removeAttribute("srcdoc"); fail("The Environment tried to do something it must not, so it was closed."); }
+    if (event.data && event.data.type === "synapse_violation") { frame.hidden = true; frame.removeAttribute("srcdoc"); labShut(); fail("The Environment tried to do something it must not, so it was closed."); }
+    else if (event.data && event.data.type === "synapse_lab") labAccept(event.data);
   });
 })();
 </script>
@@ -114,7 +247,7 @@ def standalone_page(block: EnvironmentBlock, kit_js: bytes) -> str:
         raise ExportRefused("the page does not match its recorded hash")
 
     esc = htmllib.escape
-    sources = "; ".join(citation_text(c.source, c.page, c.verified) for c in block.citations)
+    sources = "; ".join(citation_text(c.source, c.page, c.verified, c.printedPage) for c in block.citations)
     c = block.checked
     checked = (
         f"{', '.join(c.layers)}; {c.controlsExercised} controls pressed, {c.gridPoints} positions swept, "
@@ -131,7 +264,10 @@ def standalone_page(block: EnvironmentBlock, kit_js: bytes) -> str:
         "__ID__": esc(block.id),
         "__KIT__": esc(block.kitVersion),
         "__EXPECT__": _json_for_script({"html": block.htmlSha256, "kit": hashlib.sha256(kit_js).hexdigest()}),
-        "__PAYLOAD__": _json_for_script({"html": block.html, "kit": kit, "tag": tag}),
+        "__PAYLOAD__": _json_for_script({"html": block.html, "kit": kit, "tag": tag, "title": block.title}),
+        "__LABCSS__": _LAB_CSS,
+        "__LABHTML__": _LAB_HTML,
+        "__LABJS__": _LAB_JS,
     }
     # One pass over the TEMPLATE: text that came from the block is never scanned again for placeholders.
     return re.sub(r"__[A-Z]+__", lambda m: values[m.group(0)], _SHELL)
@@ -157,6 +293,7 @@ _PACK = """<!doctype html>
   button[disabled] { opacity: .6; cursor: not-allowed; }
   .meta { font-size: .9rem; opacity: .8; }
   [role=alert] { padding: 1rem; border-radius: 12px; background: #fde8e8; color: #7a1010; }
+__LABCSS__
 </style>
 </head>
 <body>
@@ -172,6 +309,7 @@ __ITEMS__
 <p><button type="button" id="back">Back to the list</button></p>
 <iframe id="frame" title="Environment" sandbox="allow-scripts"></iframe>
 __PROVENANCE__
+__LABHTML__
 </div>
 <script>
 (function () {
@@ -181,6 +319,7 @@ __PROVENANCE__
   var list = document.getElementById("list");
   var viewer = document.getElementById("viewer");
   var frame = document.getElementById("frame");
+__LABJS__
   function fail(message) { state.setAttribute("role", "alert"); state.textContent = message; }
   function hex(buffer) { return Array.prototype.map.call(new Uint8Array(buffer), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); }
   function sha(text) { return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(hex); }
@@ -205,11 +344,12 @@ __PROVENANCE__
     frame.title = p.title;
     frame.srcdoc = p.html.slice(0, at) + "<script>" + PAYLOAD.kit + "</" + "script>" + p.html.slice(at + PAYLOAD.tag.length);
     Array.prototype.forEach.call(document.querySelectorAll("section.prov"), function (s) { s.hidden = s.getAttribute("data-for") !== id; });
+    labReset(p.title);
     list.hidden = true; viewer.hidden = false;
     document.getElementById("back").focus();
   }
   function home() {
-    frame.removeAttribute("srcdoc"); viewer.hidden = true; list.hidden = false;
+    frame.removeAttribute("srcdoc"); labShut(); viewer.hidden = true; list.hidden = false;
     var b = document.querySelector("button[data-open]:not([disabled])"); if (b) b.focus();
   }
   Array.prototype.forEach.call(document.querySelectorAll("button[data-open]"), function (b) { b.addEventListener("click", function () { show(b.getAttribute("data-open")); }); });
@@ -217,6 +357,7 @@ __PROVENANCE__
   window.addEventListener("message", function (event) {
     if (event.source !== frame.contentWindow) return;
     if (event.data && event.data.type === "synapse_violation") { home(); fail("An Environment tried to do something it must not, so it was closed."); }
+    else if (event.data && event.data.type === "synapse_lab") labAccept(event.data);
   });
 })();
 </script>
@@ -248,7 +389,7 @@ def chapter_pack(title: str, blocks: list[EnvironmentBlock], kit_js: bytes) -> s
             raise ExportRefused(f"'{b.title}' does not load the Kit from the expected tag exactly once")
         if hashlib.sha256(b.html.encode("utf-8")).hexdigest() != b.htmlSha256:
             raise ExportRefused(f"'{b.title}' does not match its recorded hash")
-        sources = "; ".join(citation_text(c.source, c.page, c.verified) for c in b.citations)
+        sources = "; ".join(citation_text(c.source, c.page, c.verified, c.printedPage) for c in b.citations)
         c = b.checked
         checked = (
             f"{', '.join(c.layers)}; {c.controlsExercised} controls pressed, {c.gridPoints} positions swept, "
@@ -269,6 +410,9 @@ def chapter_pack(title: str, blocks: list[EnvironmentBlock], kit_js: bytes) -> s
         "__TITLE__": esc(title),
         "__ITEMS__": "\n".join(items),
         "__PROVENANCE__": "\n".join(provenance),
+        "__LABCSS__": _LAB_CSS,
+        "__LABHTML__": _LAB_HTML,
+        "__LABJS__": _LAB_JS,
         "__EXPECT__": _json_for_script({"kit": hashlib.sha256(kit_js).hexdigest(), "pages": [b.htmlSha256 for b in blocks]}),
         "__PAYLOAD__": _json_for_script({"kit": kit, "tag": tag, "pages": [{"id": b.id, "title": b.title, "html": b.html} for b in blocks]}),
     }

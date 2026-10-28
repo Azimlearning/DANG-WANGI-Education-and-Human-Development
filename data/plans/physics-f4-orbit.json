@@ -35,7 +35,12 @@
     "Raise the speed until the cannonball goes right round Earth, and compare the circular speed readout with your launch speed.",
     "Raise it further until the path becomes an oval, then until the cannonball leaves, and note the escape speed readout."
   ],
-  "citation_ids": [],
+  "citation_ids": [
+    "orbit_gravity_centri",
+    "orbit_cent_acc",
+    "orbit_circ_speed",
+    "orbit_escape_speed"
+  ],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -134,5 +139,10 @@
     ],
     "correct": 1,
     "explanation": "The escape speed is the square root of 2 times the circular speed, so it is always greater."
-  }
+  },
+  "hints": [
+    "The cannonball is always pulled towards the Earth.",
+    "What changes when you raise the launch speed?",
+    "Compare your launch speed with the circular speed and the escape speed readouts."
+  ]
 }

@@ -1,0 +1,112 @@
+{
+  "id": "buoyancy_lab",
+  "title": "Archimedes' principle: the push of a fluid",
+  "goal": "See how the buoyant force on an object depends on the volume of fluid it displaces.",
+  "pattern": "simulation",
+  "topic": "physics_form5_forces_and_pressure",
+  "experiment_ref": null,
+  "note": "An object in a fluid is pushed upwards by a buoyant force. The force equals the weight of the fluid the object displaces.",
+  "controls": [
+    {
+      "id": "displaced",
+      "label": "Volume of water displaced",
+      "unit": "m3",
+      "min": 0.001,
+      "max": 0.006,
+      "value": 0.002,
+      "grid": 5
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "buoyancy",
+      "model": "physics.buoyant_force",
+      "params": {
+        "density": 1000,
+        "g": 9.81
+      },
+      "inputs": {
+        "volume": "displaced"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Buoyant force",
+      "unit": "N",
+      "digits": 1,
+      "source": "buoyancy",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The buoyant force rises in a straight line as the volume of water displaced increases.",
+      "x": "displaced",
+      "source": "buoyancy",
+      "label": "Buoyant force",
+      "unit": "N",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "The fluid is water, and its density is 1000 kg/m3.",
+    "The buoyant force on the object equals the weight of the water it pushes aside."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "buoy_arch",
+    "buoy_formula"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "A block pushes aside more water as more of it is pushed under the surface. What happens to the buoyant force on it?",
+    "choices": [
+      "It increases",
+      "It stays the same",
+      "It decreases"
+    ],
+    "reveal": "Increase the volume of water displaced and watch the buoyant force."
+  },
+  "concept_check": {
+    "question": "According to Archimedes' principle, the buoyant force on an object in a fluid is equal to what?",
+    "options": [
+      "The weight of the object",
+      "The weight of the fluid displaced",
+      "The volume of the object"
+    ],
+    "correct": 1,
+    "explanation": "Archimedes' principle states that the buoyant force equals the weight of the fluid the object displaces."
+  },
+  "hints": [
+    "The fluid pushes up on the object.",
+    "What does the buoyant force depend on, the object or the fluid it pushes aside?",
+    "The buoyant force equals the weight of the fluid displaced."
+  ],
+  "apparatus": [
+    {
+      "kind": "beaker",
+      "label": "Water displaced",
+      "channels": {
+        "level": {
+          "source": "displaced",
+          "full": 0.006
+        }
+      }
+    },
+    {
+      "kind": "gauge",
+      "label": "Buoyant force",
+      "channels": {
+        "value": {
+          "source": "buoyancy",
+          "full": 60
+        }
+      }
+    }
+  ]
+}

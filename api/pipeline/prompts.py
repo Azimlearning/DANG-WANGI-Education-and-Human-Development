@@ -24,14 +24,16 @@ from api.pipeline.plan import Plan, parse
 from api.pipeline.plan_checks import PlanIssue, needed_components
 from api.prompts import DIR, estimate_tokens, load
 
-MAX_KIT_PACK = 15
-REQUEST_TOKEN_CAP = 7000
+MAX_KIT_PACK = 17
+"""The most components a planner request names. 15 until the Hooke's law Plan gained its hint ladder (D-61): that Plan alone names 16; 17 since the bench (D-66) joined the base components."""
+REQUEST_TOKEN_CAP = 8000
+"""Raised from 7000 for the apparatus catalogue in the planner pack (D-66): about 700 tokens, cacheable with the rest of the stable part."""
 
 
 class RequestTooLarge(ValueError):
     """A request over the token cap. A ValueError, so existing callers and tests that expect one still work; the pipeline catches this one kind."""
 
-BASE_COMPONENTS = ("environment", "slider", "readout", "reset", "bridge")
+BASE_COMPONENTS = ("environment", "slider", "readout", "reset", "bridge", "apparatus")
 PATTERN_COMPONENTS = {
     "simulation": ("text", "graph", "convert", "constant"),
     "virtual_experiment": ("text", "graph", "convert", "constant", "table", "stepper", "experiment"),
@@ -84,9 +86,25 @@ def kit_pack_for_question(
     )
     models = [name for score, name in scored if score > 0] or [name for _, name in scored]
     # The routed topic is the strongest signal: the models that serve it come first, then the lexical matches.
-    served = sorted(m.export_name for m in manifest.models.values() if topic and topic in m.topics)
+    # Several models can serve one topic (liquid pressure and the buoyant force are both Forces and Pressure): the better lexical match comes first.
+    rank = {name: i for i, (_, name) in enumerate(scored)}
+    served = sorted((m.export_name for m in manifest.models.values() if topic and topic in m.topics), key=lambda n: (rank[n], n))
     models = served + [m for m in models if m not in served]
     return (chosen + models)[:limit]
+
+
+def apparatus_pack(manifest: Manifest) -> str:
+    """The apparatus catalogue as one short line per part, from the built manifest (so the pack and the Kit cannot disagree). Stable: sorted by part. "[drag]" marks a channel
+    the student can grab on the drawing when it is bound to a slider (W17, D-69)."""
+    lines = []
+    for kind, info in sorted((manifest.apparatus or {}).items()):
+        grabs = info.get("grabs") or {}
+        chans = ", ".join(
+            f"{name}{'?' if ch.get('optional') else ''}" + (f" ({ch['type']})" if ch.get("type") != "fraction" else "") + (" [drag]" if name in grabs else "")
+            for name, ch in info.get("channels", {}).items()
+        )
+        lines.append(f"- {kind}: {chans} | {info.get('useWhen', '')}")
+    return "\n".join(lines) or "(none)"
 
 
 def render_kit_pack(names: list[str], manifest: Manifest) -> str:
@@ -165,6 +183,7 @@ def plan_request(
     stable, variable = planner.render_parts(
         schema=schema.strip(),
         pattern_pack=pattern_pack(pattern),
+        apparatus_pack=apparatus_pack(manifest),
         kit_pack=render_kit_pack(kit_pack_for_question(question, pattern, manifest, topic=topic), manifest),
         exemplar=example.model_dump_json(indent=None) if example else "(none)",
         question=question,

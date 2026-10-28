@@ -17,7 +17,9 @@
     "Make the final volume 25 cm3, then 250 cm3, and compare."
   ],
   "steps": [],
-  "citation_ids": ["dilution_moles"],
+  "citation_ids": [
+    "dilution_moles"
+  ],
   "presentation": "stage",
   "custom": [],
   "id": "dilution_lab",
@@ -57,6 +59,27 @@
       "digits": 3,
       "source": "diluted",
       "convert_to": null
+    }
+  ],
+  "hints": [
+    "Adding water does not change the amount of dissolved substance.",
+    "What happens to the volume when you add water?",
+    "A bigger volume holding the same amount means a lower concentration."
+  ],
+  "apparatus": [
+    {
+      "kind": "solution",
+      "label": "Diluted solution",
+      "channels": {
+        "concentration": {
+          "source": "diluted",
+          "full": 2
+        },
+        "level": {
+          "source": "v2",
+          "full": 250
+        }
+      }
     }
   ]
 }

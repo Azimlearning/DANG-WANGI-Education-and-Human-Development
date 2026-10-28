@@ -1,0 +1,32 @@
+{
+  "plan": "wave_speed_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Laju gelombang: frekuensi dan panjang gelombang",
+    "/goal": "Lihat bagaimana laju gelombang bergantung pada frekuensi dan panjang gelombangnya.",
+    "/note": "Laju gelombang ialah frekuensi didarab dengan panjang gelombang: v = f x panjang gelombang. Dalam gelombang sebenar, frekuensi ditentukan oleh sumber dan laju oleh medium, maka panjang gelombang mengikutinya. Di sini anda boleh menetapkan kedua-duanya untuk melihat hasil darabnya.",
+    "/controls/0/label": "Frekuensi",
+    "/controls/1/label": "Panjang gelombang",
+    "/readouts/0/label": "Laju gelombang",
+    "/graphs/0/title": "Laju gelombang naik secara garis lurus apabila frekuensi bertambah.",
+    "/graphs/0/label": "Laju gelombang",
+    "/sentences/0": "Kekalkan panjang gelombang pada nilai asalnya dan gerakkan frekuensi daripada yang paling kecil kepada yang paling besar.",
+    "/hints/0": "Laju gelombang bergantung pada kekerapan ia bergetar dan panjang setiap gelombang.",
+    "/hints/1": "Apakah yang berlaku kepada laju apabila frekuensi bertambah dan panjang gelombang kekal sama?",
+    "/hints/2": "Laju sama dengan frekuensi didarab dengan panjang gelombang.",
+    "/predict/prompt": "Jika panjang gelombang kekal sama dan frekuensi digandakan, apakah yang berlaku kepada laju gelombang?",
+    "/predict/choices/0": "Ia menjadi separuh",
+    "/predict/choices/1": "Ia menjadi dua kali ganda",
+    "/predict/choices/2": "Ia kekal sama",
+    "/predict/reveal": "Tetapkan frekuensi kepada nilai asalnya, kemudian kepada dua kali ganda nilai itu, dan perhatikan lajunya.",
+    "/concept_check/question": "Sebuah gelombang mempunyai frekuensi 5 Hz dan panjang gelombang 2 m. Berapakah lajunya?",
+    "/concept_check/options/0": "7 m/s",
+    "/concept_check/options/1": "10 m/s",
+    "/concept_check/options/2": "2.5 m/s",
+    "/concept_check/explanation": "Laju ialah frekuensi darab panjang gelombang, jadi 5 Hz darab 2 m memberikan 10 m/s.",
+    "/apparatus/0/label": "Gelombang air"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "id": "half_life_lab",
+  "title": "Half-life: how a radioactive sample decays",
+  "goal": "See how much of a radioactive sample is left after each half-life.",
+  "pattern": "simulation",
+  "topic": "physics_form5_nuclear_physics",
+  "experiment_ref": null,
+  "note": "Every half-life, half of the radioactive nuclei that are left decay. The sample here starts at 480 decays per second and has a half-life of 6 minutes, so the time control moves in whole half-lives.",
+  "controls": [
+    {
+      "id": "time",
+      "label": "Time",
+      "unit": "min",
+      "min": 0,
+      "max": 48,
+      "value": 0,
+      "grid": 8
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "decay",
+      "model": "physics.half_life_decay",
+      "params": {
+        "half_life": 6,
+        "initial": 480
+      },
+      "inputs": {
+        "time": "time"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Activity left",
+      "unit": "/s",
+      "digits": 1,
+      "source": "decay",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The activity halves every half-life, so the curve falls steeply and then flattens.",
+      "x": "time",
+      "source": "decay",
+      "label": "Activity left",
+      "unit": "/s",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "After one half-life half of the sample is left, after two half-lives a quarter, after three an eighth, and so on.",
+    "Each step of the time control is one half-life."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "halflife_rule",
+    "halflife_example"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "The activity starts at 480 per second. What will it be after two half-lives?",
+    "choices": [
+      "Half of the starting activity",
+      "A quarter of the starting activity",
+      "None of it"
+    ],
+    "reveal": "Move the time control to 12 minutes, which is two half-lives, and read the activity."
+  },
+  "concept_check": {
+    "question": "A sample has a half-life of 6 minutes. How much of it is left after 12 minutes?",
+    "options": [
+      "Half of it",
+      "A quarter of it",
+      "None of it"
+    ],
+    "correct": 1,
+    "explanation": "12 minutes is two half-lives. Half is left after the first and half of that, a quarter, after the second."
+  },
+  "hints": [
+    "Half of the sample decays in each half-life.",
+    "How much is left after one half-life? And after two?",
+    "Keep halving the amount once for every half-life that has passed."
+  ],
+  "apparatus": [
+    {
+      "kind": "nuclei",
+      "label": "Radioactive sample",
+      "channels": {
+        "remaining": {
+          "source": "decay",
+          "full": 480
+        }
+      }
+    }
+  ]
+}

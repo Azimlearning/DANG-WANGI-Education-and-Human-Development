@@ -27,6 +27,16 @@ DEFAULT_POINTERS = REPO / "data" / "citations" / "pointers.json"
 QUOTES_FILE = "citations.json"
 
 
+def _printed_page(pid: str, p: dict) -> int | None:
+    """The book's own page number, or None. A bool, a fraction or a number below 1 is a typo, not a page, so it refuses the file."""
+    raw = p.get("printed_page")
+    if raw is None:
+        return None
+    if isinstance(raw, bool) or not isinstance(raw, int) or raw < 1:
+        raise ValueError(f"{pid}: printed_page must be a positive whole number, got {raw!r}")
+    return raw
+
+
 @dataclass(frozen=True)
 class Pointer:
     id: str
@@ -76,7 +86,7 @@ class CitationBook:
                         topics=tuple(p.get("topics", ())),
                         models=tuple(p.get("models", ())),
                         checked_by=str(p["checked_by"]),
-                        printed_page=int(p["printed_page"]) if p.get("printed_page") is not None else None,
+                        printed_page=_printed_page(pid, p),
                     )
             except (ValueError, KeyError, TypeError) as exc:
                 raise RegistryError(f"{pointers_path}: not a valid pointer file ({type(exc).__name__}: {exc})") from exc
@@ -107,7 +117,7 @@ class CitationBook:
                 problems.append(f"{cid}: no local quotation for it (the quotations file is missing or lacks this id)")
                 continue
             try:
-                found.append(cite(self.corpus, pointer.doc, pointer.page, quote))
+                found.append(cite(self.corpus, pointer.doc, pointer.page, quote, pointer.printed_page))
             except UnverifiableCitation:
                 problems.append(f"{cid}: the quotation is not on page {pointer.page} of {pointer.doc}")
         return Resolution(tuple(found), tuple(problems))

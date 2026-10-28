@@ -17,7 +17,10 @@
     "Try a mass of 2 kg and then 10 kg at the same force."
   ],
   "steps": [],
-  "citation_ids": ["newton2_law", "newton2_fma"],
+  "citation_ids": [
+    "newton2_law",
+    "newton2_fma"
+  ],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -84,5 +87,21 @@
     "Write the formula: a = F / m.",
     "Substitute the resultant force and the mass.",
     "Divide to get the acceleration in m/s2."
+  ],
+  "apparatus": [
+    {
+      "kind": "trolley",
+      "label": "Trolley",
+      "channels": {
+        "position": {
+          "source": "motion",
+          "full": 20
+        },
+        "speed": {
+          "source": "motion",
+          "full": 20
+        }
+      }
+    }
   ]
 }

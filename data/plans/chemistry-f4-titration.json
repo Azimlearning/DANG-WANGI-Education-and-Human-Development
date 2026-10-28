@@ -137,5 +137,10 @@
     "source": "vb",
     "endpoint": "endpoint",
     "full": 50
-  }
+  },
+  "hints": [
+    "The end point is where the indicator changes colour.",
+    "Read the burette with your eye level with the bottom of the meniscus.",
+    "At the end point the acid and the alkali have just neutralised each other."
+  ]
 }

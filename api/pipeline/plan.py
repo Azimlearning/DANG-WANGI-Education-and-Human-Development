@@ -90,27 +90,53 @@ class TableSpec(_Strict):
 class SceneSpec(_Strict):
     """A picture bound to a model's output. It draws the quantity and never prints it."""
 
-    kind: Literal["spring", "titration", "fermentation", "orbit"]
+    kind: Literal["spring", "titration", "fermentation", "orbit", "refraction", "pressure"]
     source: Slug
-    """What is drawn. A spring: a model instance id (the extension, in metres). A titration, a fermentation or an orbit: a control id (the volume run in, in cm3; the glucose fermented, in mol; the launch speed, in km/s)."""
+    """What is drawn. A spring or a pressure tank: a model instance id (the extension, in metres; the pressure, in Pa). A titration, a fermentation, an orbit or a refraction: a control id (the volume run in, in cm3; the glucose fermented, in mol; the launch speed, in km/s; the angle of incidence, in deg)."""
     endpoint: Slug | None = None
     """A titration only: the model instance id of the end-point volume, where the indicator changes colour."""
     model: Slug | None = None
-    """A fermentation: the model instance id of the energy released, fed by the control the scene draws. An orbit: the model instance id of the circular speed."""
+    """A fermentation: the model instance id of the energy released, fed by the control the scene draws. An orbit: the model instance id of the circular speed. A refraction: the model instance id of the angle of refraction, fed by the control the scene draws."""
     escape: Slug | None = None
     """An orbit only: the model instance id of the escape speed, fed by the same radius constant as the circular speed."""
     full: float = Field(gt=0, allow_inf_nan=False)
-    """The value, in the source's unit, at which the picture is full (a spring fully stretched, a burette's capacity). A drawing scale; it is never shown."""
+    """The value, in the source's unit, at which the picture is full (a spring fully stretched, a burette's capacity; 90 for a refraction, the whole range of an angle). A drawing scale; it is never shown."""
 
     @model_validator(mode="after")
     def _endpoint_only_for_a_titration(self) -> SceneSpec:
         if (self.kind == "titration") != (self.endpoint is not None):
             raise ValueError("a titration scene needs an endpoint, and no other scene has one")
-        if (self.kind in ("fermentation", "orbit")) != (self.model is not None):
-            raise ValueError("a fermentation or an orbit scene needs a model, and no other scene has one")
+        if (self.kind in ("fermentation", "orbit", "refraction")) != (self.model is not None):
+            raise ValueError("a fermentation, an orbit or a refraction scene needs a model, and no other scene has one")
         if (self.kind == "orbit") != (self.escape is not None):
             raise ValueError("an orbit scene needs an escape speed, and no other scene has one")
         return self
+
+
+class ChannelBind(_Strict):
+    source: Slug
+    """A control id or a model instance id: the number this channel draws."""
+    full: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    """A fraction channel only: the value drawn as full (a full beaker, the biggest flame). A drawing scale; it is never shown."""
+
+
+class DropBind(_Strict):
+    """Items the student drags onto a part (W17, D-70): each one is one step of a slider with 2 to 8 steps."""
+
+    source: Slug
+    """The id of the slider the items add up to."""
+    item: Annotated[str, StringConstraints(min_length=1, max_length=40)]
+    """What one item is, in the student's words ("Spoon of salt")."""
+
+
+class ApparatusPart(_Strict):
+    """One piece of apparatus on the bench (W16, D-66): a part from the Kit's apparatus catalogue, its label, and what each channel draws. A channel bound to a slider
+    gets a grip the student drags on the drawing when the part has one there (W17, D-69); `drop` gives the part a tray of items to drag onto it."""
+
+    kind: Annotated[str, StringConstraints(pattern=r"^[a-z_]{2,24}$")]
+    label: Short
+    channels: dict[Slug, ChannelBind] = Field(min_length=1, max_length=4)
+    drop: DropBind | None = None
 
 
 class ExperimentCard(_Strict):
@@ -154,6 +180,8 @@ class Plan(_Strict):
     readouts: list[ReadoutSpec] = Field(min_length=1, max_length=4)
     graphs: list[GraphSpec] = Field(default_factory=list, max_length=2)
     scene: SceneSpec | None = None
+    apparatus: list[ApparatusPart] = Field(default_factory=list, max_length=4)
+    """The bench (W16): up to four reusable parts, each channel bound to a control or a model instance."""
     table: TableSpec | None = None
     experiment: ExperimentCard | None = None
     sentences: list[Sentence] = Field(default_factory=list, max_length=6)
@@ -173,7 +201,8 @@ class Plan(_Strict):
             entry: dict = {"id": m.model, "params": dict(m.params)}
             readouts = [r.label for r in self.readouts if r.source == m.id]
             series = [g.label for g in self.graphs if g.source == m.id] + [c.label for c in (self.table.columns if self.table else []) if c.source == m.id]
-            drawn = self.scene is not None and m.id in {self.scene.source if self.scene.kind == "spring" else None, self.scene.endpoint, self.scene.model, self.scene.escape}
+            drawn = self.scene is not None and m.id in {self.scene.source if self.scene.kind in ("spring", "pressure") else None, self.scene.endpoint, self.scene.model, self.scene.escape}
+            on_bench = any(ch.source == m.id for part in self.apparatus for ch in part.channels.values())
             # Which instance feeds which value matters when one model is used twice (two energies, two concentrations): the verifier compares each of these with the page.
             if readouts:
                 entry["readouts"] = readouts
@@ -181,6 +210,8 @@ class Plan(_Strict):
                 entry["series"] = series
             if drawn:
                 entry["scene"] = True
+            if on_bench:
+                entry["apparatus"] = True
             out.append(entry)
         return out
 

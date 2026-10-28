@@ -1,0 +1,32 @@
+{
+  "plan": "relative_atomic_mass_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Jisim atom relatif: purata isotop",
+    "/goal": "Lihat bagaimana jisim atom relatif klorin bergantung pada kelimpahan setiap satu daripada dua isotopnya.",
+    "/note": "Kebanyakan unsur ialah campuran isotop. Jisim atom relatif ialah purata jisim isotop, ditimbang mengikut peratusan setiap isotop dalam sampel semula jadi.",
+    "/controls/0/label": "Kelimpahan klorin-35",
+    "/readouts/0/label": "Jisim atom relatif klorin",
+    "/graphs/0/title": "Jisim atom relatif menurun apabila isotop yang lebih ringan menjadi lebih banyak.",
+    "/graphs/0/label": "Jisim atom relatif",
+    "/sentences/0": "Klorin mempunyai dua isotop, klorin-35 dan klorin-37, dan bakinya dalam sampel ialah klorin-37.",
+    "/sentences/1": "Jisim atom relatif ialah purata kedua-dua jisim, ditimbang mengikut kelimpahan setiap isotop.",
+    "/hints/0": "Sesuatu unsur boleh menjadi campuran atom yang berbeza jisimnya.",
+    "/hints/1": "Isotop yang manakah lebih banyak? Purata cenderung ke arahnya.",
+    "/hints/2": "Darabkan setiap jisim dengan peratusannya, tambahkan semuanya dan bahagikan dengan seratus.",
+    "/predict/prompt": "Isotop klorin yang lebih ringan lebih banyak daripada yang lebih berat. Adakah jisim atom relatif lebih dekat dengan jisim isotop yang lebih ringan atau yang lebih berat?",
+    "/predict/choices/0": "Lebih dekat dengan isotop yang lebih ringan",
+    "/predict/choices/1": "Tepat di tengah-tengah antara kedua-duanya",
+    "/predict/choices/2": "Lebih dekat dengan isotop yang lebih berat",
+    "/predict/reveal": "Tetapkan kelimpahan klorin-35 kepada 75 dan bandingkan jisim atom relatif dengan kedua-dua jisim isotop.",
+    "/concept_check/question": "Apakah yang menentukan jisim atom relatif sesuatu unsur?",
+    "/concept_check/options/0": "Hanya bilangan proton",
+    "/concept_check/options/1": "Jisim isotopnya dan kelimpahan setiap satu",
+    "/concept_check/options/2": "Hanya bilangan elektron",
+    "/concept_check/explanation": "Sesuatu unsur ialah campuran isotop, jadi jisim atom relatifnya ialah purata jisim isotop itu yang ditimbang mengikut kelimpahan semula jadi setiap satu.",
+    "/apparatus/0/label": "Bahagian klorin-35"
+  }
+}

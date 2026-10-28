@@ -21,7 +21,7 @@ HOOKE = load("physics-f5-hookes_amali.json")
 
 
 def test_there_are_golden_plans_to_read() -> None:
-    assert len(PLANS) == 17
+    assert len(PLANS) >= 22  # one per Environment the project can make (D-57 added four; a new golden Plan only grows this)
 
 
 @pytest.mark.parametrize("path", PLANS, ids=lambda p: p.stem)

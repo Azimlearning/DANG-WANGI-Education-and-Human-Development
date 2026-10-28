@@ -56,12 +56,32 @@
     "Move the depth from 0 m to 20 m and watch the pressure grow."
   ],
   "steps": [],
-  "citation_ids": ["pressure_liquid", "pressure_g"],
+  "citation_ids": [
+    "pressure_liquid",
+    "pressure_g"
+  ],
   "presentation": "stage",
   "custom": [],
   "hints": [
     "Pressure depends on how deep you are.",
     "Compare the pressure at two different depths.",
     "Try a depth of 5 m and then 10 m."
+  ],
+  "scene": {
+    "kind": "pressure",
+    "source": "water",
+    "full": 200000
+  },
+  "apparatus": [
+    {
+      "kind": "gauge",
+      "label": "Pressure gauge",
+      "channels": {
+        "value": {
+          "source": "water",
+          "full": 200000
+        }
+      }
+    }
   ]
 }

@@ -1,0 +1,37 @@
+{
+  "id": "reference-eenergy",
+  "title": "How much electrical energy does a lamp use?",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the electrical energy used by a lamp depends on its current and on how long it is lit.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "current",
+    "time"
+  ],
+  "readouts": [
+    "Electrical energy"
+  ],
+  "models": [
+    {
+      "id": "physics.electrical_energy",
+      "params": {
+        "voltage": 6.0
+      },
+      "readouts": [
+        "Electrical energy"
+      ],
+      "series": [
+        "Electrical energy"
+      ]
+    }
+  ]
+}

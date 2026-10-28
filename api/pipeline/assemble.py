@@ -31,6 +31,7 @@ SKELETON_PARTS: dict[str, frozenset[str]] = {
             "readouts",
             "graphs",
             "scene",
+            "apparatus",
             "steps",
             "table",
             "sentences",
@@ -51,6 +52,7 @@ SKELETON_PARTS: dict[str, frozenset[str]] = {
             "readouts",
             "graphs",
             "scene",
+            "apparatus",
             "table",
             "sentences",
             "custom",
@@ -100,6 +102,7 @@ def present_parts(plan: Plan) -> set[str]:
         ("constants", plan.constants),
         ("graphs", plan.graphs),
         ("scene", plan.scene),
+        ("apparatus", plan.apparatus),
         ("steps", plan.steps),
         ("table", plan.table),
         ("sentences", plan.sentences),
@@ -115,7 +118,29 @@ def present_parts(plan: Plan) -> set[str]:
     return parts
 
 
-def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
+KICKER = {
+    "en": lambda subject: f"Interactive {subject} lab",
+    "ms": lambda subject: f"Makmal {({'physics': 'fizik', 'chemistry': 'kimia', 'biology': 'biologi'})[subject]} interaktif",
+}
+LANGS = frozenset(KICKER)
+
+
+def _header_extras(plan: Plan, lang: str = "en") -> str:
+    """The kicker and the "Try this" line, from the Plan's subject and goal. A goal with a digit in it is left out: a digit on the page must be backed by a control."""
+    subject = plan.topic.split("_", 1)[0]
+    parts = []
+    if subject in ("physics", "chemistry", "biology"):
+        parts.append(f", kicker: {js(KICKER[lang](subject))}")
+    if plan.goal and not re.search(r"\d", plan.goal):
+        parts.append(f", tryThis: {js(plan.goal)}")
+    if lang != "en":
+        parts.append(f", lang: {js(lang)}")
+    return "".join(parts)
+
+
+def _slots(plan: Plan, manifest: Manifest, lang: str = "en") -> dict[str, str]:
+    dropped = {p.drop.source for p in plan.apparatus if p.drop is not None}
+
     def controls_js() -> str:
         return "\n  ".join(
             f"var {var('c', c.id)} = Synapse.{ {'masses': 'massHanger', 'valve': 'valve', 'dial': 'dial'}.get(c.surface, 'slider') }(env, "
@@ -128,6 +153,7 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
                     "max": c.max,
                     "value": c.value,
                     "grid": c.grid,
+                    **({"snap": True} if c.id in dropped else {}),  # a drop's items are whole steps (W17, D-70)
                 }
             )
             + ");"
@@ -174,9 +200,24 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
             return f"Synapse.fermentationScene(env, {{ fermented: {var('c', s.source)}, energy: {var('m', s.model or '')}, full: {js(s.full)} }});"
         if s.kind == "orbit":
             return f"Synapse.orbitScene(env, {{ speed: {var('c', s.source)}, circular: {var('m', s.model or '')}, escape: {var('m', s.escape or '')}, full: {js(s.full)} }});"
+        if s.kind == "pressure":
+            return f"Synapse.pressureScene(env, {{ pressure: {var('m', s.source)}, full: {js(s.full)} }});"
+        if s.kind == "refraction":
+            return f"Synapse.refractionScene(env, {{ incidence: {var('c', s.source)}, refraction: {var('m', s.model or '')} }});"
         if s.kind == "titration":
             return f"Synapse.titrationScene(env, {{ added: {var('c', s.source)}, endpoint: {var('m', s.endpoint or '')}, full: {js(s.full)} }});"
         return f"Synapse.springScene(env, {{ extension: {var('m', s.source)}, full: {js(s.full)} }});"
+
+    def apparatus_js() -> str:
+        lines = []
+        for part in plan.apparatus:
+            chans = ", ".join(
+                f"{js(name)}: {{ value: {source_expr(ch.source)}" + (f", full: {js(ch.full)}" if ch.full is not None else "") + " }"
+                for name, ch in sorted(part.channels.items())
+            )
+            drop = f", drop: {{ value: {var('c', part.drop.source)}, item: {js(part.drop.item)} }}" if part.drop is not None else ""
+            lines.append(f"Synapse.apparatus(env, {{ kind: {js(part.kind)}, label: {js(part.label)}, channels: {{ {chans} }}{drop} }});")
+        return "\n  ".join(lines)
 
     def graphs_js() -> str:
         return "\n  ".join(
@@ -213,13 +254,14 @@ def _slots(plan: Plan, manifest: Manifest) -> dict[str, str]:
         )
 
     return {
-        "environment": f"var env = Synapse.environment({{ title: {js(plan.title)}, note: {js(plan.note)} }});",
+        "environment": f"var env = Synapse.environment({{ title: {js(plan.title)}, note: {js(plan.note)}{_header_extras(plan, lang)} }});",
         "controls": controls_js(),
         "constants": constants_js(),
         "models": models_js(),
         "readouts": readouts_js(),
         "graphs": graphs_js(),
         "scene": scene_js(),
+        "apparatus": apparatus_js(),
         "steps": f"Synapse.stepper(env, {{ steps: {js(list(plan.steps))} }});" if plan.steps else "",
         "table": table_js(),
         "sentences": "\n  ".join(f"Synapse.text(env, {js(s)});" for s in plan.sentences),
@@ -257,8 +299,10 @@ def scope_names(plan: Plan) -> tuple[str, ...]:
     )
 
 
-def assemble(plan: Plan, manifest: Manifest, fills: dict[str, str] | None = None) -> Assembled:
-    """Raises AssemblyGap when the pattern has no skeleton or the skeleton cannot take a part of the Plan."""
+def assemble(plan: Plan, manifest: Manifest, fills: dict[str, str] | None = None, *, lang: str = "en") -> Assembled:
+    """Raises AssemblyGap when the pattern has no skeleton or the skeleton cannot take a part of the Plan. `lang` is the language of the Plan's words and of the Kit's own fixed words (D-62)."""
+    if lang not in LANGS:
+        raise AssemblyGap("lang", f"there is no language '{lang}'")
     fills = fills or {}
     allowed = SKELETON_PARTS.get(plan.pattern)
     if allowed is None:
@@ -269,10 +313,10 @@ def assemble(plan: Plan, manifest: Manifest, fills: dict[str, str] | None = None
         if slot.name not in fills:
             raise AssemblyGap(f"custom:{slot.name}", "no fill was supplied for this custom slot")
     template = (SKELETONS / f"{plan.pattern}.html").read_text(encoding="utf-8")
-    slots = _slots(plan, manifest)
+    slots = _slots(plan, manifest, lang)
     slots["custom"] = "\n  ".join(f"/* custom: {s.name} */\n  {fills[s.name].strip()}" for s in plan.custom)
     used = []
-    variables = {"title": html.escape(plan.title), "kit_version": manifest.version}
+    variables = {"title": html.escape(plan.title), "kit_version": manifest.version, "lang": lang}
 
     def fill(m: re.Match[str]) -> str:
         # One pass over the TEMPLATE: text that came from the plan is never scanned again for slots or variables (S3).

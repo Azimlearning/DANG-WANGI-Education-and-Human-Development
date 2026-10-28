@@ -296,7 +296,7 @@ def _value_problems(what: str, unit: str, chain: dict, audit: dict) -> list[Prob
 
 
 # The model each kind of scene may draw. A scene is a picture of a model's number; one bound to anything else is a picture the audit cannot ground.
-SCENE_MODELS = {"spring": "mechanics.hookes", "titration": "chemistry.titration_endpoint_volume", "fermentation": "biology.respiration_energy", "orbit": "physics.circular_speed"}
+SCENE_MODELS = {"spring": "mechanics.hookes", "titration": "chemistry.titration_endpoint_volume", "fermentation": "biology.respiration_energy", "orbit": "physics.circular_speed", "refraction": "physics.refraction_angle", "pressure": "fluids.pressure_depth"}
 SCENE_FILL_MIN = 0.5
 """A scene's drawing scale must be no less than the model's output at the controls' maximum and no more than twice it (the picture is then nearly full and never clipped)."""
 
@@ -385,6 +385,25 @@ def _orbit_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
     return out
 
 
+REFRACTION_FULL = 90.0
+
+
+def _refraction_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
+    """A refraction scene draws a control in deg within 0 to 90 degrees and the refraction model fed by that same control as its angle of incidence, drawn to the whole range of an angle."""
+    source = w.get("sourceChain") or {}
+    control = next((c for c in audit.get("controls", []) if source.get("kind") == "control" and c["id"] == source.get("id")), None)
+    if control is None or control.get("unit") != "deg":
+        return [Problem("scene_ungrounded", "the refraction scene is not driven by a control in deg")]
+    if not (float(control["min"]) >= 0 and float(control["max"]) <= REFRACTION_FULL):
+        return [Problem("scene_scale", f"the refraction scene's angle of incidence runs from {control['min']} to {control['max']} degrees, outside 0 to 90")]
+    fed = (chain.get("inputs") or {}).get("incidence_angle") or {}
+    if fed.get("kind") != "control" or fed.get("id") != source.get("id"):
+        return [Problem("scene_ungrounded", "the angle of refraction the scene draws is not fed by the control it draws")]
+    if w.get("full") != REFRACTION_FULL:
+        return [Problem("scene_scale", f"the refraction scene is drawn to a scale of {w.get('full')!r}, not the whole range of an angle (90 degrees)")]
+    return []
+
+
 def _titration_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
     """A titration scene draws a control in cm3 against the end-point model's output: the burette must hold what the control can run in, and the end point must be reachable."""
     source = w.get("sourceChain") or {}
@@ -432,12 +451,83 @@ def _scene_scale_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
     return []
 
 
+APPARATUS_FILL_MIN = 0.25
+"""A part's fraction channel: the value it draws must reach at least a quarter of its scale somewhere in the controls' range, and never pass it (W16)."""
+APPARATUS_LIMITS = {"angle": (0.0, 60.0), "ph": (0.0, 14.0)}
+
+
+def _corner_range(chain: dict, audit: dict) -> tuple[float, float] | None:
+    """The least and greatest value of a chain over every corner of the controls' ranges (each control at its minimum or maximum), from the independent references."""
+    controls = audit.get("controls", [])
+    used = sorted({n["id"] for n in _walk(chain) if n.get("kind") == "control"})
+    if len(used) > 6:
+        return None
+    constants = {c["label"]: float(c["value"]) for c in audit.get("constants", [])}
+    by_id = {c["id"]: c for c in controls}
+    values: list[float] = []
+    for corner in range(2 ** len(used)):
+        at = {cid: float(by_id[cid]["max"] if corner >> i & 1 else by_id[cid]["min"]) for i, cid in enumerate(used) if cid in by_id}
+        try:
+            values.append(evaluate_chain(chain, at, constants))
+        except (ValueError, KeyError):
+            return None
+    return (min(values), max(values)) if values else None
+
+
+def _apparatus_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
+    """A part's channel draws a control or a science model's output, in a unit the channel accepts, at a scale (or within limits) that fits what the controls can reach."""
+    what = f"the {w.get('part')}'s {w.get('channel')}"
+    if not has_source(chain) or chain.get("kind") == "constant":
+        return [Problem("scene_ungrounded", f"{what} draws a fixed value no control or science model produced")]
+    found = chain_problem(chain)
+    if found:
+        return [Problem(found.rule, f"{what}: {found.reason}")]
+    units = w.get("units") or []
+    unit = _chain_unit(chain, audit)
+    if units and unit not in units:
+        return [Problem("wrong_unit", f"{what} must be in {' or '.join(units)}, and its value is in {unit!r}")]
+    span = _corner_range(chain, audit)
+    if span is None:
+        return []  # an unevaluable chain is refused by the reference layer
+    lo, hi = span
+    kind = w.get("channelType")
+    if kind in APPARATUS_LIMITS:
+        a, b = APPARATUS_LIMITS[kind]
+        if lo < a - 1e-9 or hi > b + 1e-9:
+            return [Problem("scene_scale", f"{what} runs from {lo:g} to {hi:g}, outside {a:g} to {b:g}")]
+        return []
+    full = w.get("full")
+    if not isinstance(full, (int, float)) or isinstance(full, bool) or not math.isfinite(full) or full <= 0:
+        return [Problem("scene_scale", f"{what} has no drawing scale")]
+    if lo < -1e-9:
+        return [Problem("scene_scale", f"{what} can be negative ({lo:g}), which a level or a size cannot show")]
+    if hi > full * (1 + 1e-9) or hi < full * APPARATUS_FILL_MIN:
+        return [Problem("scene_scale", f"{what} is drawn to a scale of {full:g} but reaches {hi:g}, so the picture would be {'clipped' if hi > full else 'mostly unused'}")]
+    return []
+
+
+def _handle_problems(w: dict, audit: dict) -> list[Problem]:
+    """A grip on a part (W17, D-69) moves a declared control, and it is the control the part's channel draws: dragging the liquid moves the liquid's own slider."""
+    chain = w.get("chain") or {}
+    cid = w.get("control")
+    if chain.get("kind") != "control" or chain.get("id") != cid or cid not in {c.get("id") for c in audit.get("controls", [])}:
+        return [Problem("scene_ungrounded", f"the handle {w.get('id')} does not move a declared control")]
+    drawn = next((a for a in audit["widgets"] if a.get("kind") == "apparatus" and a.get("id") == w.get("id")), None)
+    if drawn is None or (drawn.get("chain") or {}).get("id") != cid:
+        return [Problem("scene_ungrounded", f"the handle {w.get('id')} is not on the channel that draws '{cid}'")]
+    return []
+
+
 def widget_problems(audit: dict) -> list[Problem]:
     """The mass hangers and scenes the Kit built: each must report itself intact, a scene must draw the model it is registered for, and a hanger must have as many masses as the Kit made."""
     out: list[Problem] = []
     for w in audit["widgets"]:
         for text in [*w.get("problems", []), *w.get("exact", []), *w.get("layout", [])]:
             out.append(Problem("widget_tampered", text))
+        if w.get("kind") == "apparatus":
+            out += _apparatus_problems(w, w.get("chain") or {}, audit)
+        if w.get("kind") == "handle":
+            out += _handle_problems(w, audit)
         if w.get("kind") == "scene":
             chain = w.get("chain") or {}
             if chain.get("kind") != "model" or chain.get("id") != SCENE_MODELS.get(w.get("id", "")):
@@ -453,6 +543,8 @@ def widget_problems(audit: dict) -> list[Problem]:
                     out += _fermentation_problems(w, chain, audit)
                 elif w.get("id") == "orbit":
                     out += _orbit_problems(w, chain, audit)
+                elif w.get("id") == "refraction":
+                    out += _refraction_problems(w, chain, audit)
                 else:
                     out += _scene_scale_problems(w, chain, audit)
     return out
@@ -637,6 +729,10 @@ def binding_problems(audit: dict, plan_models: list[dict]) -> list[Problem]:
             s = next((x for x in audit.get("series", []) if x["label"] == label), None)
             if s is None or not _is_instance(_top_model(s["chain"]), *want):
                 out.append(Problem("plan_mismatch", f"'{label}' is not fed by the plan's {m['id']} {m.get('params', {})}"))
+        if m.get("apparatus"):
+            drawn = [w["chain"] for w in audit.get("widgets", []) if w.get("kind") == "apparatus" and w.get("chain")]
+            if not any(_is_instance(_top_model(c), *want) for c in drawn):
+                out.append(Problem("plan_mismatch", f"no part on the bench is drawn from the plan's {m['id']} {m.get('params', {})}"))
         if m.get("scene"):
             drawn = [w for w in audit.get("widgets", []) if w.get("kind") == "scene" and w.get("chain")]
             if not any(_is_instance(_top_model(c), *want) for w in drawn for c in (w["chain"], w.get("secondChain")) if c):

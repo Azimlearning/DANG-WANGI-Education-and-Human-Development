@@ -1,0 +1,125 @@
+{
+  "id": "transformer_lab",
+  "title": "Transformers: stepping a voltage up or down",
+  "goal": "See how the output voltage of an ideal transformer depends on the turns of its two coils.",
+  "pattern": "simulation",
+  "topic": "physics_form5_electromagnetism",
+  "experiment_ref": null,
+  "note": "An ideal transformer loses no energy. The output voltage is the input voltage times the secondary turns divided by the primary turns, so more secondary turns step the voltage up and fewer step it down.",
+  "controls": [
+    {
+      "id": "primary",
+      "label": "Primary turns",
+      "unit": "turns",
+      "min": 100,
+      "max": 1000,
+      "value": 400,
+      "grid": 9
+    },
+    {
+      "id": "secondary",
+      "label": "Secondary turns",
+      "unit": "turns",
+      "min": 100,
+      "max": 1000,
+      "value": 100,
+      "grid": 9
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "volts",
+      "model": "physics.transformer_voltage",
+      "params": {
+        "primary_voltage": 240
+      },
+      "inputs": {
+        "primary_turns": "primary",
+        "secondary_turns": "secondary"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Output voltage",
+      "unit": "V",
+      "digits": 1,
+      "source": "volts",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The output voltage rises in a straight line as the secondary turns increase.",
+      "x": "secondary",
+      "source": "volts",
+      "label": "Output voltage",
+      "unit": "V",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "The input voltage is 240 V, as from a mains socket.",
+    "With more turns on the secondary coil than on the primary coil the transformer is a step-up transformer; with fewer it is a step-down transformer."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "transf_turns",
+    "transf_ideal"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "The primary coil has 400 turns and the secondary has 100. Will the output voltage be higher or lower than 240 V?",
+    "choices": [
+      "Higher",
+      "The same",
+      "Lower"
+    ],
+    "reveal": "Look at the output voltage with the primary at 400 turns and the secondary at 100 turns."
+  },
+  "concept_check": {
+    "question": "A transformer has fewer turns on its secondary coil than on its primary coil. What kind of transformer is it?",
+    "options": [
+      "A step-up transformer",
+      "A step-down transformer",
+      "It does not change the voltage"
+    ],
+    "correct": 1,
+    "explanation": "The output voltage is the input voltage times the secondary turns divided by the primary turns. Fewer secondary turns make that fraction less than one, so the voltage steps down."
+  },
+  "hints": [
+    "The voltage depends on how many turns each coil has.",
+    "What happens to the output voltage when the secondary coil has more turns?",
+    "The output voltage equals the input voltage times the secondary turns divided by the primary turns."
+  ],
+  "apparatus": [
+    {
+      "kind": "coils",
+      "label": "Transformer",
+      "channels": {
+        "primary": {
+          "source": "primary",
+          "full": 1000
+        },
+        "secondary": {
+          "source": "secondary",
+          "full": 1000
+        }
+      }
+    },
+    {
+      "kind": "bulb",
+      "label": "Output lamp",
+      "channels": {
+        "brightness": {
+          "source": "volts",
+          "full": 2400
+        }
+      }
+    }
+  ]
+}

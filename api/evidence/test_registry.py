@@ -46,6 +46,22 @@ def test_a_citation_that_the_corpus_proves_and_the_plan_matches_resolves_to_a_ve
     assert make(tmp_path / "again").evidence.verify(citation)  # the same proof the verifier and the gate run
 
 
+def test_a_pointer_with_a_printed_page_gives_the_citation_the_books_own_number(tmp_path: Path) -> None:
+    pointers = {
+        "hookes": {
+            "doc": DOC, "page": 2, "printed_page": 27, "claim": "extension is proportional to load within the elastic limit",
+            "topics": ["physics_f5_elasticity"], "models": [], "checked_by": "synthetic test",
+        },
+        "osmosis": {"doc": DOC, "page": 3, "claim": "osmosis", "topics": ["biology_f4_osmosis"], "models": [], "checked_by": "synthetic test"},
+    }
+    book = make(tmp_path, pointers=pointers)
+    (with_page,) = book.resolve(["hookes"], topic="physics_f5_elasticity").citations
+    (without,) = book.resolve(["osmosis"], topic="biology_f4_osmosis").citations
+    assert with_page.printedPage == 27 and with_page.page == 2  # the PDF page is still what the proof is made against
+    assert without.printedPage is None
+    assert book.evidence.verify(with_page)  # the printed page changes nothing about whether it proves
+
+
 def test_a_pointer_may_match_by_science_model_instead_of_topic(tmp_path: Path) -> None:
     assert make(tmp_path).resolve(["hookes"], topic="physics_f5_other", models=["mechanics.hookes"]).ok
 
@@ -125,6 +141,13 @@ def test_every_committed_plan_cites_only_pointers_that_exist_and_support_it() ->
             assert supports, f"{path.name}: {cid} supports neither its topic nor its models"
 
 
+def test_a_printed_page_is_a_small_step_below_the_pdf_page() -> None:
+    """The printed number is the PDF page minus the front matter (about 5 to 10 pages here). A value outside that is a typo, not a page."""
+    for cid, p in _committed_pointers().items():
+        if "printed_page" in p:
+            assert isinstance(p["printed_page"], int) and 1 <= p["printed_page"] < p["page"] and p["page"] - p["printed_page"] <= 12, cid
+
+
 def test_the_pointer_file_holds_pointers_not_textbook_text() -> None:
     allowed = {"doc", "page", "claim", "topics", "models", "checked_by", "printed_page"}
     for cid, p in _committed_pointers().items():
@@ -132,3 +155,15 @@ def test_the_pointer_file_holds_pointers_not_textbook_text() -> None:
         assert len(p["claim"]) <= 200, f"{cid}: a claim is a short note in our words, not a passage"
         assert isinstance(p["page"], int) and p["page"] >= 1 and 1 <= len(cid) <= 24, cid
         assert "NOT yet reviewed by a person" in p["checked_by"] or p["checked_by"].startswith("person"), cid
+
+
+@pytest.mark.parametrize("bad", [0, -3, True, 1.5, "7"])
+def test_a_printed_page_that_is_not_a_positive_whole_number_refuses_the_file(tmp_path: Path, bad: object) -> None:
+    pointers = {
+        "hookes": {
+            "doc": DOC, "page": 2, "printed_page": bad, "claim": "extension is proportional to load",
+            "topics": ["physics_f5_elasticity"], "models": [], "checked_by": "synthetic test",
+        },
+    }
+    with pytest.raises(RegistryError):
+        make(tmp_path, pointers=pointers)

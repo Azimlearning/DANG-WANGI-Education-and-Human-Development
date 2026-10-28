@@ -15,7 +15,7 @@ export const spec: ScienceSpec = {
   params: { central_mass: { unit: "kg", min: 0, exclusive: true } },
   output: { unit: "km/s" },
   fn: ({ radius, central_mass }) => Math.sqrt((G * (central_mass as number)) / ((radius as number) * 1000)) / 1000,
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Worked by hand: G M = 6.674e-11 x 5.972e24 = 3.986e14; divide by r in metres, take the square root, then to km/s.
   reference: [
     { args: { radius: 6371, central_mass: 5.972e24 }, expected: 7.9095, tolerance: 5e-4, derivation: "sqrt(3.986e14 / 6.371e6) = sqrt(6.256e7) = 7910 m/s = 7.91 km/s at the surface of Earth" },

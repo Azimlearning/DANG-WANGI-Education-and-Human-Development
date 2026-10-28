@@ -58,6 +58,10 @@ class RouterModel:
                     index.setdefault(feature, []).append((k, weight))
             self._by_feature[head] = index
 
+    def knows_word(self, word: str) -> bool:
+        """Whether `word` is a single word the model's word features were trained on (so an English word in a Malay question can be told from a Malay word it does not know)."""
+        return any(kind == "word" and ngram_range[0] <= 1 and word in vocabulary for kind, ngram_range, vocabulary, _idf, _offset in self._features)
+
     def features(self, query: str) -> dict[int, float]:
         merged: dict[int, float] = {}
         for kind, ngram_range, vocabulary, idf, offset in self._features:

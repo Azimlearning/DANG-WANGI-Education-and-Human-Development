@@ -1,0 +1,903 @@
+{
+  "_about": "The web page's own words in English and Bahasa Melayu (W12, D-62). `ms` is a DRAFT written by the build assistant; it is shown only when `reviewed` is true for that string, or when the build sets NEXT_PUBLIC_BM_DRAFTS=1 (a demo or a review session). A reviewer flips `reviewed` with eval/i18n/tools.py. {name} marks a place a value goes.",
+  "homeAria": {
+    "en": "Synapse, home",
+    "ms": "Synapse, laman utama",
+    "reviewed": false
+  },
+  "themeToLight": {
+    "en": "Switch to light mode",
+    "ms": "Tukar ke mod cerah",
+    "reviewed": false
+  },
+  "themeToDark": {
+    "en": "Switch to dark mode",
+    "ms": "Tukar ke mod gelap",
+    "reviewed": false
+  },
+  "myProgress": {
+    "en": "My progress",
+    "ms": "Kemajuan saya",
+    "reviewed": false
+  },
+  "languageAria": {
+    "en": "Language",
+    "ms": "Bahasa",
+    "reviewed": false
+  },
+  "bmDraftMark": {
+    "en": "Draft translation, not yet reviewed",
+    "ms": "Draf terjemahan, belum disemak",
+    "reviewed": false
+  },
+  "draftShort": {
+    "en": "Draft",
+    "ms": "Draf",
+    "reviewed": false
+  },
+  "bmPending": {
+    "en": "Bahasa Melayu is waiting for a reviewer, so this page is shown in English.",
+    "ms": "Bahasa Melayu sedang menunggu penyemak, jadi halaman ini dipaparkan dalam Bahasa Inggeris.",
+    "reviewed": false
+  },
+  "labNoTranslation": {
+    "en": "This lab is not available in Bahasa Melayu yet, so it is shown in English.",
+    "ms": "Makmal ini belum tersedia dalam Bahasa Melayu, jadi ia dipaparkan dalam Bahasa Inggeris.",
+    "reviewed": false
+  },
+  "labLoadingTranslation": {
+    "en": "Loading the Bahasa Melayu version…",
+    "ms": "Memuatkan versi Bahasa Melayu…",
+    "reviewed": false
+  },
+  "questionsEnglish": {
+    "en": "Questions are asked in English for now.",
+    "ms": "Soalan ditanya dalam Bahasa Inggeris buat masa ini.",
+    "reviewed": false
+  },
+  "studyGuide": {
+    "en": "Study guide",
+    "ms": "Panduan belajar",
+    "reviewed": false
+  },
+  "railTitle": {
+    "en": "Ask. See it. Try it.",
+    "ms": "Tanya. Lihat. Cuba.",
+    "reviewed": false
+  },
+  "railIntro": {
+    "en": "Verified, interactive science for KSSM Form 4 and 5, with its source beside it.",
+    "ms": "Sains interaktif yang disahkan untuk KSSM Tingkatan 4 dan 5, dengan sumbernya di sebelah.",
+    "reviewed": false
+  },
+  "todaysFlow": {
+    "en": "Today's flow",
+    "ms": "Aliran hari ini",
+    "reviewed": false
+  },
+  "flowAsk": {
+    "en": "Ask",
+    "ms": "Tanya",
+    "reviewed": false
+  },
+  "flowAskHint": {
+    "en": "Start with the thing that feels fuzzy.",
+    "ms": "Mulakan dengan perkara yang masih kabur.",
+    "reviewed": false
+  },
+  "flowSee": {
+    "en": "See the idea",
+    "ms": "Lihat idea itu",
+    "reviewed": false
+  },
+  "flowSeeHint": {
+    "en": "A short note, with its textbook source when there is one.",
+    "ms": "Nota ringkas, dengan sumber buku teksnya apabila ada.",
+    "reviewed": false
+  },
+  "flowTry": {
+    "en": "Try it",
+    "ms": "Cuba",
+    "reviewed": false
+  },
+  "flowTryHint": {
+    "en": "Move a slider and watch the numbers respond.",
+    "ms": "Gerakkan peluncur dan lihat nombor bertindak balas.",
+    "reviewed": false
+  },
+  "quickStarts": {
+    "en": "Quick starts",
+    "ms": "Mula pantas",
+    "reviewed": false
+  },
+  "recentlyOpened": {
+    "en": "Recently opened",
+    "ms": "Baru dibuka",
+    "reviewed": false
+  },
+  "removeFromList": {
+    "en": "Remove from this list: {title}",
+    "ms": "Buang daripada senarai ini: {title}",
+    "reviewed": false
+  },
+  "keptHere": {
+    "en": "Kept in this browser only.",
+    "ms": "Disimpan dalam pelayar ini sahaja.",
+    "reviewed": false
+  },
+  "openNotebook": {
+    "en": "Open notebook",
+    "ms": "Buku nota terbuka",
+    "reviewed": false
+  },
+  "whatUnderstand": {
+    "en": "What are you trying to understand?",
+    "ms": "Apakah yang anda cuba fahami?",
+    "reviewed": false
+  },
+  "emptyIntro": {
+    "en": "Ask one clear science question. You get a short note and, when there is one, an interactive model with its source and what was checked.",
+    "ms": "Tanya satu soalan sains yang jelas. Anda akan mendapat nota ringkas dan, apabila ada, model interaktif dengan sumber dan perkara yang telah disemak.",
+    "reviewed": false
+  },
+  "serverUnreachable": {
+    "en": "Could not reach the server.",
+    "ms": "Tidak dapat menghubungi pelayan.",
+    "reviewed": false
+  },
+  "askLabel": {
+    "en": "Ask a science question",
+    "ms": "Tanya soalan sains",
+    "reviewed": false
+  },
+  "placeholderHero": {
+    "en": "Why does a spring stretch?",
+    "ms": "Tanya dalam Bahasa Inggeris, cth. Why does a spring stretch?",
+    "reviewed": false
+  },
+  "placeholderBar": {
+    "en": "Ask a science question…",
+    "ms": "Tanya soalan sains (dalam Bahasa Inggeris)…",
+    "reviewed": false
+  },
+  "askButton": {
+    "en": "Ask",
+    "ms": "Tanya",
+    "reviewed": false
+  },
+  "asking": {
+    "en": "Asking…",
+    "ms": "Sedang bertanya…",
+    "reviewed": false
+  },
+  "labBenchAria": {
+    "en": "Lab bench",
+    "ms": "Meja makmal",
+    "reviewed": false
+  },
+  "interactiveWorkspace": {
+    "en": "Interactive workspace",
+    "ms": "Ruang kerja interaktif",
+    "reviewed": false
+  },
+  "yourLabBench": {
+    "en": "Your lab bench",
+    "ms": "Meja makmal anda",
+    "reviewed": false
+  },
+  "readyWhen": {
+    "en": "Ready when you are",
+    "ms": "Sedia apabila anda sedia",
+    "reviewed": false
+  },
+  "askAQuestion": {
+    "en": "Ask a question.",
+    "ms": "Tanya satu soalan.",
+    "reviewed": false
+  },
+  "makeTangible": {
+    "en": "Make it tangible.",
+    "ms": "Jadikan ia nyata.",
+    "reviewed": false
+  },
+  "benchIntro": {
+    "en": "Interactive models open here, with the source and what was checked beside them.",
+    "ms": "Model interaktif dibuka di sini, dengan sumber dan perkara yang telah disemak di sebelahnya.",
+    "reviewed": false
+  },
+  "labTools": {
+    "en": "Lab tools",
+    "ms": "Alat makmal",
+    "reviewed": false
+  },
+  "present": {
+    "en": "Present",
+    "ms": "Paparkan",
+    "reviewed": false
+  },
+  "share": {
+    "en": "Share",
+    "ms": "Kongsi",
+    "reviewed": false
+  },
+  "saveOffline": {
+    "en": "Save offline",
+    "ms": "Luar talian",
+    "reviewed": false
+  },
+  "fullScreen": {
+    "en": "Full screen",
+    "ms": "Skrin penuh",
+    "reviewed": false
+  },
+  "copyLink": {
+    "en": "Copy link",
+    "ms": "Salin pautan",
+    "reviewed": false
+  },
+  "linkCopied": {
+    "en": "Link copied.",
+    "ms": "Pautan disalin.",
+    "reviewed": false
+  },
+  "linkAria": {
+    "en": "Link to this Environment",
+    "ms": "Pautan ke makmal ini",
+    "reviewed": false
+  },
+  "open": {
+    "en": "Open",
+    "ms": "Buka",
+    "reviewed": false
+  },
+  "back": {
+    "en": "Back",
+    "ms": "Kembali",
+    "reviewed": false
+  },
+  "presenting": {
+    "en": "Presenting",
+    "ms": "Sedang memaparkan",
+    "reviewed": false
+  },
+  "stopPresenting": {
+    "en": "Stop presenting",
+    "ms": "Berhenti memaparkan",
+    "reviewed": false
+  },
+  "saveCopy": {
+    "en": "Save a copy to use offline",
+    "ms": "Simpan salinan untuk kegunaan luar talian",
+    "reviewed": false
+  },
+  "sourceLabel": {
+    "en": "Source:",
+    "ms": "Sumber:",
+    "reviewed": false
+  },
+  "noneStated": {
+    "en": "none stated",
+    "ms": "tiada dinyatakan",
+    "reviewed": false
+  },
+  "badgeKitVerified": {
+    "en": "Kit verified",
+    "ms": "Disahkan Kit",
+    "reviewed": false
+  },
+  "badgeCheckedByCode": {
+    "en": "Checked by code",
+    "ms": "Disemak oleh kod",
+    "reviewed": false
+  },
+  "badgeReviewed": {
+    "en": "Reviewed by a person",
+    "ms": "Disemak oleh seorang penyemak",
+    "reviewed": false
+  },
+  "badgeCanonical": {
+    "en": "Canonical",
+    "ms": "Kanonik",
+    "reviewed": false
+  },
+  "laneLibrary": {
+    "en": "From the library",
+    "ms": "Dari pustaka",
+    "reviewed": false
+  },
+  "laneCompose": {
+    "en": "Built for your question",
+    "ms": "Dibina untuk soalan anda",
+    "reviewed": false
+  },
+  "laneFree": {
+    "en": "Written whole by a model",
+    "ms": "Ditulis sepenuhnya oleh model",
+    "reviewed": false
+  },
+  "provenanceAria": {
+    "en": "Where this Environment comes from",
+    "ms": "Asal-usul makmal ini",
+    "reviewed": false
+  },
+  "laneTextInstantiate": {
+    "en": "Instantiate: a stored Environment reused as it was",
+    "ms": "Instantiate: makmal tersimpan yang digunakan semula seperti asalnya",
+    "reviewed": false
+  },
+  "laneTextCompose": {
+    "en": "Compose: planned for your question and assembled from audited Kit components",
+    "ms": "Compose: dirancang untuk soalan anda dan dipasang daripada komponen Kit yang telah diaudit",
+    "reviewed": false
+  },
+  "laneTextFree": {
+    "en": "Free: written whole by a model, not built on the Kit",
+    "ms": "Free: ditulis sepenuhnya oleh model, tidak dibina di atas Kit",
+    "reviewed": false
+  },
+  "labelNameKit": {
+    "en": "Kit verified",
+    "ms": "Disahkan Kit",
+    "reviewed": false
+  },
+  "labelNameChecked": {
+    "en": "Checked by code, no verified textbook source",
+    "ms": "Disemak oleh kod, tiada sumber buku teks yang disahkan",
+    "reviewed": false
+  },
+  "labelNameReviewed": {
+    "en": "Reviewed by a person",
+    "ms": "Disemak oleh seorang penyemak",
+    "reviewed": false
+  },
+  "labelNameCanonical": {
+    "en": "Canonical",
+    "ms": "Kanonik",
+    "reviewed": false
+  },
+  "checkedPrefix": {
+    "en": "Checked: {layers}.",
+    "ms": "Disemak: {layers}.",
+    "reviewed": false
+  },
+  "layerPostprocess": {
+    "en": "the page structure and its security policy",
+    "ms": "struktur halaman dan dasar keselamatannya",
+    "reviewed": false
+  },
+  "layerScan": {
+    "en": "no forbidden code",
+    "ms": "tiada kod yang dilarang",
+    "reviewed": false
+  },
+  "layerRender": {
+    "en": "it runs in a real browser and its controls work",
+    "ms": "ia berjalan dalam pelayar sebenar dan kawalannya berfungsi",
+    "reviewed": false
+  },
+  "layerProvenance": {
+    "en": "the values it computes come from a science model, and the numbers in its sentences match its settings",
+    "ms": "nilai yang dikiranya datang daripada model sains, dan nombor dalam ayatnya sepadan dengan tetapannya",
+    "reviewed": false
+  },
+  "layerGrid": {
+    "en": "controls were moved across their range, including the extremes",
+    "ms": "kawalan digerakkan merentasi julatnya, termasuk nilai hujung",
+    "reviewed": false
+  },
+  "layerReference": {
+    "en": "values were compared with an independent calculation",
+    "ms": "nilai dibandingkan dengan pengiraan bebas",
+    "reviewed": false
+  },
+  "layerWording": {
+    "en": "its words were read by a second model for false or misleading statements (a model's reading, not a proof)",
+    "ms": "perkataannya dibaca oleh model kedua untuk mengesan kenyataan yang salah atau mengelirukan (bacaan model, bukan bukti)",
+    "reviewed": false
+  },
+  "countControlOne": {
+    "en": "{n} control tried",
+    "ms": "{n} kawalan dicuba",
+    "reviewed": false
+  },
+  "countControlMany": {
+    "en": "{n} controls tried",
+    "ms": "{n} kawalan dicuba",
+    "reviewed": false
+  },
+  "countPositions": {
+    "en": "{n} control positions",
+    "ms": "{n} kedudukan kawalan",
+    "reviewed": false
+  },
+  "countReference": {
+    "en": "{n} values compared with the reference",
+    "ms": "{n} nilai dibandingkan dengan rujukan",
+    "reviewed": false
+  },
+  "countReadoutOne": {
+    "en": "{n} readout",
+    "ms": "{n} bacaan",
+    "reviewed": false
+  },
+  "countReadoutMany": {
+    "en": "{n} readouts",
+    "ms": "{n} bacaan",
+    "reviewed": false
+  },
+  "scienceModelLine": {
+    "en": "Science model: {id}{params}.",
+    "ms": "Model sains: {id}{params}.",
+    "reviewed": false
+  },
+  "whatWasChecked": {
+    "en": "What was checked:",
+    "ms": "Perkara yang disemak:",
+    "reviewed": false
+  },
+  "limitsLabel": {
+    "en": "Limits:",
+    "ms": "Had:",
+    "reviewed": false
+  },
+  "progressKept": {
+    "en": "Kept in this browser only. Nothing is sent anywhere. It counts your first answer to each check question.",
+    "ms": "Disimpan dalam pelayar ini sahaja. Tiada apa-apa dihantar ke mana-mana. Ia mengira jawapan pertama anda bagi setiap soalan semakan.",
+    "reviewed": false
+  },
+  "progressNothing": {
+    "en": "Nothing yet. Answer a check question in an Environment and it will appear here.",
+    "ms": "Belum ada apa-apa. Jawab soalan semakan dalam sebuah makmal dan ia akan muncul di sini.",
+    "reviewed": false
+  },
+  "masteryJustStarted": {
+    "en": "Just started",
+    "ms": "Baru bermula",
+    "reviewed": false
+  },
+  "masterySecure": {
+    "en": "Secure",
+    "ms": "Mantap",
+    "reviewed": false
+  },
+  "masteryGettingThere": {
+    "en": "Getting there",
+    "ms": "Hampir berjaya",
+    "reviewed": false
+  },
+  "progressRow": {
+    "en": "{mastery}: {correct} right out of {tries}",
+    "ms": "{mastery}: {correct} betul daripada {tries}",
+    "reviewed": false
+  },
+  "showCode": {
+    "en": "Show my code",
+    "ms": "Tunjukkan kod saya",
+    "reviewed": false
+  },
+  "codeShown": {
+    "en": "Copy this code to keep your progress or to move it to another device.",
+    "ms": "Salin kod ini untuk menyimpan kemajuan anda atau memindahkannya ke peranti lain.",
+    "reviewed": false
+  },
+  "clearProgress": {
+    "en": "Clear progress",
+    "ms": "Padam kemajuan",
+    "reviewed": false
+  },
+  "pressAgain": {
+    "en": "Press again to clear",
+    "ms": "Tekan sekali lagi untuk memadam",
+    "reviewed": false
+  },
+  "progressCleared": {
+    "en": "Progress cleared on this device.",
+    "ms": "Kemajuan dipadam pada peranti ini.",
+    "reviewed": false
+  },
+  "codeAria": {
+    "en": "Your progress code",
+    "ms": "Kod kemajuan anda",
+    "reviewed": false
+  },
+  "loadCodeLabel": {
+    "en": "Load a progress code",
+    "ms": "Muatkan kod kemajuan",
+    "reviewed": false
+  },
+  "invalidCode": {
+    "en": "That code is not valid. Check that you copied all of it.",
+    "ms": "Kod itu tidak sah. Pastikan anda menyalin keseluruhannya.",
+    "reviewed": false
+  },
+  "progressLoaded": {
+    "en": "Progress loaded. It replaced what this device had.",
+    "ms": "Kemajuan dimuatkan. Ia menggantikan apa yang ada pada peranti ini.",
+    "reviewed": false
+  },
+  "loadCode": {
+    "en": "Load code",
+    "ms": "Muatkan kod",
+    "reviewed": false
+  },
+  "progressTitle": {
+    "en": "My progress ({n})",
+    "ms": "Kemajuan saya ({n})",
+    "reviewed": false
+  },
+  "examAria": {
+    "en": "Exam practice",
+    "ms": "Latihan peperiksaan",
+    "reviewed": false
+  },
+  "examKicker": {
+    "en": "Exam practice (optional) [{marks} marks]",
+    "ms": "Latihan peperiksaan (pilihan) [{marks} markah]",
+    "reviewed": false
+  },
+  "hide": {
+    "en": "Hide",
+    "ms": "Sembunyi",
+    "reviewed": false
+  },
+  "hideExam": {
+    "en": "Hide this exam practice",
+    "ms": "Sembunyikan latihan peperiksaan ini",
+    "reviewed": false
+  },
+  "yourAnswer": {
+    "en": "Your answer",
+    "ms": "Jawapan anda",
+    "reviewed": false
+  },
+  "markAnswer": {
+    "en": "Mark my answer",
+    "ms": "Tanda jawapan saya",
+    "reviewed": false
+  },
+  "staysHere": {
+    "en": "Your answer stays in this browser.",
+    "ms": "Jawapan anda kekal dalam pelayar ini.",
+    "reviewed": false
+  },
+  "marksOf": {
+    "en": "{score} of {marks} marks",
+    "ms": "{score} daripada {marks} markah",
+    "reviewed": false
+  },
+  "earned": {
+    "en": "Earned",
+    "ms": "Diperoleh",
+    "reviewed": false
+  },
+  "missed": {
+    "en": "Missed",
+    "ms": "Terlepas",
+    "reviewed": false
+  },
+  "fullMarkAnswer": {
+    "en": "A full-mark answer:",
+    "ms": "Jawapan markah penuh:",
+    "reviewed": false
+  },
+  "examNote": {
+    "en": "Marked by matching key words, not by a teacher, so a correct answer in different words can lose a mark. Use it to practise, not as a grade. The marking points were written by the assistant and have not been reviewed by a teacher.",
+    "ms": "Ditanda dengan memadankan kata kunci, bukan oleh guru, jadi jawapan yang betul dengan perkataan lain boleh kehilangan markah. Gunakannya untuk berlatih, bukan sebagai gred. Mata pemarkahan ditulis oleh pembantu dan belum disemak oleh guru.",
+    "reviewed": false
+  },
+  "quickAria": {
+    "en": "Quick check",
+    "ms": "Semakan pantas",
+    "reviewed": false
+  },
+  "quickKicker": {
+    "en": "Quick check (optional)",
+    "ms": "Semakan pantas (pilihan)",
+    "reviewed": false
+  },
+  "hideQuick": {
+    "en": "Hide this quick check",
+    "ms": "Sembunyikan semakan pantas ini",
+    "reviewed": false
+  },
+  "yourAnswerSr": {
+    "en": " (your answer)",
+    "ms": "(jawapan anda)",
+    "reviewed": false
+  },
+  "correctAnswerMark": {
+    "en": " (correct answer)",
+    "ms": "(jawapan betul)",
+    "reviewed": false
+  },
+  "yesRight": {
+    "en": "Yes, that is right.",
+    "ms": "Ya, betul.",
+    "reviewed": false
+  },
+  "notQuiteIdea": {
+    "en": "Not quite. Here is the idea.",
+    "ms": "Belum tepat. Inilah ideanya.",
+    "reviewed": false
+  },
+  "restsOn": {
+    "en": "What this rests on:",
+    "ms": "Asasnya:",
+    "reviewed": false
+  },
+  "wentWrong": {
+    "en": "Something went wrong",
+    "ms": "Sesuatu tidak kena",
+    "reviewed": false
+  },
+  "explanationOnly": {
+    "en": "Explanation only",
+    "ms": "Penjelasan sahaja",
+    "reviewed": false
+  },
+  "tryAgain": {
+    "en": "Try again",
+    "ms": "Cuba lagi",
+    "reviewed": false
+  },
+  "stepReading": {
+    "en": "Reading your question",
+    "ms": "Membaca soalan anda",
+    "reviewed": false
+  },
+  "stepExplaining": {
+    "en": "Writing the explanation",
+    "ms": "Menulis penjelasan",
+    "reviewed": false
+  },
+  "stepPlanning": {
+    "en": "Designing the experiment",
+    "ms": "Mereka bentuk eksperimen",
+    "reviewed": false
+  },
+  "stepChecking": {
+    "en": "Checking the science",
+    "ms": "Menyemak sains",
+    "reviewed": false
+  },
+  "stepReady": {
+    "en": "Ready",
+    "ms": "Sedia",
+    "reviewed": false
+  },
+  "gettingStarted": {
+    "en": "Getting started",
+    "ms": "Bermula",
+    "reviewed": false
+  },
+  "stepOf": {
+    "en": "{a} of {b}",
+    "ms": "{a} daripada {b}",
+    "reviewed": false
+  },
+  "stateDone": {
+    "en": "done",
+    "ms": "selesai",
+    "reviewed": false
+  },
+  "stateWorking": {
+    "en": "working",
+    "ms": "sedang berjalan",
+    "reviewed": false
+  },
+  "stateNext": {
+    "en": "next",
+    "ms": "seterusnya",
+    "reviewed": false
+  },
+  "progressAria": {
+    "en": "Progress",
+    "ms": "Kemajuan",
+    "reviewed": false
+  },
+  "draftAria": {
+    "en": "{title} (draft)",
+    "ms": "{title} (draf)",
+    "reviewed": false
+  },
+  "draftBadge": {
+    "en": "Draft, not yet checked",
+    "ms": "Draf, belum disemak",
+    "reviewed": false
+  },
+  "checkingBrowser": {
+    "en": "Checking this Environment in a real browser…",
+    "ms": "Menyemak makmal ini dalam pelayar sebenar…",
+    "reviewed": false
+  },
+  "slidersList": {
+    "en": "Sliders: {list}",
+    "ms": "Peluncur: {list}",
+    "reviewed": false
+  },
+  "showsList": {
+    "en": "Shows: {list}",
+    "ms": "Menunjukkan: {list}",
+    "reviewed": false
+  },
+  "aGraph": {
+    "en": "A graph",
+    "ms": "Sebuah graf",
+    "reviewed": false
+  },
+  "aTable": {
+    "en": "A results table",
+    "ms": "Sebuah jadual keputusan",
+    "reviewed": false
+  },
+  "fromLibrary": {
+    "en": "From the library",
+    "ms": "Dari pustaka",
+    "reviewed": false
+  },
+  "quickNote": {
+    "en": "Quick study note",
+    "ms": "Nota belajar ringkas",
+    "reviewed": false
+  },
+  "checkingHash": {
+    "en": "Checking the Environment's hash…",
+    "ms": "Menyemak cap jari (hash) makmal ini…",
+    "reviewed": false
+  },
+  "runtimeError": {
+    "en": "This Environment reported an error: {message}",
+    "ms": "Makmal ini melaporkan ralat: {message}",
+    "reviewed": false
+  },
+  "violationClosed": {
+    "en": "This Environment changed what it was showing in a way the checker does not allow, so it was closed.",
+    "ms": "Makmal ini mengubah apa yang dipaparkannya dengan cara yang tidak dibenarkan oleh penyemak, jadi ia ditutup.",
+    "reviewed": false
+  },
+  "navigatedClosed": {
+    "en": "The Environment tried to navigate away, so it was closed.",
+    "ms": "Makmal ini cuba berpindah ke tempat lain, jadi ia ditutup.",
+    "reviewed": false
+  },
+  "labReportAria": {
+    "en": "Lab report",
+    "ms": "Laporan makmal",
+    "reviewed": false
+  },
+  "labReportKicker": {
+    "en": "Lab report",
+    "ms": "Laporan makmal",
+    "reviewed": false
+  },
+  "labReportHeading": {
+    "en": "Lab report: {title}",
+    "ms": "Laporan makmal: {title}",
+    "reviewed": false
+  },
+  "procedure": {
+    "en": "Procedure",
+    "ms": "Prosedur",
+    "reviewed": false
+  },
+  "resultsCaption": {
+    "en": "Results: {caption}",
+    "ms": "Keputusan: {caption}",
+    "reviewed": false
+  },
+  "noRowsYet": {
+    "en": "No rows yet. Press Record in the model to add a row of your results.",
+    "ms": "Belum ada baris. Tekan Rekod dalam model untuk menambah satu baris keputusan anda.",
+    "reviewed": false
+  },
+  "noRowsText": {
+    "en": "(no rows recorded yet)",
+    "ms": "(belum ada baris direkodkan)",
+    "reviewed": false
+  },
+  "observations": {
+    "en": "Observations",
+    "ms": "Pemerhatian",
+    "reviewed": false
+  },
+  "observationsHint": {
+    "en": "What did you see happen as you changed it?",
+    "ms": "Apakah yang anda lihat berlaku apabila anda mengubahnya?",
+    "reviewed": false
+  },
+  "discussion": {
+    "en": "Discussion",
+    "ms": "Perbincangan",
+    "reviewed": false
+  },
+  "discussionHint": {
+    "en": "Why do you think it happened? Did the results match the hypothesis?",
+    "ms": "Mengapa anda fikir ia berlaku? Adakah keputusan sepadan dengan hipotesis?",
+    "reviewed": false
+  },
+  "conclusion": {
+    "en": "Conclusion",
+    "ms": "Kesimpulan",
+    "reviewed": false
+  },
+  "conclusionHint": {
+    "en": "State what the experiment shows, in one or two sentences.",
+    "ms": "Nyatakan apa yang ditunjukkan oleh eksperimen ini, dalam satu atau dua ayat.",
+    "reviewed": false
+  },
+  "notWritten": {
+    "en": "(not written yet)",
+    "ms": "(belum ditulis)",
+    "reviewed": false
+  },
+  "copyReport": {
+    "en": "Copy report",
+    "ms": "Salin laporan",
+    "reviewed": false
+  },
+  "downloadReport": {
+    "en": "Download lab report",
+    "ms": "Muat turun laporan makmal",
+    "reviewed": false
+  },
+  "printReport": {
+    "en": "Print or save as PDF",
+    "ms": "Cetak atau simpan sebagai PDF",
+    "reviewed": false
+  },
+  "reportCopied": {
+    "en": "Report copied.",
+    "ms": "Laporan disalin.",
+    "reviewed": false
+  },
+  "reportCopyFailed": {
+    "en": "Could not copy. Use Download lab report instead.",
+    "ms": "Tidak dapat menyalin. Gunakan Muat turun laporan makmal.",
+    "reviewed": false
+  },
+  "reportSaved": {
+    "en": "Lab report saved.",
+    "ms": "Laporan makmal disimpan.",
+    "reviewed": false
+  },
+  "reportNote": {
+    "en": "The experiment, procedure and results come from the model you used. The observations, discussion and conclusion are your own words: they stay in this browser and are not checked.",
+    "ms": "Eksperimen, prosedur dan keputusan datang daripada model yang anda gunakan. Pemerhatian, perbincangan dan kesimpulan ialah kata-kata anda sendiri: ia kekal dalam pelayar ini dan tidak disemak.",
+    "reviewed": false
+  },
+  "reportTextNote": {
+    "en": "The experiment, procedure and results above come from the model you used. The observations, discussion and conclusion are your own words.",
+    "ms": "Eksperimen, prosedur dan keputusan di atas datang daripada model yang anda gunakan. Pemerhatian, perbincangan dan kesimpulan ialah kata-kata anda sendiri.",
+    "reviewed": false
+  },
+  "demoModel": {
+    "en": "Demo model",
+    "ms": "Model demo",
+    "reviewed": false
+  },
+  "demoModelHelp": {
+    "en": "The server is running on the offline fake model, so only the stored library labs can be answered. Set SYNAPSE_LLM_MODE=live to make a lab for any question.",
+    "ms": "Pelayan menggunakan model palsu luar talian, jadi hanya makmal perpustakaan yang disimpan boleh dijawab. Tetapkan SYNAPSE_LLM_MODE=live untuk membuat makmal bagi sebarang soalan.",
+    "reviewed": false
+  },
+  "noLabTitle": {
+    "en": "No lab for this question",
+    "ms": "Tiada makmal untuk soalan ini",
+    "reviewed": false
+  },
+  "noLabDemo": {
+    "en": "Only the stored library labs are answered while the server runs on the demo model. Ask one of the quick starts, or switch the server to live mode to have a lab made for any question.",
+    "ms": "Hanya makmal perpustakaan yang disimpan dijawab semasa pelayan menggunakan model demo. Tanya salah satu mula pantas, atau tukar pelayan ke mod live supaya makmal dibuat untuk sebarang soalan.",
+    "reviewed": false
+  },
+  "noLabGeneric": {
+    "en": "A lab was not shown for this question. The written answer is on the left.",
+    "ms": "Makmal tidak dipaparkan untuk soalan ini. Jawapan bertulis ada di sebelah kiri.",
+    "reviewed": false
+  },
+  "demoLabNote": {
+    "en": "Demo model: this lab was not made for your question. The server is on the offline fake model, which cannot read it. Switch the server to live mode to get a lab made for what you asked.",
+    "ms": "Model demo: makmal ini tidak dibuat untuk soalan anda. Pelayan menggunakan model palsu luar talian yang tidak dapat membaca soalan itu. Tukar pelayan ke mod live untuk mendapat makmal yang dibuat mengikut soalan anda.",
+    "reviewed": false
+  }
+}

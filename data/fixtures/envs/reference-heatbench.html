@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heat: how much energy warms water?</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Heat: how much energy warms water?", note: "The heat needed is Q = m c delta-theta. For water the specific heat capacity c is 4200 joules for each kilogram and each degree Celsius.", kicker: "Interactive physics lab", tryThis: "Find how the heat needed depends on the mass and on the rise in temperature." });
+  Synapse.predictCard(env, {"prompt": "If the rise in temperature stays the same and the mass of water doubles, what happens to the heat needed?", "choices": ["It halves", "It doubles", "It stays the same"], "reveal": "Set the mass to 1, then to 2, with the rise at 20, and compare the heat needed."});
+  Synapse.experiment(env, {"aim": "To find how the heat needed depends on the mass and the rise in temperature of water", "hypothesis": "The heat needed is directly proportional to the mass and to the rise in temperature", "independent": "Rise in temperature (°C)", "dependent": "Heat needed (J)", "controlled": ["The substance, water", "The mass of water"], "apparatus": ["Immersion heater", "Beaker", "Thermometer", "Electronic balance"]});
+  Synapse.stepper(env, { steps: ["Keep the mass at 2, set the rise in temperature to 20, then press Record.", "Set the rise in temperature to 40, then press Record.", "Set the rise in temperature to 60, then press Record.", "Compare the heat needed each time the rise doubles."] });
+  var c_mass = Synapse.slider(env, {"id": "mass", "label": "Mass of water", "unit": "kg", "min": 0.5, "max": 4.0, "value": 2.0, "grid": 7, "snap": true});
+  var c_rise = Synapse.slider(env, {"id": "rise", "label": "Rise in temperature", "unit": "°C", "min": 0.0, "max": 60.0, "value": 20.0, "grid": 6});
+  
+  var m_heat = Synapse.specificHeat({ specific_heat: 4200.0, mass: c_mass, temperature_change: c_rise });
+  Synapse.readout(env, { label: "Heat needed", unit: "J", value: m_heat, digits: 0 });
+  
+  Synapse.apparatus(env, { kind: "beaker", label: "Water", channels: { "level": { value: c_mass, full: 4.0 } }, drop: { value: c_mass, item: "Cup of water" } });
+  Synapse.apparatus(env, { kind: "thermometer", label: "Thermometer", channels: { "temperature": { value: c_rise, full: 60.0 } } });
+  Synapse.apparatus(env, { kind: "burner", label: "Heat supplied", channels: { "heat": { value: m_heat, full: 1010000.0 } } });
+  Synapse.graph(env, { title: "The heat needed rises in a straight line with the rise in temperature.", x: c_rise, y: m_heat, yLabel: "Heat needed", yUnit: "J", digits: 0 });
+  Synapse.table(env, { caption: "Results", columns: [
+    { label: "Mass", unit: "kg", value: c_mass, digits: 1 },
+    { label: "Rise in temperature", unit: "°C", value: c_rise, digits: 0 },
+    { label: "Heat needed", unit: "J", value: m_heat, digits: 0 }
+  ] });
+  Synapse.text(env, "Every substance has its own specific heat capacity. Water has a high one, so it needs a lot of heat to warm up and releases a lot as it cools.");
+  Synapse.text(env, "Doubling the mass doubles the heat needed, and so does doubling the rise in temperature.");
+  Synapse.hintLadder(env, { hints: ["A bigger mass needs more heat for the same rise.", "Heat equals mass times specific heat capacity times the rise."] });
+  Synapse.conceptCheck(env, {"question": "Why does a kilogram of water need more heat than a kilogram of aluminium for the same rise in temperature?", "options": ["Water has a higher specific heat capacity", "Water has a lower specific heat capacity", "Water is heavier than aluminium"], "correct": 0, "explanation": "The heat needed is mass times specific heat capacity times the rise in temperature. For the same mass and rise, the larger specific heat capacity needs more heat."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

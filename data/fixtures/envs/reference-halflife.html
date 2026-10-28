@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Half-life: how a radioactive sample decays</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Half-life: how a radioactive sample decays", note: "Every half-life, half of the radioactive nuclei that are left decay. The sample here starts at 480 decays per second and has a half-life of 6 minutes, so the time control moves in whole half-lives.", kicker: "Interactive physics lab", tryThis: "See how much of a radioactive sample is left after each half-life." });
+  Synapse.predictCard(env, {"prompt": "The activity starts at 480 per second. What will it be after two half-lives?", "choices": ["Half of the starting activity", "A quarter of the starting activity", "None of it"], "reveal": "Move the time control to 12 minutes, which is two half-lives, and read the activity."});
+  var c_time = Synapse.slider(env, {"id": "time", "label": "Time", "unit": "min", "min": 0.0, "max": 48.0, "value": 0.0, "grid": 8});
+  
+  var m_decay = Synapse.halfLifeDecay({ half_life: 6.0, initial: 480.0, time: c_time });
+  Synapse.readout(env, { label: "Activity left", unit: "/s", value: m_decay, digits: 1 });
+  
+  Synapse.graph(env, { title: "The activity halves every half-life, so the curve falls steeply and then flattens.", x: c_time, y: m_decay, yLabel: "Activity left", yUnit: "/s", digits: 1 });
+  
+  Synapse.text(env, "After one half-life half of the sample is left, after two half-lives a quarter, after three an eighth, and so on.");
+  Synapse.text(env, "Each step of the time control is one half-life.");
+  Synapse.hintLadder(env, { hints: ["Half of the sample decays in each half-life.", "How much is left after one half-life? And after two?", "Keep halving the amount once for every half-life that has passed."] });
+  Synapse.conceptCheck(env, {"question": "A sample has a half-life of 6 minutes. How much of it is left after 12 minutes?", "options": ["Half of it", "A quarter of it", "None of it"], "correct": 1, "explanation": "12 minutes is two half-lives. Half is left after the first and half of that, a quarter, after the second."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

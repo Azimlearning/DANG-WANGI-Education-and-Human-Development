@@ -4,8 +4,10 @@
 // composer once a conversation is going. Kept the same logic; the field is `#q` and the button is a submit "Ask" (the browser smoke drives both), the limit is the
 // API's 500 characters, and the button says "Ask" not "Build it": a covered question is answered from the library and nothing is built.
 import { useState } from "react";
+import { useT } from "../lib/i18n";
 
 export function Composer({ onSend, disabled, variant = "bar" }: { onSend: (message: string) => void; disabled: boolean; variant?: "bar" | "hero" }) {
+  const t = useT();
   const [value, setValue] = useState("");
   const hero = variant === "hero";
 
@@ -25,7 +27,7 @@ export function Composer({ onSend, disabled, variant = "bar" }: { onSend: (messa
       }}
     >
       <label htmlFor="q" className="sr-only">
-        Ask a science question
+        {t("askLabel")}
       </label>
       <textarea
         id="q"
@@ -40,13 +42,13 @@ export function Composer({ onSend, disabled, variant = "bar" }: { onSend: (messa
         rows={1}
         maxLength={500}
         autoComplete="off"
-        placeholder={hero ? "Why does a spring stretch?" : "Ask a science question…"}
-        className={`flex-1 resize-none rounded-card border-2 border-line-2 bg-card text-ink outline-none placeholder:text-ink-faint focus:border-primary focus:ring-4 focus:ring-primary-soft ${
+        placeholder={hero ? t("placeholderHero") : t("placeholderBar")}
+        className={`composer-field w-0 min-w-0 flex-1 resize-none rounded-card border-2 border-line-2 bg-card text-ink outline-none placeholder:text-ink-faint focus:border-primary focus:ring-4 focus:ring-primary-soft ${
           hero ? "min-h-[58px] px-5 py-4 text-lg font-semibold" : "min-h-[48px] px-4 py-3 text-[16px] font-medium"
         }`}
       />
       <button type="submit" disabled={disabled || value.trim().length === 0} className={`btn btn-primary ${hero ? "px-7 text-base" : "min-h-[48px] px-5 text-[15px]"}`}>
-        {disabled ? "Asking…" : "Ask"}
+        {disabled ? t("asking") : t("askButton")}
       </button>
     </form>
   );

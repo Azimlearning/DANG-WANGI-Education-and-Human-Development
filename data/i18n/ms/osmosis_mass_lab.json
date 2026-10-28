@@ -1,0 +1,26 @@
+{
+  "plan": "osmosis_mass_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Osmosis dalam ubi kentang: peratus perubahan jisim",
+    "/goal": "Cari peratus perubahan jisim seketul ubi kentang selepas direndam dalam larutan.",
+    "/note": "Seketul ubi kentang bertambah jisim dalam larutan yang lebih cair daripada sap selnya kerana air memasuki melalui osmosis, dan berkurang jisim dalam larutan yang lebih pekat. Peratus perubahan jisim ialah perubahan dibahagi dengan jisim awal, ditunjukkan sebagai peratusan. Ketulan ini bermula pada 10 g.",
+    "/controls/0/label": "Jisim selepas eksperimen",
+    "/readouts/0/label": "Perubahan jisim",
+    "/graphs/0/title": "Jisim akhir yang lebih besar bermakna peratus pertambahan yang lebih besar.",
+    "/graphs/0/label": "Perubahan jisim",
+    "/sentences/0": "Tetapkan jisim akhir kepada 6 g dan kemudian kepada 14 g, dan bandingkan tanda perubahan itu.",
+    "/hints/0": "Fikirkan arah pergerakan air melalui membran sel ubi kentang.",
+    "/hints/1": "Adakah ubi kentang bertambah atau berkurang jisim? Lihat tanda perubahan itu.",
+    "/hints/2": "Bahagikan perubahan jisim dengan jisim awal.",
+    "/concept_check/question": "Seketul ubi kentang mempunyai jisim akhir yang kurang daripada jisim awalnya. Apakah tanda peratus perubahannya?",
+    "/concept_check/options/0": "Positif",
+    "/concept_check/options/1": "Negatif",
+    "/concept_check/options/2": "Sifar",
+    "/concept_check/explanation": "Ketulan itu kehilangan jisim, jadi perubahannya negatif: air keluar dari sel melalui osmosis.",
+    "/apparatus/0/label": "Ketulan ubi kentang"
+  }
+}

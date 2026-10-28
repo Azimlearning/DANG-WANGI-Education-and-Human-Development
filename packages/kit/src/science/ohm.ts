@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: {},
   output: { unit: "A" },
   fn: ({ voltage, resistance }) => (voltage as number) / (resistance as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed from I = V / R.
   reference: [
     { args: { voltage: 12, resistance: 4 }, expected: 3, tolerance: 1e-12, derivation: "12 V over 4 ohm = 3 A" },

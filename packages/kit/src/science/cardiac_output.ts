@@ -10,7 +10,7 @@ export const spec: ScienceSpec = {
   params: {},
   output: { unit: "L/min" },
   fn: ({ heart_rate, stroke_volume }) => ((heart_rate as number) * (stroke_volume as number)) / 1000,
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed: beats/min x mL/beat gives mL/min; divide by 1000 for L/min.
   reference: [
     { args: { heart_rate: 72, stroke_volume: 70 }, expected: 5.04, tolerance: 1e-9, derivation: "72 x 70 = 5040 mL/min = 5.04 L/min" },

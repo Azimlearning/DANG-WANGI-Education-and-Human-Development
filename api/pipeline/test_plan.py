@@ -41,7 +41,45 @@ def test_there_is_a_golden_plan_for_each_physics_form_5_topic() -> None:
         "physics_form5_force_and_elasticity",
         "physics_form5_electricity",
         "physics_form5_forces_and_pressure",
+        "physics_form5_electromagnetism",
+        "physics_form5_nuclear_physics",
     }
+
+
+def refraction() -> dict:
+    return json.loads((REPO / "data" / "plans" / "physics-f4-refraction.json").read_text(encoding="utf-8"))
+
+
+def test_a_control_that_can_reach_a_models_ceiling_is_plan_005(manifest: kitmanifest.Manifest) -> None:
+    """The angle of incidence must stay below 90 degrees: a control that can reach 90 or more is refused, one that stops short of it is accepted."""
+    d = refraction()
+    assert codes(d, manifest) == []
+    d["controls"][0]["max"] = 90
+    d["controls"][0]["grid"] = 9
+    assert "PLAN-005" in codes(d, manifest)
+    d["controls"][0]["max"] = 100
+    d["controls"][0]["grid"] = 10
+    assert "PLAN-005" in codes(d, manifest)
+    d["controls"][0]["max"] = 85
+    d["controls"][0]["grid"] = 17
+    assert "PLAN-005" not in codes(d, manifest)
+
+
+def test_a_constant_above_a_models_ceiling_is_plan_005(manifest: kitmanifest.Manifest) -> None:
+    d = refraction()
+    d["constants"] = [{"id": "angle", "label": "Angle", "unit": "deg", "value": 95}]
+    d["models"][0]["inputs"]["incidence_angle"] = "angle"
+    d["controls"] = [c for c in d["controls"] if c["id"] != "incidence"]
+    d["graphs"] = []
+    d["table"] = None
+    d["steps"] = []
+    assert "PLAN-005" in codes(d, manifest)
+
+
+def test_the_manifest_carries_the_ceiling_the_checks_use(manifest: kitmanifest.Manifest) -> None:
+    q = manifest.models["physics.refraction_angle"].inputs["incidence_angle"]
+    assert q.min == 0 and q.max == 90 and q.max_exclusive
+    assert manifest.models["physics.refraction_angle"].inputs["refractive_index"].max is None
 
 
 @pytest.mark.parametrize("path", GOLDEN, ids=lambda p: p.stem)
@@ -233,3 +271,24 @@ def test_every_plan_check_code_has_a_test_that_makes_it_fire() -> None:
         if f'"{code}"' not in tests and code.lower().replace("-", "") not in tests.lower().replace("-", "")
     )
     assert not missing, f"no test fires {missing}"
+
+
+def half_life() -> dict:
+    return json.loads((REPO / "data" / "plans" / "physics-f5-half_life.json").read_text(encoding="utf-8"))
+
+
+def test_a_half_life_time_control_must_move_in_whole_half_lives_plan_021(manifest: kitmanifest.Manifest) -> None:
+    """The book states the half-life rule for whole numbers of half-lives. The golden Plan runs 0 to 48 minutes in 8 steps of 6, one half-life each."""
+    d = half_life()
+    assert codes(d, manifest) == []
+    d["controls"][0].update(grid=10)  # steps of 4.8 minutes: between half-lives
+    assert "PLAN-021" in codes(d, manifest)
+    d = half_life()
+    d["controls"][0].update(min=3, max=51, grid=8)  # starts half way through a half-life
+    assert "PLAN-021" in codes(d, manifest)
+    d = half_life()
+    d["controls"][0].update(grid=4)  # steps of 12: two half-lives at a time, still whole
+    assert "PLAN-021" not in codes(d, manifest)
+    d = half_life()
+    d["models"][0]["params"]["half_life"] = 7  # a different half-life makes the same control wrong
+    assert "PLAN-021" in codes(d, manifest)

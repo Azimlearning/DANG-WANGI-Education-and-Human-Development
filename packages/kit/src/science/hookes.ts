@@ -11,7 +11,7 @@ export const spec: ScienceSpec = {
   params: { k: { unit: "N/m", min: 0, exclusive: true } },
   output: { unit: "m" },
   fn: ({ load, k }) => (load as number) / (k as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed from F = k x rearranged as x = F / k; one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { k: 50, load: 10 }, expected: 0.2, tolerance: 1e-12, derivation: "10 N over 50 N/m = 0.2 m" },

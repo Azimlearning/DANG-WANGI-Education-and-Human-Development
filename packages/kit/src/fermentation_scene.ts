@@ -8,6 +8,7 @@
 
 import { all, attr, effectiveOpacity, layoutAvailable, parentOf, rectOf, style } from "./dom";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { guard } from "./parts";
 import { controls, markKitSvg, nodeOf, own, ownAttr, widgets } from "./provenance";
@@ -40,14 +41,12 @@ function svg<K extends keyof SVGElementTagNameMap>(name: K, attrs: Record<string
 
 /** Words for how much gas bubbles through tube A's delivery tube. */
 export function bubbleWords(count: number): string {
-  return count <= 1 ? "a few bubbles" : count <= 3 ? "steady bubbling" : "plenty of bubbles";
+  return count <= 1 ? kt("bubblesFew") : count <= 3 ? kt("bubblesSteady") : kt("bubblesPlenty");
 }
 
 /** What the student would see in tube A and tube B, in words. */
 export function observationWords(count: number): string {
-  return count > 0
-    ? `Tube A: gas bubbles through the delivery tube (${bubbleWords(count)}), the limewater has turned cloudy, the tube is warmer and it smells of ethanol. Tube B, the control: the limewater is clear and nothing has changed.`
-    : "Nothing has happened yet: both limewaters are clear and both tubes are at the same temperature.";
+  return count > 0 ? kt("fermentActive", bubbleWords(count)) : kt("fermentIdle");
 }
 
 export function fermentationScene(env: Environment, options: FermentationSceneOptions): HTMLDivElement {
@@ -73,7 +72,7 @@ export function fermentationScene(env: Environment, options: FermentationSceneOp
   const started = (): boolean => fermented.get() > 0;
   const warmer = (): boolean => energy.get() > 0;
   const bubbleCount = (): number => (started() ? Math.min(BUBBLES, Math.max(1, Math.ceil((fermented.get() / full) * BUBBLES))) : 0);
-  const describe = (): string => `Two boiling tubes under paraffin oil, A with yeast and B without, each with a delivery tube into limewater. ${observationWords(bubbleCount())}`;
+  const describe = (): string => kt("fermentScene", observationWords(bubbleCount()));
 
   // two tubes: a boiling tube, its liquid, an oil layer, a thermometer, a delivery tube into a limewater test tube
   const parts: { tube: SVGElement; cloud: SVGElement; mercury: SVGElement; bubbles: SVGElement[] }[] = [];
@@ -84,15 +83,15 @@ export function fermentationScene(env: Environment, options: FermentationSceneOp
   ];
   letters.forEach(([letter, x0], index) => {
     const withYeast = index === 0;
-    root.appendChild(svg("rect", { x: String(x0 + 4), y: "70", width: "44", height: "110", rx: "6", fill: "none", stroke: "var(--syn-edge)", "stroke-width": "3" }));
+    root.appendChild(svg("rect", { x: String(x0 + 4), y: "70", width: "44", height: "110", rx: "6", fill: "none", stroke: "var(--syn-line)", "stroke-width": "3" }));
     root.appendChild(svg("rect", { x: String(x0 + 6), y: "104", width: "40", height: "74", rx: "5", fill: withYeast ? "var(--syn-yeast)" : "var(--syn-liquid)" }));
     root.appendChild(svg("rect", { x: String(x0 + 6), y: "96", width: "40", height: "8", fill: "var(--syn-oil)" }));
     root.appendChild(svg("rect", { x: String(x0 + 38), y: "52", width: "5", height: "100", rx: "2", fill: "none", stroke: "var(--syn-muted)", "stroke-width": "1.5" }));
     const mercury = svg("rect", { x: String(x0 + 39), width: "3", fill: "var(--syn-indicator)" });
     root.appendChild(mercury);
     // the delivery tube: up out of the cork, across, down into the limewater
-    root.appendChild(svg("polyline", { points: `${x0 + 26},70 ${x0 + 26},40 ${x0 + 72},40 ${x0 + 72},150`, fill: "none", stroke: "var(--syn-edge)", "stroke-width": "3", "stroke-linejoin": "round" }));
-    const tube = svg("rect", { x: String(x0 + 58), y: "110", width: "28", height: "72", rx: "5", fill: "none", stroke: "var(--syn-edge)", "stroke-width": "3" });
+    root.appendChild(svg("polyline", { points: `${x0 + 26},70 ${x0 + 26},40 ${x0 + 72},40 ${x0 + 72},150`, fill: "none", stroke: "var(--syn-line)", "stroke-width": "3", "stroke-linejoin": "round" }));
+    const tube = svg("rect", { x: String(x0 + 58), y: "110", width: "28", height: "72", rx: "5", fill: "none", stroke: "var(--syn-line)", "stroke-width": "3" });
     const cloud = svg("rect", { x: String(x0 + 60), y: "134", width: "24", height: "46", rx: "4" });
     root.append(cloud, tube);
     const bubbles: SVGElement[] = [];
@@ -107,7 +106,7 @@ export function fermentationScene(env: Environment, options: FermentationSceneOp
     parts.push({ tube, cloud, mercury, bubbles });
     dynamic.set(mercury, () => ({ y: (withYeast && warmer() ? 76 : 100).toString(), height: (withYeast && warmer() ? 76 : 52).toString() }));
     dynamic.set(cloud, () => ({ fill: withYeast && started() ? CLOUDY : CLEAR }));
-    bubbles.forEach((b, i) => dynamic.set(b, () => ({ r: withYeast && i < bubbleCount() ? "3" : "0", fill: "var(--syn-card)", stroke: "var(--syn-edge)", "stroke-width": "1.5" })));
+    bubbles.forEach((b, i) => dynamic.set(b, () => ({ r: withYeast && i < bubbleCount() ? "3" : "0", fill: "var(--syn-card)", stroke: "var(--syn-line)", "stroke-width": "1.5" })));
   });
 
   const note = own(document.createElement("p"), () => observationWords(bubbleCount()));

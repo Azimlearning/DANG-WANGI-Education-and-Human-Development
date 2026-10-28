@@ -1,0 +1,31 @@
+{
+  "plan": "ph_scale_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Skala pH dan kepekatan ion hidrogen",
+    "/goal": "Lihat bagaimana pH larutan berubah dengan kepekatan ion hidrogen.",
+    "/note": "pH sesuatu larutan ialah ukuran kepekatan ion hidrogennya: pH = -log10 bagi kepekatan dalam mol/dm3. Kepekatan ion hidrogen yang lebih tinggi memberikan pH yang lebih rendah.",
+    "/controls/0/label": "Kepekatan ion hidrogen",
+    "/readouts/0/label": "pH",
+    "/graphs/0/title": "pH menurun apabila kepekatan ion hidrogen bertambah.",
+    "/graphs/0/label": "pH",
+    "/sentences/0": "Bandingkan kepekatan 0.001 mol/dm3 dengan 1 mol/dm3.",
+    "/hints/0": "pH yang lebih rendah bermakna larutan yang lebih berasid.",
+    "/hints/1": "Apakah yang berlaku kepada pH apabila kepekatan ion hidrogen menjadi sepuluh kali ganda lebih besar?",
+    "/hints/2": "Skala pH berubah sebanyak satu unit bagi setiap perubahan sepuluh kali ganda dalam kepekatan.",
+    "/predict/prompt": "Jika kepekatan ion hidrogen menjadi sepuluh kali ganda lebih besar, apakah yang berlaku kepada pH?",
+    "/predict/choices/0": "Ia naik sebanyak satu",
+    "/predict/choices/1": "Ia turun sebanyak satu",
+    "/predict/choices/2": "Ia kekal sama",
+    "/predict/reveal": "Tetapkan kepekatan kepada 0.1 mol/dm3 dan kemudian kepada nilai yang paling kecil, dan bandingkan pH.",
+    "/concept_check/question": "Larutan yang manakah lebih berasid?",
+    "/concept_check/options/0": "Yang mempunyai pH lebih rendah",
+    "/concept_check/options/1": "Yang mempunyai pH lebih tinggi",
+    "/concept_check/options/2": "Kedua-duanya sama",
+    "/concept_check/explanation": "pH yang lebih rendah bermakna kepekatan ion hidrogen yang lebih tinggi, jadi larutan yang pHnya lebih rendah lebih berasid.",
+    "/apparatus/0/label": "Larutan asid"
+  }
+}

@@ -9,6 +9,7 @@
 import { all, attr, contains, effectiveOpacity, hitAt, layoutAvailable, parentOf, rectOf, style, tagOf } from "./dom";
 import { guard } from "./parts";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { controls, markKitSvg, markOwnStyle, nodeOf, own, ownAttr, registerAction, widgets } from "./provenance";
 
@@ -42,19 +43,19 @@ function svg<K extends keyof SVGElementTagNameMap>(name: K, attrs: Record<string
 
 /** Words for how much liquid is left in the burette. */
 export function buretteWords(used: number): string {
-  if (used < 0.02) return "full";
-  if (used < 0.34) return "nearly full";
-  if (used < 0.67) return "about half empty";
-  return "nearly empty";
+  if (used < 0.02) return kt("buretteFull");
+  if (used < 0.34) return kt("buretteNearlyFull");
+  if (used < 0.67) return kt("buretteHalf");
+  return kt("buretteNearlyEmpty");
 }
 
 /** Words for what the student's eye position does to a reading. */
 export function eyeWords(eye: number, meniscus: number): string {
-  if (Math.abs(eye - meniscus) <= LEVEL_TOLERANCE) return "Your eye is level with the meniscus, so this is a fair reading.";
+  if (Math.abs(eye - meniscus) <= LEVEL_TOLERANCE) return kt("eyeLevel");
   // The textbook tells the student to keep the eye level with the meniscus when reading a burette; it says nothing about which way a wrong position misreads, so neither does this.
   return eye < meniscus
-    ? "Your eye is above the meniscus. Bring it level with the meniscus before you read."
-    : "Your eye is below the meniscus. Bring it level with the meniscus before you read.";
+    ? kt("eyeAbove")
+    : kt("eyeBelow");
 }
 
 export function titrationScene(env: Environment, options: TitrationSceneOptions): HTMLDivElement {
@@ -77,17 +78,17 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
   const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "syn-scene syn-titration", role: "img", preserveAspectRatio: "xMidYMid meet" });
   markKitSvg(root);
   // stand, burette (outline, graduations), liquid, meniscus line, tip, flask and its liquid, the eye's line of sight
-  root.appendChild(svg("rect", { x: "8", y: "8", width: "6", height: String(H - 24), rx: "3", fill: "var(--syn-edge)" }));
-  root.appendChild(svg("rect", { x: "8", y: String(H - 18), width: "70", height: "6", rx: "3", fill: "var(--syn-edge)" }));
+  root.appendChild(svg("rect", { x: "8", y: "8", width: "6", height: String(H - 24), rx: "3", fill: "var(--syn-line)" }));
+  root.appendChild(svg("rect", { x: "8", y: String(H - 18), width: "70", height: "6", rx: "3", fill: "var(--syn-line)" }));
   const liquid = svg("rect", { x: "42", width: "26", fill: LIQUID });
   root.appendChild(liquid);
-  root.appendChild(svg("rect", { x: "40", y: String(TOP), width: "30", height: String(BURETTE_H), rx: "4", fill: "none", stroke: "var(--syn-edge)", "stroke-width": "3" }));
-  for (let i = 1; i < 10; i++) root.appendChild(svg("line", { x1: "40", x2: i % 5 === 0 ? "54" : "48", y1: String(TOP + (BURETTE_H * i) / 10), y2: String(TOP + (BURETTE_H * i) / 10), stroke: "var(--syn-edge)", "stroke-width": "1.5" }));
+  root.appendChild(svg("rect", { x: "40", y: String(TOP), width: "30", height: String(BURETTE_H), rx: "4", fill: "none", stroke: "var(--syn-line)", "stroke-width": "3" }));
+  for (let i = 1; i < 10; i++) root.appendChild(svg("line", { x1: "40", x2: i % 5 === 0 ? "54" : "48", y1: String(TOP + (BURETTE_H * i) / 10), y2: String(TOP + (BURETTE_H * i) / 10), stroke: "var(--syn-line)", "stroke-width": "1.5" }));
   const meniscus = svg("line", { x1: "36", x2: "74", "stroke-dasharray": "4 3", stroke: "var(--syn-accent)", "stroke-width": "2" });
   meniscus.setAttribute("data-synapse-meniscus", "");
   root.appendChild(meniscus);
-  root.appendChild(svg("line", { x1: "55", x2: "55", y1: String(BASE), y2: String(BASE + 28), stroke: "var(--syn-edge)", "stroke-width": "4" }));
-  const flaskFill = svg("path", { d: "M45 200 L45 228 L22 262 L88 262 L65 228 L65 200 Z", stroke: "var(--syn-edge)", "stroke-width": "3", "stroke-linejoin": "round", fill: CLEAR });
+  root.appendChild(svg("line", { x1: "55", x2: "55", y1: String(BASE), y2: String(BASE + 28), stroke: "var(--syn-line)", "stroke-width": "4" }));
+  const flaskFill = svg("path", { d: "M45 200 L45 228 L22 262 L88 262 L65 228 L65 200 Z", stroke: "var(--syn-line)", "stroke-width": "3", "stroke-linejoin": "round", fill: CLEAR });
   root.appendChild(flaskFill);
   const sight = svg("line", { x1: "72", x2: "122", "stroke-dasharray": "5 4", stroke: "var(--syn-muted)", "stroke-width": "2" });
   root.appendChild(sight);
@@ -95,14 +96,14 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
   const eye = document.createElement("button");
   eye.type = "button";
   eye.className = "syn-eye";
-  eye.textContent = "Eye";
+  eye.textContent = kt("eye");
   eye.setAttribute("data-synapse-eye", "");
   eye.setAttribute("data-synapse-action", "eye");
-  const eyeName = "Your eye. Drag up or down the burette, or press the up and down arrow keys, to read the meniscus.";
+  const eyeName = kt("eyeName");
   eye.setAttribute("aria-label", eyeName);
   ownAttr(eye, "aria-label", () => eyeName);
-  own(eye, () => "Eye");
-  registerAction(eye, "eye", "Eye");
+  own(eye, () => kt("eye"));
+  registerAction(eye, "eye", kt("eye"));
   markOwnStyle(eye);
 
   let eyeAt = 0; // 0 is the top of the burette, 1 the bottom
@@ -111,7 +112,7 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
   const meniscusY = (): number => TOP + usedFraction() * BURETTE_H;
   const eyeY = (): number => TOP + eyeAt * BURETTE_H;
   const eyeSentence = (): string => eyeWords(eyeAt, usedFraction());
-  const describe = (): string => `A burette above a flask: the burette is ${buretteWords(usedFraction())}, and the liquid in the flask ${flaskIsPink() ? "has turned pink" : "is still colourless"}.`;
+  const describe = (): string => kt("buretteScene", buretteWords(usedFraction()), flaskIsPink());
   const eyeStyle = (): string => `top:${((eyeY() / H) * 100).toFixed(2)}%`;
 
   const note = own(document.createElement("p"), () => eyeSentence());
@@ -217,7 +218,7 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
     if (style(wrap, "display") === "none" || style(wrap, "visibility") === "hidden" || style(root, "display") === "none" || style(root, "visibility") === "hidden") out.push("the burette picture is hidden");
     for (const [name, el, want] of [
       ["liquid", liquid, LIQUID],
-      ["flask outline", flaskFill, "var(--syn-edge)"],
+      ["flask outline", flaskFill, "var(--syn-line)"],
     ] as const) {
       const have = name === "liquid" ? attr(el, "fill") : attr(el, "stroke");
       if (have !== want) out.push(`the burette picture's ${name} was restyled by the page`);

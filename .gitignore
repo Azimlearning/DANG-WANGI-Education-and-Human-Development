@@ -51,6 +51,7 @@ corpus/
 
 # Runtime stores and spend ledger (small committed fixtures live in data/fixtures/)
 data/*.db
+data/*.db.*
 data/*.sqlite
 data/store/
 data/cache/
@@ -70,3 +71,6 @@ corpus/
 brag-output/
 brag-output-*/
 gallery-output/
+
+# Playwright MCP scratch output
+.playwright-mcp/

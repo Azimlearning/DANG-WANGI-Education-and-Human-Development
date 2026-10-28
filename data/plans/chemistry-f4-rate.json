@@ -17,7 +17,10 @@
     "Try collecting 30 cm3 of gas in 60 s, and then in 20 s."
   ],
   "steps": [],
-  "citation_ids": ["rate_def", "rate_avg"],
+  "citation_ids": [
+    "rate_def",
+    "rate_avg"
+  ],
   "presentation": "stage",
   "custom": [],
   "id": "rate_of_reaction",
@@ -64,6 +67,33 @@
       "digits": 2,
       "source": "rate",
       "convert_to": null
+    }
+  ],
+  "hints": [
+    "The rate tells you how fast the gas is collected.",
+    "Divide the volume of gas by the time taken.",
+    "Compare the rate early in the reaction with the rate later on."
+  ],
+  "apparatus": [
+    {
+      "kind": "syringe",
+      "label": "Gas collected",
+      "channels": {
+        "volume": {
+          "source": "volume",
+          "full": 60
+        }
+      }
+    },
+    {
+      "kind": "gauge",
+      "label": "Rate of gas given off",
+      "channels": {
+        "value": {
+          "source": "rate",
+          "full": 6
+        }
+      }
     }
   ]
 }

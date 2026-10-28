@@ -4,6 +4,7 @@
 
 import { lab } from "./bridge";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { isObservable } from "./provenance";
 import { copy, own, registerAction, series } from "./provenance";
@@ -52,7 +53,7 @@ export function table(env: Environment, options: { caption: string; columns: Tab
 
   const record = document.createElement("button");
   const clear = document.createElement("button");
-  for (const [b, kind, label] of [[record, "record", "Record"], [clear, "clear", "Clear"]] as const) {
+  for (const [b, kind, label] of [[record, "record", kt("record")], [clear, "clear", kt("clear")]] as const) {
     own(b, () => label);
     b.type = "button";
     b.className = "syn-btn";
@@ -77,7 +78,7 @@ export function table(env: Environment, options: { caption: string; columns: Tab
     body.appendChild(tr);
     recorded.push(cells);
     tell();
-    announce("Row recorded");
+    announce(kt("rowRecorded"));
   });
   clear.addEventListener("click", () => {
     for (const tr of Array.from(body.rows)) {
@@ -86,7 +87,7 @@ export function table(env: Environment, options: { caption: string; columns: Tab
     }
     recorded.length = 0;
     tell();
-    announce("Table cleared");
+    announce(kt("tableCleared"));
   });
   // Rows are added silently otherwise; a polite status tells a screen-reader user what the button did.
   const status = own(document.createElement("p"), () => announced);
@@ -101,7 +102,7 @@ export function table(env: Environment, options: { caption: string; columns: Tab
   buttons.append(record, clear);
   scroller.appendChild(el);
   wrap.append(scroller, buttons, status);
-  env.stage.appendChild(wrap);
+  env.panel.appendChild(wrap);
   tell();
   return el;
 }

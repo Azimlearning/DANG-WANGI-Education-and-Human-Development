@@ -2,6 +2,7 @@
 // in the page as Kit-owned text, so the audit sees every number in them whether or not they are visible.
 
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import { copy, own, registerAction } from "./provenance";
 
 const MAX_HINTS = 5;
@@ -21,7 +22,7 @@ export function hintLadder(env: Environment, options: { hints: string[] }): HTML
     list.appendChild(p);
     return p;
   });
-  const label = "Show a hint";
+  const label = kt("showHint");
   const button = own(document.createElement("button"), () => label);
   button.type = "button";
   button.className = "syn-btn";
@@ -35,6 +36,6 @@ export function hintLadder(env: Environment, options: { hints: string[] }): HTML
     if (shown >= items.length) button.disabled = true;
   });
   wrap.append(list, button);
-  env.stage.appendChild(wrap);
+  env.extras.appendChild(wrap);
   return wrap;
 }

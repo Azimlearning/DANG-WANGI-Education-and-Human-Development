@@ -10,7 +10,7 @@ export const spec: ScienceSpec = {
   params: {},
   output: { unit: "m/s" },
   fn: ({ frequency, wavelength }) => (frequency as number) * (wavelength as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed from v = f lambda.
   reference: [
     { args: { frequency: 50, wavelength: 0.4 }, expected: 20, tolerance: 1e-9, derivation: "50 Hz x 0.4 m = 20 m/s" },

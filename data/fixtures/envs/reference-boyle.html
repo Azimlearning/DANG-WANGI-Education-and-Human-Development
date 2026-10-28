@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boyle&#x27;s law: squeezing a gas</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Boyle's law: squeezing a gas", note: "Air in a syringe has a pressure and a volume. Pushing the piston in makes the volume smaller and the pressure larger, while pressure times volume stays the same.", kicker: "Interactive physics lab", tryThis: "See how the pressure of a fixed mass of gas changes when its volume changes at constant temperature." });
+  Synapse.predictCard(env, {"prompt": "A syringe of trapped air is pushed in, so the air takes up less volume, at the same temperature. What happens to the pressure of the air?", "choices": ["It rises", "It stays the same", "It falls"], "reveal": "Move the volume below its starting value and watch the pressure."});
+  var c_volume = Synapse.slider(env, {"id": "volume", "label": "Volume of the gas", "unit": "cm3", "min": 24.0, "max": 120.0, "value": 48.0, "grid": 24});
+  
+  var m_pressure = Synapse.boyleLaw({ initial_pressure: 108.0, initial_volume: 60.0, final_volume: c_volume });
+  Synapse.readout(env, { label: "Gas pressure", unit: "kPa", value: m_pressure, digits: 1 });
+  
+  Synapse.graph(env, { title: "The pressure falls as the volume rises.", x: c_volume, y: m_pressure, yLabel: "Gas pressure", yUnit: "kPa", digits: 1 });
+  
+  Synapse.text(env, "The air in the syringe starts at 108 kPa when its volume is 60, and its temperature stays the same.");
+  Synapse.text(env, "A fixed mass of gas at constant temperature has a pressure that is inversely proportional to its volume.");
+  Synapse.hintLadder(env, { hints: ["Keep the temperature and the amount of gas the same.", "What happens to the pressure when the gas is squeezed into a smaller volume?", "Pressure times volume stays the same for a fixed mass of gas at constant temperature."] });
+  Synapse.conceptCheck(env, {"question": "At constant temperature, the volume of a fixed mass of gas is made larger. What happens to its pressure?", "options": ["It becomes larger", "It becomes smaller", "It stays the same"], "correct": 1, "explanation": "For a fixed mass of gas at constant temperature, pressure is inversely proportional to volume, so a larger volume means a smaller pressure."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "id": "reference-food",
+  "title": "The energy value of a food",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the energy value of a food is found from the warming of water by the burning food.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "rise",
+    "food"
+  ],
+  "readouts": [
+    "Energy value of the food"
+  ],
+  "models": [
+    {
+      "id": "biology.food_energy_value",
+      "params": {
+        "water_mass": 20.0
+      },
+      "readouts": [
+        "Energy value of the food"
+      ],
+      "series": [
+        "Energy value"
+      ]
+    }
+  ]
+}

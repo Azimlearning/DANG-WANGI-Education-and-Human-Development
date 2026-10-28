@@ -1,0 +1,23 @@
+{
+  "plan": "rate_of_reaction",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Kadar tindak balas daripada gas yang dikumpul",
+    "/goal": "Cari kadar purata sesuatu tindak balas daripada isi padu gas dan masa yang diambil.",
+    "/note": "Kadar tindak balas purata ialah kuantiti hasil yang terbentuk dibahagi dengan masa yang diambil: kadar = isi padu gas / masa.",
+    "/controls/0/label": "Isi padu gas yang dikumpul",
+    "/controls/1/label": "Masa yang diambil",
+    "/readouts/0/label": "Kadar purata",
+    "/graphs/0/title": "Gas yang sama dikumpul dalam masa yang lebih singkat bermakna tindak balas yang lebih cepat.",
+    "/graphs/0/label": "Kadar purata",
+    "/sentences/0": "Cuba mengumpul 30 cm3 gas dalam 60 s, dan kemudian dalam 20 s.",
+    "/hints/0": "Kadar memberitahu anda betapa cepat gas dikumpul.",
+    "/hints/1": "Bahagikan isi padu gas dengan masa yang diambil.",
+    "/hints/2": "Bandingkan kadar pada awal tindak balas dengan kadar pada kemudian.",
+    "/apparatus/0/label": "Gas yang dikumpul",
+    "/apparatus/1/label": "Kadar gas dibebaskan"
+  }
+}

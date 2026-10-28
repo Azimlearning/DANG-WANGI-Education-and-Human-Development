@@ -1,0 +1,37 @@
+{
+  "id": "reference-pressurescene",
+  "title": "Pressure in a liquid",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the pressure in a liquid grows with depth.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "depth"
+  ],
+  "readouts": [
+    "Pressure"
+  ],
+  "models": [
+    {
+      "id": "fluids.pressure_depth",
+      "params": {
+        "density": 1000.0,
+        "g": 9.81
+      },
+      "readouts": [
+        "Pressure"
+      ],
+      "series": [
+        "Pressure"
+      ]
+    }
+  ]
+}

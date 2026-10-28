@@ -204,3 +204,48 @@ def test_a_budget_placeholder_is_never_kept_as_the_answer(tmp_path: Path, kit_di
     deps, _ = deps_for(tmp_path, kit_dist, fakes.fake_responder)
     collect(LOW_CONFIDENCE, deps)
     assert deps.store.lookup_question_entry(run.canonical_question(LOW_CONFIDENCE)) is None  # nothing was delivered, so nothing is cached
+
+
+# ── a question that names an Environment (D-59) ────────────────────────────────
+
+
+NAMED = [
+    {"env_id": "a", "plan_id": "hookes_amali", "title": "Hooke's law: how does a spring stretch?", "goal": "See how a spring stretches under a load.", "note": "n"},
+    {"env_id": "b", "plan_id": "newton_cannonball", "title": "Newton's cannonball: falling, orbiting and escaping", "goal": "Launch a cannonball at different speeds.", "note": "n"},
+    {"env_id": "c", "plan_id": "newton_second_lab", "title": "Newton's second law: force, mass and acceleration", "goal": "See how force changes acceleration.", "note": "n"},
+    {"env_id": "d", "plan_id": "yeast_fermentation_lab", "title": "Yeast fermentation: the products and the energy", "goal": "See what yeast makes.", "note": "n"},
+]
+
+
+@pytest.mark.parametrize(
+    ("question", "plan_id"),
+    [
+        ("How do I revise Hooke's law?", "hookes_amali"),
+        ("Show Newton's cannonball for my class", "newton_cannonball"),
+        ("Why does yeast make limewater go milky?", "yeast_fermentation_lab"),
+    ],
+)
+def test_a_question_that_names_an_environment_matches_it(question: str, plan_id: str) -> None:
+    match = library.match_by_name(question, NAMED)
+    assert match is not None and match["plan_id"] == plan_id
+
+
+@pytest.mark.parametrize("question", ["What is Newton's law?", "How does a spring work?", "What is the speed of light?", "Why is the sky blue?", ""])
+def test_a_question_that_names_nothing_in_particular_matches_nothing(question: str) -> None:
+    assert library.match_by_name(question, NAMED) is None
+
+
+def test_a_question_the_topic_head_cannot_place_but_that_names_an_environment_is_answered_from_the_library(
+    seeded_db: Path, tmp_path: Path, kit_dist: Path
+) -> None:
+    deps, provider = seeded_deps(seeded_db, tmp_path, kit_dist)
+    events = collect("How do I revise Hooke's law?", deps)
+    assert provider.calls == [], "the library answers a named Environment with no model call"
+    block = next(e for e in events if e.type == "environment").block
+    assert block.lane == "instantiate" and block.id.startswith("hookes_amali-")
+    hit = next(r for r in trace_records(deps) if r["layer"] == "library")
+    assert hit["status"] == "hit" and hit["detail"]["kind"] in ("name", "topic")
+
+
+def test_an_empty_library_names_nothing() -> None:
+    assert library.match_by_name("How do I revise Hooke's law?", []) is None

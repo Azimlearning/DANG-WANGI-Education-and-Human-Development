@@ -4,6 +4,7 @@
 // re-derives each from the independent reference), and a visually hidden table is the text equivalent (hard constraint 10).
 
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { controls, copy, isObservable, markKitSvg, nodeOf, own, ownAttr, series } from "./provenance";
 
@@ -55,7 +56,7 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
 
   const root = svg("svg", { class: "syn-graph", viewBox: `0 0 ${W} ${H}`, role: "img" });
   markKitSvg(root);
-  const label = `Graph of ${yLabel} against ${xc.label}. ${title}`;
+  const label = kt("graphOf", yLabel, xc.label, title);
   root.setAttribute("aria-label", label);
   ownAttr(root, "aria-label", () => label);
   copy.push(title, yLabel, yUnit);
@@ -81,8 +82,8 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
   const tbl = document.createElement("table");
   const hidden = document.createElement("div");
   hidden.className = "syn-sr";
-  const cap = own(document.createElement("caption"), () => `${yLabel} against ${xc.label}`);
-  cap.textContent = `${yLabel} against ${xc.label}`;
+  const cap = own(document.createElement("caption"), () => kt("against", yLabel, xc.label));
+  cap.textContent = kt("against", yLabel, xc.label);
   const thead = document.createElement("thead");
   const headRow = document.createElement("tr");
   for (const text of [`${xc.label} (${xc.unit})`, `${yLabel} (${yUnit})`]) {
@@ -160,6 +161,8 @@ export function graph(env: Environment, options: GraphOptions): SVGSVGElement {
   });
 
   series.push({ kind: "graph", title, label: yLabel, unit: yUnit, digits, obs: y, xControl: xc.id, points: () => points.map(([a, b]) => [a, b] as [number, number]) });
-  env.stage.appendChild(wrap);
+  // A graph sits on the bench when it is the only picture, and beside it, in the right column under the readouts and the table, when the bench already holds a scene or
+  // the masses: the apparatus stays together on the left and the empty right column is used (W14).
+  (env.stage.childElementCount > 0 ? env.panel : env.stage).appendChild(wrap);
   return root;
 }

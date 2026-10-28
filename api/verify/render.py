@@ -20,6 +20,7 @@ from __future__ import annotations
 import itertools
 import json
 import math
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -92,6 +93,7 @@ class RenderReport:
     valve_problems: list[str] = field(default_factory=list)
     dial_problems: list[str] = field(default_factory=list)
     eye_problems: list[str] = field(default_factory=list)
+    handle_problems: list[str] = field(default_factory=list)
     kit_lane: bool = True
     """False for a Free page: it has no Kit, so the harness decides readiness and the refusal message says so."""
 
@@ -132,6 +134,8 @@ class RenderReport:
             return ("dial_dead", self.dial_problems[0])
         if self.eye_problems:
             return ("eye_dead", self.eye_problems[0])
+        if self.handle_problems:
+            return ("handle_dead", self.handle_problems[0])
         for c in self.controls:
             if not c.stable:
                 return (
@@ -438,6 +442,9 @@ def _exercise(
         _drive_valves(page, frame, report)
         _drive_dials(page, frame, report)
         _drive_eyes(page, frame, report)
+        _drive_handles(page, frame, report)
+    else:
+        _drive_free_handles(page, frame, report)
 
     # Scripted interaction: sweep every declared control and press real input for the time box.
     start = time.monotonic()
@@ -486,6 +493,18 @@ def _touch_drag(page, cdp, source, target) -> bool:  # noqa: ANN001
     return True
 
 
+def _show_together(zone: ElementHandle, tray: ElementHandle) -> None:
+    """Scroll so the drop place and the tray are both on screen (a bench part's tray is a row under the bench, not beside the place): the smallest element holding both is centred."""
+    zone.evaluate(
+        """(zone, tray) => {
+            let box = zone;
+            while (box && !box.contains(tray)) box = box.parentElement;
+            (box || zone).scrollIntoView({ block: 'center', inline: 'nearest' });
+        }""",
+        tray,
+    )
+
+
 def _drive_drags(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
     """L2 for a control operated by dragging (`massHanger`). What must exist comes from the Kit's own audit (how many masses it made for which control), never from the page, so
     a page that renames, removes or hides the masses is caught by the count. Then EVERY mass is dragged onto the hanger with the mouse (each must raise the control by exactly one
@@ -524,7 +543,7 @@ def _drive_drags(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN
 
             _set_control(control, "min")
             _settle(page, 250)
-            zone.scroll_into_view_if_needed()
+            _show_together(zone, tray)
             # With the bench in view, audit once more: the layout half of the widget report (size, place, covered, faded) can only be read from a real layout, in view.
             _settle(page, 150)
             _add(report.problems_l1, prov.l1_problems(_audit(frame)))
@@ -795,12 +814,21 @@ def _drive_dials(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN
                 return
             cx, cy, r = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, box["width"] / 2
 
+            def locate() -> None:
+                """Measure the knob again: a sentence above it that the dial changes (the fermentation scene's, on a narrow page) moves the knob between two turns."""
+                nonlocal cx, cy, r
+                knob.scroll_into_view_if_needed()
+                now = knob.bounding_box()
+                if now:
+                    cx, cy, r = now["x"] + now["width"] / 2, now["y"] + now["height"] / 2, now["width"] / 2
+
             def point(index: int) -> tuple[float, float]:
                 angle = math.radians(-135 + 270 * index / grid)
                 return cx + 0.8 * r * math.sin(angle), cy - 0.8 * r * math.cos(angle)
 
             def turn(index: int, touch: bool = False) -> None:
                 nonlocal cdp
+                locate()
                 x1, y1 = point(index)
                 x0, y0 = point(0)  # start at the first mark, so the press alone cannot satisfy a target anywhere else
                 if touch:
@@ -865,6 +893,179 @@ def _drive_dials(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN
             pass
 
 
+EYE_WORDS = {"en": ("above", "level", "below"), "ms": ("di atas", "adil", "di bawah")}
+"""The words the eye's sentence must contain when the eye is above, level with and below the meniscus, by the page's language (D-62). The sentence is the Kit's own and the Kit's table
+is where these words come from (`eyeAbove`, `eyeLevel`, `eyeBelow`)."""
+
+
+def _drive_handles(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
+    """L2 for a grip on a bench part (W17, D-69). What must exist comes from the Kit's own audit: one grip per channel bound to a slider that the catalogue lets the student grab.
+    For each grip the mouse drags it to the far end of its line (or the top of its arc), to the near end and to the middle, and a finger drags it to the far end and back. The
+    slider must land where the Kit's mapping puts it (exactly at the ends, within a step in the middle) and the readouts must move. A grip that does not follow, or a page with grips
+    the Kit did not make, is `handle_dead`; a Playwright failure is a harness error."""
+    audit = _audit(frame)
+    if audit is None:
+        return
+    widgets = [w for w in audit.get("widgets", []) if w.get("kind") == "handle"]
+    grips = frame.query_selector_all("[data-synapse-handle]")
+    if len(grips) != len(widgets):
+        report.handle_problems.append(f"the page has {len(grips)} handles on its apparatus and the Kit made {len(widgets)}")
+        return
+    cdp = None
+
+    def one(w: dict) -> None:
+        nonlocal cdp
+        hid, cid = str(w.get("id")), str(w.get("control"))
+        try:
+            grip = frame.query_selector(f"[data-synapse-handle='{hid}']")
+            control = frame.query_selector(f"[data-synapse-control='{cid}']")
+            record = next((c for c in audit["controls"] if c["id"] == cid), None)
+            grab = w.get("grab") or {}
+            if grip is None or control is None or record is None or not grab:
+                report.handle_problems.append(f"the handle {hid} has no grip, no declared control or no line to run along")
+                return
+            svg = grip.evaluate_handle("el => el.ownerSVGElement").as_element()
+            if svg is None:
+                report.handle_problems.append(f"the handle {hid} is not on a drawing")
+                return
+            lo, hi, step = float(record["min"]), float(record["max"]), float(record["step"])
+            angle = "pivot" in grab
+            full = float(w.get("full") or 0) if not angle else 0.0
+            if not angle and full <= 0:
+                report.handle_problems.append(f"the handle {hid} has no drawing scale")
+                return
+            tol = max(step * 0.02, 1e-9)
+
+            def value() -> float:
+                return float(control.input_value())
+
+            def expect(drawn: float) -> float:
+                raw = drawn if angle else drawn * full
+                c = min(hi, max(lo, raw))
+                return min(hi, lo + round((c - lo) / step) * step)
+
+            def target(drawn: float) -> tuple[float, float] | None:
+                box = svg.bounding_box()
+                if not box:
+                    return None
+                k = min(box["width"] / 120, box["height"] / 140)
+                ox, oy = box["x"] + (box["width"] - 120 * k) / 2, box["y"] + (box["height"] - 140 * k) / 2
+                if angle:
+                    a = math.radians(min(60.0, max(0.0, drawn)))
+                    x, y = grab["pivot"][0] + grab["radius"] * math.cos(a), grab["pivot"][1] - grab["radius"] * math.sin(a)
+                else:
+                    t = min(1.0, max(0.0, drawn))
+                    x = grab["from"][0] + t * (grab["to"][0] - grab["from"][0])
+                    y = grab["from"][1] + t * (grab["to"][1] - grab["from"][1])
+                return ox + x * k, oy + y * k
+
+            def drag(drawn: float, touch: bool) -> bool:
+                nonlocal cdp
+                grip.scroll_into_view_if_needed()
+                box, end = grip.bounding_box(), target(drawn)
+                if not box or end is None:
+                    return False
+                x0, y0 = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+                x1, y1 = end
+                if touch:
+                    if cdp is None:
+                        cdp = page.context.new_cdp_session(page)
+                        cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 1})
+                    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x0, "y": y0}]})
+                    for i in range(1, 9):
+                        cdp.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": x0 + (x1 - x0) * i / 8, "y": y0 + (y1 - y0) * i / 8}]})
+                    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+                else:
+                    page.mouse.move(x0, y0)
+                    page.mouse.down()
+                    page.mouse.move(x1, y1, steps=8)
+                    page.mouse.up()
+                _settle(page, 200)
+                return True
+
+            grip.scroll_into_view_if_needed()
+            _settle(page, 150)
+            _add(report.problems_l1, prov.l1_problems(_audit(frame)))
+            _set_control(control, "min")
+            _settle(page, 200)
+            start = _readout_texts(frame)
+            far, near, middle = (60.0, 0.0, 30.0) if angle else (1.0, 0.0, 0.5)
+            for how, touch, stops in (("with the mouse", False, (far, near, middle)), ("with a finger", True, (far, near))):
+                for drawn in stops:
+                    if not drag(drawn, touch):
+                        report.handle_problems.append(f"the handle {hid} could not be dragged {how}")
+                        return
+                    want = expect(drawn)
+                    if abs(value() - want) > (step * 1.01 if drawn == middle else tol):
+                        report.handle_problems.append(f"dragging the handle {hid} {how} left '{cid}' at {value():g}, not {want:g}")
+                        return
+                    if drawn == far and not touch and want != lo and _readout_texts(frame) == start:
+                        report.handle_problems.append(f"dragging the handle {hid} changed no readout")
+                        return
+            # with the grip moved, the picture must still be what the numbers say
+            drag(middle, False)
+            _add(report.problems_l1, prov.l1_problems(_audit(frame)))
+            _set_control(control, "min")
+            _settle(page, 200)
+        except PlaywrightError as exc:
+            report.harness_error = report.harness_error or f"driving the handle {hid}: {str(exc).splitlines()[0][:150]}"
+
+    for w in widgets:
+        one(w)
+    if cdp is not None:
+        try:
+            cdp.detach()
+        except PlaywrightError:
+            pass
+
+
+FREE_HANDLE_LIMIT = 8
+
+
+def _drive_free_handles(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
+    """L2 for a model-written page's handles (W17, D-71). An element marked `data-synapse-handle="<slider id>"` is a pointer surface for that slider: the mouse drags it right, left,
+    down and up from its centre, and the slider must move at least once. A handle that names no slider, or moves nothing, is `handle_dead`. The slider stays the only control and
+    the source of every number, so the sweep's checks are unchanged."""
+    grips = frame.query_selector_all("[data-synapse-handle]")
+    if len(grips) > FREE_HANDLE_LIMIT:
+        report.handle_problems.append(f"the page has {len(grips)} handles; at most {FREE_HANDLE_LIMIT}")
+        return
+    view = page.viewport_size or {"width": 1280, "height": 900}
+    for grip in grips:
+        try:
+            cid = grip.get_attribute("data-synapse-handle") or ""
+            control = frame.query_selector(f"[data-synapse-control='{cid}']") if re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,39}", cid) else None
+            if control is None:
+                report.handle_problems.append(f"a handle names '{cid[:40]}', which is not a slider on the page")
+                return
+            _set_control(control, "min")
+            _settle(page, 150)
+            before, moved = control.input_value(), False
+            for dx, dy in ((90, 0), (-180, 0), (90, 90), (0, -180)):
+                grip.scroll_into_view_if_needed()
+                box = grip.bounding_box()
+                if not box:
+                    break
+                x0, y0 = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+                x1, y1 = min(view["width"] - 2, max(2, x0 + dx)), min(view["height"] - 2, max(2, y0 + dy))
+                page.mouse.move(x0, y0)
+                page.mouse.down()
+                page.mouse.move(x1, y1, steps=8)
+                page.mouse.up()
+                _settle(page, 200)
+                if control.input_value() != before:
+                    moved = True
+                    break
+            if not moved:
+                report.handle_problems.append(f"dragging the handle for '{cid}' did not move it")
+                return
+            _set_control(control, "min")
+            _settle(page, 150)
+        except PlaywrightError as exc:
+            report.harness_error = report.harness_error or f"driving a handle: {str(exc).splitlines()[0][:150]}"
+            return
+
+
 def _drive_eyes(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
     """L2 for the eye of a titration scene. What must exist comes from the Kit's audit. With the control high, the eye is sent to the top and bottom of the burette by the keyboard
     (the sentence must say above, then below), dragged to the meniscus with the mouse and with a finger (level), and dragged to the top and bottom (above, below). A dead eye is
@@ -899,6 +1100,8 @@ def _drive_eyes(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN0
                 report.eye_problems.append("the burette scene is missing its sentence, its meniscus or its picture")
                 return
             note_h: ElementHandle = note
+            lang = str(frame.evaluate("document.documentElement.lang || 'en'"))[:2].lower()
+            above, level, below = EYE_WORDS.get(lang, EYE_WORDS["en"])
             marker_h: ElementHandle = marker
             root_h: ElementHandle = root
             # With the burette about half run in, the meniscus is clear of both ends, so the eye can be above, level and below it.
@@ -920,12 +1123,12 @@ def _drive_eyes(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN0
             eye.focus()
             page.keyboard.press("Home")
             _settle(page, 120)
-            if "above" not in words():
+            if above not in words():
                 report.eye_problems.append(f"moving the eye to the top of the burette from the keyboard did not say it was above the meniscus ({words()[:60]!r})")
                 return
             page.keyboard.press("End")
             _settle(page, 120)
-            if "below" not in words():
+            if below not in words():
                 report.eye_problems.append(f"moving the eye to the bottom of the burette from the keyboard did not say it was below the meniscus ({words()[:60]!r})")
                 return
 
@@ -966,13 +1169,13 @@ def _drive_eyes(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN0
                 return top_of + (20 + fraction * 130) * scale
 
             for label, touch in (("with the mouse", False), ("with a finger", True)):
-                if not drag_eye_to(burette_at(0.02), touch) or "above" not in words():
+                if not drag_eye_to(burette_at(0.02), touch) or above not in words():
                     report.eye_problems.append(f"dragging the eye to the top of the burette {label} did not say it was above the meniscus ({words()[:60]!r})")
                     break
-                if not drag_eye_to(meniscus_y(), touch) or "level" not in words():
+                if not drag_eye_to(meniscus_y(), touch) or level not in words():
                     report.eye_problems.append(f"dragging the eye to the meniscus {label} did not say it was level ({words()[:60]!r})")
                     break
-                if not drag_eye_to(burette_at(0.98), touch) or "below" not in words():
+                if not drag_eye_to(burette_at(0.98), touch) or below not in words():
                     report.eye_problems.append(f"dragging the eye to the bottom of the burette {label} did not say it was below the meniscus ({words()[:60]!r})")
                     break
             # with the eye moved, the picture must still be what the numbers say (structure and layout)

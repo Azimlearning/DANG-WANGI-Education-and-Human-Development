@@ -9,8 +9,9 @@ network. The provider does NOT retry (the service decides about fallback and the
 response body into an error: only the HTTP status, the API's error `type` and the request id.
 
 Thinking: Sonnet 5.5 takes `{"type": "between_tools"}` (no up-front thinking), Haiku 5.5 takes `{"type": "disabled"}`; Opus 5.5 always thinks and bills
-those tokens as output, so a caller using the heavy tier must leave room in `max_tokens`. Prompt caching is deliberately NOT used yet: the ledger prices
-every input token at the base rate and cache writes cost more, so enabling it would under-count spend. Revisit with a measured saving.
+those tokens as output, so a caller using the heavy tier must leave room in `max_tokens`. Prompt caching is sent only when the request asks for it
+(`cache_system`, which the service sets when PROMPT_CACHING is on): the system prompt becomes one text block with `cache_control: {"type": "ephemeral"}`, and the
+usage fields `cache_creation_input_tokens` and `cache_read_input_tokens` go to the ledger, which prices them (api/llm/pricing.py). Off by default until a measured saving.
 """
 
 from __future__ import annotations
@@ -62,7 +63,9 @@ class AnthropicProvider:
             "max_tokens": request.max_tokens,
             "messages": [{"role": "user", "content": request.prompt}],
         }
-        if request.system:
+        if request.system and request.cache_system:
+            body["system"] = [{"type": "text", "text": request.system, "cache_control": {"type": "ephemeral"}}]
+        elif request.system:
             body["system"] = request.system
         thinking = thinking_for(model)
         if thinking is not None:
@@ -87,11 +90,9 @@ class AnthropicProvider:
             blocks = data["content"]
             text = "".join(str(b.get("text", "")) for b in blocks if b.get("type") == "text")
             usage = data["usage"]
-            tokens_in = (
-                int(usage["input_tokens"])
-                + int(usage.get("cache_creation_input_tokens") or 0)
-                + int(usage.get("cache_read_input_tokens") or 0)
-            )
+            cache_write = int(usage.get("cache_creation_input_tokens") or 0)
+            cache_read = int(usage.get("cache_read_input_tokens") or 0)
+            tokens_in = int(usage["input_tokens"]) + cache_write + cache_read
             tokens_out = int(usage["output_tokens"])
             stop = data.get("stop_reason")
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
@@ -105,7 +106,12 @@ class AnthropicProvider:
         if not text.strip():
             raise ProviderFailure(self.name, f"the reply had no text (stop_reason {stop})", "transient", **billed)
         return ProviderResponse(
-            text=text, model=str(data.get("model") or model), tokens_in=tokens_in, tokens_out=tokens_out
+            text=text,
+            model=str(data.get("model") or model),
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            cache_read_tokens=cache_read,
+            cache_write_tokens=cache_write,
         )
 
     def _failure(self, reply: httpx.Response) -> ProviderFailure:

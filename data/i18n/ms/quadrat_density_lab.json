@@ -1,0 +1,32 @@
+{
+  "plan": "quadrat_density_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Menganggar populasi melalui persampelan kuadrat",
+    "/goal": "Lihat bagaimana ketumpatan populasi sesuatu spesies tumbuhan dicari daripada tumbuhan yang dikira dalam kuadrat.",
+    "/note": "Kuadrat diletakkan secara rawak di sebuah padang dan tumbuhan satu spesies dikira dalam setiap satu. Ketumpatan populasi ialah jumlah bilangan dibahagi dengan jumlah luas kuadrat.",
+    "/controls/0/label": "Jumlah tumbuhan yang dikira dalam semua kuadrat",
+    "/readouts/0/label": "Ketumpatan populasi",
+    "/graphs/0/title": "Ketumpatan populasi naik secara garis lurus apabila lebih banyak tumbuhan dikira.",
+    "/graphs/0/label": "Ketumpatan populasi",
+    "/sentences/0": "Sepuluh kuadrat, setiap satu seluas satu meter persegi, diletakkan secara rawak di padang sekolah.",
+    "/sentences/1": "Ketumpatan ialah jumlah bilangan tumbuhan yang dikira dibahagi dengan jumlah luas semua kuadrat.",
+    "/hints/0": "Kuadrat ialah sampel kecil bagi seluruh padang.",
+    "/hints/1": "Dua perkara yang manakah menentukan jumlah luas yang disampel?",
+    "/hints/2": "Bahagikan jumlah bilangan dengan jumlah luas yang disampel.",
+    "/predict/prompt": "Kuadrat yang sama digunakan di dua padang, dan lebih banyak tumbuhan dikira di padang pertama. Padang yang manakah mempunyai ketumpatan populasi yang lebih tinggi?",
+    "/predict/choices/0": "Padang pertama",
+    "/predict/choices/1": "Padang kedua",
+    "/predict/choices/2": "Kedua-duanya mempunyai ketumpatan yang sama",
+    "/predict/reveal": "Naikkan bilangan tumbuhan yang dikira dan perhatikan ketumpatan populasi.",
+    "/concept_check/question": "Bagaimanakah ketumpatan populasi sesuatu spesies dianggarkan melalui persampelan kuadrat?",
+    "/concept_check/options/0": "Jumlah bilangan individu dibahagi dengan jumlah luas kuadrat",
+    "/concept_check/options/1": "Bilangan kuadrat dibahagi dengan bilangan individu",
+    "/concept_check/options/2": "Luas padang dibahagi dengan bilangan kuadrat",
+    "/concept_check/explanation": "Ketumpatan ialah purata bilangan individu bagi setiap unit luas, jadi bilangan dalam semua kuadrat dibahagi dengan jumlah luas kuadrat itu.",
+    "/apparatus/0/label": "Padang sekolah"
+  }
+}

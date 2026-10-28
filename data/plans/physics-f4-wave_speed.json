@@ -17,7 +17,10 @@
     "Keep the wavelength at its starting value and move the frequency from its smallest to its largest."
   ],
   "steps": [],
-  "citation_ids": ["wave_speed_eq", "wave_freq_src"],
+  "citation_ids": [
+    "wave_speed_eq",
+    "wave_freq_src"
+  ],
   "presentation": "stage",
   "custom": [],
   "pattern": "simulation",
@@ -84,5 +87,26 @@
     ],
     "correct": 1,
     "explanation": "Speed is frequency times wavelength, so 5 Hz times 2 m gives 10 m/s."
-  }
+  },
+  "hints": [
+    "The speed of a wave depends on how often it vibrates and how long each wave is.",
+    "What happens to the speed when the frequency rises and the wavelength stays the same?",
+    "Speed equals frequency multiplied by wavelength."
+  ],
+  "apparatus": [
+    {
+      "kind": "wave",
+      "label": "Wave",
+      "channels": {
+        "wavelength": {
+          "source": "wavelength",
+          "full": 5
+        },
+        "frequency": {
+          "source": "frequency",
+          "full": 20
+        }
+      }
+    }
+  ]
 }

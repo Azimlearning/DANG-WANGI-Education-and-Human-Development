@@ -1,0 +1,28 @@
+{
+  "plan": "ohm_explorer",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Hukum Ohm: arus, beza keupayaan dan rintangan",
+    "/goal": "Terokai bagaimana arus berubah dengan beza keupayaan dan rintangan.",
+    "/note": "Dalam konduktor ohm, arus berkadar terus dengan beza keupayaan dan berkadar songsang dengan rintangan.",
+    "/controls/0/label": "Beza keupayaan",
+    "/controls/1/label": "Rintangan",
+    "/readouts/0/label": "Arus",
+    "/graphs/0/title": "Arus naik secara garis lurus apabila beza keupayaan bertambah.",
+    "/graphs/0/label": "Arus",
+    "/sentences/0": "Cuba rintangan 4 ohm dan kemudian 20 ohm pada beza keupayaan yang sama.",
+    "/hints/0": "Ubah satu kawalan pada satu masa.",
+    "/hints/1": "Apakah yang berlaku kepada arus apabila beza keupayaan bertambah dan rintangan kekal sama?",
+    "/hints/2": "Arus sama dengan beza keupayaan dibahagi dengan rintangan.",
+    "/concept_check/question": "Jika beza keupayaan kekal sama dan rintangan digandakan, apakah yang berlaku kepada arus?",
+    "/concept_check/options/0": "Ia menjadi dua kali ganda",
+    "/concept_check/options/1": "Ia menjadi separuh",
+    "/concept_check/options/2": "Ia kekal sama",
+    "/concept_check/explanation": "Arus berkadar songsang dengan rintangan, jadi menggandakan rintangan menjadikan arus separuh.",
+    "/apparatus/0/label": "Litar",
+    "/apparatus/1/label": "Ammeter litar"
+  }
+}

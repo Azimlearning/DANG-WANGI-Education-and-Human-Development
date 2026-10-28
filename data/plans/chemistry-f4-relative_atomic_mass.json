@@ -1,0 +1,102 @@
+{
+  "id": "relative_atomic_mass_lab",
+  "title": "Relative atomic mass: the average of the isotopes",
+  "goal": "See how the relative atomic mass of chlorine depends on how abundant each of its two isotopes is.",
+  "pattern": "simulation",
+  "topic": "chemistry_form4_matter_and_atomic_structure",
+  "experiment_ref": null,
+  "note": "Most elements are a mixture of isotopes. The relative atomic mass is the average of the isotope masses, weighted by the percentage of each isotope in a natural sample.",
+  "controls": [
+    {
+      "id": "abundance",
+      "label": "Abundance of chlorine-35",
+      "unit": "%",
+      "min": 10,
+      "max": 90,
+      "value": 75,
+      "grid": 16
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "ram",
+      "model": "chemistry.relative_atomic_mass",
+      "params": {
+        "mass_1": 35,
+        "mass_2": 37
+      },
+      "inputs": {
+        "abundance_1": "abundance"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Relative atomic mass of chlorine",
+      "unit": "u",
+      "digits": 2,
+      "source": "ram",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The relative atomic mass falls as the lighter isotope becomes more abundant.",
+      "x": "abundance",
+      "source": "ram",
+      "label": "Relative atomic mass",
+      "unit": "u",
+      "digits": 2
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "Chlorine has two isotopes, chlorine-35 and chlorine-37, and the rest of the sample is chlorine-37.",
+    "The relative atomic mass is the average of the two masses, weighted by how abundant each isotope is."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "ram_rule",
+    "ram_example"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "The lighter isotope of chlorine is more abundant than the heavier one. Will the relative atomic mass be closer to the mass of the lighter or the heavier isotope?",
+    "choices": [
+      "Closer to the lighter isotope",
+      "Exactly halfway between them",
+      "Closer to the heavier isotope"
+    ],
+    "reveal": "Set the abundance of chlorine-35 to 75 and compare the relative atomic mass with the two isotope masses."
+  },
+  "concept_check": {
+    "question": "What does the relative atomic mass of an element depend on?",
+    "options": [
+      "Only the number of protons",
+      "The masses of its isotopes and how abundant each is",
+      "Only the number of electrons"
+    ],
+    "correct": 1,
+    "explanation": "An element is a mixture of isotopes, so its relative atomic mass is the average of their masses weighted by the natural abundance of each."
+  },
+  "hints": [
+    "An element can be a mixture of atoms with different masses.",
+    "Which isotope is more abundant? The average leans towards it.",
+    "Multiply each mass by its percentage, add them and divide by one hundred."
+  ],
+  "apparatus": [
+    {
+      "kind": "gauge",
+      "label": "Share of chlorine-35",
+      "channels": {
+        "value": {
+          "source": "abundance",
+          "full": 100
+        }
+      }
+    }
+  ]
+}

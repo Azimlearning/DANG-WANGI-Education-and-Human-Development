@@ -430,7 +430,7 @@ async def _layers(r: _Run) -> AsyncIterator[StreamEvent]:
                 t.add("plan_checks", "refused", started, attempt=attempt, codes=[entry.code], issues=_issue_notes(issues))
                 continue
             wording_ok = verdict is not None
-        t.add("plan_checks", "ok", started, attempt=attempt, wording="checked" if wording_ok else "not checked")
+        t.add("plan_checks", "ok", started, attempt=attempt, wording="checked" if wording_ok else "not checked", parts=[a.kind for a in candidate.apparatus])
         plan = candidate
         break
     if plan is None:
@@ -611,12 +611,22 @@ async def _from_library(r: _Run, canon: str) -> AsyncIterator[StreamEvent]:
     decision = await route(r.q, llm=None)
     topic = decision.topic
     if topic.source != "local" or topic.value == "none" or topic.confidence < library.INSTANTIATE_MIN_CONFIDENCE:
+        # The topic head is unsure (or says none): a question that names a stored Environment (D-59) is still answered from the library.
+        named = library.match_by_name(decision.english or r.q, r.deps.store.all_topic_entries())
+        if named is None:
+            return
+        block = _gate(r, named["env_id"], "name", started)
+        if block is None:
+            return
+        t.add("library", "hit", started, kind="name", env_id=named["env_id"][:12], plan=named["plan_id"])
+        async for event in _serve(r, block, named["note"]):
+            yield event
         return
     entries = r.deps.store.topic_entries(str(topic.value))
     if not entries:
         return
     _note_topic(r, topic)
-    chosen = library.best_entry(r.q, entries)
+    chosen = library.best_entry(decision.english or r.q, entries)
     block = _gate(r, chosen["env_id"], "topic", started)
     if block is None:
         return

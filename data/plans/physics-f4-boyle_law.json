@@ -1,0 +1,112 @@
+{
+  "id": "boyle_law_lab",
+  "title": "Boyle's law: squeezing a gas",
+  "goal": "See how the pressure of a fixed mass of gas changes when its volume changes at constant temperature.",
+  "pattern": "simulation",
+  "topic": "physics_form4_heat",
+  "experiment_ref": null,
+  "note": "Air in a syringe has a pressure and a volume. Pushing the piston in makes the volume smaller and the pressure larger, while pressure times volume stays the same.",
+  "controls": [
+    {
+      "id": "volume",
+      "label": "Volume of the gas",
+      "unit": "cm3",
+      "min": 24,
+      "max": 120,
+      "value": 48,
+      "grid": 24
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "pressure",
+      "model": "physics.boyle_law",
+      "params": {
+        "initial_pressure": 108,
+        "initial_volume": 60
+      },
+      "inputs": {
+        "final_volume": "volume"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Gas pressure",
+      "unit": "kPa",
+      "digits": 1,
+      "source": "pressure",
+      "convert_to": null
+    }
+  ],
+  "graphs": [
+    {
+      "title": "The pressure falls as the volume rises.",
+      "x": "volume",
+      "source": "pressure",
+      "label": "Gas pressure",
+      "unit": "kPa",
+      "digits": 1
+    }
+  ],
+  "table": null,
+  "experiment": null,
+  "sentences": [
+    "The air in the syringe starts at 108 kPa when its volume is 60, and its temperature stays the same.",
+    "A fixed mass of gas at constant temperature has a pressure that is inversely proportional to its volume."
+  ],
+  "steps": [],
+  "citation_ids": [
+    "boyle_law",
+    "boyle_ex"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "A syringe of trapped air is pushed in, so the air takes up less volume, at the same temperature. What happens to the pressure of the air?",
+    "choices": [
+      "It rises",
+      "It stays the same",
+      "It falls"
+    ],
+    "reveal": "Move the volume below its starting value and watch the pressure."
+  },
+  "concept_check": {
+    "question": "At constant temperature, the volume of a fixed mass of gas is made larger. What happens to its pressure?",
+    "options": [
+      "It becomes larger",
+      "It becomes smaller",
+      "It stays the same"
+    ],
+    "correct": 1,
+    "explanation": "For a fixed mass of gas at constant temperature, pressure is inversely proportional to volume, so a larger volume means a smaller pressure."
+  },
+  "hints": [
+    "Keep the temperature and the amount of gas the same.",
+    "What happens to the pressure when the gas is squeezed into a smaller volume?",
+    "Pressure times volume stays the same for a fixed mass of gas at constant temperature."
+  ],
+  "apparatus": [
+    {
+      "kind": "syringe",
+      "label": "Trapped air",
+      "channels": {
+        "volume": {
+          "source": "volume",
+          "full": 120
+        }
+      }
+    },
+    {
+      "kind": "gauge",
+      "label": "Pressure gauge",
+      "channels": {
+        "value": {
+          "source": "pressure",
+          "full": 270
+        }
+      }
+    }
+  ]
+}

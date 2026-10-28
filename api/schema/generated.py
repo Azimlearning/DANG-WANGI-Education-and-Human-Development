@@ -40,6 +40,7 @@ class Citation(BaseModel):
     page: int | None
     quote: str | None
     verified: bool
+    printedPage: int | None = None
 
 
 class DoneEvent(BaseModel):
@@ -168,6 +169,20 @@ class TextDeltaEvent(BaseModel):
     text: str
 
 
+class Translation(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    lang: Language
+    envId: str
+    status: Literal['draft', 'reviewed']
+    reviewer: str | None
+    reviewedOn: str | None
+
+
+class TranslationsResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    translations: list[Translation]
+
+
 Block = EnvironmentBlock
 
 BlockStatus = Literal['empty', 'loading', 'partial', 'ready', 'error']
@@ -175,6 +190,8 @@ BlockStatus = Literal['empty', 'loading', 'partial', 'ready', 'error']
 ErrorCode = Literal['validation_failed', 'bad_request', 'not_found', 'spend_cap_exceeded', 'provider_unavailable', 'verification_refused', 'rate_limited', 'internal']
 
 Lane = Literal['instantiate', 'compose', 'free']
+
+Language = Literal['en', 'ms']
 
 StreamEvent = Annotated[MetaEvent | StageEvent | PlanEvent | TextDeltaEvent | EnvironmentEvent | ProbeEvent | ExamEvent | StreamErrorEvent | DoneEvent, Field(discriminator='type')]
 
@@ -200,3 +217,5 @@ ProbeEvent.model_rebuild()
 StageEvent.model_rebuild()
 StreamErrorEvent.model_rebuild()
 TextDeltaEvent.model_rebuild()
+Translation.model_rebuild()
+TranslationsResponse.model_rebuild()

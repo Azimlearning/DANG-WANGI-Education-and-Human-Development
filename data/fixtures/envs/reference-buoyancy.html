@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Archimedes&#x27; principle: the push of a fluid</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Archimedes' principle: the push of a fluid", note: "An object in a fluid is pushed upwards by a buoyant force. The force equals the weight of the fluid the object displaces.", kicker: "Interactive physics lab", tryThis: "See how the buoyant force on an object depends on the volume of fluid it displaces." });
+  Synapse.predictCard(env, {"prompt": "A block pushes aside more water as more of it is pushed under the surface. What happens to the buoyant force on it?", "choices": ["It increases", "It stays the same", "It decreases"], "reveal": "Increase the volume of water displaced and watch the buoyant force."});
+  var c_displaced = Synapse.slider(env, {"id": "displaced", "label": "Volume of water displaced", "unit": "m3", "min": 0.001, "max": 0.006, "value": 0.002, "grid": 5});
+  
+  var m_buoyancy = Synapse.buoyantForce({ density: 1000.0, g: 9.81, volume: c_displaced });
+  Synapse.readout(env, { label: "Buoyant force", unit: "N", value: m_buoyancy, digits: 1 });
+  
+  Synapse.graph(env, { title: "The buoyant force rises in a straight line as the volume of water displaced increases.", x: c_displaced, y: m_buoyancy, yLabel: "Buoyant force", yUnit: "N", digits: 1 });
+  
+  Synapse.text(env, "The fluid is water, and its density is 1000 kg/m3.");
+  Synapse.text(env, "The buoyant force on the object equals the weight of the water it pushes aside.");
+  Synapse.hintLadder(env, { hints: ["The fluid pushes up on the object.", "What does the buoyant force depend on, the object or the fluid it pushes aside?", "The buoyant force equals the weight of the fluid displaced."] });
+  Synapse.conceptCheck(env, {"question": "According to Archimedes' principle, the buoyant force on an object in a fluid is equal to what?", "options": ["The weight of the object", "The weight of the fluid displaced", "The volume of the object"], "correct": 1, "explanation": "Archimedes' principle states that the buoyant force equals the weight of the fluid the object displaces."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

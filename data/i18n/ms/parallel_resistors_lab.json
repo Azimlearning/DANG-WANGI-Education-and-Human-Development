@@ -1,0 +1,33 @@
+{
+  "plan": "parallel_resistors_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Dua perintang secara selari",
+    "/goal": "Lihat bagaimana rintangan berkesan bagi dua perintang secara selari bergantung pada kedua-dua rintangan itu.",
+    "/note": "Dalam litar selari, arus mempunyai dua laluan. Salingan rintangan berkesan ialah hasil tambah salingan kedua-dua rintangan.",
+    "/controls/0/label": "Rintangan perintang pertama",
+    "/controls/1/label": "Rintangan perintang kedua",
+    "/readouts/0/label": "Rintangan berkesan",
+    "/graphs/0/title": "Rintangan berkesan naik apabila rintangan kedua bertambah.",
+    "/graphs/0/label": "Rintangan berkesan",
+    "/sentences/0": "Dua perintang disambung secara selari kepada bekalan yang sama.",
+    "/sentences/1": "Rintangan berkesan gabungan itu kurang daripada yang lebih kecil antara kedua-dua rintangan.",
+    "/hints/0": "Dalam litar selari, arus boleh mengambil dua laluan.",
+    "/hints/1": "Adakah rintangan berkesan lebih besar atau lebih kecil daripada rintangan yang lebih kecil?",
+    "/hints/2": "Tambahkan salingan kedua-dua rintangan, kemudian ambil salingan hasil tambah itu.",
+    "/predict/prompt": "Dua perintang disambung secara selari. Adakah rintangan berkesan lebih besar atau lebih kecil daripada yang lebih kecil antara kedua-dua rintangan itu?",
+    "/predict/choices/0": "Lebih besar daripada rintangan yang lebih kecil",
+    "/predict/choices/1": "Sama dengan rintangan yang lebih kecil",
+    "/predict/choices/2": "Lebih kecil daripada rintangan yang lebih kecil",
+    "/predict/reveal": "Bandingkan rintangan berkesan dengan kedua-dua rintangan semasa anda mengubahnya.",
+    "/concept_check/question": "Apakah yang berlaku kepada rintangan berkesan apabila perintang kedua disambung secara selari dengan sebuah perintang?",
+    "/concept_check/options/0": "Ia menjadi lebih besar",
+    "/concept_check/options/1": "Ia kekal sama",
+    "/concept_check/options/2": "Ia menjadi lebih kecil",
+    "/concept_check/explanation": "Arus mendapat satu lagi laluan, jadi rintangan berkesan menjadi lebih kecil. Salingan rintangan berkesan ialah hasil tambah salingan, yang lebih besar daripada mana-mana satu.",
+    "/apparatus/0/label": "Ohmmeter litar"
+  }
+}

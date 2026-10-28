@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pressure in a liquid</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Pressure in a liquid", note: "Pressure in a liquid increases with depth. Here water has a density of 1000 kg/m3 and g is taken as 9.81 m/s2, as in the textbook's worked problems.", kicker: "Interactive physics lab", tryThis: "See how the pressure in a liquid grows with depth." });
+  
+  var c_depth = Synapse.slider(env, {"id": "depth", "label": "Depth", "unit": "m", "min": 0.0, "max": 20.0, "value": 5.0, "grid": 20});
+  
+  var m_water = Synapse.pressureDepth({ density: 1000.0, g: 9.81, depth: c_depth });
+  Synapse.readout(env, { label: "Pressure", unit: "kPa", value: Synapse.convert(m_water, "Pa", "kPa"), digits: 1 });
+  Synapse.pressureScene(env, { pressure: m_water, full: 200000.0 });
+  Synapse.graph(env, { title: "The pressure rises in a straight line with the depth.", x: c_depth, y: m_water, yLabel: "Pressure", yUnit: "Pa", digits: 0 });
+  
+  Synapse.text(env, "Move the depth from 0 m to 20 m and watch the pressure grow.");
+  Synapse.hintLadder(env, { hints: ["Pressure depends on how deep you are.", "Compare the pressure at two different depths.", "Try a depth of 5 m and then 10 m."] });
+  
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

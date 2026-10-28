@@ -1,0 +1,1298 @@
+{
+  "started_at": "2026-10-27T22:48:21+00:00",
+  "approved_usd": 1.5,
+  "exemplars": false,
+  "spent_usd": 0.738714,
+  "projection": {
+    "low": 0.3178,
+    "high": 0.6814,
+    "hard_bound": 1.2205
+  },
+  "stopped": null,
+  "questions": [
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1936
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 3866,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 13487,
+          "models": [
+            "biology.magnification"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 17
+        }
+      ],
+      "id": "b01",
+      "question": "How much is a cell magnified in my drawing?",
+      "expected_topic": "biology_form4_cell_structure_function",
+      "environment": "Magnification of a cell drawing",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 24.3,
+      "cost_usd": 0.030764,
+      "projected_high_usd": 0.046596,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1575,
+          "tokens_out": 33,
+          "cost_usd": 0.000174,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 860,
+          "tokens_out": 321,
+          "cost_usd": 0.00493,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10395,
+          "tokens_out": 487,
+          "cost_usd": 0.02566,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 754
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4506,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 13788,
+          "models": [
+            "biology.magnification"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 15
+        }
+      ],
+      "id": "b02",
+      "question": "What is magnification and how do I calculate it from the image size and the actual size?",
+      "expected_topic": "biology_form4_cell_structure_function",
+      "environment": "Magnification of a cell",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 22.1,
+      "cost_usd": 0.030189,
+      "projected_high_usd": 0.045544,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1557,
+          "tokens_out": 31,
+          "cost_usd": 0.00017120000000000001,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 848,
+          "tokens_out": 318,
+          "cost_usd": 0.004876,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 9776,
+          "tokens_out": 559,
+          "cost_usd": 0.025142,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 897
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 5155,
+          "attempt": 0,
+          "codes": [
+            "PLAN-016",
+            "PLAN-007",
+            "PLAN-007"
+          ],
+          "issues": [
+            "PLAN-016 models[0]: biology.sa_to_v_cube is registered for biology_form4_movement_of_substances, not for the topic 'biology_form4_cell_structure_function'.",
+            "PLAN-007 readouts[0]: Readout 'Surface area to volume ratio' is labelled per cm but shows /cm.",
+            "PLAN-007 graphs[0]: The graph is labelled per cm but plots /cm."
+          ],
+          "models": [
+            "biology.sa_to_v_cube"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 7263,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12251,
+          "models": [
+            "biology.sa_to_v_cube"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 16
+        }
+      ],
+      "id": "b03",
+      "question": "Why are cells so small? Does surface area to volume ratio matter?",
+      "expected_topic": "biology_form4_movement_of_substances",
+      "environment": "Why are cells small?",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 29.1,
+      "cost_usd": 0.061747,
+      "projected_high_usd": 0.047025,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1582,
+          "tokens_out": 37,
+          "cost_usd": 0.0001767,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 875,
+          "tokens_out": 320,
+          "cost_usd": 0.00495,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10811,
+          "tokens_out": 527,
+          "cost_usd": 0.026892,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 11059,
+          "tokens_out": 761,
+          "cost_usd": 0.029728,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 816
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 7590,
+          "attempt": 0,
+          "codes": [
+            "PLAN-007",
+            "PLAN-007",
+            "PLAN-007"
+          ],
+          "issues": [
+            "PLAN-007 readouts[0]: Readout 'Surface area to volume ratio' is labelled per cm but shows /cm.",
+            "PLAN-007 graphs[0]: The graph is labelled per cm but plots /cm.",
+            "PLAN-007 table.columns[1]: Column 'Surface area to volume ratio' is labelled per cm but shows /cm."
+          ],
+          "models": [
+            "biology.sa_to_v_cube"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 7737,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12159,
+          "models": [
+            "biology.sa_to_v_cube"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 16
+        }
+      ],
+      "id": "b04",
+      "question": "In the agar cube experiment, how does the size of the cube change how fast things diffuse in?",
+      "expected_topic": "biology_form4_movement_of_substances",
+      "environment": "Agar cube: size and diffusion",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 31.3,
+      "cost_usd": 0.069345,
+      "projected_high_usd": 0.047055,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1569,
+          "tokens_out": 37,
+          "cost_usd": 0.0001754,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 856,
+          "tokens_out": 252,
+          "cost_usd": 0.004232,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10565,
+          "tokens_out": 1091,
+          "cost_usd": 0.03204,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10769,
+          "tokens_out": 1136,
+          "cost_usd": 0.032898,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1017
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 5638,
+          "attempt": 0,
+          "codes": [
+            "PLAN-022",
+            "PLAN-022"
+          ],
+          "issues": [
+            "PLAN-022 apparatus[0].channels.light: A leaf's light needs a full: the value drawn as full.",
+            "PLAN-022 apparatus[0].channels.rate: 'net_rate' can be negative (-1), which a rate cannot show."
+          ],
+          "models": [
+            "biology.photosynthesis_net"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4850,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12070,
+          "models": [
+            "biology.photosynthesis_net"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 16
+        }
+      ],
+      "id": "b05",
+      "question": "What is the compensation point of a leaf and how does light intensity affect photosynthesis?",
+      "expected_topic": "biology_form5_leaf_structure_function",
+      "environment": "Leaf compensation point",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 26.2,
+      "cost_usd": 0.060783,
+      "projected_high_usd": 0.049324,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1588,
+          "tokens_out": 24,
+          "cost_usd": 0.0001708,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 867,
+          "tokens_out": 340,
+          "cost_usd": 0.005134,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10434,
+          "tokens_out": 751,
+          "cost_usd": 0.028378,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10580,
+          "tokens_out": 594,
+          "cost_usd": 0.0271,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1136
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 4729,
+          "attempt": 0,
+          "codes": [
+            "PLAN-022"
+          ],
+          "issues": [
+            "PLAN-022 apparatus[0].channels.rate: 'net' can be negative (-2), which a rate cannot show."
+          ],
+          "models": [
+            "biology.photosynthesis_net"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 3852,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12082,
+          "models": [
+            "biology.photosynthesis_net"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 16
+        }
+      ],
+      "id": "b06",
+      "question": "How does the rate of photosynthesis change as light intensity increases?",
+      "expected_topic": "biology_form5_leaf_structure_function",
+      "environment": "Light and photosynthesis rate",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 31.0,
+      "cost_usd": 0.057931,
+      "projected_high_usd": 0.049116,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1581,
+          "tokens_out": 45,
+          "cost_usd": 0.00018060000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 860,
+          "tokens_out": 222,
+          "cost_usd": 0.00394,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10649,
+          "tokens_out": 571,
+          "cost_usd": 0.027008,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10731,
+          "tokens_out": 534,
+          "cost_usd": 0.026802,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 0
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 3729,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12223,
+          "models": [
+            "chemistry.moles_from_mass"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 15
+        }
+      ],
+      "id": "b07",
+      "question": "How many moles are in 36 g of water?",
+      "expected_topic": "chemistry_form4_chemical_formulae_and_equations",
+      "environment": "Moles in water",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 19.3,
+      "cost_usd": 0.030862,
+      "projected_high_usd": 0.04733,
+      "calls": [
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 859,
+          "tokens_out": 319,
+          "cost_usd": 0.004908,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10767,
+          "tokens_out": 442,
+          "cost_usd": 0.025954,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 806
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4047,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12128,
+          "models": [
+            "chemistry.moles_from_mass"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 16
+        }
+      ],
+      "id": "b08",
+      "question": "How do I convert the mass of a substance to moles using its molar mass?",
+      "expected_topic": "chemistry_form4_chemical_formulae_and_equations",
+      "environment": "Mass to moles",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 20.1,
+      "cost_usd": 0.032144,
+      "projected_high_usd": 0.047423,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1582,
+          "tokens_out": 48,
+          "cost_usd": 0.0001822,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 854,
+          "tokens_out": 334,
+          "cost_usd": 0.005048,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10902,
+          "tokens_out": 511,
+          "cost_usd": 0.026914,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1551
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 8698,
+          "attempt": 0,
+          "codes": [
+            "PLAN-010"
+          ],
+          "issues": [
+            "PLAN-010 (plan): The words in the plan add up to more than 1800 characters."
+          ],
+          "models": [
+            "chemistry.titration_concentration"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 6746,
+          "attempt": 1,
+          "codes": [
+            "PLAN-022"
+          ],
+          "issues": [
+            "PLAN-022 apparatus[1].channels.ph: A indicator's ph draws a value in pH, and 'conc' is in mol/dm3."
+          ],
+          "models": [
+            "chemistry.titration_concentration"
+          ]
+        }
+      ],
+      "id": "b09",
+      "question": "How do I find the concentration of sodium hydroxide from a titration with hydrochloric acid?",
+      "expected_topic": "chemistry_form4_acids_bases_salts",
+      "environment": null,
+      "lane": null,
+      "label": null,
+      "degraded": [
+        "The interactive page could not be planned safely, so you are getting the written answer."
+      ],
+      "errors": [],
+      "seconds": 21.1,
+      "cost_usd": 0.072591,
+      "projected_high_usd": 0.056601,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1545,
+          "tokens_out": 12,
+          "cost_usd": 0.0001605,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 863,
+          "tokens_out": 401,
+          "cost_usd": 0.005736,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10566,
+          "tokens_out": 1393,
+          "cost_usd": 0.035062,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10631,
+          "tokens_out": 1037,
+          "cost_usd": 0.031632,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 6259,
+          "attempt": 0,
+          "codes": [
+            "PLAN-016"
+          ],
+          "issues": [
+            "PLAN-016 models[0]: chemistry.dilution is registered for chemistry_form4_acids_bases_salts, not for the topic 'biology_form4_movement_of_substances'."
+          ],
+          "models": [
+            "chemistry.dilution"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 6938,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 1,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12106,
+          "models": [
+            "chemistry.dilution"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 17
+        }
+      ],
+      "id": "b10",
+      "question": "What happens to the concentration when I dilute a solution with water?",
+      "expected_topic": "chemistry_form4_acids_bases_salts",
+      "environment": "Diluting a solution",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 28.2,
+      "cost_usd": 0.065076,
+      "projected_high_usd": 0.056562,
+      "calls": [
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 862,
+          "tokens_out": 222,
+          "cost_usd": 0.003944,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10422,
+          "tokens_out": 898,
+          "cost_usd": 0.029824,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10554,
+          "tokens_out": 1020,
+          "cost_usd": 0.031308,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 895
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 5181,
+          "attempt": 0,
+          "codes": [
+            "PLAN-016",
+            "PLAN-004",
+            "PLAN-022"
+          ],
+          "issues": [
+            "PLAN-016 models[0]: chemistry.heat_energy is registered for chemistry_form5_thermochemistry, not for the topic 'chemistry_form4_acids_bases_salts'.",
+            "PLAN-004 models[0].inputs.delta_t: Control 'dt' is in C but chemistry.heat_energy needs delta_t in °C.",
+            "PLAN-022 apparatus[0].channels.temperature: A thermometer's temperature needs a full: the value drawn as full."
+          ],
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 5435,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12062,
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 16
+        }
+      ],
+      "id": "b11",
+      "question": "How do I calculate the heat released in the neutralisation of an acid by an alkali?",
+      "expected_topic": "chemistry_form5_thermochemistry",
+      "environment": "Heat released in neutralisation",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 26.7,
+      "cost_usd": 0.062853,
+      "projected_high_usd": 0.049056,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1587,
+          "tokens_out": 44,
+          "cost_usd": 0.00018070000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 857,
+          "tokens_out": 373,
+          "cost_usd": 0.005444,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10768,
+          "tokens_out": 677,
+          "cost_usd": 0.028306,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 11041,
+          "tokens_out": 684,
+          "cost_usd": 0.028922,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 627
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 7523,
+          "attempt": 0,
+          "codes": [
+            "PLAN-004",
+            "PLAN-022"
+          ],
+          "issues": [
+            "PLAN-004 models[0].inputs.delta_t: Control 'temp_rise' is in C but chemistry.heat_energy needs delta_t in °C.",
+            "PLAN-022 apparatus[1].channels.temperature: A thermometer's temperature needs a full: the value drawn as full."
+          ],
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 8280,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 1,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 12188,
+          "models": [
+            "chemistry.heat_energy"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 17
+        }
+      ],
+      "id": "b12",
+      "question": "How do I use the temperature rise to find the heat of neutralisation?",
+      "expected_topic": "chemistry_form5_thermochemistry",
+      "environment": "Heat of neutralisation",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 32.7,
+      "cost_usd": 0.073176,
+      "projected_high_usd": 0.049337,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1536,
+          "tokens_out": 12,
+          "cost_usd": 0.00015960000000000003,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 852,
+          "tokens_out": 415,
+          "cost_usd": 0.005854,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10693,
+          "tokens_out": 1139,
+          "cost_usd": 0.032776,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10848,
+          "tokens_out": 1269,
+          "cost_usd": 0.034386,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 1111
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 4520,
+          "attempt": 0
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 1,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 13420,
+          "models": [
+            "chemistry.average_rate"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 19
+        }
+      ],
+      "id": "b13",
+      "question": "How do I find the average rate of a reaction from the gas collected?",
+      "expected_topic": "chemistry_form4_rate_of_reaction",
+      "environment": "Average rate from gas collected",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 22.2,
+      "cost_usd": 0.032175,
+      "projected_high_usd": 0.045198,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1580,
+          "tokens_out": 46,
+          "cost_usd": 0.000181,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 850,
+          "tokens_out": 328,
+          "cost_usd": 0.00498,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10792,
+          "tokens_out": 543,
+          "cost_usd": 0.027014,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "trace": [
+        {
+          "layer": "route",
+          "status": "ok",
+          "ms": 950
+        },
+        {
+          "layer": "plan_checks",
+          "status": "refused",
+          "ms": 4326,
+          "attempt": 0,
+          "codes": [
+            "PLAN-022"
+          ],
+          "issues": [
+            "PLAN-022 apparatus[0].channels.volume: A syringe's volume needs a full: the value drawn as full."
+          ],
+          "models": [
+            "chemistry.average_rate"
+          ]
+        },
+        {
+          "layer": "plan_checks",
+          "status": "ok",
+          "ms": 3902,
+          "attempt": 1
+        },
+        {
+          "layer": "assemble",
+          "status": "ok",
+          "ms": 0,
+          "lane": "compose"
+        },
+        {
+          "layer": "ground",
+          "status": "degraded",
+          "ms": 0,
+          "label": "model-checked",
+          "why": "the plan names no citation"
+        },
+        {
+          "layer": "verify",
+          "status": "ok",
+          "ms": 13753,
+          "models": [
+            "chemistry.average_rate"
+          ]
+        },
+        {
+          "layer": "deliver",
+          "status": "ok",
+          "ms": 16
+        }
+      ],
+      "id": "b14",
+      "question": "How does the time taken to collect gas change the rate of reaction?",
+      "expected_topic": "chemistry_form4_rate_of_reaction",
+      "environment": "Gas time and rate",
+      "lane": "compose",
+      "label": "model-checked",
+      "degraded": [],
+      "errors": [],
+      "seconds": 26.9,
+      "cost_usd": 0.059079,
+      "projected_high_usd": 0.045212,
+      "calls": [
+        {
+          "purpose": "route",
+          "model": "claude-haiku-5-5",
+          "tokens_in": 1560,
+          "tokens_out": 38,
+          "cost_usd": 0.000175,
+          "status": "ok"
+        },
+        {
+          "purpose": "explain",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 850,
+          "tokens_out": 330,
+          "cost_usd": 0.005,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10792,
+          "tokens_out": 549,
+          "cost_usd": 0.027074,
+          "status": "ok"
+        },
+        {
+          "purpose": "plan",
+          "model": "claude-sonnet-5-5",
+          "tokens_in": 10870,
+          "tokens_out": 509,
+          "cost_usd": 0.02683,
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

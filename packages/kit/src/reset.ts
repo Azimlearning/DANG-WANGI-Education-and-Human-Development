@@ -4,10 +4,11 @@
 
 import { event } from "./bridge";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import { controls, own, registerAction } from "./provenance";
 
 export function reset(env: Environment, options: { label?: string } = {}): HTMLButtonElement {
-  const label = String(options.label ?? "Reset");
+  const label = String(options.label ?? kt("reset"));
   const button = own(document.createElement("button"), () => label);
   button.type = "button";
   button.className = "syn-btn";

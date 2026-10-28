@@ -4,6 +4,7 @@
 
 import type { Environment } from "./environment";
 import { event as hostEvent } from "./bridge";
+import { kt } from "./i18n";
 import { copy, own, registerAction } from "./provenance";
 
 export interface ConceptCheckOptions {
@@ -24,13 +25,13 @@ export function conceptCheck(env: Environment, options: ConceptCheckOptions): HT
   const correct = options.correct;
   const wrap = document.createElement("section");
   wrap.className = "syn-card";
-  wrap.setAttribute("aria-label", "Check your understanding");
+  wrap.setAttribute("aria-label", kt("checkTitle"));
   const q = own(document.createElement("p"), () => question);
   q.textContent = question;
   copy.push(question, ...choices, explanation);
   const group = document.createElement("div");
   group.setAttribute("role", "group");
-  group.setAttribute("aria-label", "Options");
+  group.setAttribute("aria-label", kt("options"));
   let feedback = "";
   let answered = false;
   const result = own(document.createElement("p"), () => feedback);
@@ -49,13 +50,13 @@ export function conceptCheck(env: Environment, options: ConceptCheckOptions): HT
         answered = true;
         hostEvent("concept_check", i === correct ? "correct" : "incorrect");
       }
-      feedback = i === correct ? "Correct." : "Not quite.";
+      feedback = i === correct ? kt("correct") : kt("notQuite");
       result.textContent = feedback;
       why.textContent = explanation;
     });
     group.appendChild(b);
   });
   wrap.append(q, group, result, why);
-  env.stage.appendChild(wrap);
+  env.extras.appendChild(wrap);
   return wrap;
 }

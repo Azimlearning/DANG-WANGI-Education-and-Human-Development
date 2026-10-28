@@ -3,6 +3,7 @@
 
 import { lab } from "./bridge";
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import { copy, own } from "./provenance";
 
 const MAX_STEPS = 8;
@@ -12,14 +13,14 @@ export function stepper(env: Environment, options: { steps: string[] }): HTMLOLi
   if (steps.length < 1 || steps.length > MAX_STEPS) throw new RangeError(`stepper: 1 to ${MAX_STEPS} steps`);
   const list = document.createElement("ol");
   list.className = "syn-steps";
-  list.setAttribute("aria-label", "Steps");
+  list.setAttribute("aria-label", kt("steps"));
   for (const step of steps) {
     const item = own(document.createElement("li"), () => step);
     item.textContent = step;
     copy.push(step);
     list.appendChild(item);
   }
-  env.stage.appendChild(list);
+  env.head.appendChild(list);
   lab({ part: "steps", steps });
   return list;
 }

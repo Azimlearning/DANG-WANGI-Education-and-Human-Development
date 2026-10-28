@@ -95,7 +95,9 @@
     "Hang all the masses so the load is 10 N, then press Record.",
     "Compare the extension each time the load doubles."
   ],
-  "citation_ids": ["hooke_law"],
+  "citation_ids": [
+    "hooke_law"
+  ],
   "presentation": "stage",
   "custom": [],
   "predict": {
@@ -116,5 +118,10 @@
     ],
     "correct": 1,
     "explanation": "Within the elastic limit the extension is proportional to the load, so doubling the load doubles the extension."
-  }
+  },
+  "hints": [
+    "Extension is how much longer the spring gets, measured from its original length.",
+    "Look at your table. Does the force divided by the extension change when you add a mass?",
+    "Add one mass at a time and record the extension each time."
+  ]
 }

@@ -1,0 +1,33 @@
+{
+  "plan": "boyle_law_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Hukum Boyle: memampat gas",
+    "/goal": "Lihat bagaimana tekanan gas berjisim tetap berubah apabila isi padunya berubah pada suhu malar.",
+    "/note": "Udara dalam picagari mempunyai tekanan dan isi padu. Menolak omboh ke dalam menjadikan isi padu lebih kecil dan tekanan lebih besar, manakala tekanan darab isi padu kekal sama.",
+    "/controls/0/label": "Isi padu gas",
+    "/readouts/0/label": "Tekanan gas",
+    "/graphs/0/title": "Tekanan menurun apabila isi padu bertambah.",
+    "/graphs/0/label": "Tekanan gas",
+    "/sentences/0": "Udara dalam picagari bermula pada 108 kPa apabila isi padunya 60, dan suhunya kekal sama.",
+    "/sentences/1": "Gas berjisim tetap pada suhu malar mempunyai tekanan yang berkadar songsang dengan isi padunya.",
+    "/hints/0": "Kekalkan suhu dan jumlah gas.",
+    "/hints/1": "Apakah yang berlaku kepada tekanan apabila gas dimampatkan kepada isi padu yang lebih kecil?",
+    "/hints/2": "Tekanan darab isi padu kekal sama bagi gas berjisim tetap pada suhu malar.",
+    "/predict/prompt": "Picagari berisi udara terperangkap ditolak ke dalam, jadi udara itu menduduki isi padu yang lebih kecil, pada suhu yang sama. Apakah yang berlaku kepada tekanan udara itu?",
+    "/predict/choices/0": "Ia naik",
+    "/predict/choices/1": "Ia kekal sama",
+    "/predict/choices/2": "Ia turun",
+    "/predict/reveal": "Gerakkan isi padu ke bawah nilai asalnya dan perhatikan tekanan.",
+    "/concept_check/question": "Pada suhu malar, isi padu gas berjisim tetap dibesarkan. Apakah yang berlaku kepada tekanannya?",
+    "/concept_check/options/0": "Ia menjadi lebih besar",
+    "/concept_check/options/1": "Ia menjadi lebih kecil",
+    "/concept_check/options/2": "Ia kekal sama",
+    "/concept_check/explanation": "Bagi gas berjisim tetap pada suhu malar, tekanan berkadar songsang dengan isi padu, jadi isi padu yang lebih besar bermakna tekanan yang lebih kecil.",
+    "/apparatus/0/label": "Udara terperangkap",
+    "/apparatus/1/label": "Tolok tekanan"
+  }
+}

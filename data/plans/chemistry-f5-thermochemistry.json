@@ -50,7 +50,10 @@
     "Set the rise to 10 °C and press Record.",
     "Compare the heat for each rise."
   ],
-  "citation_ids": ["heat_q", "heat_neut"],
+  "citation_ids": [
+    "heat_q",
+    "heat_neut"
+  ],
   "presentation": "stage",
   "custom": [],
   "id": "heat_of_neutralisation",
@@ -90,6 +93,23 @@
       "digits": 2,
       "source": "heat",
       "convert_to": "kJ"
+    }
+  ],
+  "hints": [
+    "The heat released warms the solution.",
+    "Which three things decide how much heat the solution gained?",
+    "Multiply the mass, the specific heat capacity and the rise in temperature."
+  ],
+  "apparatus": [
+    {
+      "kind": "thermometer",
+      "label": "Solution temperature",
+      "channels": {
+        "temperature": {
+          "source": "rise",
+          "full": 10
+        }
+      }
     }
   ]
 }

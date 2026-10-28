@@ -10,7 +10,7 @@ export const spec: ScienceSpec = {
   params: { molar_volume: { unit: "dm3/mol", min: 0, exclusive: true } },
   output: { unit: "dm3" },
   fn: ({ moles, molar_volume }) => (moles as number) * (molar_volume as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed: n x molar volume.
   reference: [
     { args: { moles: 2, molar_volume: 24 }, expected: 48, tolerance: 1e-9, derivation: "2 mol x 24 dm3/mol = 48 dm3" },

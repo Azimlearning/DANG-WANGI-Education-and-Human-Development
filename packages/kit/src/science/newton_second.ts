@@ -10,7 +10,7 @@ export const spec: ScienceSpec = {
   params: {},
   output: { unit: "m/s2" },
   fn: ({ force, mass }) => (force as number) / (mass as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed from F = m a.
   reference: [
     { args: { force: 10, mass: 2 }, expected: 5, tolerance: 1e-9, derivation: "10 N / 2 kg = 5 m/s2" },

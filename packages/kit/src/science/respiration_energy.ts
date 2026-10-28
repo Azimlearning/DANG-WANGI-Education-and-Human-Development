@@ -12,7 +12,7 @@ export const spec: ScienceSpec = {
   params: { energy_per_mole: { unit: "kJ/mol", min: 0, exclusive: true } },
   output: { unit: "kJ" },
   fn: ({ glucose, energy_per_mole }) => (glucose as number) * (energy_per_mole as number),
-  citation: "UNVERIFIED (corpus not loaded until P2)",
+  citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
   // Hand-computed, one line of arithmetic each. Not run through the implementation.
   reference: [
     { args: { glucose: 1, energy_per_mole: 210 }, expected: 210, tolerance: 1e-9, derivation: "1 mol x 210 kJ/mol = 210 kJ (alcohol fermentation)" },

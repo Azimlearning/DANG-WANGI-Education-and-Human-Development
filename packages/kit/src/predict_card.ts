@@ -2,6 +2,7 @@
 // Kit then shows the author's note about what to look for. It stores nothing and grades nothing: a prediction is the student's own.
 
 import type { Environment } from "./environment";
+import { kt } from "./i18n";
 import { copy, own, registerAction } from "./provenance";
 
 export function predictCard(env: Environment, options: { prompt: string; choices: string[]; reveal: string }): HTMLElement {
@@ -12,13 +13,13 @@ export function predictCard(env: Environment, options: { prompt: string; choices
   if (prompt.trim() === "" || reveal.trim() === "") throw new RangeError("predictCard: needs a prompt and a reveal");
   const wrap = document.createElement("section");
   wrap.className = "syn-card";
-  wrap.setAttribute("aria-label", "Make a prediction");
+  wrap.setAttribute("aria-label", kt("predictTitle"));
   const p = own(document.createElement("p"), () => prompt);
   p.textContent = prompt;
   copy.push(prompt, ...choices, reveal);
   const group = document.createElement("div");
   group.setAttribute("role", "group");
-  group.setAttribute("aria-label", "Your prediction");
+  group.setAttribute("aria-label", kt("yourPrediction"));
   let chosen = false;
   const note = own(document.createElement("p"), () => (chosen ? reveal : ""));
   note.setAttribute("role", "status");
@@ -36,6 +37,8 @@ export function predictCard(env: Environment, options: { prompt: string; choices
     group.appendChild(b);
   }
   wrap.append(p, group, note);
-  env.stage.appendChild(wrap);
+  // In the header, after the steps and above the bench, so the prediction is asked before the controls are touched, at every width (W14).
+  wrap.classList.add("syn-predict");
+  env.head.appendChild(wrap);
   return wrap;
 }

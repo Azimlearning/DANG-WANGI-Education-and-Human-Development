@@ -1,0 +1,21 @@
+{
+  "plan": "dilution_lab",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Mencairkan larutan",
+    "/goal": "Lihat bagaimana penambahan air merendahkan kepekatan larutan.",
+    "/note": "Apabila anda menambah air kepada larutan, jumlah zat terlarut kekal sama, jadi M1 V1 = M2 V2. Di sini 25 cm3 larutan 2 mol/dm3 dicairkan kepada isi padu yang lebih besar.",
+    "/controls/0/label": "Isi padu akhir",
+    "/readouts/0/label": "Kepekatan",
+    "/graphs/0/title": "Kepekatan menurun apabila isi padu akhir bertambah.",
+    "/graphs/0/label": "Kepekatan",
+    "/sentences/0": "Jadikan isi padu akhir 25 cm3, kemudian 250 cm3, dan bandingkan.",
+    "/hints/0": "Menambah air tidak mengubah jumlah bahan yang terlarut.",
+    "/hints/1": "Apakah yang berlaku kepada isi padu apabila anda menambah air?",
+    "/hints/2": "Isi padu yang lebih besar yang mengandungi jumlah yang sama bermakna kepekatan yang lebih rendah.",
+    "/apparatus/0/label": "Larutan yang dicairkan"
+  }
+}

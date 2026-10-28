@@ -6,6 +6,7 @@ import { Composer } from "./Composer";
 import { DegradedCard } from "./DegradedCard";
 import { ProgressStages } from "./ProgressStages";
 import { QuickStarts, STARTERS } from "./SideRail";
+import { TopBar } from "./TopBar";
 
 afterEach(cleanup);
 
@@ -88,5 +89,21 @@ describe("quick starts", () => {
     expect(screen.getAllByRole("button")).toHaveLength(STARTERS.length);
     fireEvent.click(screen.getByText(STARTERS[1] as string));
     expect(onPrompt).toHaveBeenCalledWith(STARTERS[1]);
+  });
+});
+
+
+describe("My progress in the top bar (D-60)", () => {
+  it("opens as a card from the top bar, closes on Escape, and is not drawn until it is opened", () => {
+    render(<TopBar />);
+    expect(screen.queryByRole("heading", { name: /My progress/ })).toBeNull();
+    const button = screen.getByRole("button", { name: "My progress" });
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(button);
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("heading", { name: /My progress \(0\)/ })).toBeTruthy();
+    expect(screen.getByText(/Kept in this browser only/)).toBeTruthy();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("heading", { name: /My progress/ })).toBeNull();
   });
 });

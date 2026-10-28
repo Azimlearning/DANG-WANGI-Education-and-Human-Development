@@ -1,0 +1,36 @@
+{
+  "id": "reference-cellv",
+  "title": "The voltage of a chemical cell",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the voltage of a voltaic cell depends on the standard electrode potentials of its two half-cells.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "positive"
+  ],
+  "readouts": [
+    "Cell voltage"
+  ],
+  "models": [
+    {
+      "id": "chemistry.cell_voltage",
+      "params": {
+        "anode_potential": -0.76
+      },
+      "readouts": [
+        "Cell voltage"
+      ],
+      "series": [
+        "Cell voltage"
+      ]
+    }
+  ]
+}

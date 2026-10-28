@@ -94,7 +94,9 @@ def test_every_fingerprint_is_checked_and_each_environment_opens_in_the_exact_sa
 def test_a_tampered_environment_is_not_run_and_the_others_still_open(pack_inputs, tmp_path: Path) -> None:  # noqa: ANN001
     blocks, kit_js = pack_inputs
     good = chapter_pack("Physics Form 5", blocks, kit_js)
-    tampered = good.replace("Voltage", "Voltagf", 1)
+    # The last "Voltage" is inside an Environment's data; the first can sit in the Kit script (the transformer model has one), which would stop every Environment.
+    at = good.rindex("Voltage")
+    tampered = good[:at] + "Voltagf" + good[at + len("Voltage"):]
     assert tampered != good
 
     def script(page):  # noqa: ANN001, ANN202

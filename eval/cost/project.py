@@ -128,7 +128,7 @@ def scenario(per: dict, which: str) -> float:
     ratio = TOKEN_RATIO_LOW if low else TOKEN_RATIO_HIGH
 
     def part(name: str, tier: str, out_tokens: int, calls: float) -> float:
-        # Prompt caching is off (the ledger cannot price cache writes), so every input token is paid at the full rate in every case.
+        # Prompt caching is off by default (PROMPT_CACHING): every input token is paid at the full rate in every case.
         return calls * cost(tier, tokens(per[name]["chars_in"], ratio), out_tokens)
 
     plan_out = int(tokens(per["plan"]["plan_chars"], TOKEN_RATIO_LOW) * OUT_PLAN_SCALE[0 if low else 1])
@@ -188,7 +188,7 @@ def build() -> str:
 | High | **{mean_high:.4f}** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
 | Pessimistic | **{mean_pess:.4f}** | the high case with every plan retried once (retry rate {int(P_PLAN_RETRY_PESSIMISTIC * 100)} percent) |
 | Hard bound | **{worst:.4f}** | what the ledger itself would reserve for the worst allowed Compose path of {MAX_LLM_CALLS} calls (route, explain, plan, wording check, plan retry, wording check, fill, fill retry), every reply running to its max_tokens |
-| Free lane, extra when it fires | **{free_low:.4f}** to **{free_high:.4f}** | the Free page and its reading ({OUT_FREE[0]} to {OUT_FREE[1]} output tokens for the page), on top of the failed Compose attempts. Off by default; unmeasured |
+| Free lane, extra when it fires | **{free_low:.4f}** to **{free_high:.4f}** | the Free page and its reading ({OUT_FREE[0]} to {OUT_FREE[1]} output tokens for the page), on top of the failed Compose attempts. On by default since D-67 (live mode only); unmeasured |
 | Hard bound with the Free lane on | **{worst_free:.4f}** | route, explain, two plans each read by the judge, then one Free page and its reading ({MAX_LLM_CALLS} calls), every reply running to its max_tokens |
 
 Mean over the {n} golden questions (each hard bound is the largest over them; the wording check is counted because live mode turns it on), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
@@ -205,12 +205,12 @@ Mean over the {n} golden questions (each hard bound is the largest over them; th
 ## What must exist before the first live call (from the cost audit)
 
 - Done: live mode refuses to build without a key, a positive cap and an absolute ledger path; a provider failure that retrying cannot fix (balance, key, bad request) stops the run and says it is not the cap; timed-out and cancelled calls are booked at their input cost, not zero; `LLMService.ensure_budget` refuses a run whose worst case does not fit; tests no longer inherit a shell's `SYNAPSE_LLM_MODE`.
-- Done in the provider class (D-34, re-checked against the provider's pages on 2026-10-18): plain httpx with no retries and a 90 s timeout; usage mapped including cache tokens (caching is off and no saving is assumed); explicit prices for the three tier models; a reply that was billed and then rejected (cut off at max_tokens, empty, refused) is booked at its real tokens, so the cap cannot be under-counted.
+- Done in the provider class (D-34, re-checked against the provider's pages on 2026-10-18): plain httpx with no retries and a 90 s timeout; usage mapped including cache tokens, which the ledger now prices (D-55; caching is off by default and no saving is assumed); explicit prices for the three tier models; a reply that was billed and then rejected (cut off at max_tokens, empty, refused) is booked at its real tokens, so the cap cannot be under-counted.
 - To do in the live run script (`eval/golden/run.py --live`, not yet built): print the ledger path and the month-to-date total, call `ensure_budget`, take the ledger from settings (never a temporary folder), print this projection, refuse without `LLM_MONTHLY_CAP_USD`, and require a typed confirmation.
 
 ## Size of the real prompts (characters, rounded)
 
-- Plan request (virtual experiment): about {len(sample.system or "") + len(sample.prompt)} characters, of which {len(sample.system or "")} are the stable prefix (sent in full every time: caching is off).
+- Plan request (virtual experiment): about {len(sample.system or "") + len(sample.prompt)} characters, of which {len(sample.system or "")} are the stable prefix (sent in full every time: caching is off, PROMPT_CACHING).
 - The router-fallback request is built by the real builder, with the full topic list.
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
@@ -220,7 +220,7 @@ Mean over the {n} golden questions (each hard bound is the largest over them; th
 3. Output sizes: plan = the golden plan's JSON length times {OUT_PLAN_SCALE[0]} (low) or {OUT_PLAN_SCALE[1]} (high); explain {OUT_EXPLAIN[0]} to {OUT_EXPLAIN[1]} tokens; route fallback {OUT_ROUTE[0]} to {OUT_ROUTE[1]}; fill {OUT_FILL[0]} to {OUT_FILL[1]}. The hard bound assumes every reply runs to its max_tokens.
 4. The router fallback is called for {int(P_ROUTE_FALLBACK * 100)} percent of questions (the pattern and complexity heads clear their gates for about a third of questions, and a local `none` topic always goes to the fallback).
 5. Plan retry rate {int(P_PLAN_RETRY[0] * 100)} to {int(P_PLAN_RETRY[1] * 100)} percent in the high case and {int(P_PLAN_RETRY_PESSIMISTIC * 100)} percent in the pessimistic one (Arcana v2 was accepted on 2 of 8 first attempts). Nothing here can measure it: fakes always return a valid plan.
-6. Prompt caching is off, so every input token is priced at the full rate in every case. Turning it on needs the ledger to price cache writes and reads, and a measured saving first.
+6. Prompt caching is off (PROMPT_CACHING), so every input token is priced at the full rate in every case. The ledger can now price cache reads and writes (D-55), but the saving is unmeasured, so none is assumed. With it on, the hard bound would reserve the input at 1.25 times the base rate (the first call writes the cache), so this projection's bound is for the setting as shipped.
 7. The repair prompt beyond one retry is not built. The wording check is included in every case (live mode turns it on) at the light tier. The Free lane is NOT in Low, High or Pessimistic: it fires only when the Kit cannot take a question, how often is unknown, and its page length ({OUT_FREE[0]} to {OUT_FREE[1]} tokens) is a guess. Its cost is shown on its own rows.
 8. Verification costs no model call.
 9. The Free sample page used for input sizes is a short hand-written fixture; a model's page is longer, so the Free input estimate (the reading of the page) is low. The output bound is exact: the request's max_tokens.

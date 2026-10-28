@@ -1,0 +1,24 @@
+{
+  "plan": "mole_calculator",
+  "lang": "ms",
+  "status": "draft",
+  "reviewer": null,
+  "reviewed_on": null,
+  "strings": {
+    "/title": "Berapa molkah dalam satu sampel?",
+    "/goal": "Bandingkan kuantiti dalam mol bagi jisim yang sama pada tiga bahan.",
+    "/note": "Kuantiti bahan dalam mol ialah jisim dibahagi dengan jisim molar: n = jisim / jisim molar. Air mempunyai jisim molar 18 g/mol, karbon dioksida 44 g/mol dan natrium klorida 58.5 g/mol.",
+    "/controls/0/label": "Jisim",
+    "/readouts/0/label": "Air, H2O",
+    "/readouts/1/label": "Karbon dioksida, CO2",
+    "/readouts/2/label": "Natrium klorida, NaCl",
+    "/sentences/0": "Jisim yang sama memberikan kuantiti yang berbeza bagi bahan yang berbeza. Cuba 20 g dan kemudian 100 g.",
+    "/hints/0": "Bilangan mol bergantung pada jisim dan jisim molar.",
+    "/hints/1": "Bahan yang manakah mempunyai jisim molar yang paling besar?",
+    "/hints/2": "Bahagikan jisim dengan jisim molar bagi setiap bahan.",
+    "/worked_solution/0": "Tulis formulanya: kuantiti = jisim / jisim molar.",
+    "/worked_solution/1": "Cari jisim molar air: 18 g/mol.",
+    "/worked_solution/2": "Bahagikan jisim air dengan 18 untuk mendapatkan kuantiti dalam mol.",
+    "/apparatus/0/label": "Sampel"
+  }
+}

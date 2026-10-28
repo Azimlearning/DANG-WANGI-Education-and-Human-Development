@@ -9,6 +9,10 @@ export interface Quantity {
   min: number;
   /** When true the value must be strictly above `min`. */
   exclusive?: boolean;
+  /** Largest allowed value, for a quantity with a physical ceiling (an angle of incidence below 90 degrees). Most quantities have none. */
+  max?: number;
+  /** When true the value must be strictly below `max`. */
+  maxExclusive?: boolean;
 }
 
 export interface ReferenceCase {
@@ -37,7 +41,7 @@ export interface ScienceSpec {
   output: { unit: string };
   /** The pure function of all inputs and parameters. */
   fn: (args: Record<string, number>) => number;
-  /** Where the law comes from. `UNVERIFIED (corpus not loaded until P2)` until a quote is verified. */
+  /** Where the law comes from. `UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)` until a quote is verified. */
   citation: string;
   reference: ReferenceCase[];
   properties: Property[];
@@ -52,6 +56,7 @@ export function domainErrors(spec: ScienceSpec, args: Record<string, number>): s
     const v = args[name];
     if (typeof v !== "number" || Number.isNaN(v) || !Number.isFinite(v)) out.push(`${name} must be a finite number`);
     else if (q.exclusive ? !(v > q.min) : !(v >= q.min)) out.push(`${name} must be ${q.exclusive ? "above" : "at least"} ${q.min} ${q.unit}`);
+    else if (q.max !== undefined && (q.maxExclusive ? !(v < q.max) : !(v <= q.max))) out.push(`${name} must be ${q.maxExclusive ? "below" : "at most"} ${q.max} ${q.unit}`);
   }
   return out;
 }
@@ -147,6 +152,14 @@ export function registrationFailures(spec: ScienceSpec, impl: Impl): string[] {
     const edge = q.exclusive ? q.min + 1e-6 : q.min;
     const accepted = call({ ...base, [name]: edge });
     if (accepted instanceof Error) failures.push(`domain: ${name}=${edge} should be accepted but threw ${accepted.message}`);
+    // A quantity with a ceiling is refused just beyond it and accepted at (or just inside) it, for the same two reasons.
+    if (q.max !== undefined) {
+      const beyond = call({ ...base, [name]: q.maxExclusive ? q.max : q.max + 1 });
+      if (!(beyond instanceof Error)) failures.push(`domain: ${name}=${q.maxExclusive ? q.max : q.max + 1} was not refused (the ceiling is ${q.max})`);
+      const top = q.maxExclusive ? q.max - 1e-6 : q.max;
+      const ok = call({ ...base, [name]: top });
+      if (ok instanceof Error) failures.push(`domain: ${name}=${top} should be accepted but threw ${ok.message}`);
+    }
   }
   return failures;
 }

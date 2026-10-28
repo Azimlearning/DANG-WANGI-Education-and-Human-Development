@@ -21,6 +21,19 @@ import { spec as centripetal } from "./centripetal_acceleration";
 import { spec as hookes } from "./hookes";
 import { spec as ohm } from "./ohm";
 import { spec as pressure } from "./pressure_depth";
+import { spec as refraction } from "./refraction_angle";
+import { spec as critical } from "./critical_angle";
+import { spec as specificHeat } from "./specific_heat";
+import { spec as transformer } from "./transformer";
+import { spec as halfLife } from "./half_life";
+import { spec as relativeAtomicMassSpec } from "./relative_atomic_mass";
+import { spec as foodEnergy } from "./food_energy";
+import { spec as boyle } from "./boyle_law";
+import { spec as parallel } from "./parallel_resistance";
+import { spec as buoyant } from "./buoyant_force";
+import { spec as cellV } from "./cell_voltage";
+import { spec as popDensity } from "./population_density";
+import { spec as eEnergy } from "./electrical_energy";
 import { domainErrors, guarded, registrationFailures, type Impl, type ScienceSpec } from "./spec";
 
 // A planted physics bug: a function that is wrong in exactly one way. Its domain guard is the real one unless a test skips an argument's
@@ -383,6 +396,225 @@ const BUGS: { spec: ScienceSpec; bugs: Record<string, Impl> }[] = [
       "rounds to a whole dm3": planted(gasVol, (a) => Math.round(n(a, "moles") * n(a, "molar_volume"))),
       "squares the moles": planted(gasVol, (a) => n(a, "moles") ** 2 * n(a, "molar_volume")),
       "no domain check on molar volume": planted(gasVol, (a) => n(a, "moles") * n(a, "molar_volume"), ["molar_volume"]),
+    },
+  },
+  {
+    spec: refraction,
+    bugs: {
+      "degrees fed to the sine as radians": planted(refraction, (a) => (Math.asin(Math.sin(n(a, "incidence_angle")) / n(a, "refractive_index")) * 180) / Math.PI),
+      "reports radians, not degrees": planted(refraction, (a) => Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index"))),
+      "multiplies by n instead of dividing": planted(refraction, (a) => (Math.asin(Math.min(1, Math.sin((n(a, "incidence_angle") * Math.PI) / 180) * n(a, "refractive_index"))) * 180) / Math.PI),
+      "tangent instead of sine": planted(refraction, (a) => (Math.atan(Math.tan((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")) * 180) / Math.PI),
+      "returns sin r, not the angle": planted(refraction, (a) => Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")),
+      "the ray does not bend": planted(refraction, (a) => n(a, "incidence_angle")),
+      "divides by n squared": planted(refraction, (a) => (Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index") ** 2) * 180) / Math.PI),
+      "caps at 40 degrees": planted(refraction, (a) => Math.min((Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")) * 180) / Math.PI, 40)),
+      "NaN at 45 degrees": planted(refraction, (a) => (n(a, "incidence_angle") === 45 ? Number.NaN : (Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")) * 180) / Math.PI)),
+      "rounds to whole degrees": planted(refraction, (a) => Math.round((Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")) * 180) / Math.PI)),
+      "no domain check on the angle of incidence": planted(refraction, (a) => (Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")) * 180) / Math.PI, ["incidence_angle"]),
+      "no domain check on the refractive index": planted(refraction, (a) => (Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")) * 180) / Math.PI, ["refractive_index"]),
+      "accepts 90 degrees and over (no ceiling)": (a) => {
+        if (n(a, "refractive_index") < 1 || !(n(a, "incidence_angle") >= 0) || !Number.isFinite(n(a, "incidence_angle")) || !Number.isFinite(n(a, "refractive_index"))) throw new RangeError("outside the domain");
+        return (Math.asin(Math.sin((n(a, "incidence_angle") * Math.PI) / 180) / n(a, "refractive_index")) * 180) / Math.PI;
+      },
+    },
+  },
+  {
+    spec: critical,
+    bugs: {
+      "sin c = n instead of 1 / n": planted(critical, (a) => (Math.asin(Math.min(1, n(a, "refractive_index"))) * 180) / Math.PI),
+      "cosine instead of sine": planted(critical, (a) => (Math.acos(1 / n(a, "refractive_index")) * 180) / Math.PI),
+      "reports radians, not degrees": planted(critical, (a) => Math.asin(1 / n(a, "refractive_index"))),
+      "tangent instead of sine": planted(critical, (a) => (Math.atan(1 / n(a, "refractive_index")) * 180) / Math.PI),
+      "the complement (90 minus c)": planted(critical, (a) => 90 - (Math.asin(1 / n(a, "refractive_index")) * 180) / Math.PI),
+      "caps at 80 degrees": planted(critical, (a) => Math.min((Math.asin(1 / n(a, "refractive_index")) * 180) / Math.PI, 80)),
+      "NaN at n = 1.5": planted(critical, (a) => (n(a, "refractive_index") === 1.5 ? Number.NaN : (Math.asin(1 / n(a, "refractive_index")) * 180) / Math.PI)),
+      "rounds to whole degrees": planted(critical, (a) => Math.round((Math.asin(1 / n(a, "refractive_index")) * 180) / Math.PI)),
+      "sign flips above n = 2": planted(critical, (a) => (n(a, "refractive_index") > 2 ? -1 : 1) * ((Math.asin(1 / n(a, "refractive_index")) * 180) / Math.PI)),
+      "no domain check on the refractive index": planted(critical, (a) => (Math.asin(1 / n(a, "refractive_index")) * 180) / Math.PI, ["refractive_index"]),
+    },
+  },
+  {
+    spec: specificHeat,
+    bugs: {
+      "adds instead of multiplying": planted(specificHeat, (a) => n(a, "mass") + n(a, "specific_heat") + n(a, "temperature_change")),
+      "divides by the mass": planted(specificHeat, (a) => (n(a, "specific_heat") * n(a, "temperature_change")) / n(a, "mass")),
+      "forgets the mass": planted(specificHeat, (a) => n(a, "specific_heat") * n(a, "temperature_change")),
+      "forgets the temperature change": planted(specificHeat, (a) => n(a, "mass") * n(a, "specific_heat")),
+      "per gram (divided by 1000)": planted(specificHeat, (a) => (n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change")) / 1000),
+      "squares the temperature change": planted(specificHeat, (a) => n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change") ** 2),
+      "caps at 100 kJ": planted(specificHeat, (a) => Math.min(n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change"), 1e5)),
+      "NaN at 50 degrees": planted(specificHeat, (a) => (n(a, "temperature_change") === 50 ? Number.NaN : n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change"))),
+      "sign flips above 40 degrees": planted(specificHeat, (a) => (n(a, "temperature_change") > 40 ? -1 : 1) * n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change")),
+      "rounds to the nearest 1000 J": planted(specificHeat, (a) => Math.round((n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change")) / 1000) * 1000),
+      "no domain check on the mass": planted(specificHeat, (a) => n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change"), ["mass"]),
+      "no domain check on the specific heat capacity": planted(specificHeat, (a) => n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change"), ["specific_heat"]),
+      "no domain check on the temperature change": planted(specificHeat, (a) => n(a, "mass") * n(a, "specific_heat") * n(a, "temperature_change"), ["temperature_change"]),
+    },
+  },
+  {
+    spec: transformer,
+    bugs: {
+      "inverts the turns ratio": planted(transformer, (a) => (n(a, "primary_voltage") * n(a, "primary_turns")) / n(a, "secondary_turns")),
+      "adds the turns": planted(transformer, (a) => n(a, "primary_voltage") + n(a, "secondary_turns") - n(a, "primary_turns")),
+      "forgets the primary voltage": planted(transformer, (a) => n(a, "secondary_turns") / n(a, "primary_turns")),
+      "multiplies by both numbers of turns": planted(transformer, (a) => n(a, "primary_voltage") * n(a, "secondary_turns") * n(a, "primary_turns")),
+      "ratio of squares": planted(transformer, (a) => (n(a, "primary_voltage") * n(a, "secondary_turns") ** 2) / n(a, "primary_turns") ** 2),
+      "caps at 100 V": planted(transformer, (a) => Math.min((n(a, "primary_voltage") * n(a, "secondary_turns")) / n(a, "primary_turns"), 100)),
+      "NaN at 60 secondary turns": planted(transformer, (a) => (n(a, "secondary_turns") === 60 ? Number.NaN : (n(a, "primary_voltage") * n(a, "secondary_turns")) / n(a, "primary_turns"))),
+      "sign flips above 500 turns": planted(transformer, (a) => (n(a, "secondary_turns") > 500 ? -1 : 1) * ((n(a, "primary_voltage") * n(a, "secondary_turns")) / n(a, "primary_turns"))),
+      "rounds to whole volts": planted(transformer, (a) => Math.round((n(a, "primary_voltage") * n(a, "secondary_turns")) / n(a, "primary_turns"))),
+      "no domain check on the primary turns": planted(transformer, (a) => (n(a, "primary_voltage") * n(a, "secondary_turns")) / n(a, "primary_turns"), ["primary_turns"]),
+      "no domain check on the secondary turns": planted(transformer, (a) => (n(a, "primary_voltage") * n(a, "secondary_turns")) / n(a, "primary_turns"), ["secondary_turns"]),
+      "no domain check on the primary voltage": planted(transformer, (a) => (n(a, "primary_voltage") * n(a, "secondary_turns")) / n(a, "primary_turns"), ["primary_voltage"]),
+    },
+  },
+  {
+    spec: halfLife,
+    bugs: {
+      "loses 10% a half-life": planted(halfLife, (a) => n(a, "initial") * 0.9 ** (n(a, "time") / n(a, "half_life"))),
+      "straight-line decay": planted(halfLife, (a) => Math.max(0, n(a, "initial") * (1 - n(a, "time") / (2 * n(a, "half_life"))))),
+      "halves only once": planted(halfLife, (a) => (n(a, "time") === 0 ? n(a, "initial") : n(a, "initial") / 2)),
+      "time used as the number of half-lives": planted(halfLife, (a) => n(a, "initial") * 0.5 ** n(a, "time")),
+      "e to the minus t over T": planted(halfLife, (a) => n(a, "initial") * Math.exp(-n(a, "time") / n(a, "half_life"))),
+      "doubles instead of halving": planted(halfLife, (a) => n(a, "initial") * 2 ** (n(a, "time") / n(a, "half_life"))),
+      "caps at 300": planted(halfLife, (a) => Math.min(n(a, "initial") * 0.5 ** (n(a, "time") / n(a, "half_life")), 300)),
+      "NaN at 20 minutes": planted(halfLife, (a) => (n(a, "time") === 20 ? Number.NaN : n(a, "initial") * 0.5 ** (n(a, "time") / n(a, "half_life")))),
+      "sign flips after 30 minutes": planted(halfLife, (a) => (n(a, "time") > 30 ? -1 : 1) * n(a, "initial") * 0.5 ** (n(a, "time") / n(a, "half_life"))),
+      "rounds down to whole counts": planted(halfLife, (a) => Math.floor(n(a, "initial") * 0.5 ** (n(a, "time") / n(a, "half_life")))),
+      "no domain check on the time": planted(halfLife, (a) => n(a, "initial") * 0.5 ** (n(a, "time") / n(a, "half_life")), ["time"]),
+      "no domain check on the half-life": planted(halfLife, (a) => n(a, "initial") * 0.5 ** (n(a, "time") / n(a, "half_life")), ["half_life"]),
+      "no domain check on the initial amount": planted(halfLife, (a) => n(a, "initial") * 0.5 ** (n(a, "time") / n(a, "half_life")), ["initial"]),
+    },
+  },
+  {
+    spec: relativeAtomicMassSpec,
+    bugs: {
+      "weights the wrong isotope": planted(relativeAtomicMassSpec, (a) => (n(a, "abundance_1") * n(a, "mass_2") + (100 - n(a, "abundance_1")) * n(a, "mass_1")) / 100),
+      "plain average of the two masses": planted(relativeAtomicMassSpec, (a) => (n(a, "mass_1") + n(a, "mass_2")) / 2),
+      "forgets to divide by 100": planted(relativeAtomicMassSpec, (a) => n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")),
+      "counts only the first isotope": planted(relativeAtomicMassSpec, (a) => (n(a, "abundance_1") * n(a, "mass_1")) / 100),
+      "caps at 40": planted(relativeAtomicMassSpec, (a) => Math.min((n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")) / 100, 40)),
+      "NaN at 50 percent": planted(relativeAtomicMassSpec, (a) => (n(a, "abundance_1") === 50 ? Number.NaN : (n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")) / 100)),
+      "sign flips above 70 percent": planted(relativeAtomicMassSpec, (a) => (n(a, "abundance_1") > 70 ? -1 : 1) * ((n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")) / 100)),
+      "rounds to a whole number": planted(relativeAtomicMassSpec, (a) => Math.round((n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")) / 100)),
+      "no domain check on the abundance (the ceiling and the floor)": planted(relativeAtomicMassSpec, (a) => (n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")) / 100, ["abundance_1"]),
+      "no domain check on the first isotope mass": planted(relativeAtomicMassSpec, (a) => (n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")) / 100, ["mass_1"]),
+      "no domain check on the second isotope mass": planted(relativeAtomicMassSpec, (a) => (n(a, "abundance_1") * n(a, "mass_1") + (100 - n(a, "abundance_1")) * n(a, "mass_2")) / 100, ["mass_2"]),
+    },
+  },
+  {
+    spec: foodEnergy,
+    bugs: {
+      "forgets to convert to kilojoules": planted(foodEnergy, (a) => (n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / n(a, "food_mass")),
+      "uses 4.18 for water": planted(foodEnergy, (a) => (n(a, "water_mass") * 4.18 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000)),
+      "multiplies by the food mass": planted(foodEnergy, (a) => (n(a, "water_mass") * 4.2 * n(a, "temperature_rise") * n(a, "food_mass")) / 1000),
+      "divides by the water mass": planted(foodEnergy, (a) => (4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * n(a, "water_mass") * 1000)),
+      "caps at 8 kJ/g": planted(foodEnergy, (a) => Math.min((n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000), 8)),
+      "NaN at a 40 degree rise": planted(foodEnergy, (a) => (n(a, "temperature_rise") === 40 ? Number.NaN : (n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000))),
+      "sign flips above a 40 degree rise": planted(foodEnergy, (a) => (n(a, "temperature_rise") > 40 ? -1 : 1) * ((n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000))),
+      "rounds to one decimal": planted(foodEnergy, (a) => Math.round(((n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000)) * 10) / 10),
+      "no domain check on the temperature rise": planted(foodEnergy, (a) => (n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000), ["temperature_rise"]),
+      "no domain check on the food mass": planted(foodEnergy, (a) => (n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000), ["food_mass"]),
+      "no domain check on the water mass": planted(foodEnergy, (a) => (n(a, "water_mass") * 4.2 * n(a, "temperature_rise")) / (n(a, "food_mass") * 1000), ["water_mass"]),
+    },
+  },
+  {
+    spec: boyle,
+    bugs: {
+      "multiplies by the final volume": planted(boyle, (a) => n(a, "initial_pressure") * n(a, "initial_volume") * n(a, "final_volume")),
+      "pressure proportional to volume": planted(boyle, (a) => (n(a, "initial_pressure") * n(a, "final_volume")) / n(a, "initial_volume")),
+      "adds the volumes": planted(boyle, (a) => n(a, "initial_pressure") + n(a, "initial_volume") - n(a, "final_volume")),
+      "ignores the volume change": planted(boyle, (a) => n(a, "initial_pressure")),
+      "squares the volume ratio": planted(boyle, (a) => n(a, "initial_pressure") * (n(a, "initial_volume") / n(a, "final_volume")) ** 2),
+      "caps at 150 kPa": planted(boyle, (a) => Math.min((n(a, "initial_pressure") * n(a, "initial_volume")) / n(a, "final_volume"), 150)),
+      "NaN at 48 cm3": planted(boyle, (a) => (n(a, "final_volume") === 48 ? Number.NaN : (n(a, "initial_pressure") * n(a, "initial_volume")) / n(a, "final_volume"))),
+      "sign flips above 60 cm3": planted(boyle, (a) => (n(a, "final_volume") > 60 ? -1 : 1) * ((n(a, "initial_pressure") * n(a, "initial_volume")) / n(a, "final_volume"))),
+      "rounds to the nearest 10 kPa": planted(boyle, (a) => Math.round(((n(a, "initial_pressure") * n(a, "initial_volume")) / n(a, "final_volume")) / 10) * 10),
+      "no domain check on the final volume": planted(boyle, (a) => (n(a, "initial_pressure") * n(a, "initial_volume")) / n(a, "final_volume"), ["final_volume"]),
+      "no domain check on the initial pressure": planted(boyle, (a) => (n(a, "initial_pressure") * n(a, "initial_volume")) / n(a, "final_volume"), ["initial_pressure"]),
+      "no domain check on the initial volume": planted(boyle, (a) => (n(a, "initial_pressure") * n(a, "initial_volume")) / n(a, "final_volume"), ["initial_volume"]),
+    },
+  },
+  {
+    spec: parallel,
+    bugs: {
+      "adds the resistances (series)": planted(parallel, (a) => n(a, "resistance_1") + n(a, "resistance_2")),
+      "plain average": planted(parallel, (a) => (n(a, "resistance_1") + n(a, "resistance_2")) / 2),
+      "multiplies without dividing": planted(parallel, (a) => n(a, "resistance_1") * n(a, "resistance_2")),
+      "forgets to invert the sum": planted(parallel, (a) => 1 / n(a, "resistance_1") + 1 / n(a, "resistance_2")),
+      "the smaller resistance": planted(parallel, (a) => Math.min(n(a, "resistance_1"), n(a, "resistance_2"))),
+      "caps at 2.5 ohm": planted(parallel, (a) => Math.min((n(a, "resistance_1") * n(a, "resistance_2")) / (n(a, "resistance_1") + n(a, "resistance_2")), 2.5)),
+      "NaN at 6 ohm": planted(parallel, (a) => (n(a, "resistance_1") === 6 ? Number.NaN : (n(a, "resistance_1") * n(a, "resistance_2")) / (n(a, "resistance_1") + n(a, "resistance_2")))),
+      "sign flips above 10 ohm": planted(parallel, (a) => (n(a, "resistance_1") > 10 ? -1 : 1) * ((n(a, "resistance_1") * n(a, "resistance_2")) / (n(a, "resistance_1") + n(a, "resistance_2")))),
+      "rounds to a whole ohm": planted(parallel, (a) => Math.round((n(a, "resistance_1") * n(a, "resistance_2")) / (n(a, "resistance_1") + n(a, "resistance_2")))),
+      "no domain check on the first resistance": planted(parallel, (a) => (n(a, "resistance_1") * n(a, "resistance_2")) / (n(a, "resistance_1") + n(a, "resistance_2")), ["resistance_1"]),
+      "no domain check on the second resistance": planted(parallel, (a) => (n(a, "resistance_1") * n(a, "resistance_2")) / (n(a, "resistance_1") + n(a, "resistance_2")), ["resistance_2"]),
+    },
+  },
+  {
+    spec: buoyant,
+    bugs: {
+      "divides by the density": planted(buoyant, (a) => (n(a, "volume") * n(a, "g")) / n(a, "density")),
+      "forgets g": planted(buoyant, (a) => n(a, "volume") * n(a, "density")),
+      "forgets the density": planted(buoyant, (a) => n(a, "volume") * n(a, "g")),
+      "adds instead of multiplying": planted(buoyant, (a) => n(a, "volume") + n(a, "density") + n(a, "g")),
+      "squares the volume": planted(buoyant, (a) => n(a, "volume") ** 2 * n(a, "density") * n(a, "g")),
+      "caps at 500 N": planted(buoyant, (a) => Math.min(n(a, "volume") * n(a, "density") * n(a, "g"), 500)),
+      "NaN at 0.002 m3": planted(buoyant, (a) => (n(a, "volume") === 0.002 ? Number.NaN : n(a, "volume") * n(a, "density") * n(a, "g"))),
+      "sign flips above 0.004 m3": planted(buoyant, (a) => (n(a, "volume") > 0.004 ? -1 : 1) * (n(a, "volume") * n(a, "density") * n(a, "g"))),
+      "rounds to a whole newton": planted(buoyant, (a) => Math.round(n(a, "volume") * n(a, "density") * n(a, "g"))),
+      "no domain check on the volume": planted(buoyant, (a) => n(a, "volume") * n(a, "density") * n(a, "g"), ["volume"]),
+      "no domain check on the density": planted(buoyant, (a) => n(a, "volume") * n(a, "density") * n(a, "g"), ["density"]),
+      "no domain check on the g": planted(buoyant, (a) => n(a, "volume") * n(a, "density") * n(a, "g"), ["g"]),
+    },
+  },
+  {
+    spec: cellV,
+    bugs: {
+      "adds the two potentials": planted(cellV, (a) => n(a, "cathode_potential") + n(a, "anode_potential")),
+      "anode minus cathode": planted(cellV, (a) => n(a, "anode_potential") - n(a, "cathode_potential")),
+      "forgets the anode": planted(cellV, (a) => n(a, "cathode_potential")),
+      "absolute difference": planted(cellV, (a) => Math.abs(n(a, "cathode_potential") - n(a, "anode_potential"))),
+      "caps at 1 V": planted(cellV, (a) => Math.min(n(a, "cathode_potential") - n(a, "anode_potential"), 1)),
+      "NaN at 0.34 V": planted(cellV, (a) => (n(a, "cathode_potential") === 0.34 ? Number.NaN : n(a, "cathode_potential") - n(a, "anode_potential"))),
+      "sign flips above 0.5 V": planted(cellV, (a) => (n(a, "cathode_potential") > 0.5 ? -1 : 1) * (n(a, "cathode_potential") - n(a, "anode_potential"))),
+      "rounds to one decimal": planted(cellV, (a) => Math.round((n(a, "cathode_potential") - n(a, "anode_potential")) * 10) / 10),
+      "no domain check on the cathode potential": planted(cellV, (a) => n(a, "cathode_potential") - n(a, "anode_potential"), ["cathode_potential"]),
+      "no domain check on the anode potential": planted(cellV, (a) => n(a, "cathode_potential") - n(a, "anode_potential"), ["anode_potential"]),
+    },
+  },
+  {
+    spec: popDensity,
+    bugs: {
+      "multiplies by the quadrats": planted(popDensity, (a) => (n(a, "total_count") * n(a, "quadrats") * n(a, "quadrat_area"))),
+      "forgets the quadrat area": planted(popDensity, (a) => n(a, "total_count") / n(a, "quadrats")),
+      "forgets the number of quadrats": planted(popDensity, (a) => n(a, "total_count") / n(a, "quadrat_area")),
+      "divides the other way up": planted(popDensity, (a) => (n(a, "quadrats") * n(a, "quadrat_area")) / Math.max(n(a, "total_count"), 1)),
+      "adds instead of multiplying": planted(popDensity, (a) => n(a, "total_count") / (n(a, "quadrats") + n(a, "quadrat_area"))),
+      "caps at 10": planted(popDensity, (a) => Math.min(n(a, "total_count") / (n(a, "quadrats") * n(a, "quadrat_area")), 10)),
+      "NaN at 45 individuals": planted(popDensity, (a) => (n(a, "total_count") === 45 ? Number.NaN : n(a, "total_count") / (n(a, "quadrats") * n(a, "quadrat_area")))),
+      "sign flips above 100 individuals": planted(popDensity, (a) => (n(a, "total_count") > 100 ? -1 : 1) * (n(a, "total_count") / (n(a, "quadrats") * n(a, "quadrat_area")))),
+      "rounds to a whole number": planted(popDensity, (a) => Math.round(n(a, "total_count") / (n(a, "quadrats") * n(a, "quadrat_area")))),
+      "no domain check on the total count": planted(popDensity, (a) => n(a, "total_count") / (n(a, "quadrats") * n(a, "quadrat_area")), ["total_count"]),
+      "no domain check on the number of quadrats": planted(popDensity, (a) => n(a, "total_count") / (n(a, "quadrats") * n(a, "quadrat_area")), ["quadrats"]),
+      "no domain check on the quadrat area": planted(popDensity, (a) => n(a, "total_count") / (n(a, "quadrats") * n(a, "quadrat_area")), ["quadrat_area"]),
+    },
+  },
+  {
+    spec: eEnergy,
+    bugs: {
+      "forgets the time": planted(eEnergy, (a) => n(a, "voltage") * n(a, "current")),
+      "forgets the current": planted(eEnergy, (a) => n(a, "voltage") * n(a, "time")),
+      "adds instead of multiplying": planted(eEnergy, (a) => n(a, "voltage") + n(a, "current") + n(a, "time")),
+      "divides by the time": planted(eEnergy, (a) => (n(a, "voltage") * n(a, "current")) / Math.max(n(a, "time"), 1)),
+      "caps at 1000 J": planted(eEnergy, (a) => Math.min(n(a, "voltage") * n(a, "current") * n(a, "time"), 1000)),
+      "NaN at 60 s": planted(eEnergy, (a) => (n(a, "time") === 60 ? Number.NaN : n(a, "voltage") * n(a, "current") * n(a, "time"))),
+      "sign flips above 120 s": planted(eEnergy, (a) => (n(a, "time") > 120 ? -1 : 1) * (n(a, "voltage") * n(a, "current") * n(a, "time"))),
+      "rounds to the nearest 100 J": planted(eEnergy, (a) => Math.round((n(a, "voltage") * n(a, "current") * n(a, "time")) / 100) * 100),
+      "no domain check on the current": planted(eEnergy, (a) => n(a, "voltage") * n(a, "current") * n(a, "time"), ["current"]),
+      "no domain check on the time": planted(eEnergy, (a) => n(a, "voltage") * n(a, "current") * n(a, "time"), ["time"]),
+      "no domain check on the voltage": planted(eEnergy, (a) => n(a, "voltage") * n(a, "current") * n(a, "time"), ["voltage"]),
     },
   },
 ];

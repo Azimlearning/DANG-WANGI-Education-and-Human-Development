@@ -73,7 +73,14 @@ export function parseEnvironmentBlock(v: unknown): EnvironmentBlock | null {
   for (const c of v.citations) {
     if (!isRec(c) || !isStr(c.source) || typeof c.verified !== "boolean") return null;
     if (!(c.page === null || Number.isInteger(c.page)) || !(c.quote === null || isStr(c.quote))) return null;
-    citations.push({ source: c.source, page: c.page as number | null, quote: c.quote as string | null, verified: c.verified });
+    if (!(c.printedPage === undefined || c.printedPage === null || (Number.isInteger(c.printedPage) && (c.printedPage as number) >= 1))) return null;
+    citations.push({
+      source: c.source,
+      page: c.page as number | null,
+      quote: c.quote as string | null,
+      verified: c.verified,
+      printedPage: (c.printedPage as number | null | undefined) ?? null,
+    });
   }
   return {
     type: "Environment",

@@ -1,0 +1,37 @@
+{
+  "id": "reference-buoyancy",
+  "title": "Archimedes' principle: the push of a fluid",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the buoyant force on an object depends on the volume of fluid it displaces.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "displaced"
+  ],
+  "readouts": [
+    "Buoyant force"
+  ],
+  "models": [
+    {
+      "id": "physics.buoyant_force",
+      "params": {
+        "density": 1000.0,
+        "g": 9.81
+      },
+      "readouts": [
+        "Buoyant force"
+      ],
+      "series": [
+        "Buoyant force"
+      ]
+    }
+  ]
+}

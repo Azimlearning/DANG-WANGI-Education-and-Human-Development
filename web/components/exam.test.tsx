@@ -93,3 +93,23 @@ describe("the exam item on the wire and in a turn", () => {
     expect(turns[1]?.exam).toBeNull();
   });
 });
+
+describe("the fermentation item (the same vectors as api/models/test_exam.py)", () => {
+  const f: ExamEvent = {
+    type: "exam",
+    id: "yeast-fermentation-limewater",
+    stem: "Yeast is mixed with glucose solution in tube A. Tube B has glucose solution only and is the control. State one observation in limewater A after 60 minutes and explain your answer.",
+    marks: 2,
+    points: [
+      { text: "Limewater A turns milky or cloudy.", wordings: [["milky"], ["cloudy"], ["turn", "chalky"]] },
+      { text: "The yeast produces carbon dioxide during fermentation.", wordings: [["carbon", "dioxid"], ["co2"]] },
+    ],
+    sample: "Limewater A turns milky. The yeast ferments the glucose and produces carbon dioxide, which turns the limewater milky.",
+  };
+  it("marks the observation and the gas separately", () => {
+    expect(mark(f, f.sample)).toEqual({ score: 2, got: [true, true] });
+    expect(mark(f, "Limewater A turns cloudy.")).toEqual({ score: 1, got: [true, false] });
+    expect(mark(f, "The yeast produces CO2 as it ferments.")).toEqual({ score: 1, got: [false, true] });
+    expect(mark(f, "Limewater A stays clear.")).toEqual({ score: 0, got: [false, false] });
+  });
+});

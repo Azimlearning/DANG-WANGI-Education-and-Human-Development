@@ -44,9 +44,11 @@ def build_llm_service(
 
             fake_responder = pipeline_fakes
         provider = FakeProvider(fake_responder)
-        return LLMService(provider, None, ledger)
+        return LLMService(provider, None, ledger, prompt_caching=settings.prompt_caching)
     _require_live_prerequisites(settings)
     if settings.anthropic_api_key is None:
         raise ProviderUnavailable("Live mode needs ANTHROPIC_API_KEY; no provider was built.")
     # No OpenRouter fallback is built (CLAUDE.md names it optional): a failed call goes to the pipeline's degrade ladder instead.
-    return LLMService(AnthropicProvider(settings.anthropic_api_key.get_secret_value()), None, ledger)
+    return LLMService(
+        AnthropicProvider(settings.anthropic_api_key.get_secret_value()), None, ledger, prompt_caching=settings.prompt_caching
+    )

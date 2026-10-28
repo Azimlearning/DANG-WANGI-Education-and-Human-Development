@@ -1,0 +1,35 @@
+{
+  "id": "reference-parallel",
+  "title": "Two resistors in parallel",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "See how the effective resistance of two resistors in parallel depends on the two resistances.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "first",
+    "second"
+  ],
+  "readouts": [
+    "Effective resistance"
+  ],
+  "models": [
+    {
+      "id": "physics.parallel_resistance",
+      "params": {},
+      "readouts": [
+        "Effective resistance"
+      ],
+      "series": [
+        "Effective resistance"
+      ]
+    }
+  ]
+}

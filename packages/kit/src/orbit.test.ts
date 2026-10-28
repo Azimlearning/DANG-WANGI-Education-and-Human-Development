@@ -4,7 +4,7 @@ import { constant } from "./constant";
 import { environment } from "./environment";
 import { KIT_VERSION } from "./index";
 import { observable } from "./observable";
-import { CIRCLE_BAND, outcomeOf, orbitScene, outcomeWords, pathFor } from "./orbit_scene";
+import { CIRCLE_BAND, flightFor, outcomeOf, orbitScene, outcomeWords, pathFor } from "./orbit_scene";
 import { resetForTests } from "./provenance";
 import { readout } from "./readout";
 import { circularSpeed } from "./science/circular_speed";
@@ -97,7 +97,7 @@ describe("orbitScene: the picture follows the numbers, in words", () => {
     orbitScene(env, { speed: launch, circular, escape, full: 15 });
     const root = document.querySelector(".syn-orbit-scene") as SVGSVGElement;
     const note = () => document.querySelector("[data-synapse-observations]")?.textContent ?? "";
-    const path = () => root.querySelector("path")?.getAttribute("d");
+    const path = () => root.querySelector("path[stroke-width='3']")?.getAttribute("d");
     expect(note()).toContain(outcomeWords("falls"));
     const seen = new Set<string | null | undefined>([path()]);
     launch.set(7.9);
@@ -146,15 +146,15 @@ describe("orbitScene: the audit", () => {
     });
     const root = document.querySelector(".syn-orbit-scene") as SVGSVGElement;
     const problems = () => widgetOf("orbit")?.problems ?? [];
-    root.querySelector("path")?.setAttribute("d", "M 0 0 L 1 1");
+    root.querySelector("path[stroke-width='3']")?.setAttribute("d", "M 0 0 L 1 1");
     expect(problems().length).toBeGreaterThan(0);
     launch.set(9);
     launch.set(9.5);
     expect(problems()).toEqual([]);
-    root.querySelector("circle")?.setAttribute("fill-opacity", "0");
+    root.querySelector("circle[r='26.0']")?.setAttribute("fill-opacity", "0");
     expect(problems().length).toBeGreaterThan(0);
-    root.querySelector("circle")?.removeAttribute("fill-opacity");
-    root.querySelector("path")?.setAttribute("stroke", "var(--syn-bg)");
+    root.querySelector("circle[r='26.0']")?.removeAttribute("fill-opacity");
+    root.querySelector("path[stroke-width='3']")?.setAttribute("stroke", "var(--syn-bg)");
     expect(problems().length).toBeGreaterThan(0);
     launch.set(9);
     launch.set(9.5);
@@ -185,5 +185,68 @@ describe("orbitScene: the audit", () => {
     orbitScene(env, { speed: launch, circular, escape, full: 15 });
     for (const w of audit(KIT_VERSION).widgets) expect(w.layout).toEqual([]);
     expect(violations(audit(KIT_VERSION))).toEqual([]);
+  });
+});
+
+describe("orbitScene: the launch", () => {
+  const ballOf = (root: Element) => root.querySelector("circle[r='4.5']") as SVGCircleElement;
+  it("has a Launch button the Kit registered, a ball that is hidden until it is pressed, and a trail kept for each finished launch", async () => {
+    const { env, launch, circular, escape } = bench(5);
+    orbitScene(env, { speed: launch, circular, escape, full: 15 });
+    const root = document.querySelector(".syn-orbit-scene") as SVGSVGElement;
+    const button = document.querySelector("[data-synapse-action='launch']") as HTMLButtonElement;
+    expect(button.textContent).toBe("Launch");
+    expect(audit(KIT_VERSION).actions.some((a) => a.kind === "launch")).toBe(true);
+    expect(ballOf(root).getAttribute("fill-opacity")).toBe("0");
+    // jsdom has no matchMedia: the flight runs on timers, so a launch ends within the fall's 1.6 s plus a frame.
+    button.click();
+    expect(ballOf(root).getAttribute("fill-opacity")).toBe("1");
+    expect(widgetOf("orbit")?.problems).toEqual([]);
+    await new Promise((r) => setTimeout(r, 1800));
+    const trails = Array.from(root.querySelectorAll("path[stroke-width='2']"));
+    expect(trails[0]?.getAttribute("stroke-opacity")).toBe("0.4");
+    expect(trails[1]?.getAttribute("stroke-opacity")).toBe("0");
+    expect(widgetOf("orbit")?.problems).toEqual([]);
+  });
+  it("hides the ball again when the speed changes, and a page that moves the ball is reported", () => {
+    const { env, launch, circular, escape } = bench(5);
+    orbitScene(env, { speed: launch, circular, escape, full: 15 });
+    const root = document.querySelector(".syn-orbit-scene") as SVGSVGElement;
+    (document.querySelector("[data-synapse-action='launch']") as HTMLButtonElement).click();
+    launch.set(9);
+    expect(ballOf(root).getAttribute("fill-opacity")).toBe("0");
+    ballOf(root).setAttribute("cx", "5");
+    expect(widgetOf("orbit")?.problems.length).toBeGreaterThan(0);
+  });
+});
+
+describe("flightFor: the worked-out path agrees with the Kit's one rule", () => {
+  const e = Math.SQRT2;
+  it("ends on the ground below the circular speed's band, and not above it", () => {
+    expect(flightFor("falls", 0.5).ends).toBe("ground");
+    expect(flightFor("falls", 1 - CIRCLE_BAND - 0.002).ends).toBe("ground");
+    expect(flightFor("circle", 1 - CIRCLE_BAND + 0.002).ends).not.toBe("ground");
+  });
+  it("goes round a circle at a steady distance and comes back to where it began", () => {
+    const flight = flightFor("circle", 1);
+    expect(flight.ends).toBe("lap");
+    const start = flight.at(0);
+    const end = flight.at(1);
+    expect(Math.hypot(start.x - end.x, start.y - end.y)).toBeLessThan(3);
+    for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+      const p = flight.at(f);
+      expect(Math.abs(Math.hypot(p.x - 130, p.y - 118) - 28.2)).toBeLessThan(1.5);
+    }
+  });
+  it("goes further from Earth on an oval than on a circle, and leaves the picture at the escape speed", () => {
+    const far = (r: number) => Math.max(...[0, 0.25, 0.5, 0.75].map((f) => Math.hypot(flightFor("oval", r).at(f).x - 130, flightFor("oval", r).at(f).y - 118)));
+    expect(far(1.25)).toBeGreaterThan(far(1.05));
+    expect(flightFor("escapes", e).ends).toBe("away");
+    expect(flightFor("escapes", 1.8).ends).toBe("away");
+  });
+  it("is quick near Earth and slow far from it", () => {
+    const flight = flightFor("oval", 1.25);
+    const dist = (a: number, b: number) => Math.hypot(flight.at(a).x - flight.at(b).x, flight.at(a).y - flight.at(b).y);
+    expect(dist(0, 0.02)).toBeGreaterThan(dist(0.49, 0.51));
   });
 });
