@@ -1,0 +1,35 @@
+# Render Blueprint for the Synapse API (docs: refdocs/guides/deploy_hackastone.md). Create it from the dashboard: New > Blueprint > pick this repo.
+# The web app is NOT here; it is a Vercel project (root directory `web`).
+services:
+  - type: web
+    name: synapse-api
+    runtime: docker
+    plan: standard          # 2 GB: the verifier launches Chromium for every lab it makes. The free and starter plans have too little memory and no disk (or sleep).
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    disk:
+      name: synapse-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: SYNAPSE_LLM_MODE
+        value: live
+      - key: ANTHROPIC_API_KEY
+        sync: false          # you paste it in the dashboard; it is never in the repo
+      - key: LLM_MONTHLY_CAP_USD
+        value: "4"
+      - key: LEDGER_PATH
+        value: /data/ledger.db
+      - key: DATA_DIR
+        value: /data
+      - key: PUBLIC_ORIGIN
+        sync: false          # the Vercel production URL, for example https://synapse-v4.vercel.app (no trailing slash)
+      - key: SEED_LIBRARY
+        value: "1"
+      - key: DAILY_LIMIT_TOTAL
+        value: "150"
+      - key: DAILY_LIMIT_PER_CLIENT
+        value: "30"
+      - key: MAX_CONCURRENT_ASKS
+        value: "2"

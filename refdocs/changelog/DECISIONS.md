@@ -610,6 +610,14 @@ The lane names and labels are the agent's elaboration of the owner's idea (A-1).
 
 **Trade-offs / rejected.** A physics integration of the real orbit (V4's picture is a stated schematic and the numbers come from the models); a continuous loop (a finite flight is calmer and lets the page go idle for the verifier).
 
+## D-75: A public demo for the Hackastone grand final: web on Vercel, API on Render, live for everyone, the deploy gate waived (2026-10-29)
+
+**Decision.** The owner asked for the app to be hosted for the final. The web app goes on Vercel (root `web`); the API goes on Render as a Docker service (`Dockerfile`, `render.yaml`) with a persistent disk, live mode, the monthly cap of $4 and per-address and per-day limits (30 and 150) as the spend guard, and no access code. The owner accepts that the deploy gate in `refdocs/guides/checklist.md` is NOT met (no isolation container, no `security-reviewer` run, no licence, no name decision, corpus position open, no real-phone pass); the guide lists each. This supersedes the "do not expose" posture of D-11 for this demo only; delete the Render service after the final.
+
+**Why.** A grand-final presentation needs a URL. Vercel cannot run the API (Chromium for the verifier, a SQLite store, streaming); a container host can. The owner chose Render as the easier one and chose to rely on the cap rather than an access code.
+
+**Trade-offs / rejected.** Any visitor can spend the cap (about 30 new labs for the month at the W16 cost); the API's origin check allows one web origin, so only the production Vercel URL works; the library is built inside the container for that origin, and without the textbook corpus every lab is `model-checked`, not `kit-verified` (an open choice for the owner, A-8). Rejected: the laptop behind a tunnel (the laptop must stay on), and a library-only demo (no question outside the 30 labs).
+
 ## Working assumptions (`ASSUMED:`)
 
 Not decisions: guesses made to keep moving. Each one must be confirmed or killed before anything load-bearing is built on it. When one is resolved, delete it here and write a real ADR above. The full numbered list (A-1 to A-18) lives in `refdocs/synapse-v4-PRD.md` section 8; the load-bearing ones:
