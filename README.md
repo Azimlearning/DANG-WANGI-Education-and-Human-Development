@@ -1,5 +1,7 @@
 # Synapse v4
 
+> The UTP CodeFest '26 entry of Team Dang Wangi, Track 2, Education and Human Development. See [`CODEFEST.md`](CODEFEST.md).
+
 Turn a Malaysian Form 4 or 5 KSSM science question into a verified, interactive **environment**: raw HTML/JS assembled over a vetted library of micro-components (65 so far, plus 26 apparatus parts), with the textbook evidence and an honest trust label beside it.
 
 **Status:** in active development. The pipeline runs end to end on deterministic fakes and on the live model. A stored library of 31 labs across Physics, Biology and Chemistry answers known questions with no model call; with the owner's local textbook corpus loaded, each carries a citation the corpus re-proves word for word, and all 31 are `kit-verified`. Any other question gets a lab written for it, operated by drag and drop, and labelled for what it survived. Not done: no teacher has reviewed the labs, no learner study has run, and the latest prompt versions have no measured eval delta. See [`refdocs/STATUS.md`](refdocs/STATUS.md) for exactly what is and is not done.
