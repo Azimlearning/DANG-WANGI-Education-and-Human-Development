@@ -34,6 +34,8 @@ import { spec as buoyant } from "./buoyant_force";
 import { spec as cellV } from "./cell_voltage";
 import { spec as popDensity } from "./population_density";
 import { spec as eEnergy } from "./electrical_energy";
+import { PLANET_DATA, spec as planetG } from "./planet_gravity";
+import { spec as weightSpec } from "./weight";
 import { domainErrors, guarded, registrationFailures, type Impl, type ScienceSpec } from "./spec";
 
 // A planted physics bug: a function that is wrong in exactly one way. Its domain guard is the real one unless a test skips an argument's
@@ -615,6 +617,35 @@ const BUGS: { spec: ScienceSpec; bugs: Record<string, Impl> }[] = [
       "no domain check on the current": planted(eEnergy, (a) => n(a, "voltage") * n(a, "current") * n(a, "time"), ["current"]),
       "no domain check on the time": planted(eEnergy, (a) => n(a, "voltage") * n(a, "current") * n(a, "time"), ["time"]),
       "no domain check on the voltage": planted(eEnergy, (a) => n(a, "voltage") * n(a, "current") * n(a, "time"), ["voltage"]),
+    },
+  },
+  {
+    spec: planetG,
+    bugs: {
+      "radius in km, not metres": planted(planetG, (a) => ((p) => (G * p.mass) / (p.radius * p.radius))(PLANET_DATA[Math.round(n(a, "planet")) - 1]!)),
+      "divides by the radius, not its square": planted(planetG, (a) => ((p) => (G * p.mass) / (p.radius * 1000))(PLANET_DATA[Math.round(n(a, "planet")) - 1]!)),
+      "Earth's g for every planet": planted(planetG, () => 9.81),
+      "the next planet's data": planted(planetG, (a) => ((p) => (G * p.mass) / (p.radius * 1000) ** 2)(PLANET_DATA[Math.min(Math.round(n(a, "planet")), 7)]!)),
+      "forgets G": planted(planetG, (a) => ((p) => p.mass / (p.radius * 1000) ** 2)(PLANET_DATA[Math.round(n(a, "planet")) - 1]!)),
+      "NaN for Mars": planted(planetG, (a) => (n(a, "planet") === 4 ? Number.NaN : ((p) => (G * p.mass) / (p.radius * 1000) ** 2)(PLANET_DATA[Math.round(n(a, "planet")) - 1]!))),
+      "sign flips for the giant planets": planted(planetG, (a) => (n(a, "planet") >= 5 ? -1 : 1) * ((p) => (G * p.mass) / (p.radius * 1000) ** 2)(PLANET_DATA[Math.round(n(a, "planet")) - 1]!)),
+      "rounds to a whole number": planted(planetG, (a) => Math.round(((p) => (G * p.mass) / (p.radius * 1000) ** 2)(PLANET_DATA[Math.round(n(a, "planet")) - 1]!))),
+      "no domain check on the planet": planted(planetG, (a) => ((p) => (p ? (G * p.mass) / (p.radius * 1000) ** 2 : 0))(PLANET_DATA[Math.round(n(a, "planet")) - 1]), ["planet"]),
+    },
+  },
+  {
+    spec: weightSpec,
+    bugs: {
+      "divides the mass by g": planted(weightSpec, (a) => n(a, "mass") / Math.max(n(a, "gravity"), 1e-9)),
+      "adds instead of multiplying": planted(weightSpec, (a) => n(a, "mass") + n(a, "gravity")),
+      "forgets the mass": planted(weightSpec, (a) => n(a, "gravity")),
+      "uses 10 N/kg everywhere": planted(weightSpec, (a) => n(a, "mass") * 10),
+      "caps at 100 N": planted(weightSpec, (a) => Math.min(n(a, "mass") * n(a, "gravity"), 100)),
+      "NaN at 2 kg": planted(weightSpec, (a) => (n(a, "mass") === 2 ? Number.NaN : n(a, "mass") * n(a, "gravity"))),
+      "sign flips above 50 kg": planted(weightSpec, (a) => (n(a, "mass") > 50 ? -1 : 1) * n(a, "mass") * n(a, "gravity")),
+      "rounds to whole newtons": planted(weightSpec, (a) => Math.round(n(a, "mass") * n(a, "gravity"))),
+      "no domain check on the mass": planted(weightSpec, (a) => n(a, "mass") * n(a, "gravity"), ["mass"]),
+      "no domain check on g": planted(weightSpec, (a) => n(a, "mass") * n(a, "gravity"), ["gravity"]),
     },
   },
 ];

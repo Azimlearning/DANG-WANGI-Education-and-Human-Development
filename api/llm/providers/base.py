@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Literal, Protocol
 
 from api.llm.types import LLMRequest, ProviderResponse, Tier
@@ -38,9 +39,16 @@ class ProviderFailure(Exception):
         self.tokens_out = tokens_out
 
 
+TextSink = Callable[[str], None]
+"""Receives each piece of a reply's text as it is generated. Must not raise and must not block."""
+
+
 class Provider(Protocol):
     name: str
 
     def model_for(self, tier: Tier) -> str: ...
 
-    async def complete(self, request: LLMRequest, model: str) -> ProviderResponse: ...
+    async def complete(self, request: LLMRequest, model: str, on_text: TextSink | None = None) -> ProviderResponse:
+        """The whole reply. With `on_text`, the reply's text is also handed over piece by piece as it is generated (W19, D-79), for a reader to watch; the
+        response returned at the end, its usage and every failure are exactly those of a call without it."""
+        ...

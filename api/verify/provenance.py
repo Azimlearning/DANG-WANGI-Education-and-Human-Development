@@ -7,6 +7,7 @@ the Kit's own formatted value, and the value is compared with an independent ref
 
 from __future__ import annotations
 
+import itertools
 import math
 import re
 import unicodedata
@@ -442,7 +443,14 @@ def _scene_scale_problems(w: dict, chain: dict, audit: dict) -> list[Problem]:
     controls_at_max = {c["id"]: float(c["max"]) for c in audit.get("controls", [])}
     constants = {c["label"]: float(c["value"]) for c in audit.get("constants", [])}
     try:
-        peak = evaluate_chain(chain, controls_at_max, constants)
+        if any(c.get("unit") == "planet" for c in audit.get("controls", [])):
+            # A choice control has no order (W18): the scene's peak is the largest over every choice, from the same corners as every other range here.
+            span = _corner_range(chain, audit)
+            if span is None:
+                return []
+            peak = span[1]
+        else:
+            peak = evaluate_chain(chain, controls_at_max, constants)
     except (ValueError, KeyError):
         return []  # an unevaluable chain is refused by the checks above
     full = w.get("full")
@@ -464,11 +472,18 @@ def _corner_range(chain: dict, audit: dict) -> tuple[float, float] | None:
         return None
     constants = {c["label"]: float(c["value"]) for c in audit.get("constants", [])}
     by_id = {c["id"]: c for c in controls}
+    # Each control at its minimum or maximum; a choice control (the planets, unit `planet`, W18) has no order, so at every one of its steps.
+    options: list[list[float]] = []
+    for cid in used:
+        c = by_id.get(cid)
+        if c is None:
+            return None
+        lo, hi, grid = float(c["min"]), float(c["max"]), int(c.get("grid") or 1)
+        options.append([lo + k * (hi - lo) / grid for k in range(grid + 1)] if c.get("unit") == "planet" else [lo, hi])
     values: list[float] = []
-    for corner in range(2 ** len(used)):
-        at = {cid: float(by_id[cid]["max"] if corner >> i & 1 else by_id[cid]["min"]) for i, cid in enumerate(used) if cid in by_id}
+    for choice in itertools.product(*options):
         try:
-            values.append(evaluate_chain(chain, at, constants))
+            values.append(evaluate_chain(chain, dict(zip(used, choice, strict=True)), constants))
         except (ValueError, KeyError):
             return None
     return (min(values), max(values)) if values else None
@@ -512,6 +527,27 @@ def _handle_problems(w: dict, audit: dict) -> list[Problem]:
     cid = w.get("control")
     if chain.get("kind") != "control" or chain.get("id") != cid or cid not in {c.get("id") for c in audit.get("controls", [])}:
         return [Problem("scene_ungrounded", f"the handle {w.get('id')} does not move a declared control")]
+    host = w.get("host", "apparatus")
+    if host == "graph":
+        # A point on a graph (W18): the graph must really plot against this control.
+        if not any(s.get("kind") == "graph" and s.get("xControl") == cid for s in audit.get("series", [])):
+            return [Problem("scene_ungrounded", f"the handle {w.get('id')} is on no graph of '{cid}'")]
+        return []
+    if host == "planets":
+        # The test mass on the planets (W18): a planets picture for this control, and the control is the row of eight planets.
+        control = next((c for c in audit.get("controls", []) if c.get("id") == cid), {})
+        if not any(a.get("kind") == "planets" and a.get("control") == cid for a in audit["widgets"]):
+            return [Problem("scene_ungrounded", f"the handle {w.get('id')} is on no planets picture of '{cid}'")]
+        if (control.get("min"), control.get("max"), control.get("grid"), control.get("unit")) != (1, 8, 7, "planet"):
+            return [Problem("scene_ungrounded", f"the planets control '{cid}' must run from planet 1 to 8 in whole steps")]
+        return []
+    if host == "orbit":
+        # The launch arrow's tip (W18): an orbit picture driven by this control.
+        if not any(a.get("kind") == "scene" and a.get("id") == "orbit" and (a.get("sourceChain") or {}).get("id") == cid for a in audit["widgets"]):
+            return [Problem("scene_ungrounded", f"the handle {w.get('id')} is on no orbit picture driven by '{cid}'")]
+        return []
+    if host != "apparatus":
+        return [Problem("scene_ungrounded", f"the handle {w.get('id')} is on an unknown kind of drawing {host!r}")]
     drawn = next((a for a in audit["widgets"] if a.get("kind") == "apparatus" and a.get("id") == w.get("id")), None)
     if drawn is None or (drawn.get("chain") or {}).get("id") != cid:
         return [Problem("scene_ungrounded", f"the handle {w.get('id')} is not on the channel that draws '{cid}'")]

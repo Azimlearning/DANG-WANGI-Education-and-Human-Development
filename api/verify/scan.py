@@ -151,7 +151,9 @@ FREE_LANE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bcontent\s*:\s*[\"'`]", re.IGNORECASE), "CSS generated content"),
     (re.compile(r"::?(?:before|after|marker)\b", re.IGNORECASE), "CSS pseudo-element"),
     (re.compile(r"@counter-style\b|\bcounter-(?:reset|increment|set)\b|\bcounters?\s*\(", re.IGNORECASE), "CSS counters"),
-    (re.compile(r"<\s*img\b|<\s*(?:video|audio|source|track)\b|data\s*:\s*image|\burl\s*\(|\bimage-set\s*\(", re.IGNORECASE), "image or media"),
+    # A same-page reference, url(#glass), names an SVG gradient or pattern on the page itself (W20): it loads nothing, and any text it could pull in is a text node
+    # the reader reads. Every other url( stays closed.
+    (re.compile(r"<\s*img\b|<\s*(?:video|audio|source|track)\b|data\s*:\s*image|\burl\s*\((?!\s*[\"']?#[A-Za-z][\w-]*[\"']?\s*\))|\bimage-set\s*\(", re.IGNORECASE), "image or media"),
     (re.compile(r"\bFontFace\b|@font-face", re.IGNORECASE), "custom font"),
     (re.compile(r"__synapse", re.IGNORECASE), "the harness's own names"),
     (re.compile(r"\bwebdriver\b|\buserAgent\b|\bHeadlessChrome\b|\bplaywright\b", re.IGNORECASE), "test-browser detection"),

@@ -1,0 +1,134 @@
+{
+  "id": "planet_gravity",
+  "title": "Gravity on the planets: weigh a mass on each one",
+  "goal": "Compare how strongly each planet of the Solar System pulls on the same mass, by weighing it on a spring balance on every planet.",
+  "pattern": "simulation",
+  "topic": "physics_form4_circular_motion_and_gravitation",
+  "experiment_ref": null,
+  "note": "Every planet pulls things on its surface towards its centre. A planet with more mass pulls harder, and a bigger radius spreads the pull out, so the gravitational acceleration g = G M / R squared is different on every planet. The same mass then has a different weight, W = m g, on each one.",
+  "controls": [
+    {
+      "id": "planet",
+      "label": "Planet",
+      "unit": "planet",
+      "min": 1,
+      "max": 8,
+      "value": 3,
+      "grid": 7,
+      "surface": "planets"
+    },
+    {
+      "id": "mass",
+      "label": "Mass on the balance",
+      "unit": "kg",
+      "min": 0,
+      "max": 5,
+      "value": 1,
+      "grid": 5,
+      "surface": "masses"
+    }
+  ],
+  "constants": [],
+  "models": [
+    {
+      "id": "gravity",
+      "model": "physics.planet_gravity",
+      "params": {},
+      "inputs": {
+        "planet": "planet"
+      }
+    },
+    {
+      "id": "weight",
+      "model": "physics.weight",
+      "params": {},
+      "inputs": {
+        "mass": "mass",
+        "gravity": "gravity"
+      }
+    },
+    {
+      "id": "balance",
+      "model": "mechanics.hookes",
+      "params": {
+        "k": 500
+      },
+      "inputs": {
+        "load": "weight"
+      }
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Gravitational acceleration here",
+      "unit": "N/kg",
+      "digits": 2,
+      "source": "gravity",
+      "convert_to": null
+    },
+    {
+      "label": "Weight of the mass",
+      "unit": "N",
+      "digits": 1,
+      "source": "weight",
+      "convert_to": null
+    }
+  ],
+  "scene": {
+    "kind": "spring",
+    "source": "balance",
+    "full": 0.25
+  },
+  "graphs": [
+    {
+      "title": "Jupiter pulls hardest, and Mercury and Mars pull least.",
+      "x": "planet",
+      "source": "gravity",
+      "label": "Gravitational acceleration",
+      "unit": "N/kg",
+      "digits": 2
+    }
+  ],
+  "sentences": [
+    "Your mass is the same on every planet. Only its weight changes, because the pull of gravity changes.",
+    "Jupiter has by far the most mass, so even with its huge radius it pulls hardest of all the planets."
+  ],
+  "steps": [
+    "Hang one mass on the spring balance on Earth and read its weight.",
+    "Drag the test mass to Mars, then to Jupiter, and watch the spring and the weight change.",
+    "Hang more masses and compare the weights on two planets.",
+    "Use the bar chart to rank the planets from the weakest pull to the strongest."
+  ],
+  "citation_ids": [
+    "planet_compare",
+    "planet_g_formula",
+    "planet_weight",
+    "hooke_law"
+  ],
+  "presentation": "stage",
+  "custom": [],
+  "predict": {
+    "prompt": "You carry the same mass from Earth to Mars. What happens to its weight?",
+    "choices": [
+      "It gets smaller",
+      "It stays the same",
+      "It gets bigger"
+    ],
+    "reveal": "Hang the mass on Earth, then drag it to Mars and compare the two weights."
+  },
+  "concept_check": {
+    "question": "An astronaut flies from Earth to Jupiter. Which quantity stays the same?",
+    "options": [
+      "The astronaut's weight",
+      "The astronaut's mass",
+      "The gravitational acceleration"
+    ],
+    "correct": 1,
+    "explanation": "Mass is the amount of matter and does not depend on where you are. Weight is the pull of gravity on that mass, so it changes from planet to planet."
+  },
+  "hints": [
+    "Weight is the pull of gravity on a mass.",
+    "Which planets are much bigger and heavier than Earth?",
+    "Compare the gravitational acceleration readout on Earth and on Jupiter."
+  ]
+}

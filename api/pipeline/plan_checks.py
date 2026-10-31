@@ -7,6 +7,7 @@ the finished page (api/verify/provenance.py), so a sentence the plan checks acce
 
 from __future__ import annotations
 
+import itertools
 import math
 from dataclasses import dataclass
 
@@ -14,7 +15,7 @@ from pydantic import ValidationError
 
 from api.kitmanifest import Manifest
 from api.pipeline import constants as known_constants
-from api.pipeline.plan import Plan
+from api.pipeline.plan import GraphSpec, Plan
 from api.verify.provenance import (
     EARTH_MASSES,
     EARTH_RADIUS_KM,
@@ -46,18 +47,46 @@ COPY_FACTOR = {"ms": 1.35}
 """The copy budget of a language relative to English. ASSUMED (D-62): a Malay sentence is about a fifth to a third longer than its English; measured on the drafts."""
 
 
-def _scene_peak(inst, controls: dict, constants: dict) -> float | None:  # noqa: ANN001
+MAX_CHAIN_DEPTH = 4
+"""How many models deep a chain may run (W18: a model may feed another, as gravity feeds weight and weight feeds a spring)."""
+
+
+def _value(source: str, at: dict[str, float], controls: dict, constants: dict, instances: dict, depth: int = 0) -> float:
+    """The value of a control, a constant or a model instance with the controls at `at` (else at their starting values), from the independent references, following a chain
+    of models through their inputs. Raises KeyError or ValueError when it cannot be evaluated."""
+    if source in controls:
+        return float(at[source]) if source in at else float(controls[source].value)
+    if source in constants:
+        return float(constants[source].value)
+    if depth > MAX_CHAIN_DEPTH:
+        raise ValueError("the chain of models is too deep")
+    inst = instances[source]
+    values = {name: _value(bound, at, controls, constants, instances, depth + 1) for name, bound in inst.inputs.items()}
+    return float(evaluate_model(inst.model, dict(inst.params), values))
+
+
+def _controls_under(source: str, controls: dict, instances: dict, depth: int = 0) -> set[str]:
+    """The controls a control or a model instance depends on, through any chain of models."""
+    if source in controls:
+        return {source}
+    inst = instances.get(source)
+    if inst is None or depth > MAX_CHAIN_DEPTH:
+        return set()
+    out: set[str] = set()
+    for bound in inst.inputs.values():
+        out |= _controls_under(bound, controls, instances, depth + 1)
+    return out
+
+
+def _scene_peak(inst, controls: dict, constants: dict, instances: dict | None = None) -> float | None:  # noqa: ANN001
     """The model instance's output with every control at its maximum, from the independent reference; None where it cannot be evaluated (other checks say why)."""
-    values: dict[str, float] = {}
-    for name, bound in inst.inputs.items():
-        if bound in controls:
-            values[name] = controls[bound].max
-        elif bound in constants:
-            values[name] = constants[bound].value
-        else:
-            return None
+    pool = {**(instances or {}), inst.id: inst}
+    if any(c.surface == "planets" for c in controls.values()):
+        # A choice control has no order: the largest output is over every choice, not at the last one (Jupiter pulls harder than Neptune).
+        span = _source_range(inst.id, controls, constants, pool)
+        return span[1] if span is not None else None
     try:
-        return float(evaluate_model(inst.model, dict(inst.params), values))
+        return _value(inst.id, {c: controls[c].max for c in controls}, controls, constants, pool)
     except (KeyError, ValueError):
         return None
 
@@ -76,20 +105,15 @@ def _source_range(source: str, controls: dict, constants: dict, instances: dict)
     inst = instances.get(source)
     if inst is None:
         return None
-    moving = sorted({b for b in inst.inputs.values() if b in controls})
-    if len(moving) > MAX_CORNER_CONTROLS or any(b not in controls and b not in constants for b in inst.inputs.values()):
+    moving = sorted(_controls_under(source, controls, instances))
+    if len(moving) > MAX_CORNER_CONTROLS:
         return None
+    # Every corner of the controls' ranges; a choice control (the planets, W18) has no order, so every one of its steps is a corner.
+    options = [[controls[b].min + k * (controls[b].max - controls[b].min) / controls[b].grid for k in range(controls[b].grid + 1)] if controls[b].surface == "planets" else [controls[b].min, controls[b].max] for b in moving]
     values: list[float] = []
-    for corner in range(2 ** len(moving)):
-        at = {}
-        for name, bound in inst.inputs.items():
-            if bound in constants:
-                at[name] = constants[bound].value
-            else:
-                c = controls[bound]
-                at[name] = c.max if corner >> moving.index(bound) & 1 else c.min
+    for choice in itertools.product(*options):
         try:
-            values.append(float(evaluate_model(inst.model, dict(inst.params), at)))
+            values.append(_value(source, dict(zip(moving, choice, strict=True)), controls, constants, instances))
         except (KeyError, ValueError):
             return None
     return (min(values), max(values)) if values else None
@@ -232,6 +256,8 @@ def needed_components(plan: Plan) -> set[str]:
         need.add("valve")
     if any(c.surface == "dial" for c in plan.controls):
         need.add("dial")
+    if any(c.surface == "planets" for c in plan.controls):
+        need.add("planetPicker")
     if plan.apparatus:
         need.add("apparatus")
     if plan.scene:
@@ -332,8 +358,27 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
                 repairable=True,
             )
 
+    # PLAN-023 (W18): the planets are a row of eight, so a planets control runs from planet 1 to planet 8 in whole steps, and the planets model is fed only by one.
     for i, c in enumerate(plan.controls):
-        if c.surface == "slider" or not (math.isfinite(c.min) and math.isfinite(c.max) and math.isfinite(c.value) and c.min < c.max):
+        if c.surface == "planets" and ((c.min, c.max, c.grid, c.unit) != (1, 8, 7, "planet") or c.value not in (1, 2, 3, 4, 5, 6, 7, 8)):
+            add(
+                "PLAN-023",
+                f"controls[{i}]",
+                f"Control '{c.id}' is the planets, so it must run from 1 (Mercury) to 8 (Neptune) with grid 7, unit planet, and start on a whole planet.",
+                f"Set '{c.id}' to min 1, max 8, grid 7, unit planet and a whole-number value.",
+            )
+    planet_controls = {c.id for c in plan.controls if c.surface == "planets"}
+    for j, m in enumerate(plan.models):
+        if m.model == "physics.planet_gravity" and m.inputs.get("planet") not in planet_controls:
+            add(
+                "PLAN-023",
+                f"models[{j}]",
+                f"Model '{m.id}' gives the gravity on a planet, so its input must be a control with surface planets.",
+                "Feed planet_gravity from a control with surface planets (min 1, max 8, grid 7, unit planet).",
+            )
+
+    for i, c in enumerate(plan.controls):
+        if c.surface in ("slider", "planets") or not (math.isfinite(c.min) and math.isfinite(c.max) and math.isfinite(c.value) and c.min < c.max):
             continue
         path = f"controls[{i}]"
         most, what, unit_word = (MAX_MASSES, "masses", "masses") if c.surface == "masses" else (MAX_VALVE_STEPS, f"a {c.surface}", "steps")
@@ -401,7 +446,7 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
                             "Give both models the same acid volume, acid concentration and coefficients.",
                         )
                 if drawn is not None and drawn.unit == "cm3":
-                    at = _scene_peak(inst, controls, constants)
+                    at = _scene_peak(inst, controls, constants, instances)
                     if at is not None and not (drawn.min <= at <= drawn.max):
                         add(
                             "PLAN-019",
@@ -593,7 +638,7 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
                 )
             else:
                 # The drawing scale must fit the model: at the controls' largest values the picture should be nearly full, and never clipped.
-                peak = _scene_peak(inst, controls, constants)
+                peak = _scene_peak(inst, controls, constants, instances)
                 if peak is not None and not (SCENE_FILL_MIN <= peak / scene.full <= 1 + 1e-9):
                     add(
                         "PLAN-019",
@@ -605,6 +650,7 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
 
     for i, m in enumerate(plan.models):
         path = f"models[{i}]"
+        earlier = {x.id: x for x in plan.models[:i]}  # the models that may feed this one (W18): only those listed before it, so a chain has no loop
         entry = manifest.models.get(m.model)
         if entry is None:
             known = ", ".join(sorted(manifest.models)) or "none"
@@ -702,12 +748,30 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
                         f"Constant '{bound}' = {k.value} is outside {m.model}'s domain for {name} ({'below' if q.max_exclusive else 'at most'} {q.max} {q.unit}).",
                         f"Set {bound} {'below' if q.max_exclusive else 'to at most'} {q.max}.",
                     )
+            elif bound in earlier:
+                # W18: a model defined earlier in the Plan may feed this one (gravity feeds weight, weight feeds a spring), in the unit this input needs and inside its domain.
+                upstream = manifest.models.get(earlier[bound].model)
+                if upstream is not None and upstream.output_unit != q.unit:
+                    add(
+                        "PLAN-004",
+                        f"{path}.inputs.{name}",
+                        f"Model '{bound}' gives {upstream.output_unit} but {m.model} needs {name} in {q.unit}.",
+                        f"Feed {name} from a model, control or constant in {q.unit}.",
+                    )
+                span = _source_range(bound, controls, constants, instances)
+                if span is not None and (span[0] <= q.min if q.exclusive else span[0] < q.min):
+                    add(
+                        "PLAN-005",
+                        f"{path}.inputs.{name}",
+                        f"Model '{bound}' can give {span[0]:g}, below {m.model}'s domain for {name} ({'above' if q.exclusive else 'at least'} {q.min} {q.unit}).",
+                        f"Keep the controls feeding '{bound}' where it stays {'above' if q.exclusive else 'at least'} {q.min}.",
+                    )
             else:
                 add(
                     "PLAN-004",
                     f"{path}.inputs.{name}",
-                    f"Input {name} is bound to '{bound}', which is not a control or a constant.",
-                    f"Bind {name} to a control id or a constant id.",
+                    f"Input {name} is bound to '{bound}', which is not a control, a constant or a model defined before it.",
+                    f"Bind {name} to a control id, a constant id or the id of a model listed earlier.",
                 )
 
         # S5: a relation between an input and a parameter that a per-quantity domain cannot express.
@@ -771,7 +835,7 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
     for ci, c in enumerate(plan.controls):
         if not (math.isfinite(c.min) and math.isfinite(c.max) and c.min < c.max):
             continue
-        feeds = [m for m in plan.models if c.id in m.inputs.values()]
+        feeds = [m for m in plan.models if c.id in _controls_under(m.id, controls, instances)]
         shown_any = False
         evaluable = False
         for r in plan.readouts:
@@ -779,19 +843,7 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
             if m is None or m not in feeds:
                 continue
             try:
-                texts = []
-                for edge in (c.min, c.max):
-                    args = {
-                        name: (
-                            edge
-                            if bound == c.id
-                            else controls[bound].value
-                            if bound in controls
-                            else constants[bound].value
-                        )
-                        for name, bound in m.inputs.items()
-                    }
-                    texts.append(f"{evaluate_model(m.model, dict(m.params), args):.{r.digits}f}")
+                texts = [f"{_value(m.id, {c.id: edge}, controls, constants, instances):.{r.digits}f}" for edge in (c.min, c.max)]
             except (KeyError, ValueError):
                 continue
             evaluable = True
@@ -940,6 +992,68 @@ def check(plan: Plan, manifest: Manifest, *, lang: str = "en") -> list[PlanIssue
         )
 
     return issues
+
+
+def draggable(plan: Plan, manifest: Manifest) -> set[str]:
+    """The controls a student can operate on the drawing (W20, D-80): a surface (masses, planets, a valve, a dial), a bench channel the catalogue marks as
+    grabbable and that is bound to the control itself, or the x of a graph (whose point is a handle, D-78)."""
+    out = {c.id for c in plan.controls if c.surface != "slider"}
+    catalogue = manifest.apparatus or {}
+    for part in plan.apparatus:
+        grabs = (catalogue.get(part.kind) or {}).get("grabs") or {}
+        out |= {bind.source for name, bind in part.channels.items() if name in grabs}
+        if part.drop is not None:
+            out.add(part.drop.source)
+    out |= {g.x for g in plan.graphs}
+    if plan.scene is not None and plan.scene.kind == "orbit":
+        out.add(plan.scene.source)  # the launch arrow's tip is a handle (D-78)
+    return out & {c.id for c in plan.controls}
+
+
+def hands_on(plan: Plan, manifest: Manifest) -> Plan:
+    """W20 (D-80): the four demos' rule, guaranteed with no model call. A control the student could only move with a slider gets a graph of a readout that depends
+    on it, whose point the student drags (D-78). Up to the Plan's two graphs; a readout shown through a unit conversion, or a control whose range does not reach above
+    zero (no handle can be drawn for it), is left as it is. The caller checks the Plan again: nothing here is trusted because it was made by code."""
+    graphs = list(plan.graphs)
+    controls = {c.id: c for c in plan.controls}
+    instances = {m.id: m for m in plan.models}
+    for c in plan.controls:
+        if len(graphs) >= 2:
+            break
+        if c.id in draggable(plan.model_copy(update={"graphs": graphs}), manifest) or c.max <= 0:
+            continue
+        readout = next((r for r in plan.readouts if r.convert_to is None and c.id in _controls_under(r.source, controls, instances)), None)
+        if readout is None:
+            continue
+        graphs.append(
+            GraphSpec(
+                title=f"Drag the point to change the {c.label.lower()}."[:240],  # short: the added words count towards the Plan's 1800-character cap (PLAN-010)
+                x=c.id,
+                source=readout.source,
+                label=readout.label,
+                unit=readout.unit,
+                digits=readout.digits,
+            )
+        )
+    return plan if len(graphs) == len(plan.graphs) else plan.model_copy(update={"graphs": graphs})
+
+
+def retopic(plan: Plan, manifest: Manifest, issues: list[PlanIssue]) -> Plan:
+    """W19: when the only topic problem is PLAN-016 (the router filed the question under one topic and the planner chose models registered under another),
+    and every model in the Plan shares a registered topic, the Plan takes that topic. The topic is routing metadata, not content: a question about particles
+    diffusing faster when hot, filed under rate of reaction, is planned with the heat models under heat. Nothing about the lab changes, and every check runs
+    again on the result. A second paid plan call for a filing mismatch is avoided."""
+    if not any(i.code == "PLAN-016" for i in issues):
+        return plan
+    shared: set[str] | None = None
+    for m in plan.models:
+        entry = manifest.models.get(m.model)
+        if entry is None or not entry.topics:
+            return plan
+        shared = set(entry.topics) if shared is None else shared & set(entry.topics)
+    if not shared or plan.topic in shared:
+        return plan
+    return plan.model_copy(update={"topic": sorted(shared)[0]})
 
 
 def repair(plan: Plan, issues: list[PlanIssue]) -> Plan:

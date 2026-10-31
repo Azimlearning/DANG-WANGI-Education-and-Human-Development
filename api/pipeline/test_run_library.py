@@ -104,7 +104,8 @@ def test_a_question_the_local_router_recognises_is_answered_from_the_library_wit
     assert words(events) == plan_note("hookes_amali")  # the hand-written Plan's own words, not a model's
     assert [k for k in kinds(events) if k not in ("probe", "exam")][-2:] == ["environment", "done"]
     library_record = next(r for r in trace_records(deps) if r["layer"] == "library")
-    assert library_record["status"] == "hit" and library_record["detail"]["kind"] == "topic"
+    # W19: the seed remembers the questions a lab is known to answer, so this one is served as a known question, before the router is even asked
+    assert library_record["status"] == "hit" and library_record["detail"]["kind"] in ("question", "topic")
     assert json.loads(deps.trace_path.read_text().splitlines()[-1])["outcome"] == "library:instantiate"  # type: ignore[union-attr]
 
 
@@ -181,7 +182,7 @@ def test_a_withdrawn_page_stays_withdrawn_when_a_planner_reproduces_it_byte_for_
 
 def test_without_the_router_nothing_is_served_by_topic(seeded_db: Path, tmp_path: Path, kit_dist: Path) -> None:
     deps, provider = seeded_deps(seeded_db, tmp_path, kit_dist, use_router=False)
-    collect(SPRING, deps)
+    collect("Why does a spring get longer when more weight hangs from it?", deps)  # not one of the remembered questions (W19)
     assert provider.calls  # the library is skipped and the pipeline runs
 
 
@@ -249,3 +250,4 @@ def test_a_question_the_topic_head_cannot_place_but_that_names_an_environment_is
 
 def test_an_empty_library_names_nothing() -> None:
     assert library.match_by_name("How do I revise Hooke's law?", []) is None
+

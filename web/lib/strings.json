@@ -899,5 +899,140 @@
     "en": "Demo model: this lab was not made for your question. The server is on the offline fake model, which cannot read it. Switch the server to live mode to get a lab made for what you asked.",
     "ms": "Model demo: makmal ini tidak dibuat untuk soalan anda. Pelayan menggunakan model palsu luar talian yang tidak dapat membaca soalan itu. Tukar pelayan ke mod live untuk mendapat makmal yang dibuat mengikut soalan anda.",
     "reviewed": false
+  },
+  "seeHowBuilt": {
+    "en": "See how it's built",
+    "ms": "Lihat cara ia dibina",
+    "reviewed": false
+  },
+  "viewCode": {
+    "en": "View the page code",
+    "ms": "Lihat kod halaman",
+    "reviewed": false
+  },
+  "codeMeta": {
+    "en": "Checked page, {chars} characters, SHA-256 {sha}. This is the exact code running in the lab above.",
+    "ms": "Halaman yang disemak, {chars} aksara, SHA-256 {sha}. Ini kod tepat yang berjalan dalam makmal di atas.",
+    "reviewed": false
+  },
+  "codeAfterChecks": {
+    "en": "The page's code appears here once it has passed its checks. Nothing unchecked is shown or run.",
+    "ms": "Kod halaman dipaparkan di sini selepas ia lulus semakan. Tiada yang belum disemak dipaparkan atau dijalankan.",
+    "reviewed": false
+  },
+  "kitParts": {
+    "en": "Kit parts: {list}",
+    "ms": "Bahagian Kit: {list}",
+    "reviewed": false
+  },
+  "logPlanReady": {
+    "en": "Plan ready: {title}",
+    "ms": "Pelan sedia: {title}",
+    "reviewed": false
+  },
+  "logDelivered": {
+    "en": "Checked page delivered: {title}",
+    "ms": "Halaman disemak dihantar: {title}",
+    "reviewed": false
+  },
+  "layerIntake": {
+    "en": "Reading the question",
+    "ms": "Membaca soalan",
+    "reviewed": false
+  },
+  "layerRoute": {
+    "en": "Finding the topic",
+    "ms": "Mencari topik",
+    "reviewed": false
+  },
+  "layerLibrary": {
+    "en": "Looking in the library",
+    "ms": "Mencari dalam perpustakaan",
+    "reviewed": false
+  },
+  "layerLookup": {
+    "en": "Looking up common mix-ups",
+    "ms": "Mencari salah faham biasa",
+    "reviewed": false
+  },
+  "layerExplain": {
+    "en": "Writing the explanation",
+    "ms": "Menulis penjelasan",
+    "reviewed": false
+  },
+  "layerPlan": {
+    "en": "Planning the lab",
+    "ms": "Merancang makmal",
+    "reviewed": false
+  },
+  "layerAssemble": {
+    "en": "Assembling the page",
+    "ms": "Memasang halaman",
+    "reviewed": false
+  },
+  "layerVerify": {
+    "en": "Checking in a real browser",
+    "ms": "Menyemak dalam pelayar sebenar",
+    "reviewed": false
+  },
+  "layerDeliver": {
+    "en": "Delivering",
+    "ms": "Menghantar",
+    "reviewed": false
+  },
+  "statusStart": {
+    "en": "started",
+    "ms": "bermula",
+    "reviewed": false
+  },
+  "statusDone": {
+    "en": "done",
+    "ms": "selesai",
+    "reviewed": false
+  },
+  "statusDegraded": {
+    "en": "stopped",
+    "ms": "berhenti",
+    "reviewed": false
+  },
+  "liveCode": {
+    "en": "The code, as it is built",
+    "ms": "Kod, semasa ia dibina",
+    "reviewed": false
+  },
+  "codeWriting": {
+    "en": "Being written. Not checked yet, and never run from here.",
+    "ms": "Sedang ditulis. Belum disemak, dan tidak dijalankan dari sini.",
+    "reviewed": false
+  },
+  "codeUnchecked": {
+    "en": "Written, now being checked. Not run from here.",
+    "ms": "Sudah ditulis, kini sedang disemak. Tidak dijalankan dari sini.",
+    "reviewed": false
+  },
+  "codePassed": {
+    "en": "Passed every check.",
+    "ms": "Lulus semua semakan.",
+    "reviewed": false
+  },
+  "codeRefused": {
+    "en": "Refused, so it is not shown as a lab.",
+    "ms": "Ditolak, jadi ia tidak dipaparkan sebagai makmal.",
+    "reviewed": false
+  },
+  "codeLaneFree": {
+    "en": "Written by a model",
+    "ms": "Ditulis oleh model",
+    "reviewed": false
+  },
+  "codeLaneCompose": {
+    "en": "Assembled from the Kit",
+    "ms": "Dipasang daripada Kit",
+    "reviewed": false
+  },
+  "layerCode": {
+    "en": "The code",
+    "ms": "Kod",
+    "reviewed": false
   }
 }

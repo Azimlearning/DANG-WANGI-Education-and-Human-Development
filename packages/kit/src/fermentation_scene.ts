@@ -96,7 +96,9 @@ export function fermentationScene(env: Environment, options: FermentationSceneOp
     root.append(cloud, tube);
     const bubbles: SVGElement[] = [];
     for (let i = 0; i < BUBBLES; i++) {
-      const b = svg("circle", { cx: String(x0 + 72), cy: String(146 - i * 6 + (i % 2 === 0 ? 0 : 2)) });
+      // W19: each bubble bobs up through the limewater while it is drawn (a CSS animation on its transform; its size still follows the model, and reduced
+      // motion stops it).
+      const b = svg("circle", { cx: String(x0 + 72), cy: String(146 - i * 6 + (i % 2 === 0 ? 0 : 2)), class: `syn-a-bubble syn-d${(i % 3) + 1}` });
       bubbles.push(b);
       root.appendChild(b);
     }

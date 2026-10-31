@@ -9,8 +9,10 @@ from typing import Literal
 Tier = Literal["heavy", "standard", "light"]
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
-# Above this the Anthropic SDK wants streaming to avoid HTTP timeouts; no P0 task needs more.
-MAX_OUTPUT_TOKENS = 16_000
+# Long replies risk an HTTP timeout unless streamed: the Free and simple pages stream (D-79), and the provider waits up to 300 s for one that does not.
+MAX_OUTPUT_TOKENS = 32_000
+"""Our guard, under the models' own 128K synchronous limit (models overview, read 2026-10-29). Raised from 16,000 (W20, the owner's figure) so the heavy tier can think
+before it writes. The page itself stays compact: the second reader takes a page of about 24,000 characters at most."""
 
 
 @dataclass(frozen=True)

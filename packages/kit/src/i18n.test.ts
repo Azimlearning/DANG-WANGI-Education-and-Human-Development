@@ -38,6 +38,7 @@ const ARGS: Partial<Record<WordKey, unknown[]>> = {
 };
 
 describe("the Kit's fixed words", () => {
+  const SAME_IN_BOTH = new Set<string>(["planet7"]);
   it("every word has English and Bahasa Melayu, and the Malay is not the English", () => {
     for (const key of Object.keys(WORDS) as WordKey[]) {
       const args = ARGS[key] ?? [];
@@ -47,7 +48,8 @@ describe("the Kit's fixed words", () => {
       const ms = kt(key, ...(args as never));
       expect(en, key).not.toBe("");
       expect(ms, key).not.toBe("");
-      expect(ms, `${key} is not translated`).not.toBe(en);
+      // A proper name that is the same word in both languages (the planet Uranus) is listed here by name, never waved through in general.
+      if (!SAME_IN_BOTH.has(key)) expect(ms, `${key} is not translated`).not.toBe(en);
       document.body.innerHTML = "";
       resetForTests();
     }

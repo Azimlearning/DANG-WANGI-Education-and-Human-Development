@@ -14,6 +14,8 @@ import { spec as titrSpec } from "./science/titration";
 import { spec as titrEndSpec } from "./science/titration_endpoint";
 import { spec as respSpec } from "./science/respiration_energy";
 import { spec as circSpec } from "./science/circular_speed";
+import { spec as planetGSpec } from "./science/planet_gravity";
+import { spec as weightSpec } from "./science/weight";
 import { spec as escSpec } from "./science/escape_speed";
 import { spec as centSpec } from "./science/centripetal_acceleration";
 import { spec as dilSpec } from "./science/dilution";
@@ -102,6 +104,14 @@ export const manifestEntries: ManifestEntry[] = [
     precondition: "Use it INSTEAD of slider for a quantity a student adds in equal steps, such as hanging slotted masses. grid is the number of masses, an integer from 2 to 8; value must sit on a step (min plus a whole number of steps); id is unique in the page. The returned observable is a control exactly as a slider's is.",
     doc: "Drag masses from a tray onto a hanger, or press a mass to move it. The control's value is min plus one step per hung mass. A range input with the same id stays on the page for the keyboard and screen readers.",
     useWhen: "Use for a load, a stack of weights or any quantity added in equal whole steps that a student can hang or place by hand.",
+  },
+  {
+    id: "planetPicker",
+    kind: "interaction",
+    signature: "planetPicker(env, {id, label, value}): Observable<number>",
+    precondition: "Use it INSTEAD of slider for which planet of the Solar System something is on: the value is 1 (Mercury) to 8 (Neptune), unit planet; value is the planet it starts on. Feed it to planetGravity. id is unique in the page.",
+    doc: "Eight planets drawn in a row in space; the student drags a test mass on a spring balance from planet to planet, or taps a planet. A range input with the same id stays for the keyboard and screen readers.",
+    useWhen: "Use whenever a question compares planets: gravity, weight, falling or jumping on different planets.",
   },
   {
     id: "valve",
@@ -287,7 +297,7 @@ export const manifestEntries: ManifestEntry[] = [
     doc: "Hooke's law: extension = load / k. A read-only observable that follows the load.",
     useWhen: "Use for a spring or elastic material stretching under a load, within the elastic limit (Force and Elasticity).",
     modelId: "mechanics.hookes",
-    topics: ["physics_form5_force_and_elasticity"],
+    topics: ["physics_form5_force_and_elasticity", "physics_form4_circular_motion_and_gravitation"],
     citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
     units: { load: "N", k: "N/m", output: "m" },
     ...fromSpec(hookesSpec),
@@ -434,6 +444,32 @@ export const manifestEntries: ManifestEntry[] = [
     citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
     units: { radius: "km", central_mass: "kg", output: "km/s" },
     ...fromSpec(escSpec),
+  },
+  {
+    id: "planetGravity",
+    kind: "science",
+    signature: "planetGravity({planet: Observable<number>}): Observable<number>",
+    precondition: "Domain: planet is a whole number from 1 (Mercury) to 8 (Neptune), from a planetPicker control (unit planet). Each planet's mass and radius are fixed inside the model.",
+    doc: "Gravitational acceleration on the surface of a planet, g = G M / R squared, in N/kg. A read-only observable that follows the chosen planet.",
+    useWhen: "Use to compare gravity on the planets of the Solar System, and with weight to compare what one mass weighs on each (Gravitation).",
+    modelId: "physics.planet_gravity",
+    topics: ["physics_form4_circular_motion_and_gravitation"],
+    citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
+    units: { planet: "planet", output: "N/kg" },
+    ...fromSpec(planetGSpec),
+  },
+  {
+    id: "weight",
+    kind: "science",
+    signature: "weight({mass: Observable<number>, gravity: Observable<number>}): Observable<number>",
+    precondition: "Domain: mass at least 0 kg, gravity at least 0 N/kg (a control, a constant, or the output of planetGravity). Units: mass kg, gravity N/kg, weight N.",
+    doc: "Weight W = m g, in newtons. A read-only observable that follows the mass and the gravitational field strength.",
+    useWhen: "Use for the weight of a mass on Earth or on another planet, or to feed a spring balance (Hooke's law) with that weight (Gravitation, Force).",
+    modelId: "physics.weight",
+    topics: ["physics_form4_circular_motion_and_gravitation", "physics_form4_kinematics_dynamics_momentum"],
+    citation: "UNVERIFIED (the Kit holds no textbook text; a Plan's citations decide its label)",
+    units: { mass: "kg", gravity: "N/kg", output: "N" },
+    ...fromSpec(weightSpec),
   },
   {
     id: "centripetalAcceleration",

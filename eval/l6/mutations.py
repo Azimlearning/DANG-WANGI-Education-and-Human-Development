@@ -35,6 +35,7 @@ BUOYANCY = "reference-buoyancy.html"
 CELLV = "reference-cellv.html"
 POPDENS = "reference-popdens.html"
 EENERGY = "reference-eenergy.html"
+PLANETS = "reference-planets.html"
 
 
 def patch_fn(names: list[str], body: str) -> tuple[str, str]:
@@ -2112,6 +2113,62 @@ MUTATIONS: list[Mutation] = [
     Mutation("neutral-no-edit-boyle", "neutral", "the unmodified Boyle's law page", BOYLE, "accept"),
     Mutation("neutral-no-edit-parallel", "neutral", "the unmodified parallel resistors page", PARALLEL, "accept"),
     Mutation("neutral-no-edit-buoyancy", "neutral", "the unmodified buoyancy page", BUOYANCY, "accept"),
+    # W19 (D-78): the planets bench, the graph point and the launch arrow are handles the verifier drags.
+    Mutation(
+        "planets-handle-swallowed",
+        "structure",
+        "a page swallows the pointer on the test mass, so dragging it between the planets does nothing",
+        PLANETS,
+        "refuse",
+        edit=before_ready(
+            'document.addEventListener("pointerdown", function (e) { var t = e.target; if (t && t.getAttribute && t.getAttribute("data-synapse-handle")) e.stopImmediatePropagation(); }, true);'
+        ),
+    ),
+    Mutation(
+        "planets-mass-redrawn",
+        "structure",
+        "a page keeps drawing the test mass over Jupiter, whichever planet it is on",
+        PLANETS,
+        "refuse",
+        edit=before_ready('setInterval(function () { var m = document.querySelector(".syn-planets-scene rect[width=\"16\"]"); if (m) m.setAttribute("x", "184"); }, 20);'),
+    ),
+    Mutation(
+        "planets-name-swapped",
+        "structure",
+        "a page renames Mars as Earth, so the student weighs on the wrong planet",
+        PLANETS,
+        "refuse",
+        edit=before_ready('setInterval(function () { var t = document.querySelectorAll(".syn-planets-scene text")[3]; if (t) t.textContent = "Earth"; }, 20);'),
+    ),
+    Mutation(
+        "planets-jupiter-light",
+        "physics",
+        "the Kit's planet table gives Jupiter a tenth of its mass, so its gravity is about 2.5 N/kg instead of about 25",
+        PLANETS,
+        "refuse",
+        kit_edit=("mass:189819e22,radius:71492", "mass:189819e21,radius:71492"),
+    ),
+    Mutation(
+        "graph-handle-swallowed",
+        "structure",
+        "a page swallows the pointer on a graph's point, so dragging it along the graph does nothing",
+        EENERGY,
+        "refuse",
+        edit=before_ready(
+            'document.addEventListener("pointerdown", function (e) { var t = e.target; if (t && t.getAttribute && (t.getAttribute("data-synapse-handle") || "").indexOf("graph.") === 0) e.stopImmediatePropagation(); }, true);'
+        ),
+    ),
+    Mutation(
+        "orbit-arrow-swallowed",
+        "structure",
+        "a page swallows the pointer on the cannon's launch arrow, so dragging it does not change the speed",
+        ORBIT,
+        "refuse",
+        edit=before_ready(
+            'document.addEventListener("pointerdown", function (e) { var t = e.target; if (t && t.getAttribute && (t.getAttribute("data-synapse-handle") || "").indexOf("orbit.") === 0) e.stopImmediatePropagation(); }, true);'
+        ),
+    ),
+    Mutation("neutral-no-edit-planets", "neutral", "the unmodified planets page", PLANETS, "accept"),
     Mutation("neutral-no-edit-cellv", "neutral", "the unmodified cell voltage page", CELLV, "accept"),
     Mutation("neutral-no-edit-popdens", "neutral", "the unmodified population density page", POPDENS, "accept"),
     Mutation("neutral-no-edit-eenergy", "neutral", "the unmodified electrical energy page", EENERGY, "accept"),

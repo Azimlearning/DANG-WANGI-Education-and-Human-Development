@@ -7,8 +7,9 @@
 // control in km/s and the two models fed by one declared radius, with Earth's mass.
 
 import { event } from "./bridge";
-import { all, attr, effectiveOpacity, layoutAvailable, parentOf, rectOf, style } from "./dom";
+import { all, attr, contains, effectiveOpacity, hitAt, layoutAvailable, parentOf, rectOf, style } from "./dom";
 import type { Environment } from "./environment";
+import { dragAlong, quiet } from "./handles";
 import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { guard } from "./parts";
@@ -221,7 +222,10 @@ export function orbitScene(env: Environment, options: OrbitSceneOptions): HTMLDi
 
   const outcome = (): Outcome => outcomeOf(speed.get(), circular.get(), escape.get());
   const ratio = (): number => speed.get() / circular.get();
-  const arrow = (): number => 8 + 52 * Math.min(1, Math.max(0, speed.get() / full));
+  // The launch arrow grows with the launch speed, and its tip is a handle (W18): drag it to set the speed, then press Launch.
+  const ARROW_SPAN = 92;
+  const arrow = (): number => 8 + ARROW_SPAN * Math.min(1, Math.max(0, speed.get() / full));
+  const tipAt = (v: number): number => CX + 12 + ARROW_SPAN * Math.min(1, Math.max(0, v / full));
   const describe = (): string => kt("orbitScene", words(outcome()), schematic());
   const colourOf = (o: Outcome): string => (o === "falls" ? FALL_COLOUR : o === "escapes" ? ESCAPE_COLOUR : ORBIT_COLOUR);
 
@@ -248,7 +252,8 @@ export function orbitScene(env: Environment, options: OrbitSceneOptions): HTMLDi
   const ball = svg("circle", { r: "4.5", fill: "#ffffff" });
   const label = own(svg("text", { x: f(CX), y: f(CY + 4), "text-anchor": "middle", fill: "#ffffff", "font-weight": "800", "font-size": "13" }), () => kt("earth"));
   label.textContent = kt("earth");
-  root.append(earth, shine, ...trailEls, path, mountain, shaft, head, label, ball);
+  const grip = svg("circle", { r: "24", fill: "#000", "fill-opacity": "0", class: "syn-app-grip", "aria-hidden": "true", "data-synapse-handle": `orbit.${record.id}` });
+  root.append(earth, shine, ...trailEls, path, mountain, shaft, head, label, ball, grip);
 
   // The flight: a launch sends the ball once along the path (a fall or an escape) or twice round it (a circle or an oval), then it rests. The ball's place is a function of
   // `phase` alone, set together with the attributes, so the audit can always say where it should be. Reduced motion skips the flight and shows where it ends.
@@ -273,6 +278,7 @@ export function orbitScene(env: Environment, options: OrbitSceneOptions): HTMLDi
   const dynamic = new Map<Element, () => Record<string, string>>();
   dynamic.set(path, () => ({ d: pathFor(outcome(), ratio()), stroke: colourOf(outcome()), "stroke-dasharray": outcome() === "escapes" ? "6 5" : "none" }));
   dynamic.set(shaft, () => ({ x2: f(CX + arrow()) }));
+  dynamic.set(grip, () => ({ cx: f(tipAt(speed.get())), cy: f(LAUNCH_Y - 10) }));
   dynamic.set(head, () => ({ points: `${f(CX + arrow() + 7)},${f(LAUNCH_Y - 10)} ${f(CX + arrow() - 2)},${f(LAUNCH_Y - 16)} ${f(CX + arrow() - 2)},${f(LAUNCH_Y - 4)}` }));
   dynamic.set(ball, () => {
     const b = ballAt();
@@ -375,5 +381,33 @@ export function orbitScene(env: Environment, options: OrbitSceneOptions): HTMLDi
     return out;
   };
   widgets.push({ kind: "scene", id: "orbit", obs: circular, second: escape, source: speed, full, check, layout, exact: () => kept.problems() });
+  dragAlong(root, grip, [W, H], tipAt(record.min), tipAt(record.max), record);
+  quiet(record);
+  widgets.push({
+    kind: "handle",
+    id: `orbit.${record.id}`,
+    control: record.id,
+    host: "orbit",
+    box: [W, H],
+    origin: record.min,
+    full: record.max,
+    grab: { from: [tipAt(record.min), LAUNCH_Y - 10], to: [tipAt(record.max), LAUNCH_Y - 10] },
+    obs: speed,
+    check: () => {
+      const out: string[] = [];
+      if (parentOf(grip) !== root) out.push("the launch arrow's handle was taken off");
+      if (style(grip, "display") === "none" || style(grip, "visibility") === "hidden" || style(grip, "pointer-events") === "none") out.push("the launch arrow cannot be grabbed");
+      return out;
+    },
+    layout: () => {
+      if (!layoutAvailable()) return [];
+      const out: string[] = [];
+      const r = rectOf(grip);
+      if (r.width < 40 || r.height < 40) out.push("the launch arrow's handle is too small to grab");
+      const over = hitAt(r.left + r.width / 2, r.top + r.height / 2);
+      if (over && over !== grip && !contains(grip, over)) out.push("the launch arrow's handle is covered by something else");
+      return out;
+    },
+  });
   return wrap;
 }

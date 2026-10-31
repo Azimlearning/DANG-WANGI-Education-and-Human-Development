@@ -39,28 +39,28 @@ def codes(data: dict, manifest: kitmanifest.Manifest) -> list[str]:
     return [i.code for i in check(plan_of(data), manifest)]
 
 
-def test_the_fermentation_bench_is_a_dial_and_a_fermentation_scene_and_passes_every_check(manifest: kitmanifest.Manifest) -> None:
+def test_the_fermentation_bench_takes_glucose_by_the_spoon_on_a_fermentation_scene_and_passes_every_check(manifest: kitmanifest.Manifest) -> None:
     plan = plan_of(FERM)
-    assert plan.controls[0].surface == "dial" and plan.controls[0].grid == 8
+    assert plan.controls[0].surface != "dial" and plan.controls[0].grid == 8  # the dial gave way to spoons dropped on a beaker (2026-10-29)
     assert plan.scene is not None and plan.scene.kind == "fermentation" and plan.scene.source == "glucose" and plan.scene.model == "ferment"
     assert check(plan, manifest) == []
-    assert {"dial", "fermentationScene"} <= needed_components(plan)
+    assert "fermentationScene" in needed_components(plan) and "dial" not in needed_components(plan)
 
 
-def test_the_assembler_writes_the_dial_both_energy_models_and_the_scene_after_them(manifest: kitmanifest.Manifest) -> None:
+def test_the_assembler_writes_the_control_both_energy_models_and_the_scene_after_them(manifest: kitmanifest.Manifest) -> None:
     page = assemble(plan_of(FERM), manifest).html
-    assert 'Synapse.dial(env, {"id": "glucose"' in page and "Synapse.slider(" not in page
+    assert 'Synapse.slider(env, {"id": "glucose"' in page and "Synapse.dial(" not in page
     assert page.count("Synapse.respirationEnergy({") == 2
     assert "Synapse.fermentationScene(env, { fermented: c_glucose, energy: m_ferment, full: 0.004 });" in page
     assert page.index("Synapse.respirationEnergy(") < page.index("Synapse.fermentationScene(")
 
 
 def test_PLAN_018_a_dial_has_two_to_forty_steps_and_starts_on_one(manifest: kitmanifest.Manifest) -> None:
-    assert "PLAN-018" in codes(changed(lambda d: d["controls"][0].update(grid=1)), manifest)
+    assert "PLAN-018" in codes(changed(lambda d: d["controls"][0].update(surface="dial", grid=1)), manifest)
     for value in (0.0003, 0.00075, 0.0012):
-        assert "PLAN-018" in codes(changed(lambda d, v=value: d["controls"][0].update(value=v)), manifest)
+        assert "PLAN-018" in codes(changed(lambda d, v=value: d["controls"][0].update(surface="dial", value=v)), manifest)
     for n in range(0, 9):
-        assert "PLAN-018" not in codes(changed(lambda d, n=n: d["controls"][0].update(value=0.0005 * n)), manifest)
+        assert "PLAN-018" not in codes(changed(lambda d, n=n: d["controls"][0].update(surface="dial", value=0.0005 * n)), manifest)
 
 
 def test_a_fermentation_scene_needs_a_model_and_no_other_scene_has_one() -> None:

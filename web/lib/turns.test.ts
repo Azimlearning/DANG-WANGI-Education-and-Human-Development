@@ -6,7 +6,7 @@ const block = { type: "Environment", id: "hookes_amali-0123456789ab", title: "Ho
 const stage = (layer: string, status: "start" | "done" | "degraded", note: string | null = null): StreamEvent => ({ type: "stage", layer, status, note });
 const run = (events: StreamEvent[]) => events.reduce<Turn[]>((t, event) => turnReducer(t, { type: "event", event }), turnReducer([], { type: "ask", question: "Why?" }));
 const last = (turns: Turn[]): Turn => turns[turns.length - 1] as Turn;
-const draft: PlanDraft = { title: "d", goal: "g", pattern: "simulation", note: "n", controls: [], readouts: [], hasGraph: false, hasTable: false, steps: [] };
+const draft: PlanDraft = { title: "d", goal: "g", pattern: "simulation", note: "n", controls: [], readouts: [], hasGraph: false, hasTable: false, steps: [], components: [] };
 
 describe("turnReducer", () => {
   it("starts an open turn at the first step and numbers turns", () => {
@@ -34,6 +34,12 @@ describe("turnReducer", () => {
     const t = last(run([{ type: "text_delta", text: "x" }, stage("library", "done", "Found in the library."), { type: "environment", block }]));
     expect(t).toMatchObject({ step: "ready", fromLibrary: true });
     expect(t.block?.id).toBe("hookes_amali-0123456789ab");
+    expect(t.note).toBeNull(); // an ordinary library hit adds no caveat
+  });
+
+  it("a lab that arrives after a degraded stage clears the no-lab note: the last step made one (D-80)", () => {
+    const t = last(run([stage("verify", "degraded", "No lab this time."), stage("assemble", "start", "A simpler lab is being written."), { type: "environment", block }]));
+    expect(t).toMatchObject({ step: "ready", note: null });
   });
 
   it("an error event and a transport failure both end up on the turn, and closing ends it", () => {

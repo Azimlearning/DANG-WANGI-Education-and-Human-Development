@@ -495,6 +495,14 @@ _ENTRIES = [
         "retry_plan",
         "Bind each bench part's channels to a slider or model of the right unit; a fraction channel needs a full at least the source's largest value and at most four times it.",
     ),
+    _e(
+        "PLAN-023",
+        "PLAN-023",
+        "plan",
+        "block",
+        "retry_plan",
+        "A planets control runs from 1 (Mercury) to 8 (Neptune) with grid 7 and unit planet, and only it may feed planet_gravity.",
+    ),
     _e("PLAN-015", "PLAN-015", "plan", "block", "retry_plan", "Keep the final volume at or above the starting volume."),
     _e("PLAN-014", "PLAN-014", "plan", "block", "deterministic", "Start each control inside its range."),
     # fill checks

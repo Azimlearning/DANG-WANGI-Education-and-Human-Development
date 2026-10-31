@@ -88,8 +88,15 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
   meniscus.setAttribute("data-synapse-meniscus", "");
   root.appendChild(meniscus);
   root.appendChild(svg("line", { x1: "55", x2: "55", y1: String(BASE), y2: String(BASE + 28), stroke: "var(--syn-line)", "stroke-width": "4" }));
+  // W19: a drop falls from the tip while the stopcock is held open (shown by the stylesheet from the stopcock's own open state; hidden otherwise and under
+  // reduced motion). It is decoration: nothing in it follows a number, and its attributes never change.
+  root.appendChild(svg("circle", { cx: "55", cy: String(BASE + 34), r: "3.5", fill: LIQUID, class: "syn-titr-drop" }));
   const flaskFill = svg("path", { d: "M45 200 L45 228 L22 262 L88 262 L65 228 L65 200 Z", stroke: "var(--syn-line)", "stroke-width": "3", "stroke-linejoin": "round", fill: CLEAR });
-  root.appendChild(flaskFill);
+  // W20: the student picks the flask up and swirls it, as in V3 and at a real bench. Motion only: it follows the pointer through the Web Animations API, which
+  // changes no attribute (the guard below still holds every one exactly) and no number, and it is off under reduced motion.
+  const flask = svg("g", { class: "syn-titr-flask" });
+  flask.appendChild(flaskFill);
+  root.appendChild(flask);
   const sight = svg("line", { x1: "72", x2: "122", "stroke-dasharray": "5 4", stroke: "var(--syn-muted)", "stroke-width": "2" });
   root.appendChild(sight);
 
@@ -175,6 +182,43 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
   };
   eye.addEventListener("pointerup", stop);
   eye.addEventListener("pointercancel", stop);
+
+  // The swirl: tilt and lift with the pointer's sideways movement while held, then settle back.
+  const still = (): boolean => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let swirl: { x: number; anim: Animation | null } | null = null;
+  const pose = (dx: number): Keyframe => {
+    const tilt = Math.max(-14, Math.min(14, dx * 0.35));
+    return { transform: `translate(${(tilt * 0.4).toFixed(1)}px, -6px) rotate(${tilt.toFixed(1)}deg)` };
+  };
+  const hold = (frame0: Keyframe): void => {
+    if (!swirl || typeof flask.animate !== "function") return;
+    swirl.anim?.cancel();
+    swirl.anim = flask.animate([frame0], { duration: 0, fill: "forwards" });
+  };
+  flask.addEventListener("pointerdown", (e: PointerEvent) => {
+    if (still() || (e.button !== undefined && e.button !== 0)) return;
+    swirl = { x: e.clientX, anim: null };
+    try {
+      flask.setPointerCapture?.(e.pointerId);
+    } catch {
+      /* moves still arrive without capture */
+    }
+    hold(pose(0));
+  });
+  flask.addEventListener("pointermove", (e: PointerEvent) => {
+    if (swirl) hold(pose(e.clientX - swirl.x));
+  });
+  const settle = (): void => {
+    if (!swirl) return;
+    const last = swirl.anim;
+    swirl = null;
+    if (typeof flask.animate !== "function") return;
+    const back = flask.animate([{ transform: "translate(0px, 0px) rotate(0deg)" }], { duration: 450, easing: "cubic-bezier(.3,1.6,.5,1)" });
+    back.onfinish = () => last?.cancel();
+    last?.cancel();
+  };
+  flask.addEventListener("pointerup", settle);
+  flask.addEventListener("pointercancel", settle);
   eye.addEventListener("keydown", (e: KeyboardEvent) => {
     const keys: Record<string, () => number> = {
       ArrowUp: () => eyeAt - EYE_STEP,
@@ -188,7 +232,11 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
     moveEye(to());
   });
 
-  frame.append(root, eye);
+  // W19: the stopcock goes on the burette, by its tip, as on a real burette and in V3, instead of above the readouts. It stays the valve's own button and group (the
+  // valve checks only that it is intact and uncovered); the stylesheet places it. A page that built the scene without a valve keeps the picture as it was.
+  const stopcock = record.el.closest(".syn-control")?.previousElementSibling;
+  if (stopcock?.classList.contains("syn-valves")) frame.append(root, eye, stopcock);
+  else frame.append(root, eye);
   wrap.append(frame, note);
   env.stage.appendChild(wrap);
 
@@ -211,6 +259,7 @@ export function titrationScene(env: Environment, options: TitrationSceneOptions)
     if (attr(liquid, "y") !== y.toFixed(2) || attr(liquid, "height") !== Math.max(0, BASE - y).toFixed(2)) out.push("the burette's liquid was redrawn by the page");
     if (attr(meniscus, "y1") !== y.toFixed(2) || attr(meniscus, "y2") !== y.toFixed(2)) out.push("the meniscus line was moved by the page");
     if (attr(flaskFill, "fill") !== (flaskIsPink() ? PINK : CLEAR)) out.push("the flask's colour does not follow the end point");
+    if (parentOf(flaskFill) !== flask || parentOf(flask) !== root) out.push("the flask was taken out of the picture");
     if (attr(root, "aria-label") !== describe()) out.push("the burette picture's description was changed by the page");
     if (attr(eye, "style") !== eyeStyle()) out.push("the eye was moved by the page");
     if (parentOf(root) !== frame || parentOf(eye) !== frame || parentOf(frame) !== wrap || parentOf(note) !== wrap || parentOf(wrap) === null) out.push("the burette picture was taken apart");

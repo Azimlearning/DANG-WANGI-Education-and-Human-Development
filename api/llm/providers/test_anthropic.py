@@ -204,3 +204,49 @@ def test_an_empty_key_is_refused_and_every_tier_model_has_a_price() -> None:
     with pytest.raises(ValueError):
         AnthropicProvider("")
     assert set(ANTHROPIC_MODELS.values()) <= set(PRICES_PER_MTOK)
+
+
+def _sse(events: list[dict]) -> httpx.Response:
+    lines = "".join(f"event: {e['type']}\ndata: {json.dumps(e)}\n\n" for e in events)
+    return httpx.Response(200, content=lines.encode("utf-8"), headers={"content-type": "text/event-stream"})
+
+
+def _stream_events(text_parts: list[str], stop: str = "end_turn") -> list[dict]:
+    return [
+        {"type": "message_start", "message": {"model": "claude-sonnet-5-5", "usage": {"input_tokens": 120, "output_tokens": 1}}},
+        {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
+        *[{"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": p}} for p in text_parts],
+        {"type": "content_block_stop", "index": 0},
+        {"type": "message_delta", "delta": {"stop_reason": stop}, "usage": {"output_tokens": 42}},
+        {"type": "message_stop"},
+    ]
+
+
+async def test_a_watched_call_streams_its_text_and_returns_the_same_response_with_its_usage() -> None:
+    sent: list[dict] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(req.content))
+        return _sse(_stream_events(["<!doctype html>", "<p>hi", "</p>"]))
+
+    seen: list[str] = []
+    resp = await provider(handler).complete(LLMRequest(prompt="q", purpose="free"), "claude-sonnet-5-5", on_text=seen.append)
+    assert sent[0]["stream"] is True
+    assert seen == ["<!doctype html>", "<p>hi", "</p>"]
+    assert resp.text == "<!doctype html><p>hi</p>"
+    assert (resp.tokens_in, resp.tokens_out) == (120, 42)
+
+
+async def test_a_watched_call_cut_off_or_errored_fails_as_an_unwatched_one_would() -> None:
+    cut = provider(lambda req: _sse(_stream_events(["<p>half"], stop="max_tokens")))
+    with pytest.raises(ProviderFailure) as info:
+        await cut.complete(LLMRequest(prompt="q", purpose="free"), "claude-sonnet-5-5", on_text=lambda _t: None)
+    assert info.value.kind == "truncated" and info.value.tokens_out == 42
+    broken = provider(lambda req: _sse([{"type": "message_start", "message": {"usage": {"input_tokens": 5}}}, {"type": "error", "error": {"type": "overloaded_error", "message": "x"}}]))
+    with pytest.raises(ProviderFailure) as info2:
+        await broken.complete(LLMRequest(prompt="q", purpose="free"), "claude-sonnet-5-5", on_text=lambda _t: None)
+    assert info2.value.kind == "transient"
+    refused = provider(lambda req: httpx.Response(401, json={"type": "error", "error": {"type": "authentication_error", "message": "no"}}))
+    with pytest.raises(ProviderFailure) as info3:
+        await refused.complete(LLMRequest(prompt="q", purpose="free"), "claude-sonnet-5-5", on_text=lambda _t: None)
+    assert info3.value.kind == "auth"

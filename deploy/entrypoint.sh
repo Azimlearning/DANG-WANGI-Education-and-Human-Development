@@ -8,7 +8,7 @@ cp -rn /app/data-seed/. "${DATA_DIR:-/data}/"
 # with the same lab in the library (ConflictingRecord), so the server is not started until the library is whole.
 if [ "${SEED_LIBRARY:-0}" = "1" ] && [ ! -f "${DATA_DIR:-/data}/environments.db" ]; then
   echo "seeding the library into ${DATA_DIR:-/data} (PUBLIC_ORIGIN=${PUBLIC_ORIGIN})"
-  python -m api.library_seed
+  python -m api.library_seed --english-only
 fi
 
 # --proxy-headers: behind Render's proxy the client address comes from X-Forwarded-For, so the per-address limits count real visitors, not the proxy.

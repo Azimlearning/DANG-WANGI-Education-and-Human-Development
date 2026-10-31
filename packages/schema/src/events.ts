@@ -40,6 +40,8 @@ export interface PlanDraft {
   hasGraph: boolean;
   hasTable: boolean;
   steps: string[];
+  /** The Kit parts the page will be assembled from (W18, D-77), by their Kit names (`planetPicker`, `planetGravity`, `graph`): shown in the build log. Names only, never code. */
+  components: string[];
 }
 
 export interface PlanPart {
@@ -104,4 +106,18 @@ export interface DoneEvent {
   type: "done";
 }
 
-export type StreamEvent = MetaEvent | StageEvent | PlanEvent | TextDeltaEvent | EnvironmentEvent | ProbeEvent | ExamEvent | StreamErrorEvent | DoneEvent;
+/**
+ * The page's code as it is written (W19, D-79, the owner's call reversing D-77): shown as TEXT in "See how it's built", never rendered and never run. Hard
+ * constraint 1 still holds for the page itself: only the verified block is ever run. `reset` starts the text again (a second attempt); `delta` is appended;
+ * `status` says where the code stands: being written, written and not yet checked, passed every check, or refused (`note` says why).
+ */
+export interface CodeEvent {
+  type: "code";
+  lane: "compose" | "free";
+  status: "writing" | "unchecked" | "passed" | "refused";
+  reset: boolean;
+  delta: string;
+  note: string | null;
+}
+
+export type StreamEvent = MetaEvent | StageEvent | PlanEvent | CodeEvent | TextDeltaEvent | EnvironmentEvent | ProbeEvent | ExamEvent | StreamErrorEvent | DoneEvent;

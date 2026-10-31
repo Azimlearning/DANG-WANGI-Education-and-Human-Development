@@ -184,7 +184,8 @@
             "slider",
             "masses",
             "valve",
-            "dial"
+            "dial",
+            "planets"
           ],
           "title": "Surface",
           "type": "string"
@@ -713,6 +714,15 @@
       "default": null,
       "title": "Experiment Ref"
     },
+    "fit": {
+      "default": "full",
+      "enum": [
+        "full",
+        "partial"
+      ],
+      "title": "Fit",
+      "type": "string"
+    },
     "goal": {
       "maxLength": 240,
       "minLength": 1,
@@ -741,6 +751,20 @@
       "pattern": "^[a-z][a-z0-9_]{0,23}$",
       "title": "Id",
       "type": "string"
+    },
+    "missing": {
+      "anyOf": [
+        {
+          "maxLength": 240,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Missing"
     },
     "models": {
       "items": {

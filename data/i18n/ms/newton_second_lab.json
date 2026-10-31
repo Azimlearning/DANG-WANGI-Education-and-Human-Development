@@ -25,6 +25,8 @@
     "/predict/choices/1": "Ia menjadi separuh",
     "/predict/choices/2": "Ia kekal sama",
     "/predict/reveal": "Kekalkan daya pada nilai asalnya dan bandingkan jisim 2 kg dengan 4 kg.",
-    "/apparatus/0/label": "Troli"
+    "/apparatus/0/label": "Troli",
+    "/graphs/1/title": "Seret titik di sepanjang graf untuk mengubah jisim dan perhatikan pecutan.",
+    "/graphs/1/label": "Pecutan"
   }
 }

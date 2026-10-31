@@ -43,6 +43,16 @@ class Citation(BaseModel):
     printedPage: int | None = None
 
 
+class CodeEvent(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
+    type: Literal['code']
+    lane: Literal['compose', 'free']
+    status: Literal['writing', 'unchecked', 'passed', 'refused']
+    reset: bool
+    delta: str
+    note: str | None
+
+
 class DoneEvent(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True, allow_inf_nan=False)
     type: Literal['done']
@@ -124,6 +134,7 @@ class PlanDraft(BaseModel):
     hasGraph: bool
     hasTable: bool
     steps: list[str]
+    components: list[str]
 
 
 class PlanEvent(BaseModel):
@@ -193,7 +204,7 @@ Lane = Literal['instantiate', 'compose', 'free']
 
 Language = Literal['en', 'ms']
 
-StreamEvent = Annotated[MetaEvent | StageEvent | PlanEvent | TextDeltaEvent | EnvironmentEvent | ProbeEvent | ExamEvent | StreamErrorEvent | DoneEvent, Field(discriminator='type')]
+StreamEvent = Annotated[MetaEvent | StageEvent | PlanEvent | CodeEvent | TextDeltaEvent | EnvironmentEvent | ProbeEvent | ExamEvent | StreamErrorEvent | DoneEvent, Field(discriminator='type')]
 
 TrustLabel = Literal['kit-verified', 'model-checked', 'reviewed', 'canonical']
 
@@ -201,6 +212,7 @@ AskRequest.model_rebuild()
 BlockMeta.model_rebuild()
 CheckedSummary.model_rebuild()
 Citation.model_rebuild()
+CodeEvent.model_rebuild()
 DoneEvent.model_rebuild()
 EnvironmentBlock.model_rebuild()
 EnvironmentEvent.model_rebuild()

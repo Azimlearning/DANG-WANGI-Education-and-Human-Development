@@ -33,7 +33,7 @@
     "/experiment/apparatus/5": "Minyak parafin",
     "/sentences/0": "Penapaian membebaskan 210 kJ daripada setiap mol glukosa; respirasi aerob membebaskan 2898 kJ.",
     "/steps/0": "Tabung A mengandungi larutan glukosa yang telah dididihkan dan yis; tabung B, kawalan, mengandungi glukosa sahaja. Kedua-duanya ditutup dengan minyak parafin.",
-    "/steps/1": "Putar dail untuk menetapkan berapa banyak glukosa dalam tabung A yang telah ditapai, dan perhatikan air kapur A, termometer dan baunya.",
+    "/steps/1": "Seret sudu glukosa ke dalam bikar untuk tabung A, satu demi satu, dan perhatikan air kapur A, termometer dan baunya.",
     "/steps/2": "Tekan Rekod pada 0.002 mol dan pada 0.004 mol, dan bandingkan tenaga daripada penapaian dengan tenaga daripada respirasi aerob.",
     "/predict/prompt": "Daripada glukosa yang sama, yang manakah membebaskan lebih banyak tenaga?",
     "/predict/choices/0": "Penapaian",
@@ -44,6 +44,8 @@
     "/concept_check/options/0": "Oksigen",
     "/concept_check/options/1": "Karbon dioksida",
     "/concept_check/options/2": "Etanol",
-    "/concept_check/explanation": "Penapaian glukosa menghasilkan etanol dan karbon dioksida, dan karbon dioksidalah yang mengeruhkan air kapur."
+    "/concept_check/explanation": "Penapaian glukosa menghasilkan etanol dan karbon dioksida, dan karbon dioksidalah yang mengeruhkan air kapur.",
+    "/apparatus/0/label": "Glukosa untuk tabung A",
+    "/apparatus/0/drop/item": "Sudu glukosa"
   }
 }

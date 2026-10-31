@@ -55,6 +55,14 @@
       "label": "Current",
       "unit": "A",
       "digits": 3
+    },
+    {
+      "title": "Drag the point along the graph to change the resistance and watch the current.",
+      "x": "resistance",
+      "source": "conductor",
+      "label": "Current",
+      "unit": "A",
+      "digits": 3
     }
   ],
   "table": null,

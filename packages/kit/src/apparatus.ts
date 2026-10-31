@@ -16,6 +16,7 @@ import { all, attr, contains, effectiveOpacity, hasAttribute, hitAt, layoutAvail
 import type { Environment } from "./environment";
 import { kt, ktWord } from "./i18n";
 import type { Observable } from "./observable";
+import { quiet } from "./handles";
 import { guard } from "./parts";
 import { controls, copy, isObservable, markKitSvg, markOwnStyle, nodeOf, own, ownAttr, registerAction, widgets, type ControlRecord } from "./provenance";
 import { APPARATUS, MAX_APPARATUS_PARTS, type ChannelType, type Grab } from "./apparatus_catalogue";
@@ -466,7 +467,8 @@ export function apparatus(env: Environment, options: ApparatusOptions): SVGSVGEl
   for (const c of bound) {
     const g = info.grabs?.[c.name];
     const rec = g ? controlOf(c.obs) : undefined;
-    if (!g || !rec) continue;
+    // W20: a control the part takes drops for is worked by dropping items; a grip on the same control would sit under the dropped items and fight them.
+    if (!g || !rec || rec === dropRec) continue;
     const at = (st: State): Attrs => {
       const [x, y] = gripPoint(g, st[c.name] ?? 0);
       return { cx: f(x), cy: f(y) };
@@ -475,6 +477,7 @@ export function apparatus(env: Environment, options: ApparatusOptions): SVGSVGEl
     builder.el("circle", { r: "5.5", fill: ACC, stroke: "var(--syn-card)", "stroke-width": "2" }, at);
     const hit = builder.el("circle", { r: String(GRIP_RADIUS), fill: "#000", "fill-opacity": "0", class: "syn-app-grip", "aria-hidden": "true", "data-synapse-handle": `${kind}-${index}.${c.name}` }, at);
     grips.push({ name: c.name, rec, obs: c.obs, grab: g, hit, full: c.full, type: c.type });
+    quiet(rec); // the drawing is what the student drags; the bar is drawn only with focus (W18)
   }
   const toDrawing = (clientX: number, clientY: number): [number, number] | null => {
     const r = root.getBoundingClientRect(); // the student's own pointer, so the element's own method; the audit's reads go through the captured one
@@ -528,6 +531,7 @@ export function apparatus(env: Environment, options: ApparatusOptions): SVGSVGEl
   caption.className = "syn-app-label";
   copy.push(label);
   const drop = dropRec && options.drop ? buildDrop(dropRec, options.drop.value, dropItem, label) : null;
+  if (dropRec && drop) quiet(dropRec); // the items are what the student drags; the bar is drawn only with focus
   if (drop) {
     drop.zone.prepend(root);
     figure.append(drop.zone, caption);

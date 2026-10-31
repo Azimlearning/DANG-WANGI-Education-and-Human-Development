@@ -55,6 +55,14 @@
       "label": "Effective resistance",
       "unit": "ohm",
       "digits": 2
+    },
+    {
+      "title": "Drag the point along the graph to change the resistance of the first resistor and watch the effective resistance.",
+      "x": "first",
+      "source": "effective",
+      "label": "Effective resistance",
+      "unit": "ohm",
+      "digits": 2
     }
   ],
   "table": null,

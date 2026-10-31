@@ -389,6 +389,37 @@ def electrical_energy(current: float, time: float, voltage: float) -> float:
     return charge * voltage
 
 
+
+# Planet masses (kg) and equatorial radii (m), transcribed here by hand from the NASA planetary fact sheet, in order from the Sun. Not read from the Kit.
+_PLANETS: tuple[tuple[str, float, float], ...] = (
+    ("Mercury", 0.33011e24, 2439.7e3),
+    ("Venus", 4.8675e24, 6051.8e3),
+    ("Earth", 5.9724e24, 6378.1e3),
+    ("Mars", 0.64171e24, 3396.2e3),
+    ("Jupiter", 1898.19e24, 71492e3),
+    ("Saturn", 568.34e24, 60268e3),
+    ("Uranus", 86.813e24, 25559e3),
+    ("Neptune", 102.413e24, 24764e3),
+)
+_G = 6.674e-11
+
+
+def planet_gravity(planet: float) -> float:
+    """Gravitational acceleration (N/kg) on the surface of the planet `planet` places from the Sun (1 Mercury to 8 Neptune): g = G M / R^2."""
+    _finite(planet=planet)
+    if planet < 1 or planet > 8:
+        raise ValueError("planet must be 1 (Mercury) to 8 (Neptune)")
+    _, mass, radius = _PLANETS[int(math.floor(planet + 0.5)) - 1]  # nearest planet, a half rounded up as the browser rounds
+    return _G * mass / (radius * radius)
+
+
+def weight(mass: float, gravity: float) -> float:
+    """Weight (N) of `mass` (kg) where the gravitational field strength is `gravity` (N/kg): W = m g."""
+    _finite(mass=mass, gravity=gravity)
+    if mass < 0 or gravity < 0:
+        raise ValueError("mass and gravity must be 0 or more")
+    return mass * gravity
+
 REFERENCES: dict[str, Reference] = {
     "mechanics.hookes": Reference(hookes, ("load",), ("k",), "m", {"load": "N"}),
     "electricity.ohm": Reference(ohm, ("voltage", "resistance"), (), "A", {"voltage": "V", "resistance": "ohm"}),
@@ -418,6 +449,8 @@ REFERENCES: dict[str, Reference] = {
         wave_speed, ("frequency", "wavelength"), (), "m/s", {"frequency": "Hz", "wavelength": "m"}
     ),
     "physics.newton_second": Reference(newton_second, ("force", "mass"), (), "m/s2", {"force": "N", "mass": "kg"}),
+    "physics.planet_gravity": Reference(planet_gravity, ("planet",), (), "N/kg", {"planet": "planet"}),
+    "physics.weight": Reference(weight, ("mass", "gravity"), (), "N", {"mass": "kg", "gravity": "N/kg"}),
     "biology.cardiac_output": Reference(
         cardiac_output, ("heart_rate", "stroke_volume"), (), "L/min", {"heart_rate": "beats/min", "stroke_volume": "mL"}
     ),

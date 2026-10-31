@@ -7,6 +7,7 @@
 import { event } from "./bridge";
 import { contains, hitAt, layoutAvailable, parentOf, rectOf, style } from "./dom";
 import type { Environment } from "./environment";
+import { quiet } from "./handles";
 import type { Observable } from "./observable";
 import { guard } from "./parts";
 import { controls, markOwnStyle, widgets } from "./provenance";
@@ -38,6 +39,7 @@ export function dial(env: Environment, options: DialOptions): Observable<number>
   const value = slider(env, { id, label: options.label, unit: options.unit, min, max, value: options.value, grid, snap: true });
   const record = controls.find((c) => c.id === id);
   if (!record) throw new Error(`dial ${id}: its control was not registered`);
+  quiet(record); // the knob is what the student turns; the bar is drawn only with focus (W19)
 
   const fraction = (): number => Math.min(1, Math.max(0, (value.get() - min) / (max - min)));
   const angle = (): number => -SWEEP + fraction() * 2 * SWEEP;

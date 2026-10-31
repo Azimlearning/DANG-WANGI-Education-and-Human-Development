@@ -38,7 +38,7 @@ describe("parseStreamEvent", () => {
     expect(parseStreamEvent({ type: "stage", layer: "plan", status: "degraded", note: "n" })).toEqual({ type: "stage", layer: "plan", status: "degraded", note: "n" });
     expect(parseStreamEvent({ type: "stage", layer: "plan", status: "start", note: null })).toMatchObject({ type: "stage" });
     expect(parseStreamEvent({ type: "stage", layer: "plan", status: "weird", note: null })).toBeNull();
-    const draft = { title: "t", goal: "g", pattern: "simulation", note: "n", controls: [{ label: "Load", unit: "N" }], readouts: [{ label: "Extension", unit: "m" }], hasGraph: true, hasTable: false, steps: ["s"] };
+    const draft = { title: "t", goal: "g", pattern: "simulation", note: "n", controls: [{ label: "Load", unit: "N" }], readouts: [{ label: "Extension", unit: "m" }], hasGraph: true, hasTable: false, steps: ["s"], components: ["graph", "hookes"] };
     expect(parseStreamEvent({ type: "plan", draft })).toMatchObject({ type: "plan" });
     expect(parseStreamEvent({ type: "plan", draft: { ...draft, controls: [{ label: 1 }] } })).toBeNull();
     expect(parseStreamEvent({ type: "plan", draft: { ...draft, hasGraph: "yes" } })).toBeNull();

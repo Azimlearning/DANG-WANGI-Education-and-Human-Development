@@ -7,19 +7,19 @@
 
 | Case | USD per Environment | What it assumes |
 |---|---|---|
-| Low | **0.0238** | no plan retry, no slot fill, 4 characters per token, short outputs (no caching in any case) |
-| High | **0.0508** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
-| Pessimistic | **0.0698** | the high case with every plan retried once (retry rate 100 percent) |
-| Hard bound | **0.0912** | what the ledger itself would reserve for the worst allowed Compose path of 8 calls (route, explain, plan, wording check, plan retry, wording check, fill, fill retry), every reply running to its max_tokens |
-| Free lane, extra when it fires | **0.0285** to **0.0658** | the Free page and its reading (2500 to 6000 output tokens for the page), on top of the failed Compose attempts. On by default since D-67 (live mode only); unmeasured |
-| Hard bound with the Free lane on | **0.1589** | route, explain, two plans each read by the judge, then one Free page and its reading (8 calls), every reply running to its max_tokens |
+| Low | **0.0252** | no plan retry, no slot fill, 4 characters per token, short outputs (no caching in any case) |
+| High | **0.0538** | one plan retry 40 percent of the time, a slot fill, no caching, 3 characters per token, long outputs |
+| Pessimistic | **0.0744** | the high case with every plan retried once (retry rate 100 percent) |
+| Hard bound | **0.0955** | what the ledger itself would reserve for the worst allowed Compose path of 8 calls (route, explain, plan, wording check, plan retry, wording check, fill, fill retry), every reply running to its max_tokens |
+| Free lane, extra when it fires | **0.0304** to **0.0682** | the Free page and its reading (2500 to 6000 output tokens for the page), on top of the failed Compose attempts. On by default since D-67 (live mode only); unmeasured |
+| Hard bound with the Free lane on | **0.2067** | route, explain, two plans each read by the judge, then one Free page and its reading (8 calls), every reply running to its max_tokens |
 
 Mean over the 24 golden questions (each hard bound is the largest over them; the wording check is counted because live mode turns it on), from the real prompts the pipeline builds. For comparison, Synapse v3 spent about $0.19 per whole-page generation (an unverified figure from v3's notes, A-4).
 
 ## Proposed first paid run (the amounts to confirm)
 
-1. **A canary of 1 question** first: up to **$0.0912** (hard bound), expected about $0.024 to $0.051. It checks model ids, token counts and error handling for almost nothing.
-2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.21 to $0.63**, hard bound **$0.82**.
+1. **A canary of 1 question** first: up to **$0.0955** (hard bound), expected about $0.025 to $0.054. It checks model ids, token counts and error handling for almost nothing.
+2. **Then 9 questions**, three per Physics Form 5 topic (spring, circuit, liquid pressure): projected **$0.23 to $0.67**, hard bound **$0.86**.
 3. **Suggested `LLM_MONTHLY_CAP_USD`: $1.00** for both together. The cap is the last line of defence, so it is set close to the hard bound, not far above it. A second run in the same month adds to the same cap.
 - What it would measure that nothing else can: the rate of valid plans (the biggest unknown), tokens per layer, the real retry rate, the real characters per token and any hidden thinking tokens, and whether the fail-check registry's hints fix a bad plan.
 - It would not measure: whether the content is right. That is checked by reading the textbook pages against each Plan (Step 2, D-36), and a model-written Plan can only earn `kit-verified` by naming citation ids that exist and support it. A teacher's judgement is not measured at all.
@@ -33,7 +33,7 @@ Mean over the 24 golden questions (each hard bound is the largest over them; the
 
 ## Size of the real prompts (characters, rounded)
 
-- Plan request (virtual experiment): about 28282 characters, of which 21921 are the stable prefix (sent in full every time: caching is off, PROMPT_CACHING).
+- Plan request (virtual experiment): about 31471 characters, of which 25110 are the stable prefix (sent in full every time: caching is off, PROMPT_CACHING).
 - The router-fallback request is built by the real builder, with the full topic list.
 
 ## Assumptions (each can be wrong; the first paid run replaces them with measurements)
@@ -52,27 +52,27 @@ Mean over the 24 golden questions (each hard bound is the largest over them; the
 
 | Question | Low USD | High USD | Pessimistic USD |
 |---|---|---|---|
-| g01 | 0.0245 | 0.0530 | 0.0729 |
-| g02 | 0.0252 | 0.0543 | 0.0747 |
-| g03 | 0.0252 | 0.0543 | 0.0747 |
-| g04 | 0.0252 | 0.0544 | 0.0748 |
-| g05 | 0.0245 | 0.0530 | 0.0729 |
-| g06 | 0.0245 | 0.0530 | 0.0729 |
-| g07 | 0.0245 | 0.0531 | 0.0730 |
-| g08 | 0.0253 | 0.0545 | 0.0750 |
-| g09 | 0.0245 | 0.0527 | 0.0725 |
-| g10 | 0.0248 | 0.0533 | 0.0733 |
-| g11 | 0.0246 | 0.0530 | 0.0730 |
-| g12 | 0.0248 | 0.0534 | 0.0734 |
-| g13 | 0.0248 | 0.0533 | 0.0733 |
-| g14 | 0.0248 | 0.0534 | 0.0734 |
-| g15 | 0.0247 | 0.0531 | 0.0730 |
-| g16 | 0.0250 | 0.0537 | 0.0739 |
-| g17 | 0.0219 | 0.0455 | 0.0622 |
-| g18 | 0.0217 | 0.0451 | 0.0617 |
-| g19 | 0.0218 | 0.0455 | 0.0621 |
-| g20 | 0.0218 | 0.0455 | 0.0622 |
-| g21 | 0.0224 | 0.0465 | 0.0636 |
-| g22 | 0.0219 | 0.0455 | 0.0622 |
-| g23 | 0.0219 | 0.0455 | 0.0622 |
-| g24 | 0.0217 | 0.0451 | 0.0617 |
+| g01 | 0.0260 | 0.0562 | 0.0778 |
+| g02 | 0.0263 | 0.0567 | 0.0785 |
+| g03 | 0.0263 | 0.0567 | 0.0784 |
+| g04 | 0.0263 | 0.0568 | 0.0786 |
+| g05 | 0.0258 | 0.0558 | 0.0772 |
+| g06 | 0.0258 | 0.0558 | 0.0771 |
+| g07 | 0.0261 | 0.0563 | 0.0779 |
+| g08 | 0.0263 | 0.0568 | 0.0786 |
+| g09 | 0.0262 | 0.0567 | 0.0785 |
+| g10 | 0.0265 | 0.0573 | 0.0793 |
+| g11 | 0.0263 | 0.0571 | 0.0790 |
+| g12 | 0.0265 | 0.0574 | 0.0795 |
+| g13 | 0.0265 | 0.0573 | 0.0794 |
+| g14 | 0.0265 | 0.0574 | 0.0795 |
+| g15 | 0.0264 | 0.0571 | 0.0790 |
+| g16 | 0.0267 | 0.0577 | 0.0799 |
+| g17 | 0.0229 | 0.0478 | 0.0658 |
+| g18 | 0.0228 | 0.0475 | 0.0653 |
+| g19 | 0.0229 | 0.0478 | 0.0658 |
+| g20 | 0.0229 | 0.0478 | 0.0658 |
+| g21 | 0.0235 | 0.0488 | 0.0672 |
+| g22 | 0.0230 | 0.0478 | 0.0658 |
+| g23 | 0.0230 | 0.0478 | 0.0658 |
+| g24 | 0.0228 | 0.0475 | 0.0653 |

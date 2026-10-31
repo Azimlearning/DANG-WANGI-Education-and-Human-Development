@@ -9,6 +9,14 @@
       "label": "Acceleration",
       "unit": "m/s2",
       "digits": 2
+    },
+    {
+      "title": "Drag the point along the graph to change the mass and watch the acceleration.",
+      "x": "mass",
+      "source": "motion",
+      "label": "Acceleration",
+      "unit": "m/s2",
+      "digits": 2
     }
   ],
   "table": null,

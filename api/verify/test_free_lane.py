@@ -193,3 +193,39 @@ def test_a_free_page_whose_handle_moves_nothing_or_names_no_slider_is_refused(ki
     with pytest.raises(VerificationFailed) as err:
         free(kit_dist, html)
     assert (err.value.stage, err.value.rule) == ("render", "handle_dead")
+
+
+# W20 (D-80): a handle dropped onto something names it with data-synapse-target; the harness drops it there and the slider must move.
+_PAN = '<div id="pan" style="width:120px;height:60px;background:#ccc"></div>\n'
+_DROP = """
+  var grip = document.getElementById("grip");
+  var held = false;
+  grip.addEventListener("pointerdown", function (e) { held = true; grip.setPointerCapture(e.pointerId); });
+  grip.addEventListener("pointerup", function (e) {
+    if (!held) return;
+    held = false;
+    var r = document.getElementById("pan").getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+      depth.value = depth.max;
+      depth.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  });
+  show();
+})();"""
+
+
+def _with_target(target: str = "pan", works: bool = True) -> str:
+    grip = _GRIP.replace('data-synapse-handle="depth"', f'data-synapse-handle="depth" data-synapse-target="{target}"')
+    out = GOOD.replace('<output data-synapse-readout="pressure"', _PAN + grip + '<output data-synapse-readout="pressure"', 1)
+    return out.replace("  show();\n})();", _DROP if works else "  show();\n})();", 1)
+
+
+def test_a_free_page_whose_handle_is_dropped_onto_its_target_is_minted(kit_dist: Path) -> None:
+    assert free(kit_dist, _with_target()).lane == "free"
+
+
+@pytest.mark.parametrize(("html", "fragment"), [(_with_target("nowhere"), "not on the page"), (_with_target(works=False), "did not move it")], ids=["missing", "dead"])
+def test_a_drop_target_that_is_missing_or_moves_nothing_is_refused(kit_dist: Path, html: str, fragment: str) -> None:
+    with pytest.raises(VerificationFailed) as err:
+        free(kit_dist, html)
+    assert (err.value.stage, err.value.rule) == ("render", "handle_dead") and fragment in str(err.value)

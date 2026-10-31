@@ -1,0 +1,64 @@
+@@TITLE
+Pressure and depth
+@@KICKER
+Physics, Form 5
+@@TRY
+Drag the diver down into the water and watch the pressure readout climb.
+@@IDEA
+The pressure from a liquid grows with depth: p = h x rho x g.
+Here rho is 1000 kg/m3 for water and g is 9.81 m/s2.
+@@PREDICT
+The diver goes twice as deep. What happens to the pressure from the water?
+- It halves
+- It stays the same
+- It doubles
+Check: drag the diver from 2 m to 4 m and compare the two pressures.
+@@STEPS
+- Drag the diver to 2 m and read the pressure.
+- Drag the diver to 4 m and read it again.
+- Compare the two readings.
+@@HINTS
+- Pressure depends on how much water is above the diver.
+- Look at how the pressure changes when the depth doubles.
+@@EXPLAIN
+The water above the diver pushes down with its weight. Twice the depth means twice the water above, so twice the pressure from the water.
+@@STYLE
+.water{fill:#7cc4d8}
+@@DRAWING
+<svg id="tank" viewBox="0 0 200 240" role="img" aria-label="A tank of water with a diver at 2 metres">
+  <rect class="water" x="20" y="20" width="160" height="200"/>
+  <circle id="diver" cx="100" cy="60" r="24" fill="#d6336c" data-synapse-handle="depth" aria-hidden="true" style="touch-action:none;cursor:grab"/>
+</svg>
+@@CONTROLS
+depth | Depth | 0 | 10 | 0.5 | 2 | m
+@@READOUTS
+pressure | Pressure from the water (kPa)
+@@SCRIPT
+var RHO_KG_PER_M3 = 1000;
+var G_M_PER_S2 = 9.81;
+var depth = document.getElementById("depth");
+var out = document.getElementById("pressure");
+var found = document.getElementById("found");
+var tank = document.getElementById("tank");
+var diver = document.getElementById("diver");
+function pressureKpa(hMetres) { return hMetres * RHO_KG_PER_M3 * G_M_PER_S2 / 1000; }
+function show() {
+  var h = Number(depth.value);
+  out.textContent = pressureKpa(h).toFixed(1) + " kPa";
+  diver.setAttribute("cy", String(30 + h * 18));
+  tank.setAttribute("aria-label", "A tank of water with a diver at " + h + " metres");
+  found.textContent = "At " + h + " m the water pushes with " + pressureKpa(h).toFixed(1) + " kPa.";
+}
+var held = false;
+diver.addEventListener("pointerdown", function (e) { held = true; diver.setPointerCapture(e.pointerId); });
+diver.addEventListener("pointermove", function (e) {
+  if (!held) return;
+  var r = tank.getBoundingClientRect();
+  var f = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+  depth.value = String(Math.round(f * 20) / 2);
+  depth.dispatchEvent(new Event("input", { bubbles: true }));
+});
+diver.addEventListener("pointerup", function () { held = false; });
+depth.addEventListener("input", show);
+show();
+@@END

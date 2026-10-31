@@ -17,9 +17,9 @@ from html.parser import HTMLParser
 
 from api.pipeline.plan import Plan
 
-MAX_LINES = 80
+MAX_LINES = 160
 MAX_LINE_CHARS = 400
-MAX_SCRIPT_CHARS = 12000
+MAX_SCRIPT_CHARS = 32000
 MAX_ISSUES = 8
 MAX_ISSUE_CHARS = 200
 
@@ -32,6 +32,8 @@ class UnusableVerdict(ValueError):
 class WordingVerdict:
     ok: bool
     issues: tuple[str, ...]
+    cleared: tuple[str, ...] = ()
+    """Points the reader listed and then cleared itself ("... is fine; no error there"), dropped from `issues` (W20) and kept here for the trace."""
 
 
 def _clip(text: str) -> str:
@@ -167,6 +169,12 @@ def numbered(lines: list[str]) -> str:
     return "\n".join(f"{i}. {line}" for i, line in enumerate(lines, 1))
 
 
+_SELF_CLEARED = re.compile(
+    r"(?:\bno (?:real )?(?:error|problem|issue|mistake)s?(?: (?:there|here|in (?:it|this|that)))?|\b(?:is|are|looks?) (?:fine|correct|accurate|right|consistent|ok)(?: (?:there|here))?)\s*[.!]?\s*$",
+    re.IGNORECASE,
+)
+"""An issue that ends by saying it is not one (W20): the reader checked a point, found it right, and listed it anyway. Seen in live runs from both readers."""
+
 _FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL | re.IGNORECASE)
 
 
@@ -180,8 +188,15 @@ def parse_verdict(raw: str) -> WordingVerdict:
         text = fenced.group(1)
     try:
         data = json.loads(text)
-    except ValueError as exc:
-        raise UnusableVerdict("the reply is not JSON") from exc
+    except ValueError:
+        # W20: a reader that wraps its verdict in a sentence still gave one. The object found must still be exactly {"ok", "issues"} below.
+        found = re.search(r"\{.*\}", text, re.DOTALL)
+        try:
+            data = json.loads(found.group(0)) if found else None
+        except ValueError:
+            data = None
+        if data is None:
+            raise UnusableVerdict("the reply is not JSON") from None
     if not isinstance(data, dict) or set(data) != {"ok", "issues"}:
         raise UnusableVerdict('the reply must be an object with exactly "ok" and "issues"')
     ok, issues = data["ok"], data["issues"]
@@ -189,9 +204,14 @@ def parse_verdict(raw: str) -> WordingVerdict:
         raise UnusableVerdict('"ok" must be true or false')
     if not isinstance(issues, list) or not all(isinstance(i, str) for i in issues):
         raise UnusableVerdict('"issues" must be a list of strings')
-    kept = tuple(" ".join(i.split())[:MAX_ISSUE_CHARS] for i in issues if i.strip())[:MAX_ISSUES]
+    stated = [" ".join(i.split()) for i in issues if i.strip()]
+    cleared = tuple(i[:MAX_ISSUE_CHARS] for i in stated if _SELF_CLEARED.search(i))
+    kept = tuple(i[:MAX_ISSUE_CHARS] for i in stated if not _SELF_CLEARED.search(i))[:MAX_ISSUES]
     if ok and kept:
-        return WordingVerdict(False, kept)
+        return WordingVerdict(False, kept, cleared)
     if not ok and not kept:
+        if cleared:
+            # Every reason the reader gave, it cleared itself: no problem was stated, so this is a pass, and the trace keeps what was cleared (W20).
+            return WordingVerdict(True, (), cleared)
         return WordingVerdict(False, ("the wording check refused without saying why",))
-    return WordingVerdict(ok, kept)
+    return WordingVerdict(ok, kept, cleared)

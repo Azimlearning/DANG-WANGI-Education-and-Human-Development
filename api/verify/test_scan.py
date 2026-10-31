@@ -55,3 +55,13 @@ def test_an_external_stylesheet_is_refused() -> None:
 def test_our_own_csp_origin_is_not_scanned() -> None:
     html = '<meta http-equiv="Content-Security-Policy" content="script-src http://localhost:3000/vendor/;">' + GOOD
     assert scan.scan(html) is None
+
+
+def test_a_free_page_may_colour_its_drawing_with_a_same_page_gradient_but_no_other_url() -> None:
+    # W20: url(#glass) names a gradient on the page itself; it loads nothing. Any other url( is still an image or an import.
+    from api.verify.scan import FREE_LANE_PATTERNS
+
+    media = next(p for p, label in FREE_LANE_PATTERNS if label == "image or media")
+    assert not media.search('<rect fill="url(#glass)"/>') and not media.search("fill: url( '#g-1' )")
+    for bad in ("background:url(x.png)", "url(data:image/png;base64,AA)", "url(#a) url(b.png)", "url(//x)"):
+        assert media.search(bad), bad

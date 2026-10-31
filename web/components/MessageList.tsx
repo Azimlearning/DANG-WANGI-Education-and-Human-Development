@@ -7,6 +7,7 @@ import { useEffect, useRef, type RefObject } from "react";
 import { useT } from "../lib/i18n";
 import { usePacedStep } from "../lib/pace";
 import type { Turn } from "../lib/turns";
+import { BuildDetails, BuildLog } from "./BuildLog";
 import { DegradedCard } from "./DegradedCard";
 import { ExamCard } from "./ExamCard";
 import { Peek } from "./Peek";
@@ -35,6 +36,7 @@ function TurnWork({
     return (
       <div className="grid gap-3">
         <ProgressStages step={shown} />
+        <BuildLog log={turn.log} draft={turn.draft} code={turn.code} />
         {turn.draft && !turn.block ? <PeekSkeleton draft={turn.draft} /> : null}
       </div>
     );
@@ -43,6 +45,9 @@ function TurnWork({
   return (
     <div ref={labRef} className="scroll-mt-2">
       {stagedId === turn.block.id ? <Stage block={turn.block} onBack={onBack} /> : <Peek block={turn.block} onOpen={() => onOpen(turn.block!.id)} />}
+      <div className="mt-3">
+        <BuildDetails block={turn.block} log={turn.log} />
+      </div>
     </div>
   );
 }

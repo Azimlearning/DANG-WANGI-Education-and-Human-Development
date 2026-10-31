@@ -27,6 +27,24 @@ class Page:
     html: str
 
 
+def read_reply(raw: str) -> Page | str:
+    """The page from the model's reply, or the reason there is none (told to the model on a retry). A reply in labelled sections (W20) is assembled into the
+    house frame (`free_house`); a whole document (the older format, and the test fixtures) is taken as it is."""
+    from api.pipeline import free_house
+
+    text = raw.lstrip("﻿").strip()
+    fenced = _FENCE.match(text)
+    if fenced:
+        text = fenced.group(1).strip()
+    if free_house.is_sections(text):
+        lab = free_house.parse(text)
+        if isinstance(lab, str):
+            return lab
+        return Page(lab.title or DEFAULT_TITLE, free_house.assemble(lab))
+    page = parse_reply(text)
+    return page if page is not None else "the reply was not the lab in the @@ sections asked for"
+
+
 def parse_reply(raw: str) -> Page | None:
     """One document from the model's reply, or None when there is not one."""
     text = raw.lstrip("﻿").strip()

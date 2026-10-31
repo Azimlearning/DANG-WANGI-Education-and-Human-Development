@@ -8,6 +8,8 @@ assembler and the full verifier, the label comes from `grounding`, and the store
 
 from __future__ import annotations
 
+import functools
+import json
 import re
 from pathlib import Path
 
@@ -89,6 +91,7 @@ def seed(
     build and link the Bahasa Melayu Environment of each Plan that has an overlay there."""
     version = latest_version(kit_dist)
     manifest = kitmanifest.load(kit_dist, version)
+    known = known_questions()
     built: list[tuple[Plan, VerifiedEnvironment]] = []
     for path in sorted(plans_dir.glob("*.json")):
         plan = plan_module.parse(path.read_text(encoding="utf-8"))
@@ -106,6 +109,8 @@ def seed(
         )
         store.put_verified(env)
         store.index_topic(plan.topic, env.env_id, plan_id=plan.id, title=plan.title, goal=plan.goal, note=plan.note)
+        for question in known.get(plan.id, []):
+            store.remember_question(canonical_question(question), env.env_id, plan.note)
         built.append((plan, env))
         if translations_dir is not None:
             translate(
@@ -206,6 +211,94 @@ def match_by_name(question: str, entries: list[dict]) -> dict | None:
     if best < 2 or (len(scored) > 1 and scored[1][0] >= best):
         return None
     return scored[0][1]
+
+
+def canonical_question(question: str) -> str:
+    """Lowercase words only, single spaces: 'Why does a spring stretch?' and 'why does a SPRING stretch' are the same question."""
+    return " ".join(re.findall(r"[a-z0-9]+", question.lower()))
+
+
+LIBRARY_QUESTIONS = Path(__file__).resolve().parents[2] / "data" / "library_questions.json"
+"""Questions each library lab is known to answer (W19): the seed remembers them word for word, so they are served with no model call."""
+
+
+def known_questions(path: Path = LIBRARY_QUESTIONS) -> dict[str, list[str]]:
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {k: [str(q) for q in v] for k, v in data.items() if not k.startswith("_") and isinstance(v, list)}
+
+
+_ASKING = frozenset(
+    w[:5]
+    for w in (
+        "simulate simulation happen happens happening change changes changing affect affects effect effects compare compared comparing comparison difference "
+        "different differ demonstrate depend depends dependent relationship relate increase increases decrease decreases investigate measure measured calculate "
+        "determine model interactive experiment visualise visualize animate animation explore example student science physics chemistry biology "
+        "please simple quick happen revise revision learn understand explain teach"
+    ).split()
+)
+"""Words that say what the student wants done, not what the question is about: they never decide whether a lab covers it."""
+
+
+_SHORT_STOP = frozenset(
+    "what when does have with that this they from will into than then them much many some more most each make goes just like also only over show tell come gets were your able "
+    "kind sort same around across along behind below beside inside outside toward towards without within again still even ever every really actually".split()
+)
+
+
+def _content(text: str) -> set[str]:
+    """Content words as five-letter stems, keeping four-letter words (moon, mass, heat, acid) and folding a plural or a past or continuous form onto its root."""
+    out: set[str] = set()
+    for w in re.findall(r"[a-z]+", text.lower()):
+        if len(w) < 4 or w in _STOP or w in _SHORT_STOP:
+            continue
+        for suffix in ("ing", "ed", "s"):
+            if w.endswith(suffix) and not w.endswith("ss") and len(w) - len(suffix) >= 4:
+                w = w[: -len(suffix)]
+                break
+        out.add(w[:5])
+    return out
+
+
+@functools.cache
+def _plan_words(plan_id: str, plans_dir: Path = PLANS) -> frozenset[str]:
+    """Every content word a library Plan uses anywhere (title, note, sentences, steps, graph titles, hints, the experiment card): what its lab is about."""
+    for path in plans_dir.glob("*.json"):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("id") == plan_id:
+            return frozenset(_content(" ".join(_strings(data))))
+    return frozenset()
+
+
+def _strings(v: object) -> list[str]:
+    """Every string anywhere inside a JSON value."""
+    if isinstance(v, str):
+        return [v]
+    if isinstance(v, dict):
+        return [s for x in v.values() for s in _strings(x)]
+    if isinstance(v, list):
+        return [s for x in v for s in _strings(x)]
+    return []
+
+
+def uncovered(question: str, entry: dict) -> list[str]:
+    """The question's content words that the stored lab's Plan never uses (W19). A lab is served from the library by topic or by name only when this is empty:
+    a question about the Moon's phases shares "orbit" and "Earth" with the cannonball lab, but that lab does not answer it, so it goes on to be planned or written.
+    Questions the library is known to answer are remembered word for word by the seed (`LIBRARY_QUESTIONS`), so they never depend on this rule."""
+    about = lab_words(entry)
+    return sorted(w for w in content_words(question) if w not in about and w not in _GENERIC)
+
+
+def content_words(question: str) -> set[str]:
+    """What a question is about (W20): its content stems, without the words that only say what the student wants done."""
+    asking = {w[:5] for w in _ASKING} | _ASKING
+    return {w for w in _content(question) if w not in asking}
+
+
+def lab_words(entry: dict) -> frozenset[str]:
+    """What a stored lab is about: every content stem its Plan uses, and its title, goal and note."""
+    return _plan_words(str(entry.get("plan_id", ""))) | _content(f"{entry.get('title', '')} {entry.get('goal', '')} {entry.get('note', '')}")
 
 
 def best_entry(question: str, entries: list[dict]) -> dict:

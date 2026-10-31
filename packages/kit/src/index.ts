@@ -40,6 +40,9 @@ import { ohm } from "./science/ohm";
 import { pressureDepth } from "./science/pressure_depth";
 import { respirationEnergy } from "./science/respiration_energy";
 import { circularSpeed } from "./science/circular_speed";
+import { planetGravity } from "./science/planet_gravity";
+import { weight } from "./science/weight";
+import { planetPicker } from "./planets";
 import { escapeSpeed } from "./science/escape_speed";
 import { centripetalAcceleration } from "./science/centripetal_acceleration";
 import { refractionAngle } from "./science/refraction_angle";
@@ -77,7 +80,7 @@ const readyAndWatch = (): void => {
 };
 const bridge = Object.freeze({ ready: readyAndWatch, event, error, installErrorHandlers });
 
-export const components = { observable, environment, slider, massHanger, springScene, valve, titrationScene, titrationEndpoint, dial, fermentationScene, orbitScene, refractionScene, pressureScene, apparatus, respirationEnergy, circularSpeed, escapeSpeed, centripetalAcceleration, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, waveSpeed, newtonSecond, cardiacOutput, percentChangeMass, ph, gasVolume, refractionAngle, criticalAngle, specificHeat, transformerVoltage, halfLifeDecay, relativeAtomicMass, foodEnergyValue, boyleLaw, parallelResistance, buoyantForce, cellVoltage, populationDensity, electricalEnergy, bridge };
+export const components = { observable, environment, slider, massHanger, planetPicker, springScene, valve, titrationScene, titrationEndpoint, dial, fermentationScene, orbitScene, refractionScene, pressureScene, apparatus, respirationEnergy, circularSpeed, escapeSpeed, planetGravity, weight, centripetalAcceleration, readout, reset, graph, table, stepper, experiment, hintLadder, conceptCheck, predictCard, workedSolution, text, constant, convert, hookes, ohm, pressureDepth, magnification, surfaceAreaToVolume, netPhotosynthesis, moles, titration, dilution, heatEnergy, averageRate, waveSpeed, newtonSecond, cardiacOutput, percentChangeMass, ph, gasVolume, refractionAngle, criticalAngle, specificHeat, transformerVoltage, halfLifeDecay, relativeAtomicMass, foodEnergyValue, boyleLaw, parallelResistance, buoyantForce, cellVoltage, populationDensity, electricalEnergy, bridge };
 
 export const Synapse = Object.freeze({ version: KIT_VERSION, ...components, audit: () => audit(KIT_VERSION) });
 seal(Synapse);

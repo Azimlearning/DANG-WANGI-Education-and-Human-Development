@@ -68,7 +68,24 @@ body{margin:0;background:var(--syn-bg);color:var(--syn-fg);font:16px/1.5 system-
 .syn-masses>.syn-hanger{grid-area:hanger;flex-direction:column;flex-wrap:nowrap;align-items:center;justify-self:center;width:min(100%,160px);gap:3px;border-top:5px solid var(--syn-line);border-radius:4px 4px 16px 16px}
 .syn-masses .syn-mass{border-radius:8px;border-color:#262e33;background:#48525a;color:#eef3f6;box-shadow:0 3px 0 #262e33}
 .syn-hanger .syn-mass{width:100%;min-height:44px}
-.syn-control-quiet:not(:focus-within){position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.syn-hanger .syn-mass:last-of-type{animation:syn-drop-in .45s cubic-bezier(.34,1.5,.5,1)}
+@keyframes syn-drop-in{0%{transform:translateY(-18px);opacity:.4}60%{transform:translateY(4px);opacity:1}100%{transform:none}}
+.syn-control-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.syn-control-value{font-weight:800;color:var(--syn-accent);font-variant-numeric:tabular-nums}
+.syn-control-quiet{padding:6px 14px}
+.syn-control-quiet input[type=range]:not(:focus){position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.syn-planets{display:grid;gap:6px;grid-column:1/-1;width:100%}
+.syn-planets .syn-scene{max-height:none;display:block}
+.syn-planets-hint{text-align:center;font-size:.9rem}
+.syn-planet{cursor:pointer}
+.syn-a-bubble{animation:syn-bubble 1.3s ease-in-out infinite}
+@keyframes syn-bubble{0%{transform:translateY(3px);opacity:.55}50%{opacity:1}100%{transform:translateY(-5px);opacity:.55}}
+.syn-titr-drop{opacity:0}
+.syn-titr-flask{cursor:grab;touch-action:none;transform-box:fill-box;transform-origin:50% 100%}
+.syn-titr-flask:active{cursor:grabbing}
+.syn-titr-frame>.syn-valves{position:absolute;left:30.5%;top:66%;transform:translateY(-50%)}
+.syn-env:has(.syn-valve.syn-open) .syn-titr-drop{animation:syn-drip .5s linear infinite}
+@keyframes syn-drip{0%{transform:translateY(-6px);opacity:1}100%{transform:translateY(26px);opacity:0}}
 .syn-scene{width:100%;max-height:360px;height:auto}
 .syn-valves{display:flex;align-items:center;gap:8px}
 .syn-valve{min-width:88px;min-height:44px;padding:0 16px;border-radius:999px;border:2px solid var(--syn-edge);background:var(--syn-card);color:var(--syn-fg);font:inherit;font-weight:800;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 3px 0 var(--syn-edge)}

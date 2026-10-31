@@ -16,7 +16,7 @@ from pathlib import Path
 
 from api.evidence.registry import CitationBook
 from api.kitmanifest import Manifest
-from api.llm.types import LLMRequest
+from api.llm.types import MAX_OUTPUT_TOKENS, LLMRequest
 from api.models.misconceptions import _tokens
 from api.pipeline import failchecks, wording
 from api.pipeline.fill import SlotContract
@@ -26,8 +26,8 @@ from api.prompts import DIR, estimate_tokens, load
 
 MAX_KIT_PACK = 17
 """The most components a planner request names. 15 until the Hooke's law Plan gained its hint ladder (D-61): that Plan alone names 16; 17 since the bench (D-66) joined the base components."""
-REQUEST_TOKEN_CAP = 8000
-"""Raised from 7000 for the apparatus catalogue in the planner pack (D-66): about 700 tokens, cacheable with the rest of the stable part."""
+REQUEST_TOKEN_CAP = 9500
+"""Raised from 7000 for the apparatus catalogue in the planner pack (D-66), then from 8000 (W18, 2026-10-29): with the golden Plan as exemplar the gravity topic needed about 8150 tokens and was refused before any model call, so every gravity question got no lab in live mode. Worst case measured over the topics: about 8150; 9500 leaves room for the next bench. About $0.004 more per plan call at most."""
 
 
 class RequestTooLarge(ValueError):
@@ -123,10 +123,15 @@ def pattern_pack(pattern: str) -> str:
     return pack.render(failure_modes=failure_modes_text()).strip()
 
 
-def _check(system: str, user: str) -> None:
+READING_TOKEN_CAP = 24000
+"""The cap for a Free page's reading (W20): a whole page written by the heavy tier runs to about 30,000 characters of script, and the reader must take all of it."""
+
+
+def _check(system: str, user: str, cap: int | None = None) -> None:
+    cap = REQUEST_TOKEN_CAP if cap is None else cap  # read when called, so the cap is the module's current one
     total = estimate_tokens(system) + estimate_tokens(user)
-    if total > REQUEST_TOKEN_CAP:
-        raise RequestTooLarge(f"the request would be about {total} tokens, over the cap of {REQUEST_TOKEN_CAP}")
+    if total > cap:
+        raise RequestTooLarge(f"the request would be about {total} tokens, over the cap of {cap}")
 
 
 def issues_text(issues: list[PlanIssue]) -> str:
@@ -173,6 +178,7 @@ def plan_request(
     issues: list[PlanIssue] | None = None,
     topic: str | None = None,
     use_exemplar: bool = True,
+    tier: str = "standard",
 ) -> LLMRequest:
     """`use_exemplar=False` gives the planner no worked example (an evaluation switch): for a topic with a hand-written golden Plan the exemplar IS the
     answer, so a planner measured with it shows plumbing and cost, not whether a model can plan an Environment on its own."""
@@ -192,7 +198,7 @@ def plan_request(
     )
     system = core.stable + "\n" + stable
     _check(system, variable)
-    return LLMRequest(prompt=variable, purpose="plan", tier="standard", system=system, max_tokens=2000)
+    return LLMRequest(prompt=variable, purpose="plan", system=system, **_writer(tier, PLAN_MAX_TOKENS))
 
 
 def planner_schema() -> str:
@@ -220,14 +226,32 @@ def fill_request(
 
 
 def explain_request(question: str, route_summary: str, misconception: str = "(none)") -> LLMRequest:
-    core, explain = load("core"), load("explainer")
+    # The explainer does not take `core`: core ends with the planner's JSON output contract, and with it a "simulate ..." question was answered with a refusal
+    # to output JSON (W19). Its own pack carries the role and the writing rules.
+    explain = load("explainer")
     stable, variable = explain.render_parts(question=question, route=route_summary, misconception=misconception)
-    system = core.stable + "\n" + stable
+    system = stable
     _check(system, variable)
     return LLMRequest(prompt=variable or stable, purpose="explain", tier="standard", system=system, max_tokens=600)
 
 
-FREE_MAX_TOKENS = 6000
+PLAN_MAX_TOKENS = 2000
+SIMPLE_MAX_TOKENS = 6000
+"""Output cap for one simple page (W20): a small page, so it is written whole and read whole."""
+HEAVY_TOKEN_FACTOR = 4
+"""On the heavy tier the writer always thinks first, and its thinking counts against max_tokens: the cap is raised by this factor so a page is not cut off."""
+HEAVY_EFFORT = "medium"
+"""How hard the heavy writer thinks: enough to plan the page, without making a visitor wait minutes for it."""
+
+
+def _writer(tier: str, max_tokens: int) -> dict:
+    """The tier, output cap and effort for a request that WRITES a Plan or a page (W20, GENERATION_TIER). Readers keep their own tier."""
+    if tier == "heavy":
+        return {"tier": "heavy", "max_tokens": min(max_tokens * HEAVY_TOKEN_FACTOR, MAX_OUTPUT_TOKENS), "effort": HEAVY_EFFORT}
+    return {"tier": "standard", "max_tokens": max_tokens}
+
+
+FREE_MAX_TOKENS = 9000
 """Output cap for one whole Free-lane page. The v3 figure of about $0.19 per whole page was measured on a heavier tier; the ledger reserves this cap's cost
 before the call is sent."""
 
@@ -263,15 +287,29 @@ def wording_request(plan: Plan, passage: str = "(none)") -> LLMRequest:
         passage=fence_safe(passage),
     )
     _check(stable, variable)
-    return LLMRequest(prompt=variable, purpose="wording", tier="light", system=stable, max_tokens=300)
+    return LLMRequest(prompt=variable, purpose="wording", tier="standard", system=stable, max_tokens=900)
 
 
-def free_request(question: str, route_summary: str) -> LLMRequest:
-    """The Free lane's whole-page generator. Standard tier: this page is checked less than any other, so it is not written by the cheapest model."""
+def free_request(question: str, route_summary: str, fix: str | None = None, tier: str = "standard") -> LLMRequest:
+    """The Free lane's whole-page generator. Standard tier: this page is checked less than any other, so it is not written by the cheapest model. `fix` is the
+    checker's reason a first page was refused (W19): the second attempt is told exactly what to leave out. It is our checker's text, never the model's."""
     pack = load("free")
     stable, variable = pack.render_parts(question=question, route=route_summary)
+    if fix:
+        variable += f"\n\nA first page for this question was refused by the checker: {fix}. Write the whole page again, the same lab, without that."
     _check(stable, variable)
-    return LLMRequest(prompt=variable, purpose="free", tier="standard", system=stable, max_tokens=FREE_MAX_TOKENS)
+    return LLMRequest(prompt=variable, purpose="free", system=stable, **_writer(tier, FREE_MAX_TOKENS))
+
+
+def simple_request(question: str, route_summary: str, fix: str | None = None, tier: str = "standard") -> LLMRequest:
+    """The last step's page (W20, D-80): the same contract as a Free page, made small so it is written whole, read whole and passes. `fix` is why the page
+    before it was refused: our checkers' words, or the second reader's."""
+    pack = load("free_simple")
+    stable, variable = pack.render_parts(question=question, route=route_summary)
+    if fix:
+        variable += f"\n\nThe page written before this one was refused: {fix}. Write the whole page again, for the same question, without that problem."
+    _check(stable, variable)
+    return LLMRequest(prompt=variable, purpose="free", system=stable, **_writer(tier, SIMPLE_MAX_TOKENS))
 
 
 def free_wording_request(topic: str, html: str, passage: str = "(none)") -> LLMRequest:
@@ -285,8 +323,8 @@ def free_wording_request(topic: str, html: str, passage: str = "(none)") -> LLMR
         script=fence_safe(wording.page_script(html)) or "(no script)",
         passage=fence_safe(passage),
     )
-    _check(stable, variable)
-    return LLMRequest(prompt=variable, purpose="wording_free", tier="standard", system=stable, max_tokens=400)
+    _check(stable, variable, READING_TOKEN_CAP)
+    return LLMRequest(prompt=variable, purpose="wording_free", tier="standard", system=stable, max_tokens=1500)
 
 
 def describe(request: LLMRequest) -> dict:

@@ -34,8 +34,8 @@ class ControlSpec(_Strict):
     max: float
     value: float
     grid: int = Field(ge=1, le=40)
-    surface: Literal["slider", "masses", "valve", "dial"] = "slider"
-    """How the student operates the control. `masses` (Kit `massHanger`) is dragging equal masses onto a hanger: `grid` is then the number of masses. `valve` (Kit `valve`) is a stopcock the student holds or presses, and `dial` (Kit `dial`) is a knob the student turns: `grid` is then the number of steps."""
+    surface: Literal["slider", "masses", "valve", "dial", "planets"] = "slider"
+    """How the student operates the control. `masses` (Kit `massHanger`) is dragging equal masses onto a hanger: `grid` is then the number of masses. `valve` (Kit `valve`) is a stopcock the student holds or presses, and `dial` (Kit `dial`) is a knob the student turns: `grid` is then the number of steps. `planets` (Kit `planetPicker`, W18) is dragging a test mass between the eight planets: min 1, max 8, grid 7, unit `planet`."""
 
 
 class ConstantSpec(_Strict):
@@ -193,6 +193,11 @@ class Plan(_Strict):
     citation_ids: list[Slug] = Field(default_factory=list, max_length=6)
     presentation: Literal["peek", "stage"] = "stage"
     custom: list[CustomSlot] = Field(default_factory=list, max_length=3)
+    fit: Literal["full", "partial"] = "full"
+    """The planner's own judgement (W18, D-76): `full` when this lab shows what the question asks with the Kit's models, `partial` when the Kit has no model for the core
+    quantity of the question and the lab can only show something near it. A partial fit is sent to the Free lane first, with this Plan as the fallback."""
+    missing: Sentence | None = None
+    """With `fit` partial: in one sentence, what the Kit cannot show (for the trace and the Kit gap log)."""
 
     def model_summaries(self) -> list[dict]:
         """The plan's models in the shape the verifier compares with the page (`plan_models`)."""

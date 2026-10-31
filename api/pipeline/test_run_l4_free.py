@@ -122,13 +122,28 @@ def test_a_plan_the_judge_refuses_twice_degrades_to_the_written_answer_and_the_g
     assert SPRING not in gaps.read_text(encoding="utf-8")
 
 
-def test_a_wording_refusal_does_not_fall_down_to_the_less_checked_free_lane(tmp_path: Path, kit_dist: Path) -> None:
+def test_under_the_kit_preference_a_twice_refused_plan_still_ends_with_a_lab_from_the_last_step(tmp_path: Path, kit_dist: Path) -> None:
+    # W20 (D-80): the `kit` preference no longer lets a question end without a lab. The Free lane does not take over in the middle of the pipeline,
+    # but the last step writes a page for the question, with every Free check.
     def responder(request: LLMRequest) -> str:
         return marked_plan() if request.purpose == "plan" else fakes.fake_responder(request)
 
-    deps, provider = deps_for(tmp_path, kit_dist, responder, wording_check=True, free_lane=True)
-    assert "environment" not in kinds(collect(SPRING, deps))
-    assert not {"free", "wording_free"} & set(purposes(provider))
+    deps, provider = deps_for(tmp_path, kit_dist, responder, wording_check=True, free_lane=True, lane_preference="kit")
+    events = collect(SPRING, deps)
+    assert environment_of(events).lane == "free"
+    calls = purposes(provider)
+    assert calls.index("free") > max(i for i, p in enumerate(calls) if p == "wording")  # only after both plans were refused
+    assert "wording_free" in calls
+
+
+def test_a_wording_refusal_goes_on_to_the_free_lane_under_the_balanced_preference(tmp_path: Path, kit_dist: Path) -> None:
+    # W19 (D-76): the owner leans the pipeline towards Free; a Kit plan whose words were refused twice gets a whole page, read by its own second reader.
+    def responder(request: LLMRequest) -> str:
+        return marked_plan() if request.purpose == "plan" else fakes.fake_responder(request)
+
+    deps, provider = deps_for(tmp_path, kit_dist, responder, wording_check=True, free_lane=True, lane_preference="balanced")
+    collect(SPRING, deps)
+    assert "free" in purposes(provider)
 
 
 @pytest.mark.parametrize("reply", ["maybe", "{}", '{"ok": true}', ""])
@@ -224,8 +239,11 @@ def test_a_free_page_the_judge_refuses_is_never_shown(tmp_path: Path, kit_dist: 
     gaps = tmp_path / "gaps.jsonl"
     deps, _ = deps_for(tmp_path, kit_dist, free_with(page), free_lane=True, wording_check=True, gap_log_path=gaps)
     assert "environment" not in kinds(collect(SPRING, deps))
-    free = next(r for r in trace_records(deps) if r["layer"] == "free")
-    assert free["detail"]["code"] == "L4-001" and not any(r["layer"] == "verify" for r in trace_records(deps))
+    records = [r for r in trace_records(deps) if r["layer"] == "free"]
+    # W20: the first refusal is retried once with the reader's issues; the second is final for the full page
+    assert records[0]["status"] == "retry" and records[0]["detail"]["why"] == "reader"
+    assert next(r for r in records if r["status"] == "refused")["detail"]["code"] == "L4-001"
+    assert not any(r["layer"] == "verify" for r in trace_records(deps))
     assert gap_rows(gaps)[0]["outcome"] == "text_only"
 
 
@@ -242,9 +260,18 @@ def test_a_free_page_with_no_usable_judge_is_never_shown(tmp_path: Path, kit_dis
 
 def test_a_reply_that_is_not_a_document_is_refused_as_free_001(tmp_path: Path, kit_dist: Path) -> None:
     deps, provider = deps_for(tmp_path, kit_dist, free_with("Sorry, I can only explain this in words."), free_lane=True, wording_check=True)
-    assert "environment" not in kinds(collect(SPRING, deps))
-    assert next(r for r in trace_records(deps) if r["layer"] == "free")["detail"]["code"] == "FREE-001"
+    events = collect(SPRING, deps)
+    assert "environment" not in kinds(events)
+    # W19: the first non-document is retried once with the reason; the second is refused as FREE-001, and the judge is never paid for either.
+    free_records = [r for r in trace_records(deps) if r["layer"] == "free"]
+    assert free_records[0]["status"] == "retry"
+    assert next(r for r in free_records if r["status"] == "refused")["detail"]["code"] == "FREE-001"
+    # W20 (D-80): then the last step writes up to three simple pages, each after the first told why the one before was refused.
+    writes = [c for c in provider.calls if c.purpose == "free"]
+    assert len(writes) == 2 + run.SIMPLE_ATTEMPTS
+    assert all("was refused: the reply was not the lab in the @@ sections asked for" in c.prompt for c in writes[3:])
     assert "wording_free" not in purposes(provider)
+    assert degraded(events)[-1].note == run.NO_LAB_NOTE
 
 
 def test_the_cheap_scan_runs_before_the_judge_is_paid(tmp_path: Path, kit_dist: Path) -> None:
@@ -293,11 +320,13 @@ def test_a_page_with_a_slot_fill_does_not_claim_the_wording_layer_because_the_ju
 
 
 def test_a_free_page_too_big_to_be_read_whole_is_refused_and_the_judge_is_not_paid(tmp_path: Path, kit_dist: Path) -> None:
-    page = good_page().replace("<h1>", "".join(f"<p>filler line {i}</p>" for i in range(100)) + "<h1>")
+    page = good_page().replace("<h1>", "".join(f"<p>filler line {i}</p>" for i in range(200)) + "<h1>")
     deps, provider = deps_for(tmp_path, kit_dist, free_with(page), free_lane=True, wording_check=True)
     assert "environment" not in kinds(collect(SPRING, deps))
-    free = next(r for r in trace_records(deps) if r["layer"] == "free")
-    assert free["detail"]["code"] == "FREE-001" and "lines of text" in free["detail"]["why"]
+    records = [r for r in trace_records(deps) if r["layer"] == "free"]
+    assert records[0]["status"] == "retry" and records[0]["detail"]["why"] == "too long"  # W20: told to write it shorter, once
+    refused = next(r for r in records if r["status"] == "refused")
+    assert refused["detail"]["code"] == "FREE-001" and "lines of text" in refused["detail"]["why"]
     assert "wording_free" not in purposes(provider)
 
 
@@ -339,3 +368,115 @@ def test_a_gap_is_logged_even_when_the_free_attempt_ends_in_an_error(tmp_path: P
     events = collect(SPRING, deps)
     assert "error" in kinds(events) and "environment" not in kinds(events)
     assert [r["outcome"] for r in gap_rows(gaps)] == ["error"]
+
+
+# ── the last step: a lab for every question (W20, D-80) ────────────────────────────────────────────────────────────────
+
+
+def marked_page() -> str:
+    """A good page whose words carry the fake judge's refusal marker."""
+    return good_page().replace("</body>", f"<p>{fakes.FALSE_MARKER} planted</p></body>", 1)
+
+
+def full_refused_simple_good(request: LLMRequest) -> str:
+    """The planner fails, the full page is refused by the reader, and the simple page (its pack says a fuller lab could not be made) is good."""
+    if request.purpose == "plan":
+        return "{}"
+    if request.purpose == "free":
+        return good_page() if "A fuller lab could not be made" in (request.system or "") else marked_page()
+    return fakes.fake_responder(request)
+
+
+def test_a_full_page_refused_by_the_reader_is_followed_by_a_simple_lab_that_is_delivered(tmp_path: Path, kit_dist: Path) -> None:
+    gaps = tmp_path / "gaps.jsonl"
+    deps, provider = deps_for(tmp_path, kit_dist, full_refused_simple_good, free_lane=True, wording_check=True, gap_log_path=gaps)
+    events = collect(SPRING, deps)
+    block = environment_of(events)
+    assert block.lane == "free" and block.label == "model-checked" and "wording" in block.checked.layers
+    assert any(e.type == "stage" and e.note == run.SIMPLE_NOTE for e in events)
+    assert purposes(provider).count("wording_free") == 3  # the full page and its one retry (both refused), then the simple page
+    assert next(r for r in trace_records(deps) if r["layer"] == "simple" and r["status"] == "ok")
+    assert gap_rows(gaps)[-1]["reason"] == "simple" and gap_rows(gaps)[-1]["env_id"] == block.id
+
+
+def test_the_simple_page_after_a_reader_refusal_is_told_what_the_reader_found(tmp_path: Path, kit_dist: Path) -> None:
+    deps, provider = deps_for(tmp_path, kit_dist, free_with(marked_page()), free_lane=True, wording_check=True)
+    events = collect(SPRING, deps)
+    assert "environment" not in kinds(events) and degraded(events)[-1].note == run.NO_LAB_NOTE
+    simple = [c for c in provider.calls if c.purpose == "free" and "A fuller lab could not be made" in (c.system or "")]
+    assert len(simple) == run.SIMPLE_ATTEMPTS
+    assert "a second reader found these problems" in simple[1].prompt and "planted false statement" in simple[1].prompt
+
+
+def test_a_compose_page_refused_in_the_browser_gets_the_full_page_from_the_last_step(tmp_path: Path, kit_dist: Path) -> None:
+    from api.verify.mint import VerificationFailed, verify_environment
+
+    def verify(**kw: object):  # noqa: ANN202
+        if kw["lane"] == "compose":
+            raise VerificationFailed("render", "dead_control", "control 'load' changed no readout")
+        return verify_environment(**kw)  # type: ignore[arg-type]
+
+    deps, provider = deps_for(tmp_path, kit_dist, fakes.fake_responder, free_lane=True, wording_check=True, verify_fn=verify, lane_preference="kit")
+    block = environment_of(collect(SPRING, deps))
+    assert block.lane == "free"
+    assert purposes(provider).count("free") == 1  # the full page, not the simple one: it was never tried before
+
+
+def test_a_question_outside_science_still_gets_a_lab(tmp_path: Path, kit_dist: Path) -> None:
+    deps, _ = deps_for(tmp_path, kit_dist, fakes.fake_responder, free_lane=True, wording_check=True)
+    events = collect("What is the capital city of France?", deps)
+    assert environment_of(events).lane == "free"
+
+
+def test_without_a_second_reader_the_last_step_spends_nothing(tmp_path: Path, kit_dist: Path) -> None:
+    deps, provider = deps_for(tmp_path, kit_dist, failing_planner, free_lane=True)
+    assert "environment" not in kinds(collect(SPRING, deps))
+    assert "free" not in purposes(provider)
+
+
+def test_the_heavy_tier_writes_plans_and_pages_with_room_to_think_and_leaves_the_readers_alone(tmp_path: Path, kit_dist: Path) -> None:
+    from api.llm.types import MAX_OUTPUT_TOKENS
+    from api.pipeline import prompts
+
+    deps, provider = deps_for(tmp_path, kit_dist, failing_planner, free_lane=True, wording_check=True, generation_tier="heavy")
+    collect(SPRING, deps)
+    by = {c.purpose: c for c in provider.calls}
+    assert by["plan"].tier == "heavy" and by["plan"].max_tokens == prompts.PLAN_MAX_TOKENS * prompts.HEAVY_TOKEN_FACTOR and by["plan"].effort == "medium"
+    assert by["free"].tier == "heavy" and by["free"].max_tokens == min(prompts.FREE_MAX_TOKENS * prompts.HEAVY_TOKEN_FACTOR, MAX_OUTPUT_TOKENS)  # the service refuses more
+    assert by["wording_free"].tier == "standard" and by["explain"].tier == "standard"
+
+
+def test_a_partial_fit_whose_full_page_fails_gets_a_simple_lab_on_the_question_before_the_kit_lab(tmp_path: Path, kit_dist: Path) -> None:
+    # W20 (D-81): a quantum question once got a Boyle's law syringe, because the Kit lab for a partial fit came before a simple lab on the question itself.
+    def responder(request: LLMRequest) -> str:
+        if request.purpose == "plan":
+            plan = json.loads(json.dumps(GOLDEN_SPRING))
+            plan["fit"], plan["missing"] = "partial", "The Kit has no model for this question."
+            return json.dumps(plan)
+        return full_refused_simple_good(request)
+
+    deps, provider = deps_for(tmp_path, kit_dist, responder, free_lane=True, wording_check=True)
+    events = collect(SPRING, deps)
+    block = environment_of(events)
+    assert block.lane == "free"
+    assert not any(r["layer"] == "lane" and r["status"] == "kit_fallback" for r in trace_records(deps))
+    assert any(e.type == "stage" and e.note == run.SIMPLE_NOTE for e in events)
+
+
+def test_a_full_page_refused_in_the_browser_is_written_once_more_with_the_reason_and_delivered(tmp_path: Path, kit_dist: Path) -> None:
+    # W20 (D-81): the quantum page failed only because one slider moved no readout; the retry is told which check failed and why.
+    dead = good_page().replace('out.textContent = pressureKpa(h).toFixed(1) + " kPa";', 'out.textContent = "fixed";')
+
+    def responder(request: LLMRequest) -> str:
+        if request.purpose == "plan":
+            return "{}"
+        if request.purpose == "free":
+            return good_page() if "real-browser check refused it" in request.prompt else dead
+        return fakes.fake_responder(request)
+
+    deps, provider = deps_for(tmp_path, kit_dist, responder, free_lane=True, wording_check=True)
+    block = environment_of(collect(SPRING, deps))
+    assert block.lane == "free"
+    writes = [c for c in provider.calls if c.purpose == "free"]
+    assert len(writes) == 2 and "dead_control" in writes[1].prompt
+    assert any(r["layer"] == "free" and r["status"] == "retry" and r["detail"].get("why") == "browser" for r in trace_records(deps))

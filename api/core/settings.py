@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     prompt_caching: bool = False
     """Ask the provider to cache the system prompt of every call (B6, D-55). Off until one measured run shows a real saving: the ledger already prices cache reads and
     writes, so turning it on cannot under-count, but the saving is not yet measured."""
+    lane_preference: Literal["kit", "balanced", "free"] = "balanced"
+    """Which lane leads after a Plan passes its checks (W18, D-76, the owner's call: "leaning more towards free"). `balanced`: the Free lane leads when the planner says the
+    Kit only partly fits the question or the Plan draws no picture; `free`: it leads for every question; `kit`: only when the Kit cannot take the question. A refused Free page
+    falls back to the Kit lab. Each Free page costs a paid generation and a paid second reading."""
+    generation_tier: Literal["standard", "heavy"] = "standard"
+    """Which model tier plans the Kit lab and writes the Free and simple pages (W20). `heavy` (Opus) for a demo day, the owner's call: a stronger writer with
+    larger output limits, at several times the spend per question; the readers keep their own tier. Switch back to `standard` after."""
     free_lane_enabled: bool = True
     """Let a question the Kit cannot express get a whole model-written page (the labelled Free lane, D-07, D-41). On by default since W16 (D-67, the owner's call:
     "u should be able to generate anything related to simulation or experiments"). It also needs the wording check, which the API turns on only in live mode, so it

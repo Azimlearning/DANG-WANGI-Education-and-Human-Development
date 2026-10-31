@@ -20,6 +20,7 @@ from api.seed import open_store
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--interaction-seconds", type=float, default=None, help="how long the browser presses controls per Environment (default: the setting)")
+    ap.add_argument("--english-only", action="store_true", help="do not build the Bahasa Melayu translations (an English-only demo)")
     args = ap.parse_args(argv)
     settings = load_settings()
     store = open_store(settings)
@@ -31,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
         book=book,
         evidence=evidence,
         interaction_seconds=args.interaction_seconds or settings.verify_interaction_seconds,
-        translations_dir=OVERLAYS,
+        translations_dir=None if args.english_only else OVERLAYS,
     )
     verified = sum(1 for _, env in built if env.label == "kit-verified")
     translated = sum(len(store.translations_of(env.env_id)) for _, env in built)

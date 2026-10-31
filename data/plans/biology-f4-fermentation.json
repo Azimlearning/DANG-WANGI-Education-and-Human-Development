@@ -65,7 +65,7 @@
   ],
   "steps": [
     "Tube A holds boiled glucose solution and yeast; tube B, the control, holds the glucose only. Both are sealed with paraffin oil.",
-    "Turn the dial to set how much glucose tube A has fermented, and watch limewater A, the thermometer and the smell.",
+    "Drag spoons of glucose into the beaker for tube A, one at a time, and watch limewater A, the thermometer and the smell.",
     "Press Record at 0.002 mol and at 0.004 mol, and compare the energy from fermentation with the energy from aerobic respiration."
   ],
   "citation_ids": [
@@ -89,8 +89,7 @@
       "min": 0,
       "max": 0.004,
       "value": 0.001,
-      "grid": 8,
-      "surface": "dial"
+      "grid": 8
     }
   ],
   "models": [
@@ -155,5 +154,21 @@
     ],
     "correct": 1,
     "explanation": "Fermentation of glucose makes ethanol and carbon dioxide, and it is the carbon dioxide that turns limewater cloudy."
-  }
+  },
+  "apparatus": [
+    {
+      "kind": "beaker",
+      "label": "Glucose for tube A",
+      "channels": {
+        "level": {
+          "source": "glucose",
+          "full": 0.004
+        }
+      },
+      "drop": {
+        "source": "glucose",
+        "item": "Spoon of glucose"
+      }
+    }
+  ]
 }

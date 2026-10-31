@@ -1,0 +1,10 @@
+{
+  "_about": "Questions each library lab is known to answer, remembered word for word by the library seed (W19), so they are served from the library with no model call whatever the coverage rule says. The web page's quick starts are here. Keyed by Plan id.",
+  "hookes_amali": ["Why does a spring stretch when I hang a weight on it?", "How does the extension of a spring depend on the load?"],
+  "ohm_explorer": ["What happens to the current if I raise the resistance in a circuit?"],
+  "pressure_depth": ["How does the pressure change as a diver goes deeper in water?"],
+  "titration_virtual": ["How do I find the concentration of an acid by titration?"],
+  "yeast_fermentation_lab": ["Why does yeast make limewater go milky?"],
+  "newton_cannonball": ["What is Newton's cannonball, and how does a satellite stay in orbit?"],
+  "planet_gravity": ["How much would I weigh on Jupiter compared with Earth?", "How does gravity change on different planets?", "Can you simulate the difference in gravitational strength on each planet in my solar system?"]
+}

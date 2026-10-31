@@ -114,7 +114,8 @@ export function parsePlanDraft(v: unknown): PlanDraft | null {
   const readouts = parts(v.readouts);
   if (!controls || !readouts || typeof v.hasGraph !== "boolean" || typeof v.hasTable !== "boolean") return null;
   if (!Array.isArray(v.steps) || !v.steps.every(isStr)) return null;
-  return { title: v.title, goal: v.goal, pattern: v.pattern, note: v.note, controls, readouts, hasGraph: v.hasGraph, hasTable: v.hasTable, steps: v.steps as string[] };
+  if (!Array.isArray(v.components) || !v.components.every(isStr)) return null;
+  return { title: v.title, goal: v.goal, pattern: v.pattern, note: v.note, controls, readouts, hasGraph: v.hasGraph, hasTable: v.hasTable, steps: v.steps as string[], components: v.components as string[] };
 }
 
 /** One decoded JSON value to a StreamEvent, or null for anything this client does not understand. */
@@ -134,6 +135,12 @@ export function parseStreamEvent(v: unknown): StreamEvent | null {
     }
     case "text_delta":
       return isStr(v.text) ? { type: "text_delta", text: v.text } : null;
+    case "code":
+      // The page's code as text for the build log (D-79). Never rendered and never run: the lab runs only the verified block.
+      if (oneOf(["compose", "free"] as const, v.lane) && oneOf(["writing", "unchecked", "passed", "refused"] as const, v.status) && typeof v.reset === "boolean" && isStr(v.delta) && (v.note === null || isStr(v.note))) {
+        return { type: "code", lane: v.lane, status: v.status, reset: v.reset, delta: v.delta, note: v.note };
+      }
+      return null;
     case "environment": {
       const block = parseEnvironmentBlock(v.block);
       return block ? { type: "environment", block } : null;

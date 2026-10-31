@@ -15,7 +15,7 @@ from dataclasses import replace
 from api.core.errors import BadRequest, ProviderRejected, ProviderUnavailable, SpendCapExceeded
 from api.llm.ledger import SpendLedger
 from api.llm.pricing import cost_usd, estimate_call_cost, estimate_input_tokens
-from api.llm.providers.base import Provider, ProviderFailure
+from api.llm.providers.base import Provider, ProviderFailure, TextSink
 from api.llm.types import MAX_OUTPUT_TOKENS, LLMRequest, LLMResult
 
 log = logging.getLogger(__name__)
@@ -57,7 +57,9 @@ class LLMService:
         total = sum(estimate_call_cost(provider.name, provider.model_for(r.tier), self._prepared(r)) for r in requests)
         return remaining >= total
 
-    async def complete(self, request: LLMRequest) -> LLMResult:
+    async def complete(self, request: LLMRequest, on_text: TextSink | None = None) -> LLMResult:
+        """One paid call through the cap and the ledger. `on_text` (W19, D-79) watches the reply's text as it is generated; nothing about the reservation,
+        the cap, the booking or the fallback changes with it. A fallback provider's text is watched too, after the first provider's partial text."""
         request = self._prepared(request)
         if not 1 <= request.max_tokens <= MAX_OUTPUT_TOKENS:
             raise BadRequest(f"max_tokens must be between 1 and {MAX_OUTPUT_TOKENS}.")
@@ -67,7 +69,7 @@ class LLMService:
             model = provider.model_for(request.tier)
             reservation = self._ledger.reserve(estimate_call_cost(provider.name, model, request))
             try:
-                response = await provider.complete(request, model)
+                response = await (provider.complete(request, model) if on_text is None else provider.complete(request, model, on_text=on_text))
             except ProviderFailure as failure:
                 # A reply the provider billed and we then rejected (cut off, empty, refused) arrives with its real usage: book that, output
                 # included. A timeout (or a cut-off with no usage to read) may have been billed for the whole reply, because the provider can go on

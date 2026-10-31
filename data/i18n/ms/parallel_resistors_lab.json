@@ -28,6 +28,8 @@
     "/concept_check/options/1": "Ia kekal sama",
     "/concept_check/options/2": "Ia menjadi lebih kecil",
     "/concept_check/explanation": "Arus mendapat satu lagi laluan, jadi rintangan berkesan menjadi lebih kecil. Salingan rintangan berkesan ialah hasil tambah salingan, yang lebih besar daripada mana-mana satu.",
-    "/apparatus/0/label": "Ohmmeter litar"
+    "/apparatus/0/label": "Ohmmeter litar",
+    "/graphs/1/title": "Seret titik di sepanjang graf untuk mengubah rintangan perintang pertama dan perhatikan rintangan berkesan.",
+    "/graphs/1/label": "Rintangan berkesan"
   }
 }

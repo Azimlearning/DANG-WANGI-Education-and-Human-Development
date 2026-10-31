@@ -432,6 +432,24 @@
     "mutated": "The escape speed is the square root of 2 times the circular speed, so it is always smaller."
   },
   {
+    "id": "physics-f4-planet_gravity:true",
+    "plan": "physics-f4-planet_gravity.json",
+    "expect": "accept",
+    "kind": "unchanged",
+    "field": "",
+    "original": "",
+    "mutated": ""
+  },
+  {
+    "id": "physics-f4-planet_gravity:note",
+    "plan": "physics-f4-planet_gravity.json",
+    "expect": "refuse",
+    "kind": "size flipped",
+    "field": "note",
+    "original": "Every planet pulls things on its surface towards its centre. A planet with more mass pulls harder, and a bigger radius spreads the pull out, so the gravitational acceleration g = G M / R squared is different on every planet. The same mass then has a different weight, W = m g, on each one.",
+    "mutated": "Every planet pulls things on its surface towards its centre. A planet with less mass pulls harder, and a bigger radius spreads the pull out, so the gravitational acceleration g = G M / R squared is different on every planet. The same mass then has a different weight, W = m g, on each one."
+  },
+  {
     "id": "physics-f4-refraction:true",
     "plan": "physics-f4-refraction.json",
     "expect": "accept",

@@ -280,6 +280,9 @@ WORKED = [
     ("mechanics.hookes", {"k": 50}, {"load": 2}, 0.04),
     ("mechanics.hookes", {"k": 20}, {"load": 4}, 0.2),
     ("electricity.ohm", {}, {"voltage": 12, "resistance": 4}, 3.0),
+    ("physics.weight", {}, {"mass": 1, "gravity": 9.81}, 9.81),
+    ("physics.weight", {}, {"mass": 5, "gravity": 3.7}, 18.5),
+    ("physics.weight", {}, {"mass": 0, "gravity": 24.79}, 0.0),
     ("electricity.ohm", {}, {"voltage": 6, "resistance": 12}, 0.5),
     ("electricity.ohm", {}, {"voltage": 230, "resistance": 46}, 5.0),
     ("fluids.pressure_depth", {"density": 1000, "g": 10}, {"depth": 2}, 20000.0),
@@ -664,3 +667,18 @@ def test_second_routes_agree_for_the_new_models() -> None:
     # Magnification of a drawing: image = magnification x actual.
     x = evaluate_model("biology.magnification", {}, {"image": 80, "actual": 0.16})
     assert x * 0.16 == pytest.approx(80, rel=1e-12)
+
+
+def test_planet_gravity_agrees_with_the_published_surface_gravity_of_each_planet() -> None:
+    # Published values of G M / R^2 at the equator (worked by hand from the fact sheet, not by running the reference): within 1 percent.
+    published = {1: 3.70, 2: 8.87, 3: 9.80, 4: 3.71, 5: 24.79, 6: 10.44, 7: 8.87, 8: 11.15}
+    for planet, g in published.items():
+        assert evaluate_model("physics.planet_gravity", {}, {"planet": planet}) == pytest.approx(g, rel=0.01)
+    # Jupiter pulls hardest and Mercury and Mars least; Earth is between Venus and Saturn.
+    gs = {p: evaluate_model("physics.planet_gravity", {}, {"planet": p}) for p in range(1, 9)}
+    assert max(gs, key=gs.__getitem__) == 5
+    assert gs[3] > gs[2]
+    with pytest.raises(ValueError):
+        evaluate_model("physics.planet_gravity", {}, {"planet": 9})
+    with pytest.raises(ValueError):
+        evaluate_model("physics.planet_gravity", {}, {"planet": 0})

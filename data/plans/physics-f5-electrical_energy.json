@@ -57,6 +57,14 @@
       "label": "Electrical energy",
       "unit": "J",
       "digits": 1
+    },
+    {
+      "title": "Drag the point along the graph to change the current and watch the electrical energy.",
+      "x": "current",
+      "source": "energy",
+      "label": "Electrical energy",
+      "unit": "J",
+      "digits": 1
     }
   ],
   "table": null,

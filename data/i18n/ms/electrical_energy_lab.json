@@ -29,6 +29,8 @@
     "/concept_check/options/2": "E = I / (V t)",
     "/concept_check/explanation": "Tenaga ialah beza keupayaan darab cas, dan cas ialah arus darab masa, jadi E = V I t.",
     "/apparatus/0/label": "Litar lampu",
-    "/apparatus/1/label": "Tenaga digunakan"
+    "/apparatus/1/label": "Tenaga digunakan",
+    "/graphs/1/title": "Seret titik di sepanjang graf untuk mengubah arus dan perhatikan tenaga elektrik.",
+    "/graphs/1/label": "Tenaga elektrik"
   }
 }

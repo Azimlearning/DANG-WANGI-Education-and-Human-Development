@@ -143,9 +143,12 @@ def _slots(plan: Plan, manifest: Manifest, lang: str = "en") -> dict[str, str]:
 
     def controls_js() -> str:
         return "\n  ".join(
-            f"var {var('c', c.id)} = Synapse.{ {'masses': 'massHanger', 'valve': 'valve', 'dial': 'dial'}.get(c.surface, 'slider') }(env, "
+            f"var {var('c', c.id)} = Synapse.{ {'masses': 'massHanger', 'valve': 'valve', 'dial': 'dial', 'planets': 'planetPicker'}.get(c.surface, 'slider') }(env, "
             + js(
-                {
+                # the planets (W18) are always the eight, so the picker takes only its id, label and starting planet
+                {"id": c.id, "label": c.label, "value": c.value}
+                if c.surface == "planets"
+                else {
                     "id": c.id,
                     "label": c.label,
                     "unit": c.unit,
@@ -172,7 +175,8 @@ def _slots(plan: Plan, manifest: Manifest, lang: str = "en") -> dict[str, str]:
             entry = manifest.models[m.model]
             args = [f"{name}: {js(value)}" for name, value in sorted(m.params.items())]
             for name, bound in sorted(m.inputs.items()):
-                kind = "c" if any(c.id == bound for c in plan.controls) else "k"
+                # a control, a model defined earlier (W18: gravity feeds weight, weight feeds a spring), else a constant
+                kind = "c" if any(c.id == bound for c in plan.controls) else "m" if any(x.id == bound for x in plan.models) else "k"
                 args.append(f"{name}: {var(kind, bound)}")
             lines.append(f"var {var('m', m.id)} = Synapse.{entry.export_name}({{ {', '.join(args)} }});")
         return "\n  ".join(lines)

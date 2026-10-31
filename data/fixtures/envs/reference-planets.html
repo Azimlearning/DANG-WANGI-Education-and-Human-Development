@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gravity on the planets: weigh a mass on each one</title>
+</head>
+<body>
+<script src="/vendor/kit/0.1.0/core.js"></script>
+<script>
+  var env = Synapse.environment({ title: "Gravity on the planets: weigh a mass on each one", note: "Every planet pulls things on its surface towards its centre. A planet with more mass pulls harder, and a bigger radius spreads the pull out, so the gravitational acceleration g = G M / R squared is different on every planet. The same mass then has a different weight, W = m g, on each one.", kicker: "Interactive physics lab", tryThis: "Compare how strongly each planet of the Solar System pulls on the same mass, by weighing it on a spring balance on every planet." });
+  Synapse.predictCard(env, {"prompt": "You carry the same mass from Earth to Mars. What happens to its weight?", "choices": ["It gets smaller", "It stays the same", "It gets bigger"], "reveal": "Hang the mass on Earth, then drag it to Mars and compare the two weights."});
+  var c_planet = Synapse.planetPicker(env, {"id": "planet", "label": "Planet", "value": 3.0});
+  var c_mass = Synapse.massHanger(env, {"id": "mass", "label": "Mass on the balance", "unit": "kg", "min": 0.0, "max": 5.0, "value": 1.0, "grid": 5});
+  
+  var m_gravity = Synapse.planetGravity({ planet: c_planet });
+  var m_weight = Synapse.weight({ gravity: m_gravity, mass: c_mass });
+  var m_balance = Synapse.hookes({ k: 500.0, load: m_weight });
+  Synapse.readout(env, { label: "Gravitational acceleration here", unit: "N/kg", value: m_gravity, digits: 2 });
+  Synapse.readout(env, { label: "Weight of the mass", unit: "N", value: m_weight, digits: 1 });
+  Synapse.springScene(env, { extension: m_balance, full: 0.25 });
+  
+  Synapse.graph(env, { title: "Jupiter pulls hardest, and Mercury and Mars pull least.", x: c_planet, y: m_gravity, yLabel: "Gravitational acceleration", yUnit: "N/kg", digits: 2 });
+  Synapse.stepper(env, { steps: ["Hang one mass on the spring balance on Earth and read its weight.", "Drag the test mass to Mars, then to Jupiter, and watch the spring and the weight change.", "Hang more masses and compare the weights on two planets.", "Use the bar chart to rank the planets from the weakest pull to the strongest."] });
+  
+  Synapse.text(env, "Your mass is the same on every planet. Only its weight changes, because the pull of gravity changes.");
+  Synapse.text(env, "Jupiter has by far the most mass, so even with its huge radius it pulls hardest of all the planets.");
+  Synapse.hintLadder(env, { hints: ["Weight is the pull of gravity on a mass.", "Which planets are much bigger and heavier than Earth?", "Compare the gravitational acceleration readout on Earth and on Jupiter."] });
+  Synapse.conceptCheck(env, {"question": "An astronaut flies from Earth to Jupiter. Which quantity stays the same?", "options": ["The astronaut's weight", "The astronaut's mass", "The gravitational acceleration"], "correct": 1, "explanation": "Mass is the amount of matter and does not depend on where you are. Weight is the pull of gravity on that mass, so it changes from planet to planet."});
+  
+  Synapse.reset(env);
+  Synapse.bridge.ready();
+</script>
+</body>
+</html>

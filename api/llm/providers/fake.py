@@ -13,7 +13,7 @@ import math
 from collections.abc import Callable
 
 from api.llm.models import ANTHROPIC_MODELS
-from api.llm.providers.base import FailureKind, ProviderFailure
+from api.llm.providers.base import FailureKind, ProviderFailure, TextSink
 from api.llm.types import LLMRequest, ProviderResponse, Tier
 
 _SENTENCES = (
@@ -54,11 +54,14 @@ class FakeProvider:
     def model_for(self, tier: Tier) -> str:
         return self._models[tier]
 
-    async def complete(self, request: LLMRequest, model: str) -> ProviderResponse:
+    async def complete(self, request: LLMRequest, model: str, on_text: TextSink | None = None) -> ProviderResponse:
         self.calls.append(request)
         if self._fail_with is not None:
             raise ProviderFailure(self.name, self._fail_with, self._fail_kind)
         text = self._responder(request)
+        if on_text is not None:
+            for i in range(0, len(text), 400):  # the fake's whole reply, in pieces, so a watcher sees the same shape of events as from a live model
+                on_text(text[i : i + 400])
         chars_in = len(request.prompt) + len(request.system or "")
         return ProviderResponse(
             text=text,

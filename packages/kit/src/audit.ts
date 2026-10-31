@@ -62,7 +62,7 @@ export interface AuditRecord {
   /** Elements with a shadow root: their content cannot be audited, so the verifier refuses them. */
   shadowRoots: number;
   /** Composite widgets (mass hangers, scenes): what each is, how many masses the Kit made, the chain a scene draws, and any way the page changed it. */
-  widgets: { kind: string; id: string; masses?: number; full?: number; eye?: boolean; part?: string; channel?: string; channelType?: string; units?: string[]; chain?: ChainNode; sourceChain?: ChainNode; secondChain?: ChainNode; problems: string[]; exact: string[]; layout: string[] }[];
+  widgets: { kind: string; id: string; host?: string; box?: [number, number]; origin?: number; masses?: number; full?: number; eye?: boolean; part?: string; channel?: string; channelType?: string; units?: string[]; chain?: ChainNode; sourceChain?: ChainNode; secondChain?: ChainNode; problems: string[]; exact: string[]; layout: string[] }[];
 }
 
 /** True for an element inside a drawing the Kit made (a nested `svg` the Kit's own picture holds is the Kit's). */
@@ -248,6 +248,9 @@ export function audit(version: string): AuditRecord {
       ...(w.eye ? { eye: true } : {}),
       ...(w.part !== undefined ? { part: w.part, channel: w.channel, channelType: w.channelType, units: [...(w.units ?? [])] } : {}),
       ...(w.control !== undefined ? { control: w.control } : {}),
+      ...(w.host !== undefined ? { host: w.host } : {}),
+      ...(w.box !== undefined ? { box: [w.box[0], w.box[1]] as [number, number] } : {}),
+      ...(w.origin !== undefined ? { origin: w.origin } : {}),
       ...(w.grab !== undefined ? { grab: "pivot" in w.grab ? { pivot: [w.grab.pivot[0], w.grab.pivot[1]], radius: w.grab.radius } : { from: [w.grab.from[0], w.grab.from[1]], to: [w.grab.to[0], w.grab.to[1]] } } : {}),
       ...(w.obs ? { chain: describe(w.obs) } : {}),
       ...(w.source ? { sourceChain: describe(w.source) } : {}),

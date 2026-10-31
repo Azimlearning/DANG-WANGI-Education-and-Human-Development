@@ -127,6 +127,8 @@ export interface ControlRecord {
   step: number;
   obs: object;
   el: HTMLInputElement;
+  /** A choice control (W18): the word for each whole step from `min` (planet names), shown instead of the number. */
+  words?: readonly string[];
 }
 
 export interface ReadoutRecord {
@@ -165,10 +167,15 @@ export interface ActionRecord {
 
 /** A composite widget the Kit built (the mass hanger, a scene). It reports facts about itself that a page could falsify (where its parts are, what they show), as problems; none means intact. */
 export interface WidgetRecord {
-  kind: "masses" | "scene" | "valve" | "dial" | "apparatus" | "handle";
+  kind: "masses" | "scene" | "valve" | "dial" | "apparatus" | "handle" | "planets";
   /** Handles only (W17): the control a grip on the drawing moves, and where the grip runs in the part's drawing units. */
   control?: string;
   grab?: { from: [number, number]; to: [number, number] } | { pivot: [number, number]; radius: number };
+  /** Handles only (W18): what the handle is drawn on (`apparatus` when absent), the drawing's box in its own units (120 by 140 when absent) and the control value at the
+   *  line's start (0 when absent: an apparatus channel's drawn fraction starts at nothing). The verifier drags along `grab` in that box. */
+  host?: "apparatus" | "graph" | "planets" | "orbit";
+  box?: [number, number];
+  origin?: number;
   /** Apparatus only: the part, the channel, its type and the units it accepts (empty: any unit, judged by its scale). */
   part?: string;
   channel?: string;

@@ -9,6 +9,14 @@
       "label": "Magnification",
       "unit": "times",
       "digits": 0
+    },
+    {
+      "title": "Drag the point along the graph to change the actual size and watch the magnification.",
+      "x": "actual",
+      "source": "scope",
+      "label": "Magnification",
+      "unit": "times",
+      "digits": 0
     }
   ],
   "table": null,

@@ -9,6 +9,7 @@ import { useT } from "../lib/i18n";
 import { useServerMode } from "../lib/mode";
 import { usePacedStep } from "../lib/pace";
 import type { Turn } from "../lib/turns";
+import { BuildDetails, BuildLog } from "./BuildLog";
 import { DegradedCard } from "./DegradedCard";
 import { Mascot } from "./Mascot";
 import { LabFrame } from "./LabFrame";
@@ -52,11 +53,15 @@ export function LabBench({
           stagedId === lab.id ? (
             <Stage block={lab} onBack={onBack} startPresenting={presentFirst} />
           ) : (
-            <LabFrame block={lab} onOpen={(present) => onOpen(lab.id, present)} />
+            <div className="grid gap-3">
+              <LabFrame block={lab} onOpen={(present) => onOpen(lab.id, present)} />
+              <BuildDetails block={lab} log={turn.log} />
+            </div>
           )
         ) : working && turn ? (
           <div className="grid gap-3">
             <ProgressStages step={shown} />
+            <BuildLog log={turn.log} draft={turn.draft} code={turn.code} />
             {turn.draft ? <PeekSkeleton draft={turn.draft} /> : null}
           </div>
         ) : noLab ? (

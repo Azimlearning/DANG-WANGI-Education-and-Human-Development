@@ -1,0 +1,50 @@
+{
+  "id": "reference-planets",
+  "title": "Gravity on the planets: weigh a mass on each one",
+  "lane": "instantiate",
+  "label": "model-checked",
+  "kitVersion": "0.1.0",
+  "planSummary": "Compare how strongly each planet of the Solar System pulls on the same mass, by weighing it on a spring balance on every planet.",
+  "citations": [
+    {
+      "source": "UNVERIFIED (fixture, no corpus)",
+      "page": null,
+      "quote": null,
+      "verified": false
+    }
+  ],
+  "controls": [
+    "planet",
+    "mass"
+  ],
+  "readouts": [
+    "Gravitational acceleration here",
+    "Weight of the mass"
+  ],
+  "models": [
+    {
+      "id": "physics.planet_gravity",
+      "params": {},
+      "readouts": [
+        "Gravitational acceleration here"
+      ],
+      "series": [
+        "Gravitational acceleration"
+      ]
+    },
+    {
+      "id": "physics.weight",
+      "params": {},
+      "readouts": [
+        "Weight of the mass"
+      ]
+    },
+    {
+      "id": "mechanics.hookes",
+      "params": {
+        "k": 500.0
+      },
+      "scene": true
+    }
+  ]
+}

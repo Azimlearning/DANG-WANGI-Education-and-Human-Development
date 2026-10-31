@@ -8,6 +8,7 @@ import { event } from "./bridge";
 import { contains, hasAttribute, hitAt, layoutAvailable, parentOf, rectOf, style, tagOf } from "./dom";
 import { guard } from "./parts";
 import type { Environment } from "./environment";
+import { quiet } from "./handles";
 import { kt } from "./i18n";
 import type { Observable } from "./observable";
 import { controls, own, ownAttr, registerAction, widgets } from "./provenance";
@@ -44,6 +45,7 @@ export function valve(env: Environment, options: ValveOptions): Observable<numbe
   const value = slider(env, { id, label: options.label, unit: options.unit, min, max, value: options.value, grid, snap: true });
   const record = controls.find((c) => c.id === id);
   if (!record) throw new Error(`valve ${id}: its control was not registered`);
+  quiet(record); // the stopcock or the knob is what the student operates; the bar is drawn only with focus (W19)
 
   const wordsNow = (): string => (running ? kt("stopcockOpen") : value.get() >= max ? kt("stopcockLimit") : kt("stopcockClosed"));
   let running = false;

@@ -754,6 +754,45 @@
         "physics.electrical_energy"
       ],
       "checked_by": "assistant 2026-10-27: read the page; NOT yet reviewed by a person"
+    },
+    "planet_compare": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 91,
+      "printed_page": 86,
+      "topics": [
+        "physics_form4_circular_motion_and_gravitation"
+      ],
+      "checked_by": "assistant 2026-10-29: read the page; NOT yet reviewed by a person",
+      "claim": "An activity to compare the gravitational acceleration on the surface of the Moon, the Sun and each planet of the Solar System.",
+      "models": [
+        "physics.planet_gravity"
+      ]
+    },
+    "planet_g_formula": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 91,
+      "printed_page": 86,
+      "topics": [
+        "physics_form4_circular_motion_and_gravitation"
+      ],
+      "checked_by": "assistant 2026-10-29: read the page; NOT yet reviewed by a person",
+      "claim": "States that g = G M / R squared gives the gravitational acceleration on the surface of other bodies such as the planets.",
+      "models": [
+        "physics.planet_gravity"
+      ]
+    },
+    "planet_weight": {
+      "doc": "textbook-physics-physics-f4-removed",
+      "page": 91,
+      "printed_page": 86,
+      "topics": [
+        "physics_form4_circular_motion_and_gravitation"
+      ],
+      "checked_by": "assistant 2026-10-29: read the page; NOT yet reviewed by a person",
+      "claim": "Says that once g on a planet is known, the gravitational force on an object on its surface (its weight) can be calculated.",
+      "models": [
+        "physics.weight"
+      ]
     }
   }
 }

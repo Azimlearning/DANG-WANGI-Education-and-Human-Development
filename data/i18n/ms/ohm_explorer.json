@@ -23,6 +23,8 @@
     "/concept_check/options/2": "Ia kekal sama",
     "/concept_check/explanation": "Arus berkadar songsang dengan rintangan, jadi menggandakan rintangan menjadikan arus separuh.",
     "/apparatus/0/label": "Litar",
-    "/apparatus/1/label": "Ammeter litar"
+    "/apparatus/1/label": "Ammeter litar",
+    "/graphs/1/title": "Seret titik di sepanjang graf untuk mengubah rintangan dan perhatikan arus.",
+    "/graphs/1/label": "Arus"
   }
 }

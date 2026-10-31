@@ -72,5 +72,9 @@ brag-output/
 brag-output-*/
 gallery-output/
 
+# Business material: never in this repo, which feeds a public mirror. Kept in the private GenUI repo.
+founder/
+refdocs/business/
+
 # Playwright MCP scratch output
 .playwright-mcp/

@@ -1,8 +1,8 @@
 # Synapse v4
 
-Turn a Malaysian Form 4 or 5 KSSM science question into a verified, interactive **environment**: raw HTML/JS assembled over a vetted library of micro-components (34 so far), with the textbook evidence and an honest trust label beside it.
+Turn a Malaysian Form 4 or 5 KSSM science question into a verified, interactive **environment**: raw HTML/JS assembled over a vetted library of micro-components (65 so far, plus 26 apparatus parts), with the textbook evidence and an honest trust label beside it.
 
-**Status:** the pipeline runs end to end on deterministic fakes and produces 16 verified Environments across Physics, Biology and Chemistry. With the owner's local textbook corpus loaded, each carries a citation that the corpus re-proves word for word, and all 16 are `kit-verified` (not yet reviewed by a teacher). No paid model call has ever been made. See [`refdocs/STATUS.md`](refdocs/STATUS.md) for exactly what is and is not done.
+**Status:** in active development. The pipeline runs end to end on deterministic fakes and on the live model. A stored library of 31 labs across Physics, Biology and Chemistry answers known questions with no model call; with the owner's local textbook corpus loaded, each carries a citation the corpus re-proves word for word, and all 31 are `kit-verified`. Any other question gets a lab written for it, operated by drag and drop, and labelled for what it survived. Not done: no teacher has reviewed the labs, no learner study has run, and the latest prompt versions have no measured eval delta. See [`refdocs/STATUS.md`](refdocs/STATUS.md) for exactly what is and is not done.
 
 ## What it does
 
@@ -12,7 +12,7 @@ Three lanes decide how it is made and what it is allowed to claim:
 
 - **Instantiate:** a stored, re-verified environment, or a template filled in. Seconds, almost no cost.
 - **Compose:** the model writes raw HTML/JS that calls the micro-component Kit. Every displayed number must come from an audited science micro-model. Labelled `kit-verified`.
-- **Free:** the model writes a whole document with no Kit. Labelled `model-checked`, never `canonical` without human review, and logged as a Kit gap.
+- **Free:** the model writes the lab's text, drawing and script, and Synapse assembles them in the house page. Labelled `model-checked`, never `canonical` without human review, and logged as a Kit gap. If a full page is refused, a simpler lab is written, so every question ends with a lab.
 
 Nothing unverified reaches the client: the deliverable type can only be minted by the verifier, and the delivery gate re-hashes it.
 
@@ -74,6 +74,8 @@ The textbook corpus is never in the repository: point `CORPUS_DIR` at a local fo
 | [`refdocs/guides/env_setup.md`](refdocs/guides/env_setup.md) | Every setting and where to get it |
 | [`refdocs/guides/checklist.md`](refdocs/guides/checklist.md) | Pre-ship and deploy-gate checklist |
 | [`refdocs/guides/file_map.md`](refdocs/guides/file_map.md) | Where everything is and what it is for |
+| [`refdocs/guides/generation_pipeline.md`](refdocs/guides/generation_pipeline.md) | How a question becomes a lab |
+| [`refdocs/guides/publishing.md`](refdocs/guides/publishing.md) | Which branch goes to which repository |
 | [`refdocs/guides/local_handoff.md`](refdocs/guides/local_handoff.md) | The prompt for the first local session: everything left to finish the project |
 | [`CLAUDE.md`](CLAUDE.md) | Operating brief for AI sessions on this repo |
 

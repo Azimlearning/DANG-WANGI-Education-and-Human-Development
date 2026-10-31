@@ -913,9 +913,19 @@ def _drive_handles(page, frame: Frame, report: RenderReport) -> None:  # noqa: A
         return
     cdp = None
 
+    def defaults() -> None:
+        """Every control at the value the student first sees. The sweeps before this leave controls at their ends, and a graph of current against resistance has
+        no readout to move while the voltage sits at 0."""
+        for c in audit.get("controls", []):
+            el = frame.query_selector(f"[data-synapse-control='{c['id']}']")
+            if el is not None:
+                _set_value(el, float(c["default"]))
+        _settle(page, 150)
+
     def one(w: dict) -> None:
         nonlocal cdp
         hid, cid = str(w.get("id")), str(w.get("control"))
+        defaults()
         try:
             grip = frame.query_selector(f"[data-synapse-handle='{hid}']")
             control = frame.query_selector(f"[data-synapse-control='{cid}']")
@@ -931,6 +941,10 @@ def _drive_handles(page, frame: Frame, report: RenderReport) -> None:  # noqa: A
             lo, hi, step = float(record["min"]), float(record["max"]), float(record["step"])
             angle = "pivot" in grab
             full = float(w.get("full") or 0) if not angle else 0.0
+            # W18: a handle on a graph or on the planets brings its own drawing box and the control value at the start of its line; an apparatus grip has neither
+            # (the 120 by 140 part, and a drawn fraction that starts at nothing).
+            box_w, box_h = (float(v) for v in (w.get("box") or (120, 140)))
+            origin = float(w.get("origin") or 0.0)
             if not angle and full <= 0:
                 report.handle_problems.append(f"the handle {hid} has no drawing scale")
                 return
@@ -940,7 +954,7 @@ def _drive_handles(page, frame: Frame, report: RenderReport) -> None:  # noqa: A
                 return float(control.input_value())
 
             def expect(drawn: float) -> float:
-                raw = drawn if angle else drawn * full
+                raw = drawn if angle else origin + drawn * (full - origin)
                 c = min(hi, max(lo, raw))
                 return min(hi, lo + round((c - lo) / step) * step)
 
@@ -948,8 +962,8 @@ def _drive_handles(page, frame: Frame, report: RenderReport) -> None:  # noqa: A
                 box = svg.bounding_box()
                 if not box:
                     return None
-                k = min(box["width"] / 120, box["height"] / 140)
-                ox, oy = box["x"] + (box["width"] - 120 * k) / 2, box["y"] + (box["height"] - 140 * k) / 2
+                k = min(box["width"] / box_w, box["height"] / box_h)
+                ox, oy = box["x"] + (box["width"] - box_w * k) / 2, box["y"] + (box["height"] - box_h * k) / 2
                 if angle:
                     a = math.radians(min(60.0, max(0.0, drawn)))
                     x, y = grab["pivot"][0] + grab["radius"] * math.cos(a), grab["pivot"][1] - grab["radius"] * math.sin(a)
@@ -1024,7 +1038,8 @@ FREE_HANDLE_LIMIT = 8
 
 def _drive_free_handles(page, frame: Frame, report: RenderReport) -> None:  # noqa: ANN001
     """L2 for a model-written page's handles (W17, D-71). An element marked `data-synapse-handle="<slider id>"` is a pointer surface for that slider: the mouse drags it right, left,
-    down and up from its centre, and the slider must move at least once. A handle that names no slider, or moves nothing, is `handle_dead`. The slider stays the only control and
+    down and up from its centre, and the slider must move at least once. A handle that also names a drop target (`data-synapse-target="<element id>"`, W20) is dragged onto
+    that element instead, and the drop must move the slider. A handle that names no slider, or moves nothing, is `handle_dead`. The slider stays the only control and
     the source of every number, so the sweep's checks are unchanged."""
     grips = frame.query_selector_all("[data-synapse-handle]")
     if len(grips) > FREE_HANDLE_LIMIT:
@@ -1041,6 +1056,26 @@ def _drive_free_handles(page, frame: Frame, report: RenderReport) -> None:  # no
             _set_control(control, "min")
             _settle(page, 150)
             before, moved = control.input_value(), False
+            # W20 (D-80): a handle that is dropped onto something (a mass onto a pan, a test mass onto a planet) names it, and is dragged there and nowhere else.
+            aim = grip.get_attribute("data-synapse-target")
+            if aim is not None:
+                spot = frame.query_selector(f"#{aim}") if re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,39}", aim) else None
+                grip.scroll_into_view_if_needed()
+                box, goal = grip.bounding_box(), spot.bounding_box() if spot is not None else None
+                if box is None or goal is None:
+                    report.handle_problems.append(f"the handle for '{cid}' names the drop target '{aim[:40]}', which is not on the page")
+                    return
+                page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+                page.mouse.down()
+                page.mouse.move(goal["x"] + goal["width"] / 2, goal["y"] + goal["height"] / 2, steps=10)
+                page.mouse.up()
+                _settle(page, 250)
+                if control.input_value() == before:
+                    report.handle_problems.append(f"dropping the handle for '{cid}' onto '{aim}' did not move it")
+                    return
+                _set_control(control, "min")
+                _settle(page, 150)
+                continue
             for dx, dy in ((90, 0), (-180, 0), (90, 90), (0, -180)):
                 grip.scroll_into_view_if_needed()
                 box = grip.bounding_box()

@@ -173,3 +173,17 @@ def test_the_gap_log_does_nothing_without_a_path_and_survives_a_write_failure(tm
     blocked = tmp_path / "file"
     blocked.write_text("x", encoding="utf-8")
     gaplog.record(blocked / "nested" / "gaps.jsonl", question_sha256="a", topic="t", domain="d", pattern="p", reason="r", outcome="o")
+
+
+def test_a_verdict_wrapped_in_a_sentence_is_still_read_and_still_must_be_exact() -> None:
+    # W20: a reader that adds a sentence around its JSON still gave a verdict; the object found must still be exactly {"ok", "issues"}.
+    import pytest
+
+    from api.pipeline.wording import UnusableVerdict, parse_verdict
+
+    assert parse_verdict('My verdict: {"ok": true, "issues": []} Thanks.').ok
+    assert not parse_verdict('Verdict:\n{"ok": false, "issues": ["g is 9.81 m/s2, not 98.1"]}').ok
+    with pytest.raises(UnusableVerdict):
+        parse_verdict('Verdict: {"ok": true}')
+    with pytest.raises(UnusableVerdict):
+        parse_verdict("Looks fine to me.")

@@ -16,10 +16,12 @@ usage fields `cache_creation_input_tokens` and `cache_read_input_tokens` go to t
 
 from __future__ import annotations
 
+import json
+
 import httpx
 
 from api.llm.models import ANTHROPIC_MODELS
-from api.llm.providers.base import FailureKind, ProviderFailure
+from api.llm.providers.base import FailureKind, ProviderFailure, TextSink
 from api.llm.types import LLMRequest, ProviderResponse, Tier
 
 API_VERSION = "2023-06-01"
@@ -44,7 +46,7 @@ class AnthropicProvider:
         *,
         models: dict[Tier, str] | None = None,
         base_url: str = BASE_URL,
-        timeout_seconds: float = 90.0,
+        timeout_seconds: float = 300.0,  # W20: a heavy-tier plan call thinks before it answers and does not stream; 90 s cut some off
         client: httpx.AsyncClient | None = None,
     ):
         if not api_key:
@@ -75,8 +77,10 @@ class AnthropicProvider:
             body["output_config"] = {"effort": request.effort}
         return body
 
-    async def complete(self, request: LLMRequest, model: str) -> ProviderResponse:
+    async def complete(self, request: LLMRequest, model: str, on_text: TextSink | None = None) -> ProviderResponse:
         headers = {"x-api-key": self._key, "anthropic-version": API_VERSION, "content-type": "application/json"}
+        if on_text is not None:
+            return await self._stream(request, model, headers, on_text)
         try:
             reply = await self._client.post(self._url, headers=headers, json=self._body(request, model))
         except httpx.TimeoutException as exc:
@@ -113,6 +117,65 @@ class AnthropicProvider:
             cache_read_tokens=cache_read,
             cache_write_tokens=cache_write,
         )
+
+    async def _stream(self, request: LLMRequest, model: str, headers: dict, on_text: TextSink) -> ProviderResponse:
+        """The same call with `stream: true` (W19, D-79). Read against the current docs on 2026-10-29 (/api/messages, streaming): server-sent events
+        `message_start` (the message, with its input usage), `content_block_delta` (a `text_delta` carries text), `message_delta` (the `stop_reason`, and the
+        cumulative usage with `output_tokens`), `message_stop`, and `error` at any point. The text is handed to `on_text` as it arrives; the response, the usage
+        and every rejection at the end are those of `complete` without it."""
+        body = {**self._body(request, model), "stream": True}
+        parts: list[str] = []
+        usage: dict = {}
+        stop = None
+        echoed = model
+        try:
+            async with self._client.stream("POST", self._url, headers=headers, json=body) as reply:
+                if reply.status_code != 200:
+                    await reply.aread()
+                    raise self._failure(reply)
+                async for line in reply.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    try:
+                        event = json.loads(line[5:].strip())
+                    except ValueError:
+                        continue
+                    kind = event.get("type")
+                    if kind == "message_start":
+                        message = event.get("message") or {}
+                        echoed = str(message.get("model") or model)
+                        usage.update(message.get("usage") or {})
+                    elif kind == "content_block_delta":
+                        delta = event.get("delta") or {}
+                        if delta.get("type") == "text_delta" and delta.get("text"):
+                            parts.append(str(delta["text"]))
+                            on_text(str(delta["text"]))
+                    elif kind == "message_delta":
+                        stop = (event.get("delta") or {}).get("stop_reason") or stop
+                        usage.update({k: v for k, v in (event.get("usage") or {}).items() if v is not None})
+                    elif kind == "error":
+                        error_type = str((event.get("error") or {}).get("type", "unknown"))[:60]
+                        raise ProviderFailure(self.name, f"stream error {error_type}", "transient")
+        except httpx.TimeoutException as exc:
+            raise ProviderFailure(self.name, "the request timed out", "timeout") from exc
+        except httpx.HTTPError as exc:
+            raise ProviderFailure(self.name, f"network error ({type(exc).__name__})", "transient") from exc
+        try:
+            cache_write = int(usage.get("cache_creation_input_tokens") or 0)
+            cache_read = int(usage.get("cache_read_input_tokens") or 0)
+            tokens_in = int(usage["input_tokens"]) + cache_write + cache_read
+            tokens_out = int(usage["output_tokens"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ProviderFailure(self.name, "the stream ended without its usage", "truncated") from exc
+        text = "".join(parts)
+        billed = {"tokens_in": tokens_in, "tokens_out": tokens_out}
+        if stop == "max_tokens":
+            raise ProviderFailure(self.name, "the reply was cut off at max_tokens", "truncated", **billed)
+        if stop == "refusal":
+            raise ProviderFailure(self.name, "the model declined to answer (stop_reason refusal)", "transient", **billed)
+        if not text.strip():
+            raise ProviderFailure(self.name, f"the reply had no text (stop_reason {stop})", "transient", **billed)
+        return ProviderResponse(text=text, model=echoed, tokens_in=tokens_in, tokens_out=tokens_out, cache_read_tokens=cache_read, cache_write_tokens=cache_write)
 
     def _failure(self, reply: httpx.Response) -> ProviderFailure:
         """Map an HTTP error to a ProviderFailure. Only the status, the API's error type and the request id are kept."""
